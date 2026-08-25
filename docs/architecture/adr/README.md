@@ -14,3 +14,6 @@ One short record per decision that constrains later work. No ADR for trivia.
 | [0008](0008-phase1-validation-strategy.md) | Phase 1 validation ladder; Playwright deferred | 1 |
 | [0009](0009-controller-families.md) | Controllers interpret intent; never physical input or gameplay | 3 |
 | [0010](0010-pack-config-validation.md) | Pack config validation is dependency-inverted, not imported | 4 |
+| [0011](0011-capability-id-governance.md) | Capability ids are namespaced `<family>.<service>` | 5 |
+| [0012](0012-gameplay-events-belong-to-their-package.md) | Gameplay events are declared by the package that raises them | 5 |
+| [0013](0013-composition-root-enforces-pack-declarations.md) | A pack's declarations are enforced where the game is composed | 5 |

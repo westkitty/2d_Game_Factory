@@ -14,7 +14,7 @@ describe('aiPack', () => {
   it('installs and publishes the ai capability, defaulting to idle', () => {
     const context = createFakeGameContext();
     const installed = installAiWithCombat(context);
-    const ai = context.capabilities.require<AiService>('ai');
+    const ai = context.capabilities.require<AiService>('ai.state');
 
     ai.register('goblin');
     expect(ai.state('goblin')).toBe('idle');
@@ -24,7 +24,7 @@ describe('aiPack', () => {
   it('accepts an explicit initial state and rejects a duplicate registration', () => {
     const context = createFakeGameContext();
     installAiWithCombat(context);
-    const ai = context.capabilities.require<AiService>('ai');
+    const ai = context.capabilities.require<AiService>('ai.state');
 
     ai.register('goblin', 'patrol');
     expect(ai.state('goblin')).toBe('patrol');
@@ -34,7 +34,7 @@ describe('aiPack', () => {
   it('transitions state and emits ai:stateChanged only on an actual change', () => {
     const context = createFakeGameContext();
     installAiWithCombat(context);
-    const ai = context.capabilities.require<AiService>('ai');
+    const ai = context.capabilities.require<AiService>('ai.state');
     ai.register('goblin');
 
     const changes: unknown[] = [];
@@ -51,7 +51,7 @@ describe('aiPack', () => {
   it('rejects an invalid state at the runtime boundary, not just via the TS union', () => {
     const context = createFakeGameContext();
     installAiWithCombat(context);
-    const ai = context.capabilities.require<AiService>('ai');
+    const ai = context.capabilities.require<AiService>('ai.state');
     ai.register('goblin');
 
     expect(() => ai.setState('goblin', 'berserk' as never)).toThrow(InvalidAiStateError);
@@ -60,7 +60,7 @@ describe('aiPack', () => {
   it('throws for an unknown agent', () => {
     const context = createFakeGameContext();
     installAiWithCombat(context);
-    const ai = context.capabilities.require<AiService>('ai');
+    const ai = context.capabilities.require<AiService>('ai.state');
 
     expect(() => ai.state('ghost')).toThrow(UnknownAiAgentError);
   });
@@ -68,7 +68,7 @@ describe('aiPack', () => {
   it('list() is sorted and removal drops the agent', () => {
     const context = createFakeGameContext();
     installAiWithCombat(context);
-    const ai = context.capabilities.require<AiService>('ai');
+    const ai = context.capabilities.require<AiService>('ai.state');
     ai.register('b');
     ai.register('a');
 
@@ -80,8 +80,8 @@ describe('aiPack', () => {
   it('isAgentAlive() consumes combat by capability id, not by importing its module', () => {
     const context = createFakeGameContext();
     installAiWithCombat(context);
-    const ai = context.capabilities.require<AiService>('ai');
-    const combat = context.capabilities.require<CombatService>('combat');
+    const ai = context.capabilities.require<AiService>('ai.state');
+    const combat = context.capabilities.require<CombatService>('combat.health');
     ai.register('goblin');
     combat.register('goblin', 5);
 
@@ -102,7 +102,7 @@ describe('aiPack', () => {
 
     installed.dispose();
 
-    expect(context.capabilities.has('ai')).toBe(false);
-    expect(context.capabilities.has('combat')).toBe(true);
+    expect(context.capabilities.has('ai.state')).toBe(false);
+    expect(context.capabilities.has('combat.health')).toBe(true);
   });
 });

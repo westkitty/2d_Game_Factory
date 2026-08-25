@@ -55,6 +55,7 @@ export class SystemHostImpl<TContext extends GameContext> implements SystemHost 
       try {
         const config = this.#validatedConfig(definition, selection.config);
         this.#installed.push(definition.install(this.#context, config as never));
+        this.#assertProvidesPublished(definition);
       } catch (error) {
         // Roll back everything already installed so a partial install - or a
         // config that fails validation - never leaves orphaned listeners
@@ -65,6 +66,24 @@ export class SystemHostImpl<TContext extends GameContext> implements SystemHost 
           { cause: error },
         );
       }
+    }
+  }
+
+  /**
+   * A pack's `provides` list is what `resolveInstallOrder` trusts when it
+   * satisfies another pack's `dependencies`. A pack that declares a
+   * capability and never publishes it therefore passes resolution and then
+   * fails at the dependent pack's `capabilities.require()` - far from the
+   * actual mistake. Checking it here turns declared-but-unpublished into the
+   * same install-time, named, rolled-back failure every other composition
+   * error already is.
+   */
+  #assertProvidesPublished(definition: SystemPackDefinition<never, TContext>): void {
+    const missing = definition.provides.filter((id) => !this.#context.capabilities.has(id));
+    if (missing.length > 0) {
+      throw new Error(
+        `declared provides ${missing.map((id) => `"${id}"`).join(', ')} but did not publish it through context.capabilities.provide()`,
+      );
     }
   }
 

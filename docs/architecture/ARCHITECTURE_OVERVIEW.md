@@ -1,6 +1,7 @@
 # Architecture Overview
 
-Status: Phase 4 (Sonnet 5). Governing spec: [`MASTER_PROJECT.md`](../../MASTER_PROJECT.md).
+Status: Phase 5 (Opus 5) - architecture integration gate A passed with targeted repairs. See
+[`PHASE5_ARCHITECTURE_GATE_A.md`](PHASE5_ARCHITECTURE_GATE_A.md). Governing spec: [`MASTER_PROJECT.md`](../../MASTER_PROJECT.md).
 
 ## The thesis
 
@@ -104,9 +105,20 @@ interface SystemPackDefinition<TConfig, TContext extends GameContext> {
 
 Packs depend on **capability ids**, never on another pack's module. `resolveInstallOrder()` is
 a pure function: it sorts by dependency, rejects cycles, duplicate ids, duplicate capabilities
-and unknown packs, and names the offending pack in the message. Being pure means pack
-composition is testable without a browser - which is why Phase 1 could ship real coverage for
-it before any pack existed.
+and unknown packs, and names the offending pack in the message. Being pure means pack composition
+is testable without a browser - which is why Phase 1 could ship real coverage for it before any
+pack existed.
+
+**Capability ids are namespaced `<family>.<service>`** ([ADR-0011](adr/0011-capability-id-governance.md)):
+`combat.health`, `world.state`, `arcade.score`. The segment before the dot claims a family; the
+segment after it claims one capability within that family, so the fuller family systems
+`MASTER_PROJECT.md` §9 describes (combat weapons, world tilemaps and camera zones) can publish
+alongside these foundational cores instead of colliding with them. No id may be a bare family
+name. Pack ids are separate, vendor-prefixed strings (`sw2d.combat`) and are never reused as
+capability ids, so an implementation can be swapped without its consumers' id changing.
+Game-specific capabilities carry their own owner segment (`starter.player`).
+`packages/packs/test/capabilityIds.test.ts` enforces this - it is a convention and a test, not a
+registry.
 
 `SystemHostImpl` owns one scene's packs. It installs in dependency order, tears down in
 reverse, and rolls back a partial install. One host per scene lifetime is the whole leak story:
@@ -117,7 +129,7 @@ arcade, puzzle, simulation, narrative, strategy. Each is a foundational capabili
 damage model, an agent-state vocabulary, a resource ledger - not a full genre system; see each
 file's doc comment for the exact line drawn (e.g. combat has no weapons or projectiles, AI has no
 pathfinding). Every pack publishes exactly one capability and depends on other packs only by
-capability id: `aiPack` reads `combat`'s service (`context.capabilities.require<CombatService>('combat')`)
+capability id: `aiPack` reads combat's service (`context.capabilities.require<CombatService>('combat.health')`)
 with `CombatService` imported as a *type* only, never `combatPack.ts`'s implementation. None
 imports Phaser; all are typed against plain `GameContext`, not `SceneContext`.
 
@@ -127,12 +139,21 @@ imports Phaser; all are typed against plain `GameContext`, not `SceneContext`.
 validates a pack's config (rolling back on failure through the same path a failed `install()`
 already used) before that pack's `install()` runs. `@sw2d/schemas` supplies the concrete
 implementation (`packConfigValidator`); `@sw2d/runtime` itself still imports neither Ajv nor
-`@sw2d/schemas` - its dependency graph is unchanged. Enforcement is opt-in per host instance: the
-starter's `PlayScene` still constructs its host with two arguments, so
-`starter.placeholder-mover`'s `configSchemaId` remains declared-but-unenforced in the actual
-running game, exactly as every phase before Phase 4 left it. Only packs with real,
-JSON-serializable config get a schema (`progressionPack`, `arcadePack`); `puzzlePack`'s config is
-functions (`createInitialState`, `isSolved`) and correctly has none.
+`@sw2d/schemas` - its dependency graph is unchanged. **A game turns enforcement on at the composition root** (Phase 5,
+[ADR-0013](adr/0013-composition-root-enforces-pack-declarations.md)):
+`createGame({ packConfigValidator })` threads a validator through `PlayScene` to the host, and the
+starter supplies `@sw2d/schemas`' implementation. It stays optional - a test harness or a CLI
+dry-run legitimately has no schema layer - but a debug build warns, naming every pack whose
+`configSchemaId` is going unenforced, so "declared but silently unenforced" is no longer a state a
+generated game can be in without knowing. Only packs with real, JSON-serializable config get a
+schema (`progressionPack`, `arcadePack`, and the starter's own `placeholder-mover`);
+`puzzlePack`'s config is functions (`createInitialState`, `isSolved`) and correctly has none.
+
+**A pack's `provides` list is verified after install** (ADR-0013). `resolveInstallOrder` satisfies
+another pack's `dependencies` from that declaration, so a pack that declares a capability and
+never publishes it must fail at install - with a named error, through the same rollback path a
+throwing `install()` and a failed config validation already use - rather than surfacing later
+inside the dependent pack's `require()`.
 
 ## Semantic input
 
@@ -167,6 +188,18 @@ interface Controller<TIntent> {
   read(input: ActionInput): TIntent;
 }
 ```
+
+### Events
+
+`@sw2d/contracts`' `GameEventMap` holds **runtime lifecycle events only** (`pause:changed`,
+`settings:changed`, `run:restarted`, ...). Gameplay events are declared by the package that raises
+them, merged in through declaration merging
+([ADR-0012](adr/0012-gameplay-events-belong-to-their-package.md)) - see
+`packages/packs/src/events.ts`. That keeps the dependency-free core from accumulating the whole
+content catalogue's vocabulary, and keeps `packages/contracts/**` - which the protected boundary
+reserves for runtime work - off the edit path for ordinary preset and game work. Naming is
+`<capability family>:<pastTenseFact>`. A pack that needs an *answer* calls a capability directly;
+events are for facts other systems may want to react to.
 
 Six families exist in `packages/runtime/src/controllers/`, each a stateless singleton:
 `platformController`, `topDownController`, `vehicleController`, `gridController`,

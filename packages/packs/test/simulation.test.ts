@@ -12,14 +12,14 @@ describe('simulationPack', () => {
     const context = createFakeGameContext();
     const installed = simulationPack.install(context, undefined);
 
-    expect(context.capabilities.has('simulation')).toBe(true);
+    expect(context.capabilities.has('simulation.resources')).toBe(true);
     expect(installed.id).toBe('sw2d.simulation');
   });
 
   it('addResource clamps at 0 and emits simulation:resourceChanged', () => {
     const context = createFakeGameContext();
     simulationPack.install(context, undefined);
-    const simulation = context.capabilities.require<SimulationService>('simulation');
+    const simulation = context.capabilities.require<SimulationService>('simulation.resources');
 
     const changes: unknown[] = [];
     context.events.on('simulation:resourceChanged', (payload) => changes.push(payload));
@@ -35,7 +35,7 @@ describe('simulationPack', () => {
   it('rejects a duplicate job id and a negative duration', () => {
     const context = createFakeGameContext();
     simulationPack.install(context, undefined);
-    const simulation = context.capabilities.require<SimulationService>('simulation');
+    const simulation = context.capabilities.require<SimulationService>('simulation.resources');
 
     simulation.queueJob('smelt-iron', 1000);
     expect(() => simulation.queueJob('smelt-iron', 500)).toThrow(DuplicateSimulationJobError);
@@ -45,7 +45,7 @@ describe('simulationPack', () => {
   it('completes a job deterministically after enough update(deltaMs) ticks, not before', () => {
     const context = createFakeGameContext();
     const installed = simulationPack.install(context, undefined);
-    const simulation = context.capabilities.require<SimulationService>('simulation');
+    const simulation = context.capabilities.require<SimulationService>('simulation.resources');
     simulation.queueJob('smelt-iron', 100);
 
     installed.update?.(40);
@@ -59,7 +59,7 @@ describe('simulationPack', () => {
   it('a cancelled job never completes', () => {
     const context = createFakeGameContext();
     const installed = simulationPack.install(context, undefined);
-    const simulation = context.capabilities.require<SimulationService>('simulation');
+    const simulation = context.capabilities.require<SimulationService>('simulation.resources');
     simulation.queueJob('smelt-iron', 100);
 
     expect(simulation.cancelJob('smelt-iron')).toBe(true);
@@ -70,7 +70,7 @@ describe('simulationPack', () => {
   it('listJobs() is sorted and reflects only active (not completed) jobs', () => {
     const context = createFakeGameContext();
     const installed = simulationPack.install(context, undefined);
-    const simulation = context.capabilities.require<SimulationService>('simulation');
+    const simulation = context.capabilities.require<SimulationService>('simulation.resources');
     simulation.queueJob('b-job', 100);
     simulation.queueJob('a-job', 100);
 
@@ -85,6 +85,6 @@ describe('simulationPack', () => {
 
     installed.dispose();
 
-    expect(context.capabilities.has('simulation')).toBe(false);
+    expect(context.capabilities.has('simulation.resources')).toBe(false);
   });
 });

@@ -1,5 +1,6 @@
 import './styles.css';
 import { createGame } from '@sw2d/runtime';
+import { packConfigValidator } from '@sw2d/schemas';
 import { starterContent } from './content.ts';
 import { STARTER_GAME } from './game.ts';
 import { PLACEHOLDER_MOVER_PACK } from './game-specific/placeholderMoverPack.ts';
@@ -14,6 +15,10 @@ const runtime = await createGame({
   content: starterContent,
   parent: gameRoot,
   packs: [PLACEHOLDER_MOVER_PACK],
+  // Every pack that declares a configSchemaId is validated before it
+  // installs. A generated game supplies this so a declared schema cannot be
+  // silently unenforced (ADR-0013).
+  packConfigValidator,
 });
 
 /**

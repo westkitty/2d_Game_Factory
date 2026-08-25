@@ -7,7 +7,7 @@ describe('narrativePack', () => {
   it('installs and publishes the narrative capability with no current node', () => {
     const context = createFakeGameContext();
     const installed = narrativePack.install(context, undefined);
-    const narrative = context.capabilities.require<NarrativeService>('narrative');
+    const narrative = context.capabilities.require<NarrativeService>('narrative.state');
 
     expect(narrative.currentNode()).toBeNull();
     expect(installed.id).toBe('sw2d.narrative');
@@ -16,7 +16,7 @@ describe('narrativePack', () => {
   it('goTo() moves between nodes', () => {
     const context = createFakeGameContext();
     narrativePack.install(context, undefined);
-    const narrative = context.capabilities.require<NarrativeService>('narrative');
+    const narrative = context.capabilities.require<NarrativeService>('narrative.state');
 
     narrative.goTo('intro');
     expect(narrative.currentNode()).toBe('intro');
@@ -25,7 +25,7 @@ describe('narrativePack', () => {
   it('setFlag emits narrative:flagChanged only on an actual change', () => {
     const context = createFakeGameContext();
     narrativePack.install(context, undefined);
-    const narrative = context.capabilities.require<NarrativeService>('narrative');
+    const narrative = context.capabilities.require<NarrativeService>('narrative.state');
 
     const changes: unknown[] = [];
     context.events.on('narrative:flagChanged', (payload) => changes.push(payload));
@@ -39,7 +39,7 @@ describe('narrativePack', () => {
   it('choose() records the choice and transitions in one step', () => {
     const context = createFakeGameContext();
     narrativePack.install(context, undefined);
-    const narrative = context.capabilities.require<NarrativeService>('narrative');
+    const narrative = context.capabilities.require<NarrativeService>('narrative.state');
     narrative.goTo('crossroads');
 
     narrative.choose('go-left', 'forest-path');
@@ -51,7 +51,7 @@ describe('narrativePack', () => {
   it('tracks seen/codex entries, sorted and deduplicated', () => {
     const context = createFakeGameContext();
     narrativePack.install(context, undefined);
-    const narrative = context.capabilities.require<NarrativeService>('narrative');
+    const narrative = context.capabilities.require<NarrativeService>('narrative.state');
 
     narrative.markSeen('codex.dragon');
     narrative.markSeen('codex.dragon');
@@ -68,6 +68,6 @@ describe('narrativePack', () => {
 
     installed.dispose();
 
-    expect(context.capabilities.has('narrative')).toBe(false);
+    expect(context.capabilities.has('narrative.state')).toBe(false);
   });
 });

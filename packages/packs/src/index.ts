@@ -9,6 +9,11 @@
  * No Phaser dependency: packs interact with the game only through
  * `GameContext` (events, capabilities) established in @sw2d/contracts.
  */
+// Side-effect-free type-only module augmentation: this package's gameplay
+// events are merged into @sw2d/contracts' GameEventMap here, not declared
+// inside the dependency-free core (ADR-0012).
+import './events.ts';
+
 export { PACK_IDS, CAPABILITY_IDS } from './ids.ts';
 
 export {

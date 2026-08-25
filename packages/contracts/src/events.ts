@@ -3,15 +3,23 @@ import type { Disposable } from './disposable.ts';
 /**
  * Typed cross-system event map.
  *
- * System packs extend this via declaration merging:
+ * This interface holds *runtime-owned* lifecycle events only - the ones the
+ * machine itself raises and any game may rely on. Gameplay events belong to
+ * whichever package owns the system that raises them, and are merged in
+ * declaratively:
  *
  *   declare module '@sw2d/contracts' {
  *     interface GameEventMap {
- *       'combat:playerDamaged': { readonly amount: number };
+ *       'combat:entityDied': { readonly entityId: string };
  *     }
  *   }
  *
- * That keeps gameplay events out of the core while keeping emit/on fully typed.
+ * See `packages/packs/src/events.ts` for the worked example. Keeping gameplay
+ * events out of this file is load-bearing rather than tidy: adding one would
+ * otherwise mean editing `@sw2d/contracts`, which the protected boundary
+ * reserves for runtime work, every time a pack family or preset grows an
+ * event (ADR-0012).
+ *
  * Do not add an event for every trivial local operation; events are for
  * cross-system communication.
  */
@@ -24,22 +32,6 @@ export interface GameEventMap {
   'settings:changed': { readonly reason: 'patch' | 'reset' | 'load' };
   'accessibility:changed': Record<string, never>;
   'audio:unlocked': Record<string, never>;
-
-  // Phase 4 system pack events. One or two per family, added only where a
-  // cross-system reaction is plausible (HUD, other packs) - not for every
-  // internal mutation. See @sw2d/packs.
-  'combat:entityDamaged': { readonly entityId: string; readonly amount: number; readonly current: number };
-  'combat:entityDied': { readonly entityId: string };
-  'ai:stateChanged': { readonly agentId: string; readonly from: string; readonly to: string };
-  'world:flagChanged': { readonly flag: string; readonly value: boolean };
-  'world:checkpointActivated': { readonly checkpointId: string };
-  'progression:currencyChanged': { readonly currency: number; readonly delta: number };
-  'progression:unlockChanged': { readonly flag: string; readonly unlocked: boolean };
-  'arcade:scoreChanged': { readonly score: number; readonly delta: number };
-  'puzzle:solved': { readonly puzzleId: string };
-  'simulation:resourceChanged': { readonly resourceId: string; readonly amount: number; readonly delta: number };
-  'narrative:flagChanged': { readonly flag: string; readonly value: boolean };
-  'strategy:turnChanged': { readonly team: string; readonly turnNumber: number };
 }
 
 export type GameEventName = keyof GameEventMap & string;

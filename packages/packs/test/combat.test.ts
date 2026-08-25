@@ -8,15 +8,15 @@ describe('combatPack', () => {
     const context = createFakeGameContext();
     const installed = combatPack.install(context, undefined);
 
-    expect(context.capabilities.has('combat')).toBe(true);
-    expect(context.capabilities.require<CombatService>('combat')).toBeDefined();
+    expect(context.capabilities.has('combat.health')).toBe(true);
+    expect(context.capabilities.require<CombatService>('combat.health')).toBeDefined();
     expect(installed.id).toBe('sw2d.combat');
   });
 
   it('registers an entity at full health and rejects a duplicate', () => {
     const context = createFakeGameContext();
     combatPack.install(context, undefined);
-    const combat = context.capabilities.require<CombatService>('combat');
+    const combat = context.capabilities.require<CombatService>('combat.health');
 
     combat.register('goblin-1', 10);
     expect(combat.get('goblin-1')).toEqual({ current: 10, max: 10, invulnerableUntilMs: 0 });
@@ -26,7 +26,7 @@ describe('combatPack', () => {
   it('clamps damage at 0 and heal at max - bounded and deterministic', () => {
     const context = createFakeGameContext();
     combatPack.install(context, undefined);
-    const combat = context.capabilities.require<CombatService>('combat');
+    const combat = context.capabilities.require<CombatService>('combat.health');
     combat.register('goblin-1', 10);
 
     expect(combat.damage('goblin-1', 4, 0).current).toBe(6);
@@ -41,7 +41,7 @@ describe('combatPack', () => {
   it('rejects damage while invulnerable, without mutating state or emitting an event', () => {
     const context = createFakeGameContext();
     combatPack.install(context, undefined);
-    const combat = context.capabilities.require<CombatService>('combat');
+    const combat = context.capabilities.require<CombatService>('combat.health');
     combat.register('player', 10);
     combat.setInvulnerableFor('player', 500, 1000);
 
@@ -62,7 +62,7 @@ describe('combatPack', () => {
   it('emits combat:entityDamaged and combat:entityDied at the right moments', () => {
     const context = createFakeGameContext();
     combatPack.install(context, undefined);
-    const combat = context.capabilities.require<CombatService>('combat');
+    const combat = context.capabilities.require<CombatService>('combat.health');
     combat.register('goblin', 5);
 
     const damaged: unknown[] = [];
@@ -84,7 +84,7 @@ describe('combatPack', () => {
   it('rejects negative or non-finite amounts', () => {
     const context = createFakeGameContext();
     combatPack.install(context, undefined);
-    const combat = context.capabilities.require<CombatService>('combat');
+    const combat = context.capabilities.require<CombatService>('combat.health');
     combat.register('goblin', 10);
 
     expect(() => combat.damage('goblin', -1, 0)).toThrow(RangeError);
@@ -95,7 +95,7 @@ describe('combatPack', () => {
   it('throws a named error for an unknown entity, and lets remove() be idempotent', () => {
     const context = createFakeGameContext();
     combatPack.install(context, undefined);
-    const combat = context.capabilities.require<CombatService>('combat');
+    const combat = context.capabilities.require<CombatService>('combat.health');
 
     expect(() => combat.get('ghost')).toThrow(UnknownCombatEntityError);
     expect(() => combat.remove('ghost')).not.toThrow();
@@ -104,7 +104,7 @@ describe('combatPack', () => {
   it('list() is sorted and reflects removal', () => {
     const context = createFakeGameContext();
     combatPack.install(context, undefined);
-    const combat = context.capabilities.require<CombatService>('combat');
+    const combat = context.capabilities.require<CombatService>('combat.health');
     combat.register('b', 5);
     combat.register('a', 5);
 
@@ -116,10 +116,10 @@ describe('combatPack', () => {
   it('withdraws the capability on dispose', () => {
     const context = createFakeGameContext();
     const installed = combatPack.install(context, undefined);
-    expect(context.capabilities.has('combat')).toBe(true);
+    expect(context.capabilities.has('combat.health')).toBe(true);
 
     installed.dispose();
 
-    expect(context.capabilities.has('combat')).toBe(false);
+    expect(context.capabilities.has('combat.health')).toBe(false);
   });
 });

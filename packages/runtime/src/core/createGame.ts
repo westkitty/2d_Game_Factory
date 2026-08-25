@@ -7,6 +7,7 @@ import {
   type GameContext,
   type GameDefinition,
   type GameExtension,
+  type PackConfigValidator,
   type StorageDriver,
 } from '@sw2d/contracts';
 import { AccessibilityStateImpl } from '../accessibility/AccessibilityStateImpl.ts';
@@ -45,6 +46,17 @@ export interface CreateGameOptions {
   readonly controlsRoot?: HTMLElement;
   /** System packs available for installation. A game installs a subset by id. */
   readonly packs?: readonly ScenePackDefinition[];
+  /**
+   * Enforces every selected pack's declared `configSchemaId` before that pack
+   * installs. Dependency-inverted (ADR-0010): pass `packConfigValidator` from
+   * `@sw2d/schemas`, or any other implementation - the runtime never imports a
+   * schema library itself.
+   *
+   * Optional for backward compatibility, but a generated game should supply
+   * one: without it a declared `configSchemaId` is silently unenforced. A
+   * debug build warns when that is the case (ADR-0013).
+   */
+  readonly packConfigValidator?: PackConfigValidator;
   /** Game-specific extensions. The only sanctioned way to add unique mechanics. */
   readonly extensions?: readonly GameExtension[];
   /** Enables development-only diagnostics. Defaults to import.meta.env.DEV. */
@@ -128,9 +140,21 @@ export async function createGame(options: CreateGameOptions): Promise<GameRuntim
     disposables: rootBag,
   };
 
+  if (debugEnabled && !options.packConfigValidator) {
+    const unenforced = (options.packs ?? [])
+      .filter((pack) => pack.configSchemaId)
+      .map((pack) => pack.id);
+    if (unenforced.length > 0) {
+      console.warn(
+        `[sw2d] no packConfigValidator supplied: configSchemaId is declared but NOT enforced for ${unenforced.join(', ')}. ` +
+          "Pass createGame({ packConfigValidator }) - `@sw2d/schemas` exports one.",
+      );
+    }
+  }
+
   const boot = new BootScene(context);
   const title = new TitleScene(context);
-  const play = new PlayScene(context, options.packs ?? []);
+  const play = new PlayScene(context, options.packs ?? [], options.packConfigValidator);
   const pause = new PauseScene(context);
   playScene = play;
 

@@ -30,7 +30,7 @@ describe('puzzlePack', () => {
   it('installs and publishes the puzzle capability with the initial state', () => {
     const context = createFakeGameContext();
     const installed = installPuzzle(context, slideConfig(3));
-    const puzzle = context.capabilities.require<PuzzleService<SlideState>>('puzzle');
+    const puzzle = context.capabilities.require<PuzzleService<SlideState>>('puzzle.state');
 
     expect(puzzle.current()).toEqual({ position: 0 });
     expect(installed.id).toBe('sw2d.puzzle');
@@ -39,7 +39,7 @@ describe('puzzlePack', () => {
   it('apply() mutates through an explicit operation and isSolved() reflects the goal predicate', () => {
     const context = createFakeGameContext();
     installPuzzle(context, slideConfig(2));
-    const puzzle = context.capabilities.require<PuzzleService<SlideState>>('puzzle');
+    const puzzle = context.capabilities.require<PuzzleService<SlideState>>('puzzle.state');
 
     expect(puzzle.isSolved()).toBe(false);
     puzzle.apply((state) => ({ position: state.position + 1 }));
@@ -52,7 +52,7 @@ describe('puzzlePack', () => {
   it('undo() restores the exact prior state, and returns null with nothing to undo', () => {
     const context = createFakeGameContext();
     installPuzzle(context, slideConfig(5));
-    const puzzle = context.capabilities.require<PuzzleService<SlideState>>('puzzle');
+    const puzzle = context.capabilities.require<PuzzleService<SlideState>>('puzzle.state');
 
     expect(puzzle.undo()).toBeNull();
 
@@ -69,7 +69,7 @@ describe('puzzlePack', () => {
   it('reset() regenerates the initial state and clears history', () => {
     const context = createFakeGameContext();
     installPuzzle(context, slideConfig(5));
-    const puzzle = context.capabilities.require<PuzzleService<SlideState>>('puzzle');
+    const puzzle = context.capabilities.require<PuzzleService<SlideState>>('puzzle.state');
     puzzle.apply((state) => ({ position: state.position + 4 }));
 
     expect(puzzle.reset()).toEqual({ position: 0 });
@@ -81,8 +81,8 @@ describe('puzzlePack', () => {
     const contextB = createFakeGameContext();
     installPuzzle(contextA, slideConfig(5));
     installPuzzle(contextB, slideConfig(5));
-    const a = contextA.capabilities.require<PuzzleService<SlideState>>('puzzle');
-    const b = contextB.capabilities.require<PuzzleService<SlideState>>('puzzle');
+    const a = contextA.capabilities.require<PuzzleService<SlideState>>('puzzle.state');
+    const b = contextB.capabilities.require<PuzzleService<SlideState>>('puzzle.state');
 
     const ops = [(s: SlideState) => ({ position: s.position + 2 }), (s: SlideState) => ({ position: s.position * 3 })];
     for (const op of ops) {
@@ -99,6 +99,6 @@ describe('puzzlePack', () => {
 
     installed.dispose();
 
-    expect(context.capabilities.has('puzzle')).toBe(false);
+    expect(context.capabilities.has('puzzle.state')).toBe(false);
   });
 });

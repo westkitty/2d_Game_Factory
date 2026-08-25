@@ -1,6 +1,8 @@
 import Phaser from 'phaser';
 import type { InstalledSystemPack } from '@sw2d/contracts';
 import { platformController, type SceneContext, type ScenePackDefinition } from '@sw2d/runtime';
+import { registerSchema } from '@sw2d/schemas';
+import placeholderMoverConfigSchema from '../../schemas/placeholder-mover-config.schema.json';
 
 /**
  * Game-specific extension: a controllable placeholder actor.
@@ -21,7 +23,14 @@ import { platformController, type SceneContext, type ScenePackDefinition } from 
  * Real platform movement systems (coyote time, jump buffering, variable jump
  * height, double jump) belong to a movement system pack in a later phase.
  * This is deliberately the minimum that proves the wiring.
+ *
+ * It also owns its own config schema and registers it here, so a composition
+ * root only has to supply *a* validator rather than know which schema belongs
+ * to which pack (ADR-0010). `registerSchema` is idempotent.
  */
+export const PLACEHOLDER_MOVER_CONFIG_SCHEMA_ID = placeholderMoverConfigSchema.$id;
+registerSchema(placeholderMoverConfigSchema);
+
 export interface PlaceholderMoverConfig {
   readonly moveSpeed: number;
   readonly dashMultiplier: number;
@@ -52,10 +61,15 @@ function safely(step: () => void): void {
 export const PLACEHOLDER_MOVER_PACK: ScenePackDefinition<Partial<PlaceholderMoverConfig>> = {
   id: 'starter.placeholder-mover',
   version: '0.1.0',
-  provides: ['starter.player'],
+  // Publishes nothing: this pack owns the player body, but no other system
+  // consumes it, and a declared capability that is never published is a lie
+  // resolveInstallOrder would happily satisfy another pack's dependency with
+  // (SystemHostImpl now rejects that at install time). Add the id back
+  // together with a real `context.capabilities.provide()` call the day a
+  // second system needs it - not before (invariant 14).
+  provides: [],
   dependencies: [],
-  // Declared now, enforced by the validator Sonnet builds in Phase 2.
-  configSchemaId: 'starter/placeholder-mover.config.json',
+  configSchemaId: PLACEHOLDER_MOVER_CONFIG_SCHEMA_ID,
 
   install(context: SceneContext, config): InstalledSystemPack {
     const settings: PlaceholderMoverConfig = { ...DEFAULT_CONFIG, ...config };

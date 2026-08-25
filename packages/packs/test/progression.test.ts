@@ -8,7 +8,7 @@ describe('progressionPack', () => {
   it('installs and publishes the progression capability, defaulting to zero', () => {
     const context = createFakeGameContext();
     const installed = progressionPack.install(context, {});
-    const progression = context.capabilities.require<ProgressionService>('progression');
+    const progression = context.capabilities.require<ProgressionService>('progression.state');
 
     expect(progression.currency()).toBe(0);
     expect(progression.xp()).toBe(0);
@@ -18,7 +18,7 @@ describe('progressionPack', () => {
   it('honours startingCurrency/startingXp config', () => {
     const context = createFakeGameContext();
     progressionPack.install(context, { startingCurrency: 50, startingXp: 10 });
-    const progression = context.capabilities.require<ProgressionService>('progression');
+    const progression = context.capabilities.require<ProgressionService>('progression.state');
 
     expect(progression.currency()).toBe(50);
     expect(progression.xp()).toBe(10);
@@ -27,7 +27,7 @@ describe('progressionPack', () => {
   it('addCurrency clamps at 0 and emits progression:currencyChanged', () => {
     const context = createFakeGameContext();
     progressionPack.install(context, { startingCurrency: 10 });
-    const progression = context.capabilities.require<ProgressionService>('progression');
+    const progression = context.capabilities.require<ProgressionService>('progression.state');
 
     const changes: unknown[] = [];
     context.events.on('progression:currencyChanged', (payload) => changes.push(payload));
@@ -43,7 +43,7 @@ describe('progressionPack', () => {
   it('addXp clamps at 0 without going negative', () => {
     const context = createFakeGameContext();
     progressionPack.install(context, {});
-    const progression = context.capabilities.require<ProgressionService>('progression');
+    const progression = context.capabilities.require<ProgressionService>('progression.state');
 
     expect(progression.addXp(-10)).toBe(0);
     expect(progression.addXp(30)).toBe(30);
@@ -52,7 +52,7 @@ describe('progressionPack', () => {
   it('unlock() is idempotent and emits progression:unlockChanged only once', () => {
     const context = createFakeGameContext();
     progressionPack.install(context, {});
-    const progression = context.capabilities.require<ProgressionService>('progression');
+    const progression = context.capabilities.require<ProgressionService>('progression.state');
 
     const changes: unknown[] = [];
     context.events.on('progression:unlockChanged', (payload) => changes.push(payload));
@@ -68,7 +68,7 @@ describe('progressionPack', () => {
   it('tracks item counts, clamped at 0', () => {
     const context = createFakeGameContext();
     progressionPack.install(context, {});
-    const progression = context.capabilities.require<ProgressionService>('progression');
+    const progression = context.capabilities.require<ProgressionService>('progression.state');
 
     expect(progression.itemCount('potion')).toBe(0);
     expect(progression.addItem('potion', 3)).toBe(3);
@@ -81,7 +81,7 @@ describe('progressionPack', () => {
 
     installed.dispose();
 
-    expect(context.capabilities.has('progression')).toBe(false);
+    expect(context.capabilities.has('progression.state')).toBe(false);
   });
 
   describe('config schema', () => {

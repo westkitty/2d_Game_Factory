@@ -8,7 +8,7 @@ describe('arcadePack', () => {
   it('installs with defaults (3 lives, 800ms combo window)', () => {
     const context = createFakeGameContext();
     const installed = arcadePack.install(context, {});
-    const arcade = context.capabilities.require<ArcadeService>('arcade');
+    const arcade = context.capabilities.require<ArcadeService>('arcade.score');
 
     expect(arcade.score()).toBe(0);
     expect(arcade.lives()).toBe(3);
@@ -19,7 +19,7 @@ describe('arcadePack', () => {
   it('honours startingLives config and clamps loseLife at 0', () => {
     const context = createFakeGameContext();
     arcadePack.install(context, { startingLives: 1 });
-    const arcade = context.capabilities.require<ArcadeService>('arcade');
+    const arcade = context.capabilities.require<ArcadeService>('arcade.score');
 
     expect(arcade.loseLife()).toBe(0);
     expect(arcade.loseLife()).toBe(0);
@@ -28,7 +28,7 @@ describe('arcadePack', () => {
   it('addScore accumulates and emits arcade:scoreChanged', () => {
     const context = createFakeGameContext();
     arcadePack.install(context, {});
-    const arcade = context.capabilities.require<ArcadeService>('arcade');
+    const arcade = context.capabilities.require<ArcadeService>('arcade.score');
 
     const changes: unknown[] = [];
     context.events.on('arcade:scoreChanged', (payload) => changes.push(payload));
@@ -44,7 +44,7 @@ describe('arcadePack', () => {
   it('registerHit builds combo within the window and resets outside it - deterministic given nowMs', () => {
     const context = createFakeGameContext();
     arcadePack.install(context, { comboWindowMs: 500 });
-    const arcade = context.capabilities.require<ArcadeService>('arcade');
+    const arcade = context.capabilities.require<ArcadeService>('arcade.score');
 
     expect(arcade.registerHit(0)).toBe(1);
     expect(arcade.registerHit(400)).toBe(2); // within 500ms
@@ -54,7 +54,7 @@ describe('arcadePack', () => {
   it('resetCombo clears combo and the hit-timing memory', () => {
     const context = createFakeGameContext();
     arcadePack.install(context, { comboWindowMs: 500 });
-    const arcade = context.capabilities.require<ArcadeService>('arcade');
+    const arcade = context.capabilities.require<ArcadeService>('arcade.score');
     arcade.registerHit(0);
     arcade.registerHit(100);
     expect(arcade.combo()).toBe(2);
@@ -67,7 +67,7 @@ describe('arcadePack', () => {
   it('nextRound increments deterministically', () => {
     const context = createFakeGameContext();
     arcadePack.install(context, {});
-    const arcade = context.capabilities.require<ArcadeService>('arcade');
+    const arcade = context.capabilities.require<ArcadeService>('arcade.score');
 
     expect(arcade.nextRound()).toBe(2);
     expect(arcade.nextRound()).toBe(3);
@@ -76,7 +76,7 @@ describe('arcadePack', () => {
   it('elapsedMs accumulates only through update(deltaMs) - deterministic, no wall-clock read', () => {
     const context = createFakeGameContext();
     const installed = arcadePack.install(context, {});
-    const arcade = context.capabilities.require<ArcadeService>('arcade');
+    const arcade = context.capabilities.require<ArcadeService>('arcade.score');
 
     expect(arcade.elapsedMs()).toBe(0);
     installed.update?.(16.6667);
@@ -90,7 +90,7 @@ describe('arcadePack', () => {
 
     installed.dispose();
 
-    expect(context.capabilities.has('arcade')).toBe(false);
+    expect(context.capabilities.has('arcade.score')).toBe(false);
   });
 
   describe('config schema', () => {

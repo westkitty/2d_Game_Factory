@@ -8,14 +8,14 @@ describe('worldPack', () => {
     const context = createFakeGameContext();
     const installed = worldPack.install(context, undefined);
 
-    expect(context.capabilities.has('world')).toBe(true);
+    expect(context.capabilities.has('world.state')).toBe(true);
     expect(installed.id).toBe('sw2d.world');
   });
 
   it('sets and reads flags, emitting only on an actual change', () => {
     const context = createFakeGameContext();
     worldPack.install(context, undefined);
-    const world = context.capabilities.require<WorldService>('world');
+    const world = context.capabilities.require<WorldService>('world.state');
 
     const changes: unknown[] = [];
     context.events.on('world:flagChanged', (payload) => changes.push(payload));
@@ -30,7 +30,7 @@ describe('worldPack', () => {
   it('activates checkpoints and emits world:checkpointActivated', () => {
     const context = createFakeGameContext();
     worldPack.install(context, undefined);
-    const world = context.capabilities.require<WorldService>('world');
+    const world = context.capabilities.require<WorldService>('world.state');
 
     const activations: unknown[] = [];
     context.events.on('world:checkpointActivated', (payload) => activations.push(payload));
@@ -44,7 +44,7 @@ describe('worldPack', () => {
   it('tracks zone-entered state independent of flags', () => {
     const context = createFakeGameContext();
     worldPack.install(context, undefined);
-    const world = context.capabilities.require<WorldService>('world');
+    const world = context.capabilities.require<WorldService>('world.state');
 
     expect(world.isZoneEntered('boss-arena')).toBe(false);
     world.setZoneEntered('boss-arena', true);
@@ -56,7 +56,7 @@ describe('worldPack', () => {
   it('reset() clears flags, zones and the active checkpoint together', () => {
     const context = createFakeGameContext();
     worldPack.install(context, undefined);
-    const world = context.capabilities.require<WorldService>('world');
+    const world = context.capabilities.require<WorldService>('world.state');
     world.setFlag('seen-intro', true);
     world.setZoneEntered('zone-a', true);
     world.activateCheckpoint('cp1');
@@ -74,6 +74,6 @@ describe('worldPack', () => {
 
     installed.dispose();
 
-    expect(context.capabilities.has('world')).toBe(false);
+    expect(context.capabilities.has('world.state')).toBe(false);
   });
 });

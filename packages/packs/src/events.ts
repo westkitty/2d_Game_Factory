@@ -1,0 +1,34 @@
+/**
+ * Gameplay events owned by @sw2d/packs, merged into the core
+ * `GameEventMap` rather than declared inside `@sw2d/contracts` (ADR-0012).
+ *
+ * Contracts owns runtime lifecycle events (`pause:changed`,
+ * `settings:changed`, ...). A pack family owns its own; declaration merging
+ * keeps `emit`/`on` fully typed for anyone who imports this package, without
+ * a gameplay vocabulary accumulating inside the dependency-free core - and
+ * without a preset author having to edit a protected package to raise an
+ * event.
+ *
+ * Naming: `<capability family>:<pastTenseFact>`. One or two per family, added
+ * only where a cross-system reaction is plausible (a HUD, another pack) - not
+ * for every internal mutation.
+ */
+
+declare module '@sw2d/contracts' {
+  interface GameEventMap {
+    'combat:entityDamaged': { readonly entityId: string; readonly amount: number; readonly current: number };
+    'combat:entityDied': { readonly entityId: string };
+    'ai:stateChanged': { readonly agentId: string; readonly from: string; readonly to: string };
+    'world:flagChanged': { readonly flag: string; readonly value: boolean };
+    'world:checkpointActivated': { readonly checkpointId: string };
+    'progression:currencyChanged': { readonly currency: number; readonly delta: number };
+    'progression:unlockChanged': { readonly flag: string; readonly unlocked: boolean };
+    'arcade:scoreChanged': { readonly score: number; readonly delta: number };
+    'puzzle:solved': { readonly puzzleId: string };
+    'simulation:resourceChanged': { readonly resourceId: string; readonly amount: number; readonly delta: number };
+    'narrative:flagChanged': { readonly flag: string; readonly value: boolean };
+    'strategy:turnChanged': { readonly team: string; readonly turnNumber: number };
+  }
+}
+
+export {};

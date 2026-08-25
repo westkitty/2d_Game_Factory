@@ -2,7 +2,7 @@
 
 Project: **Stinky Weasel 2D Browser Game Factory** (`sw2d`)
 Repository: `westkitty/2d_Game_Factory`
-State revision: **4**
+State revision: **5**
 Updated: 2026-08-25
 
 Read this before doing anything. Governing spec: [`MASTER_PROJECT.md`](MASTER_PROJECT.md).
@@ -12,9 +12,12 @@ Workflow: [`docs/AGENT_WORKFLOW.md`](docs/AGENT_WORKFLOW.md).
 
 ## Current phase
 
-**Phase 4 - Reusable System Pack Core - COMPLETE (Sonnet 5).**
+**Phase 5 - Architecture Integration Gate A - COMPLETE (Opus 5).**
 
-Next owner: **Opus 5, Phase 5** (Architecture Integration Gate A). See
+Gate verdict: **PASS WITH TARGETED REPAIRS.** Full report:
+[`docs/architecture/PHASE5_ARCHITECTURE_GATE_A.md`](docs/architecture/PHASE5_ARCHITECTURE_GATE_A.md).
+
+Next owner: **Sonnet 5, Phase 6** (Tiled, Theme, Accessibility, and Resource Pipeline). See
 [Next bounded action](#next-bounded-action).
 
 ## Current baseline
@@ -41,18 +44,18 @@ Full rationale: [`docs/architecture/DEPENDENCY_BASELINE.md`](docs/architecture/D
 ## Verified capabilities
 
 Backed by the evidence in [`docs/qa/PHASE1_VALIDATION.md`](docs/qa/PHASE1_VALIDATION.md) (Phase 1)
-and this revision's validation run (Phase 4).
+and this revision's validation run (Phase 5).
 
-- `npm install`, `npm run typecheck`, `npm test` (200 tests), `npm run build` and
+- `npm install`, `npm run typecheck`, `npm test` (213 tests), `npm run build` and
   `npm run check:offline` all pass.
 - Boot -> title -> start -> controllable placeholder actor -> pause -> resume -> restart works
   end to end in a real browser against the production build. **(Phase 3)** Re-verified against the
   platform-controller-driven mover specifically: horizontal movement and jump were confirmed
   through real Arcade Physics (`vx`, `vy`, `onGround` read from the live debug snapshot), not
   just "no console error." **(Phase 4)** Re-verified again after `SystemHostImpl`'s constructor
-  gained an optional validator parameter: the starter's own `PlayScene` (unchanged, still
-  constructs its host with two arguments) still boots, moves, pauses, resumes and restarts
-  cleanly with zero console errors and flat listener/GameObject counts.
+  gained an optional validator parameter. **(Phase 5)** Re-verified again after the starter began
+  supplying `packConfigValidator` through `createGame` and `SystemHostImpl` began verifying a
+  pack's declared `provides` - see the Phase 5 browser-regression entry below.
 - Restart is clean: 8 consecutive restarts via the pause menu plus a quit-to-title and a fresh run
   left every live-resource counter flat (input adapters, context disposables, scene disposables,
   installed packs, debug contributions) **and, newly checked this revision, every live Phaser
@@ -166,6 +169,64 @@ and this revision's validation run (Phase 4).
   `combatPack`'s invulnerability window and damage/heal clamping take `nowMs` as an explicit
   caller-supplied argument, never `Date.now()`.
 
+- **(Phase 5)** Capability ids are namespaced `<family>.<service>`
+  ([ADR-0011](docs/architecture/adr/0011-capability-id-governance.md)): `combat.health`,
+  `ai.state`, `world.state`, `progression.state`, `arcade.score`, `puzzle.state`,
+  `simulation.resources`, `narrative.state`, `strategy.turns`. Enforced by six assertions in
+  `packages/packs/test/capabilityIds.test.ts` (pattern, no bare family names, uniqueness,
+  vendor-prefixed pack ids, each pack provides exactly the id `ids.ts` records, no pack id reused
+  as a capability id). No registry object exists; this is a convention plus a test.
+- **(Phase 5)** Gameplay events are declared by the package that raises them
+  ([ADR-0012](docs/architecture/adr/0012-gameplay-events-belong-to-their-package.md)).
+  `@sw2d/contracts`' `GameEventMap` now holds the eight runtime lifecycle events only; the twelve
+  Phase 4 pack events moved verbatim to `packages/packs/src/events.ts` via the declaration merging
+  contracts' own doc comment has prescribed since Phase 1. Type-only: no payload, emit site,
+  subscriber or assertion changed, and the production bundle is unaffected.
+- **(Phase 5)** Pack config validation is a composition-root option
+  ([ADR-0013](docs/architecture/adr/0013-composition-root-enforces-pack-declarations.md)):
+  `createGame({ packConfigValidator })` threads through `PlayScene` to `SystemHostImpl`, and the
+  starter supplies `@sw2d/schemas`' implementation. `@sw2d/runtime`'s dependency graph is
+  unchanged - `PackConfigValidator` is a contracts interface and the import is type-only.
+  A debug build warns, naming every pack whose `configSchemaId` is going unenforced, so silence
+  is no longer a possible state. **Proven in a real browser against the production build**: the
+  starter now boots with enforcement on and `starter.placeholder-mover` installs after its config
+  is validated.
+- **(Phase 5) Defect found and fixed.** `starter.placeholder-mover` declared
+  `configSchemaId: 'starter/placeholder-mover.config.json'` - an id no schema in the repository
+  carried - with the comment "enforced by the validator Sonnet builds in Phase 2," a phase that
+  shipped without touching it. The declaration had been wrong since Phase 1 and was undiscoverable
+  because nothing ever resolved it; turning enforcement on would have thrown
+  `UnregisteredSchemaError` at boot. Fixed by giving the pack a real
+  `starter/schemas/placeholder-mover-config.schema.json` (registered by the pack module, per
+  ADR-0010) with meaningful constraints - a positive `jumpVelocity`, a zero `moveSpeed` or an
+  unknown field is now rejected before install, asserted in `starter/test/packConfig.test.ts`
+  (5 tests).
+- **(Phase 5) Second defect found and fixed.** `starter.placeholder-mover` declared
+  `provides: ['starter.player']` and never called `context.capabilities.provide()`.
+  `resolveInstallOrder` satisfies another pack's `dependencies` from that declaration, so a
+  dependent pack would have resolved cleanly and then failed inside its own `require()`, naming
+  the wrong pack. `SystemHostImpl` now verifies after `install()` that every declared capability
+  was published, failing with a named error through the existing rollback path; the starter drops
+  the entry it never published rather than inventing a service no second system consumes.
+  Covered by `packsComposition.test.ts`.
+- **(Phase 5)** The Phase 3 teardown lesson is now locked at the host level, not just in prose:
+  `packsComposition.test.ts` asserts that when one pack's `dispose()` throws, every other pack
+  still disposes, every capability is still withdrawn and the host still empties. Previously only
+  `DisposableBagImpl` had this coverage - `SystemHostImpl`, where the Phase 3 leak actually
+  happened, had none.
+- **(Phase 5)** `@sw2d/packs`' `sideEffects` field is truthful: `progressionPack.ts` and
+  `arcadePack.ts` register their config schemas at module load, so `sideEffects: false` was wrong.
+  No live failure was observed (importing the pack binding keeps the module), but a bundler is
+  entitled to act on the declaration.
+- **(Phase 5)** Browser regression re-run against the production build after the runtime and
+  starter composition changes: boot -> title -> play -> movement (`vx` 220 walking, 385 dashing =
+  220 x 1.75) -> jump (`vy` -430, the schema-validated config value, only when `onGround`) ->
+  pause -> resume -> 8 pause-menu restarts -> quit-to-title -> fresh run. Zero console errors.
+  Every counter flat across all 8 restarts (`input.adapters` 2, `context.disposables` 6,
+  `scene.disposables` 1, installed packs 1) and the live Phaser GameObject count flat at 5;
+  quit-to-title released every counter to zero. Frames were clocked manually via
+  `game.loop.step(t)`, same pre-existing limitation as previous revisions.
+
 ## Implemented but unverified
 
 These exist in source and type-check, but have **no** executed evidence yet. Do not treat as
@@ -178,13 +239,12 @@ working.
   `optionalSystemPacks` carry no dependency edges of their own; the only cross-field rule
   checked so far is duplicate/empty pack references (`validatePresetComposition`,
   `@sw2d/schemas`).
-- `SystemPackDefinition.configSchemaId` - enforcement now exists (Phase 4, ADR-0010), but is
-  **opt-in per `SystemHostImpl` instance**. The starter's own `PlayScene` still constructs its
-  host with two arguments (no validator), so `starter.placeholder-mover`'s `configSchemaId`
-  remains declared-but-unenforced in the actual running game. Only `progressionPack` and
-  `arcadePack` have real config schemas; the other seven Phase 4 packs declare no
-  `configSchemaId` at all (either no config, or - `puzzlePack` - config that is inherently
-  non-serializable functions, which correctly has no schema to validate against).
+- **(Phase 4, superseded)** ~~`configSchemaId` enforcement is opt-in per `SystemHostImpl`
+  instance and unenforced in the running starter~~ - closed in Phase 5 (ADR-0013): enforcement is
+  now a `createGame` option, the starter supplies it, and the starter's pack has a real schema.
+  Still true: only `progressionPack`, `arcadePack` and `starter.placeholder-mover` have config
+  schemas; the other seven Phase 4 packs declare no `configSchemaId` (either no config, or -
+  `puzzlePack` - config that is inherently non-serializable functions).
 - Image-backed (`kind: 'image'`) assets - code path exists, unused; no theme/asset pipeline yet
   (Phase 6).
 - `starter/src/content.ts`'s `assets`/`ui` fields have **no JSON Schema**, only a TypeScript
@@ -267,13 +327,14 @@ working.
 - Whether arcade physics suffices for every planned preset, or whether the optional advanced
   physics pack becomes necessary (`MASTER_PROJECT.md` §9.16).
 - Final project software license. Still a user decision; `package.json` says `UNLICENSED`.
-- **(Phase 4, for Phase 5 Opus)** Whether combat's health clamping, simulation's resource ledger,
-  arcade's score/lives and progression's currency/XP/items should share one low-level
-  "bounded-counter-with-change-event" primitive. All four independently reimplement the same
-  shape (`Math.max(0, value + delta)`, emit an event on change) this phase. Not unified now -
-  four small, correct, independent implementations were judged safer than a shared abstraction
-  invented before a second real consumer proved the abstraction's boundary. See
-  `PROJECT_BIBLE.md`'s Phase 4 entry for the full list of items flagged for Opus review.
+- **(Phase 4, answered in Phase 5)** ~~Whether combat/simulation/arcade/progression should share a
+  bounded-counter primitive~~ - reviewed at the gate and **deferred with an explicit trigger**: a
+  *third* family needing the same clamp **and** the same change-event shape, or the persistence
+  phase needing one uniform serialization across all four. Same disposition for world's and
+  narrative's flag stores (trigger: a third flag-store consumer, or shared persistence/query
+  semantics). Judged on semantic stability, not line count: the events each family emits differ
+  enough that a shared primitive would have to be event-agnostic, and therefore less useful than
+  it looks. See `docs/architecture/PHASE5_ARCHITECTURE_GATE_A.md`.
 
 ## Protected invariants
 
@@ -304,39 +365,93 @@ Breaking one of these is an architecture change, not a bug fix. Escalate rather 
     may import another pack's *service interface* as a type only.
 17. `@sw2d/runtime` never imports a schema validator library or `@sw2d/schemas` directly.
     `configSchemaId` enforcement happens only through the dependency-inverted
-    `PackConfigValidator` interface (ADR-0010), supplied optionally at composition time.
+    `PackConfigValidator` interface (ADR-0010), supplied at the composition root through
+    `createGame({ packConfigValidator })` (ADR-0013).
+18. Capability ids are namespaced `<family>.<service>` and never a bare family name (ADR-0011).
+    Pack ids are vendor-prefixed and are never reused as capability ids.
+19. `@sw2d/contracts`' `GameEventMap` holds runtime lifecycle events only. A gameplay event is
+    declared by the package that raises it, through declaration merging (ADR-0012). Adding one
+    must never require editing `@sw2d/contracts`.
+20. A pack publishes every capability id it declares in `provides`, during `install()`
+    (ADR-0013). `resolveInstallOrder` satisfies other packs' dependencies from that declaration,
+    so it is a contract, not documentation.
 
 ## Validation matrix
 
 | Layer | State | Command |
 |---|---|---|
-| Static / schema | TypeScript passing; JSON Schema exists for 5 contract types + 1 content document + 2 pack config schemas | `npm run typecheck` |
-| Unit | 200 tests passing (58 Phase 1 + 29 Phase 2 + 35 Phase 3 + 78 Phase 4) | `npm test` |
+| Static / schema | TypeScript passing; JSON Schema exists for 5 contract types + 1 content document + 3 pack config schemas (progression, arcade, starter placeholder-mover) | `npm run typecheck` |
+| Unit | 213 tests passing (58 Phase 1 + 29 Phase 2 + 35 Phase 3 + 78 Phase 4 + 13 Phase 5) | `npm test` |
 | Build | passing | `npm run build` |
 | Offline (static guard) | passing | `npm run check:offline` |
 | Runtime integration | proven manually in-browser, **not automated** | see ADR-0008 |
-| Browser journeys | not automated; boot/move/pause/resume/restart re-verified manually this revision after the `SystemHostImpl` constructor change | Phase 2+ (QA package still unbuilt) |
+| Browser journeys | not automated; boot/title/move/jump/dash/pause/resume/8x restart/quit/fresh-run re-verified manually this revision after the `createGame`/`PlayScene`/`SystemHostImpl` changes | Phase 2+ (QA package still unbuilt) |
 | Proof regression | none - no proof games exist | Phase 10 |
-| Pack composition | real `SystemHostImpl` + `resolveInstallOrder` + `CapabilityRegistryImpl` installing all nine Phase 4 packs together, automated | `packages/runtime/test/packsComposition.test.ts` |
+| Pack composition | real `SystemHostImpl` + `resolveInstallOrder` + `CapabilityRegistryImpl` installing all nine Phase 4 packs together, plus config-validation, declared-`provides` and throwing-teardown failure paths, automated | `packages/runtime/test/packsComposition.test.ts` |
+| Capability-id governance | pattern, uniqueness and pack-id/capability-id split, automated | `packages/packs/test/capabilityIds.test.ts` |
 
 `npm run validate` runs typecheck + test + build + offline guard. All four passed this revision.
 
 ## Pending work
 
-Phase 5 (Opus, architecture integration gate) is next; Phases 6-12 are unstarted. See
-`MASTER_PROJECT.md` §38 for the routed plan and owners.
+Phases 6-12 are unstarted. See `MASTER_PROJECT.md` §38 for the routed plan and owners.
 
 ## Next bounded action
 
-**Phase 5 - Opus 5 - Architecture Integration Gate A.**
+**Phase 6 - Sonnet 5 - Tiled, Theme, Accessibility, and Resource Pipeline.**
 
-Not executed this revision. Per `MASTER_PROJECT.md`, Opus should inspect the state since Phase 1,
-the core contracts, schemas, registries, the six controller families and now the nine Phase 4
-system-pack cores and their dependency/capability discipline, plus representative tests, and
-judge whether the original boundaries are holding before the project multiplies into dozens of
-presets. See "Opus Phase 5 handoff" material below for the specific concerns this phase surfaced.
+Not executed this revision. Gate A passed, so the Phase 1-4 boundaries are settled and Phase 6 may
+build on them. Read
+[`docs/architecture/PHASE5_ARCHITECTURE_GATE_A.md`](docs/architecture/PHASE5_ARCHITECTURE_GATE_A.md)
+first - specifically "Phase 6 readiness" and the deferred-decision triggers.
+
+What Sonnet may assume, and what is protected:
+
+- Package boundaries and dependency direction are settled. `@sw2d/contracts` keeps zero
+  dependencies; `@sw2d/runtime` never imports a schema library.
+- `GameContext` is **closed** for Phase 6. Theme and asset work goes through the existing `assets`
+  and `content` fields; anything engine-specific extends `SceneContext`; anything a game can run
+  without is a system pack.
+- Capability ids follow ADR-0011 and a test enforces it.
+- Phase 6's events are declared where Phase 6's systems live, never in `@sw2d/contracts`
+  (ADR-0012).
+- A pack's `configSchemaId` and `provides` are both enforced at install (ADR-0013).
+- The first schema task is the known `assets`/`ui` gap (see "Implemented but unverified"), which
+  was deliberately reserved for this phase rather than guessed at in Phase 2.
+
+Do **not** pre-emptively solve any deferred item in the gate report - each names its own trigger.
+Do not build the Playwright/QA package; that is still its own phase.
 
 ## Revision history
+
+### Revision 5 - 2026-08-25 (Opus 5)
+Phase 5 complete. Architecture Integration Gate A: **PASS WITH TARGETED REPAIRS**
+(`docs/architecture/PHASE5_ARCHITECTURE_GATE_A.md`). The Phase 1-4 boundaries hold in the actual
+implementation, not just in the ADRs describing them - contracts dependency-free, runtime free of
+a validator, packs depending on capability ids rather than modules, one host per scene owning
+teardown, controllers stateless. Five defects were found, all the same shape: metadata declaring a
+contract nothing evaluates, or a rule stated in a doc comment the code beside it does not follow.
+All five repaired, none by rewriting anything: capability ids namespaced `<family>.<service>` plus
+a governance test (ADR-0011, closing a live three-convention drift where flat `combat`/`world`
+would have blocked Phase 6's own world systems and §9.7's fuller combat family); the twelve Phase 4
+pack events moved out of `@sw2d/contracts` into `@sw2d/packs` via the declaration merging contracts
+itself prescribes (ADR-0012, so raising an event no longer requires editing a protected package);
+pack config validation promoted to a `createGame` option with a debug warning when a declared
+schema is going unenforced (ADR-0013); `SystemHostImpl` now verifying that a pack publishes what
+its `provides` declares (ADR-0013); and `@sw2d/packs`' `sideEffects` field made truthful. Two real
+pre-existing defects surfaced through those repairs, both in the one running game:
+`starter.placeholder-mover` declared a `configSchemaId` naming a schema that existed nowhere
+(undiscoverable precisely because nothing resolved it - enforcement would have thrown at boot), and
+declared a `provides` capability it never published (which `resolveInstallOrder` would have used to
+satisfy a dependent pack). Both fixed. Lifecycle coverage gained the test the Phase 3 leak
+deserved: one pack's `dispose()` throwing must not stop the others. `GameContext` reviewed and
+explicitly left unchanged - nine new pack families across nine domains added zero fields, which is
+the strongest evidence the surface is bounded. Shared-primitive extraction, the generic puzzle API
+shape, the spatial pointer service and schema-as-data export were all deferred with named triggers
+rather than built. `npm run validate` passed (typecheck, 213 tests, build, offline guard), and a
+full browser regression against the production build (boot, title, movement, jump, dash, pause,
+resume, 8 pause-menu restarts, quit-to-title, fresh run) showed zero console errors with every
+counter and the live Phaser GameObject count flat.
 
 ### Revision 4 - 2026-08-25 (Sonnet 5)
 Phase 4 complete. Created `@sw2d/packs`: nine reusable, renderer-independent system pack cores

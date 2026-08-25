@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import type { GameContext, SystemPackDefinition, SystemPackSelection } from '@sw2d/contracts';
 import {
   aiPack,
@@ -78,16 +78,18 @@ describe('Phase 4 pack composition (real SystemHostImpl + resolveInstallOrder + 
 
     host.install(ALL_NINE_SELECTIONS);
 
+    // Sorted by CapabilityRegistryImpl.list(). Every id is namespaced
+    // `<family>.<service>` per ADR-0011.
     const expectedCapabilities = [
-      'ai',
-      'arcade',
-      'combat',
-      'narrative',
-      'progression',
-      'puzzle',
-      'simulation',
-      'strategy',
-      'world',
+      'ai.state',
+      'arcade.score',
+      'combat.health',
+      'narrative.state',
+      'progression.state',
+      'puzzle.state',
+      'simulation.resources',
+      'strategy.turns',
+      'world.state',
     ];
     expect(context.capabilities.list()).toEqual(expectedCapabilities);
     expect(host.installed.map((pack) => pack.id).sort()).toEqual(
@@ -106,8 +108,8 @@ describe('Phase 4 pack composition (real SystemHostImpl + resolveInstallOrder + 
 
     // Exercise a real cross-pack interaction: AI's isAgentAlive reads combat
     // by capability id, both installed through the same real host.
-    const combat = context.capabilities.require<CombatService>('combat');
-    const ai = context.capabilities.require<AiService>('ai');
+    const combat = context.capabilities.require<CombatService>('combat.health');
+    const ai = context.capabilities.require<AiService>('ai.state');
     combat.register('goblin', 5);
     ai.register('goblin');
     expect(ai.isAgentAlive('goblin')).toBe(true);
@@ -115,21 +117,21 @@ describe('Phase 4 pack composition (real SystemHostImpl + resolveInstallOrder + 
     expect(ai.isAgentAlive('goblin')).toBe(false);
 
     // Spot-check one API per remaining family.
-    context.capabilities.require<WorldService>('world').setFlag('intro-seen', true);
-    expect(context.capabilities.require<WorldService>('world').hasFlag('intro-seen')).toBe(true);
+    context.capabilities.require<WorldService>('world.state').setFlag('intro-seen', true);
+    expect(context.capabilities.require<WorldService>('world.state').hasFlag('intro-seen')).toBe(true);
 
-    expect(context.capabilities.require<ProgressionService>('progression').currency()).toBe(20);
-    expect(context.capabilities.require<ArcadeService>('arcade').lives()).toBe(3);
-    expect(context.capabilities.require<PuzzleService>('puzzle').isSolved()).toBe(false);
-    expect(context.capabilities.require<SimulationService>('simulation').resource('wood')).toBe(0);
-    context.capabilities.require<NarrativeService>('narrative').goTo('intro');
-    expect(context.capabilities.require<NarrativeService>('narrative').currentNode()).toBe('intro');
-    context.capabilities.require<StrategyService>('strategy').registerTeam('red');
-    expect(context.capabilities.require<StrategyService>('strategy').activeTeam()).toBeNull();
+    expect(context.capabilities.require<ProgressionService>('progression.state').currency()).toBe(20);
+    expect(context.capabilities.require<ArcadeService>('arcade.score').lives()).toBe(3);
+    expect(context.capabilities.require<PuzzleService>('puzzle.state').isSolved()).toBe(false);
+    expect(context.capabilities.require<SimulationService>('simulation.resources').resource('wood')).toBe(0);
+    context.capabilities.require<NarrativeService>('narrative.state').goTo('intro');
+    expect(context.capabilities.require<NarrativeService>('narrative.state').currentNode()).toBe('intro');
+    context.capabilities.require<StrategyService>('strategy.turns').registerTeam('red');
+    expect(context.capabilities.require<StrategyService>('strategy.turns').activeTeam()).toBeNull();
 
     // update(deltaMs) reaches every pack that declared one (arcade, simulation).
     host.update(16.6667);
-    expect(context.capabilities.require<ArcadeService>('arcade').elapsedMs()).toBeCloseTo(16.6667, 4);
+    expect(context.capabilities.require<ArcadeService>('arcade.score').elapsedMs()).toBeCloseTo(16.6667, 4);
 
     host.dispose();
 
@@ -157,12 +159,85 @@ describe('Phase 4 pack composition (real SystemHostImpl + resolveInstallOrder + 
     expect(context.capabilities.list()).toEqual([]);
   });
 
-  it('fails with a duplicate-capability error when two real/fake packs both provide "combat"', () => {
+  it('rejects a pack that declares a capability it never publishes, and rolls back', () => {
+    const context = createContext();
+    const liarPack: SystemPackDefinition<never, GameContext> = {
+      id: 'test.declares-but-never-publishes',
+      version: '0.0.0',
+      provides: ['test.phantom'],
+      dependencies: [],
+      install: () => ({ id: 'test.declares-but-never-publishes', dispose: () => undefined }),
+    };
+    const host = new SystemHostImpl(context, [combatPack, liarPack]);
+
+    expect(() =>
+      host.install([{ packId: combatPack.id }, { packId: 'test.declares-but-never-publishes' }]),
+    ).toThrow(/did not publish it/);
+
+    // resolveInstallOrder would have satisfied a dependent pack's
+    // `dependencies: ['test.phantom']` from that declaration, so this has to
+    // fail at install rather than at the dependent pack's require().
+    expect(context.capabilities.has('combat.health')).toBe(false);
+    expect(host.installed).toEqual([]);
+  });
+
+  /**
+   * The Phase 3 lesson, locked at the host level.
+   *
+   * A scene-shutdown teardown cannot assume Phaser's own systems are still
+   * alive, so a pack's dispose() can legitimately throw mid-teardown. When it
+   * does, every *other* pack must still tear down and every capability must
+   * still be withdrawn - otherwise one bad teardown silently leaks the rest,
+   * which is exactly the class of defect the flat-disposable-count evidence
+   * could not see (PROJECT_BIBLE.md, Phase 3).
+   */
+  it('disposes every other pack and withdraws every capability when one pack dispose() throws', () => {
+    const context = createContext();
+    const throwingPack: SystemPackDefinition<never, GameContext> = {
+      id: 'test.throwing-teardown',
+      version: '0.0.0',
+      provides: ['test.throwing'],
+      dependencies: [],
+      install: (context) => {
+        const handle = context.capabilities.provide('test.throwing', {});
+        return {
+          id: 'test.throwing-teardown',
+          dispose: () => {
+            handle.dispose();
+            throw new Error('teardown blew up mid-shutdown');
+          },
+        };
+      },
+    };
+    const host = new SystemHostImpl(context, [combatPack, throwingPack, worldPack]);
+    const errors = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+
+    host.install([
+      { packId: combatPack.id },
+      { packId: 'test.throwing-teardown' },
+      { packId: worldPack.id },
+    ]);
+    expect(context.capabilities.list()).toHaveLength(3);
+
+    expect(() => host.dispose()).not.toThrow();
+
+    // Reverse order means world disposed before the thrower and combat after
+    // it: both sides of the failure must have run.
+    expect(context.capabilities.list()).toEqual([]);
+    expect(host.installed).toEqual([]);
+    expect(errors).toHaveBeenCalledWith(
+      expect.stringContaining('test.throwing-teardown'),
+      expect.any(Error),
+    );
+    errors.mockRestore();
+  });
+
+  it('fails with a duplicate-capability error when two real/fake packs both provide "combat.health"', () => {
     const context = createContext();
     const duplicateCombatPack: SystemPackDefinition<never, GameContext> = {
       id: 'test.duplicate-combat',
       version: '0.0.0',
-      provides: ['combat'],
+      provides: ['combat.health'],
       dependencies: [],
       install: () => ({ id: 'test.duplicate-combat', dispose: () => undefined }),
     };
@@ -170,7 +245,7 @@ describe('Phase 4 pack composition (real SystemHostImpl + resolveInstallOrder + 
 
     expect(() =>
       host.install([{ packId: combatPack.id }, { packId: 'test.duplicate-combat' }]),
-    ).toThrow(/combat.*provided by both/s);
+    ).toThrow(/combat\.health.*provided by both/s);
   });
 
   describe('configSchemaId enforcement (dependency-inverted validator)', () => {
@@ -182,7 +257,7 @@ describe('Phase 4 pack composition (real SystemHostImpl + resolveInstallOrder + 
         host.install([{ packId: progressionPack.id, config: { startingCurrency: -5 } }]),
       ).not.toThrow();
       // The bad value made it all the way into the service, unvalidated.
-      expect(context.capabilities.require<ProgressionService>('progression').currency()).toBe(-5);
+      expect(context.capabilities.require<ProgressionService>('progression.state').currency()).toBe(-5);
     });
 
     it('is enforced with packConfigValidator: an out-of-range config is rejected before install', () => {
@@ -192,7 +267,7 @@ describe('Phase 4 pack composition (real SystemHostImpl + resolveInstallOrder + 
       expect(() =>
         host.install([{ packId: progressionPack.id, config: { startingCurrency: -5 } }]),
       ).toThrow(/startingCurrency/);
-      expect(context.capabilities.has('progression')).toBe(false);
+      expect(context.capabilities.has('progression.state')).toBe(false);
     });
 
     it('accepts a valid config with the validator wired in', () => {
@@ -201,7 +276,7 @@ describe('Phase 4 pack composition (real SystemHostImpl + resolveInstallOrder + 
 
       host.install([{ packId: progressionPack.id, config: { startingCurrency: 100 } }]);
 
-      expect(context.capabilities.require<ProgressionService>('progression').currency()).toBe(100);
+      expect(context.capabilities.require<ProgressionService>('progression.state').currency()).toBe(100);
     });
 
     it('rolls back an already-installed pack when a later pack fails config validation', () => {
@@ -226,7 +301,7 @@ describe('Phase 4 pack composition (real SystemHostImpl + resolveInstallOrder + 
       const host = new SystemHostImpl(context, [worldPack], packConfigValidator);
 
       expect(() => host.install([{ packId: worldPack.id }])).not.toThrow();
-      expect(context.capabilities.has('world')).toBe(true);
+      expect(context.capabilities.has('world.state')).toBe(true);
     });
   });
 });

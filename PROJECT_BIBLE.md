@@ -8,6 +8,101 @@ Detail for each architectural decision lives in `docs/architecture/adr/`. This f
 
 ---
 
+## Phase 5 - Architecture Integration Gate A (2026-08-25, Opus 5)
+
+Verdict: **PASS WITH TARGETED REPAIRS**. Full report:
+[`docs/architecture/PHASE5_ARCHITECTURE_GATE_A.md`](docs/architecture/PHASE5_ARCHITECTURE_GATE_A.md).
+
+### The pattern behind every defect this gate found
+
+Five issues, one shape: **a declaration nothing evaluates.**
+
+`configSchemaId` named a schema that did not exist. `provides` named a capability that was never
+published. `sideEffects: false` claimed a purity two modules did not have. `GameEventMap`'s doc
+comment stated a rule the interface below it broke. Capability ids claimed families their services
+did not cover.
+
+None of these was a bug in the usual sense - nothing was broken, no test failed, and the code did
+exactly what it was written to do. They are all cases where a *contract* existed in metadata and
+nothing on any execution path ever checked it. That is precisely the class of defect that survives
+a green validation ladder, and precisely the class that multiplies when 74 presets copy the worked
+example.
+
+The lesson worth carrying: **a declared field is either enforced or it is a comment.** Declaring
+`configSchemaId` and not resolving it hid a wrong value for four phases. Declaring `provides` and
+not publishing it would have blamed the wrong pack. When a phase adds a field to a definition
+contract, the same phase should add the thing that reads it - or record explicitly that it is a
+comment until phase N.
+
+### Decisions
+
+**`GameContext` is closed, on negative evidence.** All nine Phase 4 pack families needed only
+`events` and `capabilities` - both present since Phase 1. Nine new consumers across nine domains
+added zero fields. That is the whole argument; nothing about the field list itself would have
+settled it. ADR-0004's admission test ("a pack may be absent") still decides every future case, and
+Phase 6's theme/asset work has an existing home (`assets`, `content`) rather than a new field.
+
+**Capability ids were renamed now because nine constants is the cheapest this ever gets.** The
+forcing evidence was not tidiness: `combatPack`'s own doc comment says it is "deliberately not a
+combat system," and `MASTER_PROJECT.md` §9.7 lists the rest of that family; `worldPack` holds flags
+while §9.9's world family is tilemaps and camera zones - Phase 6's subject. A foundational core
+holding the flat id `world` means Phase 6 literally cannot publish, because `resolveInstallOrder`
+will correctly refuse it. Three id conventions were already live in the repo (Phase 1's tests used
+`combat.health`, Phase 4 shipped `combat`, the starter used `starter.player`), so this settled a
+drift rather than inventing a style. ([ADR-0011](docs/architecture/adr/0011-capability-id-governance.md))
+
+**Gameplay events moved out of contracts because of the protected boundary, not because of size.**
+The accumulation argument alone (sixteen families, 74 presets, one core interface) would have been
+weak - a long interface is not a defect. The decisive argument is that `packages/contracts/**` is
+reserved for runtime work needing justification and regression coverage, so under the Phase 4
+arrangement a preset author raising one event has to edit the machine. Declaration merging was
+already documented in the file as the intended mechanism; Phase 4 simply did not use it.
+([ADR-0012](docs/architecture/adr/0012-gameplay-events-belong-to-their-package.md))
+
+**Config validation became a composition-root option, but stayed optional.** Making it required
+would break every call site and force a schema layer on roots that legitimately have none (a test
+harness, a CLI dry-run). The actual failure was never "unenforced" - it was **silent**. A debug
+warning naming every pack whose `configSchemaId` is going unenforced closes that without the
+breakage. ([ADR-0013](docs/architecture/adr/0013-composition-root-enforces-pack-declarations.md))
+
+**Deferred with triggers, not with intentions.** Shared bounded-counter and flag-store primitives,
+the generic `PuzzleService<TState>` shape, the spatial pointer service, and exporting pack config
+schemas as data instead of self-registering. Sonnet's Phase 4 judgement on the first two was
+correct and is upheld: the *events* each family emits differ enough (`combat:entityDamaged` vs
+`progression:currencyChanged` vs `simulation:resourceChanged`) that a shared primitive would have
+to be event-agnostic, which makes it a `Math.max` wrapper. Each deferral names the concrete
+condition that reopens it, so "later" is checkable rather than aspirational.
+
+### The proof that had never been written
+
+The Phase 3 leak - a pack's `dispose()` throwing mid-teardown and silently skipping the rest of its
+own cleanup - was fixed, documented at length in this file, and *untested at the layer where it
+happened*. `DisposableBagImpl` had "keeps tearing down after one teardown throws";
+`SystemHostImpl` did not. A lesson recorded in prose and not in a test is a lesson the next
+Phaser-backed pack gets to learn again. Now asserted: one pack's throwing `dispose()` leaves every
+other pack disposed, every capability withdrawn and the host empty.
+
+### Rejected during this phase
+
+- **Extracting a `BoundedCounter` / `FlagStore` primitive.** Deferred with a named trigger, for the
+  reason above. Judged on semantic stability, not on the ~30 lines it would save.
+- **Redesigning the generic puzzle API for uniformity with the other eight families.** The widening
+  cast only appears where a caller invokes `install()` directly - which is tests. A real game
+  selects the pack through `SystemPackSelection`, whose `config` is already `unknown`, and reads
+  state back through `capabilities.require<PuzzleService<TState>>(...)`, fully typed. An asymmetry
+  that costs nothing outside a test file is not a design problem yet.
+- **Making `packConfigValidator` required on `createGame`.** See above.
+- **Building a leak detector, a capability registry, or a schema-ownership framework.** Each was
+  considered against a concrete failure and rejected because a convention, a test or a named error
+  already covered it. `MASTER_PROJECT.md` §47 is right.
+- **Inventing a `starter.player` service so the starter's unpublished `provides` entry could
+  stay.** An abstraction with no consumer, created to preserve a declaration nothing reads.
+- **Writing an asset/theme schema to close the known `assets`/`ui` gap.** Real, correctly scoped,
+  and Phase 6's - defining a schema before the pipeline that decides what an asset is would be
+  guessing at the shape.
+
+---
+
 ## Phase 4 - Reusable System Pack Core (2026-08-25, Sonnet 5)
 
 ### Decisions

@@ -4,6 +4,14 @@
  * capability id(s) it provides are deliberately different strings: a pack
  * could in principle be swapped for another implementation providing the
  * same capability.
+ *
+ * Capability ids follow the project convention (ADR-0011): a reserved
+ * `<family>` segment, a dot, and the specific service that family member
+ * publishes. The segment before the dot claims a family; the segment after
+ * it claims one capability *within* that family, so the fuller systems each
+ * family will grow (MASTER_PROJECT.md §9 - combat weapons/projectiles, world
+ * tilemaps/camera zones, ...) still have room to publish alongside these
+ * foundational cores instead of colliding with them.
  */
 
 export const PACK_IDS = {
@@ -19,13 +27,13 @@ export const PACK_IDS = {
 } as const;
 
 export const CAPABILITY_IDS = {
-  combat: 'combat',
-  ai: 'ai',
-  world: 'world',
-  progression: 'progression',
-  arcade: 'arcade',
-  puzzle: 'puzzle',
-  simulation: 'simulation',
-  narrative: 'narrative',
-  strategy: 'strategy',
+  combat: 'combat.health',
+  ai: 'ai.state',
+  world: 'world.state',
+  progression: 'progression.state',
+  arcade: 'arcade.score',
+  puzzle: 'puzzle.state',
+  simulation: 'simulation.resources',
+  narrative: 'narrative.state',
+  strategy: 'strategy.turns',
 } as const;

@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:sw2d:schema:starter-placeholder-mover-config:v1",
+  "title": "PlaceholderMoverConfig",
+  "description": "Mirrors starter/src/game-specific/placeholderMoverPack.ts's PlaceholderMoverConfig. Every field is optional; an omitted field falls back to DEFAULT_CONFIG. jumpVelocity is negative because Phaser's y axis grows downward.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "moveSpeed": { "type": "number", "exclusiveMinimum": 0 },
+    "dashMultiplier": { "type": "number", "minimum": 1 },
+    "jumpVelocity": { "type": "number", "exclusiveMaximum": 0 },
+    "gravity": { "type": "number", "minimum": 0 }
+  }
+}

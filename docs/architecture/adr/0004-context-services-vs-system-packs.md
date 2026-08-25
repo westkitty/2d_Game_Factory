@@ -41,8 +41,10 @@ Ownership rules:
   input always produces the same order.
 - Disposing a scene disposes its host, which disposes every pack. That single ownership chain
   is the whole leak story - verified across 8 restarts with flat counters.
-- `configSchemaId` is declared on the pack contract now and enforced by the Phase 2 validator.
-  It is a declared field, not an unused method.
+- `configSchemaId` is declared on the pack contract here in Phase 1. Enforcement arrived in
+  Phase 4 ([ADR-0010](0010-pack-config-validation.md)) as a dependency-inverted validator, and
+  became a composition-root option in Phase 5 ([ADR-0013](0013-composition-root-enforces-pack-declarations.md)).
+  It was *not* enforced by the Phase 2 validator, as an earlier revision of this ADR claimed.
 
 ## Rejected
 

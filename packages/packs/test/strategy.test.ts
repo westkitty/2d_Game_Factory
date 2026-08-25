@@ -7,7 +7,7 @@ describe('strategyPack', () => {
   it('installs and publishes the strategy capability with no active team yet', () => {
     const context = createFakeGameContext();
     const installed = strategyPack.install(context, undefined);
-    const strategy = context.capabilities.require<StrategyService>('strategy');
+    const strategy = context.capabilities.require<StrategyService>('strategy.turns');
 
     expect(strategy.activeTeam()).toBeNull();
     expect(strategy.turnNumber()).toBe(0);
@@ -17,7 +17,7 @@ describe('strategyPack', () => {
   it('rejects a duplicate team id', () => {
     const context = createFakeGameContext();
     strategyPack.install(context, undefined);
-    const strategy = context.capabilities.require<StrategyService>('strategy');
+    const strategy = context.capabilities.require<StrategyService>('strategy.turns');
     strategy.registerTeam('red');
 
     expect(() => strategy.registerTeam('red')).toThrow(DuplicateTeamError);
@@ -26,7 +26,7 @@ describe('strategyPack', () => {
   it('fails to advance a turn with no registered teams', () => {
     const context = createFakeGameContext();
     strategyPack.install(context, undefined);
-    const strategy = context.capabilities.require<StrategyService>('strategy');
+    const strategy = context.capabilities.require<StrategyService>('strategy.turns');
 
     expect(() => strategy.advanceTurn()).toThrow(NoTeamsRegisteredError);
   });
@@ -34,7 +34,7 @@ describe('strategyPack', () => {
   it('round-robins turns in registration order and emits strategy:turnChanged', () => {
     const context = createFakeGameContext();
     strategyPack.install(context, undefined);
-    const strategy = context.capabilities.require<StrategyService>('strategy');
+    const strategy = context.capabilities.require<StrategyService>('strategy.turns');
     strategy.registerTeam('red');
     strategy.registerTeam('blue');
 
@@ -55,7 +55,7 @@ describe('strategyPack', () => {
   it('tracks selection independently of turn state', () => {
     const context = createFakeGameContext();
     strategyPack.install(context, undefined);
-    const strategy = context.capabilities.require<StrategyService>('strategy');
+    const strategy = context.capabilities.require<StrategyService>('strategy.turns');
 
     expect(strategy.selected()).toBeNull();
     strategy.select('unit-7');
@@ -70,6 +70,6 @@ describe('strategyPack', () => {
 
     installed.dispose();
 
-    expect(context.capabilities.has('strategy')).toBe(false);
+    expect(context.capabilities.has('strategy.turns')).toBe(false);
   });
 });
