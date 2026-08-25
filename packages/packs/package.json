@@ -2,13 +2,17 @@
   "name": "@sw2d/packs",
   "version": "0.1.0",
   "private": true,
-  "description": "Reusable, renderer-independent system pack cores: combat, AI, world, progression, arcade, puzzle, simulation, narrative, strategy.",
+  "description": "Reusable, renderer-independent system pack cores: combat, AI, world, world-entities, progression, arcade, puzzle, simulation, narrative, strategy.",
   "type": "module",
   "license": "UNLICENSED",
   "exports": {
     ".": {
       "types": "./src/index.ts",
       "default": "./src/index.ts"
+    },
+    "./ids": {
+      "types": "./src/ids.ts",
+      "default": "./src/ids.ts"
     }
   },
   "types": "./src/index.ts",

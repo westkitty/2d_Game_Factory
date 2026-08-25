@@ -8,6 +8,83 @@ Detail for each architectural decision lives in `docs/architecture/adr/`. This f
 
 ---
 
+## Phase 7A - Preset Catalog Families A-C (2026-08-25, Sonnet 5)
+
+Full architecture rationale:
+[ADR-0015](docs/architecture/adr/0015-preset-catalog-and-pack-metadata-boundary.md).
+
+### Decisions
+
+**Investigate the Phase 5 trigger before choosing a dependency shape - the brief said to, and it
+paid off twice.** The obvious first attempt (`@sw2d/presets`' tests importing `resolveInstallOrder`
+from `@sw2d/runtime`) failed immediately and loudly: `ReferenceError: window is not defined`,
+thrown from inside Phaser's own module-load code, not from anything this phase wrote. That is the
+same failure shape the Ajv trigger already described for `@sw2d/packs` - a package's barrel
+evaluates everything reachable from it, so importing one pure function pulls in a renderer that
+function never touches. Confirming the trigger *with a failing test* rather than reasoning about
+it abstractly is what turned "investigate before choosing the package dependency shape" from a
+suggestion into an actual repair.
+
+**The repair is the same shape both times: a named `package.json` "exports" subpath pointing
+directly at the one already-side-effect-free file, nothing invented.** `@sw2d/packs` gained
+`./ids` (`ids.ts`, zero imports - true before this phase, unchanged by it). `@sw2d/runtime` gained
+`./composition` (`resolveInstallOrder.ts`, contracts-types-only - also true before this phase). Both
+additive; neither package's `.` export or existing behaviour changed, confirmed by an unchanged
+`npm run build` output. The alternative that was actually tempting - a small hand-written
+`PackMetadata[]` mirroring each pack's `id`/`provides`/`dependencies` as plain data - was rejected
+specifically because it is the exact defect shape Phase 5's gate spent its whole report
+diagnosing: a second copy of a fact that could silently drift from the real implementation. A
+subpath export has nothing to drift, because it is not a copy.
+
+**Eleven recipes carry the master plan's exact required limitation text, verbatim, asserted by
+regex in a test.** Not paraphrased per-recipe: `stealth-game` and `heist-game` share one string,
+every shmup/`bullet-hell`/`run-and-gun` share another, because they share the same real gap
+(`combatPack`'s own doc comment: "deliberately not a combat system - no weapons, projectiles").
+Sharing the string is a decision, not laziness - MASTER_PROJECT.md section 12 is explicit about
+what each of these must say, and duplicating slightly-different wordings per recipe would be the
+first crack in the "honest limitations" invariant.
+
+**`aiPack.dependencies = ['combat.health']` shaped every recipe that touches AI.** It is the one
+non-trivial cross-pack dependency among all ten current packs (every other pack's `dependencies`
+is `[]`). Any recipe selecting `sw2d.ai` anywhere - required or optional - had to select
+`sw2d.combat` as *required*, or the recipe's own selection set would fail to resolve through the
+real `resolveInstallOrder` the moment a generated game actually tried to install AI without combat
+already present. `stealth-game`/`heist-game` needed a second pass for exactly this: they were
+first drafted with `combat` only optional, and the catalog-integrity test - which resolves the
+*full* required+optional selection set, not just required - caught it immediately.
+
+**`defaultConfig: {}` and `starterScene: SCENE_KEYS.play` are uniform across all 27, deliberately,
+not from an oversight.** Nothing in the repository consumes `PresetDefinition.defaultConfig` yet
+(MASTER_PROJECT.md section 11 explicitly permits `{}` when that is true), and every generated game
+boots into the one real `PlayScene` regardless of preset - genre identity lives in which packs and
+controller families a preset selects, not in a preset-specific scene. Inventing per-recipe values
+for either field would have been decoration, the same class of problem Phase 4/5 already named and
+rejected for pack config.
+
+### Rejected during this phase
+
+- **A hand-written pack-metadata mirror**, instead of the subpath-export repair. See "Decisions".
+- **Moving `resolveInstallOrder` into `@sw2d/contracts`.** Genuinely Phaser-free and could live
+  there, but moving working, tested code to solve a reachability problem an additive
+  `package.json` entry already solves is a bigger change than the problem justifies.
+- **Deep relative imports** (`../../runtime/src/core/resolveInstallOrder.ts`) from
+  `@sw2d/presets`' test suite, bypassing `package.json` "exports" entirely. Works today only
+  because this is one monorepo checkout; not a real package boundary.
+- **A fourth or fifth `validationProfile`** to give shooters and top-down recipes more granular
+  buckets. MASTER_PROJECT.md section 14 asks for a bounded set "justified by actual recipe
+  differences" - nothing about horizontal vs. vertical shmup, or arena-combat vs. boss-rush,
+  actually differs at the validation-profile level yet; three profiles, one per family, is the
+  honest granularity today.
+- **A twentieth object-class catalog entry**, for any recipe that might want one. None of the 27
+  Family A-C recipes needed a class beyond Phase 6's fixed nineteen; ADR-0014's deferral trigger
+  ("a second real consumer") did not fire.
+- **Promoting any recipe past `maturity: 'recipe'`.** Nothing in this phase - schema validation,
+  composition checks, pack-dependency resolution, materialization - constitutes a smoke demo or an
+  end-to-end proof. Calling any of it `smoke-validated` would be exactly the "file existing is not
+  a feature" failure MASTER_PROJECT.md section 3.9 and `docs/AGENT_WORKFLOW.md` both warn against.
+
+---
+
 ## Phase 6 - Tiled, Theme, Accessibility, and Resource Pipeline (2026-08-25, Sonnet 5)
 
 Full architecture rationale:

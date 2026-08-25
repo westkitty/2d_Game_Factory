@@ -1,18 +1,14 @@
 {
-  "name": "@sw2d/runtime",
+  "name": "@sw2d/presets",
   "version": "0.1.0",
   "private": true,
-  "description": "Reusable SW2D runtime: scene lifecycle, semantic input, persistence, audio, accessibility, content, debug. Phaser-backed.",
+  "description": "The genre preset catalogue: composition recipes over reusable controllers and system packs. Production code depends on contracts + packs' side-effect-free ids subpath only - no Ajv, no Phaser (see ADR-0015).",
   "type": "module",
   "license": "UNLICENSED",
   "exports": {
     ".": {
       "types": "./src/index.ts",
       "default": "./src/index.ts"
-    },
-    "./composition": {
-      "types": "./src/core/resolveInstallOrder.ts",
-      "default": "./src/core/resolveInstallOrder.ts"
     }
   },
   "types": "./src/index.ts",
@@ -20,10 +16,10 @@
   "sideEffects": false,
   "dependencies": {
     "@sw2d/contracts": "0.1.0",
-    "phaser": "4.2.1"
+    "@sw2d/packs": "0.1.0"
   },
   "devDependencies": {
-    "@sw2d/packs": "0.1.0",
+    "@sw2d/runtime": "0.1.0",
     "@sw2d/schemas": "0.1.0"
   }
 }

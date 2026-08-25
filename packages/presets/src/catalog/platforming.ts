@@ -1,0 +1,138 @@
+import type { PresetDefinition } from '@sw2d/contracts';
+import { PACK_IDS } from '@sw2d/packs/ids';
+import { LIMITATIONS, VALIDATION_PROFILES, definePreset, pack } from '../shared.ts';
+
+/**
+ * Family A - Platforming (recipes 1-10).
+ *
+ * All ten use the `platform` controller family - side-view movement intent
+ * only, per MASTER_PROJECT.md section 6. `puzzle-platformer` additionally
+ * uses `grid`, because its identity is discrete puzzle interaction layered
+ * on top of platform movement, not platform movement alone.
+ *
+ * None reference a "movement pack": platform movement is game-specific code
+ * reading `platformController` intent directly (starter/src/game-specific/
+ * placeholderMoverPack.ts and tiledLevelPack.ts are the worked examples), not
+ * a `@sw2d/packs` capability. What a platforming recipe actually composes
+ * from real packs is content/world plumbing (`sw2d.world`,
+ * `sw2d.world-entities` - Phase 6) and, where the genre calls for it,
+ * scoring, progression or puzzle state.
+ */
+export const PLATFORMING_PRESETS: readonly PresetDefinition[] = [
+  definePreset({
+    id: 'traditional-platformer',
+    displayName: 'Traditional Platformer',
+    family: 'platforming',
+    controllerFamilies: ['platform'],
+    requiredSystemPacks: [pack(PACK_IDS.world), pack(PACK_IDS.worldEntities)],
+    optionalSystemPacks: [pack(PACK_IDS.arcade)],
+    requiredContentRoles: ['tuning', 'levels'],
+    validationProfile: VALIDATION_PROFILES.platform,
+  }),
+
+  definePreset({
+    id: 'chase-platformer',
+    displayName: 'Chase Platformer',
+    family: 'platforming',
+    controllerFamilies: ['platform'],
+    requiredSystemPacks: [pack(PACK_IDS.world), pack(PACK_IDS.worldEntities)],
+    optionalSystemPacks: [pack(PACK_IDS.combat), pack(PACK_IDS.arcade)],
+    requiredContentRoles: ['tuning', 'levels'],
+    validationProfile: VALIDATION_PROFILES.platform,
+    knownLimitations: [LIMITATIONS.chasePressure],
+  }),
+
+  definePreset({
+    id: 'endless-runner',
+    displayName: 'Endless Runner',
+    family: 'platforming',
+    controllerFamilies: ['platform'],
+    requiredSystemPacks: [pack(PACK_IDS.arcade)],
+    optionalSystemPacks: [pack(PACK_IDS.world), pack(PACK_IDS.worldEntities)],
+    requiredContentRoles: ['tuning', 'levels'],
+    validationProfile: VALIDATION_PROFILES.platform,
+    knownLimitations: [LIMITATIONS.proceduralGeneration],
+  }),
+
+  definePreset({
+    id: 'precision-platformer',
+    displayName: 'Precision Platformer',
+    family: 'platforming',
+    controllerFamilies: ['platform'],
+    requiredSystemPacks: [pack(PACK_IDS.world), pack(PACK_IDS.worldEntities)],
+    optionalSystemPacks: [pack(PACK_IDS.arcade)],
+    requiredContentRoles: ['tuning', 'levels'],
+    validationProfile: VALIDATION_PROFILES.platform,
+  }),
+
+  definePreset({
+    id: 'metroidvania',
+    displayName: 'Metroidvania',
+    family: 'platforming',
+    controllerFamilies: ['platform'],
+    requiredSystemPacks: [pack(PACK_IDS.world), pack(PACK_IDS.worldEntities), pack(PACK_IDS.progression)],
+    optionalSystemPacks: [pack(PACK_IDS.combat), pack(PACK_IDS.ai)],
+    requiredContentRoles: ['tuning', 'levels'],
+    validationProfile: VALIDATION_PROFILES.platform,
+    knownLimitations: [LIMITATIONS.worldGraphAndMap],
+  }),
+
+  definePreset({
+    id: 'puzzle-platformer',
+    displayName: 'Puzzle Platformer',
+    family: 'platforming',
+    controllerFamilies: ['platform', 'grid'],
+    requiredSystemPacks: [pack(PACK_IDS.puzzle), pack(PACK_IDS.world), pack(PACK_IDS.worldEntities)],
+    requiredContentRoles: ['tuning', 'levels'],
+    validationProfile: VALIDATION_PROFILES.platform,
+    knownLimitations: [LIMITATIONS.puzzleConfigIsCode],
+  }),
+
+  definePreset({
+    id: 'auto-runner',
+    displayName: 'Auto Runner',
+    family: 'platforming',
+    controllerFamilies: ['platform'],
+    requiredSystemPacks: [pack(PACK_IDS.arcade)],
+    optionalSystemPacks: [pack(PACK_IDS.world), pack(PACK_IDS.worldEntities)],
+    requiredContentRoles: ['tuning', 'levels'],
+    validationProfile: VALIDATION_PROFILES.platform,
+    knownLimitations: [LIMITATIONS.proceduralGeneration],
+  }),
+
+  definePreset({
+    id: 'climbing-game',
+    displayName: 'Climbing Game',
+    family: 'platforming',
+    controllerFamilies: ['platform'],
+    requiredSystemPacks: [pack(PACK_IDS.world), pack(PACK_IDS.worldEntities)],
+    optionalSystemPacks: [pack(PACK_IDS.arcade)],
+    requiredContentRoles: ['tuning', 'levels'],
+    validationProfile: VALIDATION_PROFILES.platform,
+    knownLimitations: [LIMITATIONS.climbingMechanics],
+  }),
+
+  definePreset({
+    id: 'grappling-platformer',
+    displayName: 'Grappling Platformer',
+    family: 'platforming',
+    controllerFamilies: ['platform'],
+    requiredSystemPacks: [pack(PACK_IDS.world), pack(PACK_IDS.worldEntities)],
+    optionalSystemPacks: [pack(PACK_IDS.arcade)],
+    requiredContentRoles: ['tuning', 'levels'],
+    validationProfile: VALIDATION_PROFILES.platform,
+    knownLimitations: [LIMITATIONS.grapplingPhysics],
+  }),
+
+  definePreset({
+    id: 'collectathon-platformer',
+    displayName: 'Collectathon Platformer',
+    family: 'platforming',
+    controllerFamilies: ['platform'],
+    requiredSystemPacks: [pack(PACK_IDS.world), pack(PACK_IDS.worldEntities), pack(PACK_IDS.arcade)],
+    optionalSystemPacks: [pack(PACK_IDS.progression)],
+    requiredContentRoles: ['tuning', 'levels', 'items'],
+    validationProfile: VALIDATION_PROFILES.platform,
+    knownLimitations: [LIMITATIONS.itemDefinitions],
+  }),
+];
