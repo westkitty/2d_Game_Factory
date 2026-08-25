@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "masterVolume": "loud",
+  "musicVolume": 0.5,
+  "sfxVolume": 0.5,
+  "muted": false,
+  "reducedMotion": false,
+  "screenShake": 1,
+  "highContrast": false,
+  "touchControls": "auto"
+}

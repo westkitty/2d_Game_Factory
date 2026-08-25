@@ -1,0 +1,30 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:sw2d:schema:game-settings:v1",
+  "title": "GameSettings",
+  "description": "Mirrors @sw2d/contracts GameSettings (persistence.ts). Every field is required: the interface declares no optional properties.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "masterVolume",
+    "musicVolume",
+    "sfxVolume",
+    "muted",
+    "reducedMotion",
+    "screenShake",
+    "highContrast",
+    "touchControls"
+  ],
+  "properties": {
+    "schemaVersion": { "type": "integer", "minimum": 1 },
+    "masterVolume": { "type": "number", "minimum": 0, "maximum": 1 },
+    "musicVolume": { "type": "number", "minimum": 0, "maximum": 1 },
+    "sfxVolume": { "type": "number", "minimum": 0, "maximum": 1 },
+    "muted": { "type": "boolean" },
+    "reducedMotion": { "type": "boolean" },
+    "screenShake": { "type": "number", "minimum": 0, "maximum": 1 },
+    "highContrast": { "type": "boolean" },
+    "touchControls": { "type": "string", "enum": ["auto", "on", "off"] }
+  }
+}

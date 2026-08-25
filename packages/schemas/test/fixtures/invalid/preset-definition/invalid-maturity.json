@@ -1,0 +1,15 @@
+{
+  "id": "test-preset",
+  "displayName": "Test Preset",
+  "family": "platforming",
+  "maturity": "super-validated",
+  "controllerFamilies": ["platform"],
+  "requiredSystemPacks": [],
+  "optionalSystemPacks": [],
+  "defaultConfig": {},
+  "requiredContentRoles": [],
+  "supportedInputModes": ["keyboard"],
+  "starterScene": "PlayScene",
+  "validationProfile": "default",
+  "knownLimitations": []
+}

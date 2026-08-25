@@ -21,7 +21,10 @@ Making a normal new game must not require editing the machine.
 ```text
 packages/contracts/   @sw2d/contracts   engine-agnostic interfaces. No dependencies at all.
 packages/runtime/     @sw2d/runtime     the reusable machine. Depends on contracts + phaser.
-starter/              @sw2d/starter     the Phase 1 vertical slice: one game composing the runtime.
+packages/schemas/     @sw2d/schemas     JSON Schema + Ajv validation + content-document registry.
+                                        Depends on contracts + ajv + ajv-formats. No Phaser.
+starter/              @sw2d/starter     one game composing the runtime, loading validated JSON
+                                        content through @sw2d/schemas.
 tools/scripts/                          repository-level checks (offline build guard).
 ```
 
@@ -42,12 +45,11 @@ Engine specifics stop at `SceneContext` in `@sw2d/runtime`, which extends `GameC
 a `Phaser.Scene`. Packs that render are typed against `SceneContext`; packs that only
 simulate can be typed against plain `GameContext`.
 
-### Packages Phase 2+ will add
+### Packages later phases will add
 
 Reserved names and boundaries, so later phases do not have to relitigate them:
 
 ```text
-packages/schemas/   @sw2d/schemas   JSON Schemas + validator + schema/type parity test.
 packages/presets/   @sw2d/presets   the 74 preset recipes and the catalogue.
 packages/packs/     @sw2d/packs     reusable system packs (combat, AI, world, ...).
 packages/cli/       @sw2d/cli       the `sw2d` factory CLI.
@@ -140,9 +142,12 @@ off - a scene left running is a scene nobody is accounting for.
 
 The runtime never reads a file or fetches a URL. It consumes a `ContentBundle` produced by a
 `ContentSource`. Gameplay asks the `AssetCatalog` for a semantic role (`player`, `platform`)
-and gets a texture key; the theme decides what that looks like. Phase 1's bundle is inline and
-its art is generated in-process, so the foundation runs before any asset exists. Phase 2
-substitutes a schema-validated JSON source with no runtime change.
+and gets a texture key; the theme decides what that looks like. Phase 1's bundle was inline,
+generated in-process art. Phase 2 replaced it with a schema-validated JSON source
+(`starter/content/*.json`, validated through `@sw2d/schemas`) with zero `@sw2d/runtime` change -
+the runtime still only ever sees a `ContentBundle`. `ContentBundle.data` entries are now
+`ContentDocumentEnvelope`s (`schemaId`, `valid`, `value`), not an ungoverned
+`Record<string, unknown>`.
 
 UI wording follows the same rule: the runtime knows *that* the game is paused and supplies
 neutral fallbacks; `ContentBundle.ui` supplies the words. No game identity, lore or joke

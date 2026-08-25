@@ -1,0 +1,38 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:sw2d:schema:action-bindings:v1",
+  "title": "ActionBindings",
+  "description": "Mirrors @sw2d/contracts ActionBindings = Readonly<Partial<Record<ActionId, ActionBinding>>>. Keys are exactly the ACTION_IDS vocabulary in actions.ts.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "MOVE_LEFT": { "$ref": "#/definitions/actionBinding" },
+    "MOVE_RIGHT": { "$ref": "#/definitions/actionBinding" },
+    "MOVE_UP": { "$ref": "#/definitions/actionBinding" },
+    "MOVE_DOWN": { "$ref": "#/definitions/actionBinding" },
+    "JUMP": { "$ref": "#/definitions/actionBinding" },
+    "PRIMARY_ACTION": { "$ref": "#/definitions/actionBinding" },
+    "SECONDARY_ACTION": { "$ref": "#/definitions/actionBinding" },
+    "DASH": { "$ref": "#/definitions/actionBinding" },
+    "INTERACT": { "$ref": "#/definitions/actionBinding" },
+    "PAUSE": { "$ref": "#/definitions/actionBinding" },
+    "CONFIRM": { "$ref": "#/definitions/actionBinding" },
+    "CANCEL": { "$ref": "#/definitions/actionBinding" }
+  },
+  "definitions": {
+    "actionBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "keyboard": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "pointerTargets": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  }
+}

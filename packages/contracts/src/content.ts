@@ -70,6 +70,21 @@ export interface AssetCatalog {
   list(): readonly AssetDescriptor[];
 }
 
+/**
+ * One validated content document inside a ContentBundle.
+ *
+ * `schemaId` names the schema that governed it, `valid` records whether it
+ * passed, and `value` is the parsed document - typed by whichever document
+ * registry produced the envelope (see @sw2d/schemas). Contracts stays
+ * validator-agnostic: it knows the shape of "a validated document", not how
+ * validation happens or which schema library performs it.
+ */
+export interface ContentDocumentEnvelope<T = unknown> {
+  readonly schemaId: string;
+  readonly valid: boolean;
+  readonly value: T;
+}
+
 export interface ContentBundle {
   readonly id: string;
   readonly schemaVersion: number;
@@ -78,9 +93,11 @@ export interface ContentBundle {
   readonly ui?: Partial<UiCopy>;
   /**
    * Validated game data keyed by document name ('tuning', 'levels/01-intro', ...).
-   * Phase 1 leaves this open; Phase 2 gates every entry through JSON Schema.
+   * Each entry is a ContentDocumentEnvelope produced by a schema-validated
+   * ContentSource. The runtime never validates content itself; it only ever
+   * sees documents that already carry their validation outcome.
    */
-  readonly data: Readonly<Record<string, unknown>>;
+  readonly data: Readonly<Record<string, ContentDocumentEnvelope>>;
 }
 
 export interface ContentSource {

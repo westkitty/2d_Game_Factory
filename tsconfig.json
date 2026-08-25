@@ -4,6 +4,7 @@
     "packages/*/src/**/*.ts",
     "packages/*/test/**/*.ts",
     "starter/src/**/*.ts",
+    "starter/test/**/*.ts",
     "starter/vite.config.ts",
     "tools/**/*.ts"
   ],

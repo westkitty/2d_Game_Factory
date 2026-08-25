@@ -1,0 +1,22 @@
+{
+  "name": "@sw2d/schemas",
+  "version": "0.1.0",
+  "private": true,
+  "description": "JSON Schema definitions, Ajv-based validation and the content-document registry for the SW2D game factory. Renderer-independent: no Phaser, no DOM assumptions.",
+  "type": "module",
+  "license": "UNLICENSED",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "types": "./src/index.ts",
+  "main": "./src/index.ts",
+  "sideEffects": false,
+  "dependencies": {
+    "@sw2d/contracts": "0.1.0",
+    "ajv": "8.20.0",
+    "ajv-formats": "3.0.1"
+  }
+}

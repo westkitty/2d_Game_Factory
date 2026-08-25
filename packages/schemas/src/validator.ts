@@ -1,0 +1,157 @@
+import Ajv, { type ErrorObject, type ValidateFunction } from 'ajv';
+import addFormats from 'ajv-formats';
+
+import actionBindingsSchema from '../schemas/action-bindings.schema.json';
+import systemPackSelectionSchema from '../schemas/system-pack-selection.schema.json';
+import gameDefinitionSchema from '../schemas/game-definition.schema.json';
+import presetDefinitionSchema from '../schemas/preset-definition.schema.json';
+import gameSettingsSchema from '../schemas/game-settings.schema.json';
+import tuningSchema from '../schemas/tuning.schema.json';
+
+/**
+ * Ajv-based validation for every schema this package owns.
+ *
+ * One Ajv instance for the whole package: schemas that $ref each other (e.g.
+ * GameDefinition -> ActionBindings) must share a registry, and compiling twice
+ * per process would silently double memory and hide "same schema id added
+ * twice" mistakes that are cheap to catch here.
+ */
+
+export type SchemaName =
+  | 'action-bindings'
+  | 'system-pack-selection'
+  | 'game-definition'
+  | 'preset-definition'
+  | 'game-settings'
+  | 'tuning';
+
+export const SCHEMA_NAMES: readonly SchemaName[] = [
+  'action-bindings',
+  'system-pack-selection',
+  'game-definition',
+  'preset-definition',
+  'game-settings',
+  'tuning',
+];
+
+/** One located problem: which document, where in it, and what is wrong. */
+export interface ValidationIssue {
+  readonly documentId: string;
+  readonly instancePath: string;
+  readonly message: string;
+}
+
+export interface ValidationResult<T = unknown> {
+  readonly valid: boolean;
+  readonly errors: readonly ValidationIssue[];
+  readonly value: T | undefined;
+}
+
+interface SchemaDocument {
+  readonly $id: string;
+  readonly [key: string]: unknown;
+}
+
+const ajv = new Ajv({ allErrors: true, strict: true });
+addFormats(ajv);
+
+const SCHEMA_DOCUMENTS: Readonly<Record<SchemaName, SchemaDocument>> = {
+  'action-bindings': actionBindingsSchema,
+  'system-pack-selection': systemPackSelectionSchema,
+  'game-definition': gameDefinitionSchema,
+  'preset-definition': presetDefinitionSchema,
+  'game-settings': gameSettingsSchema,
+  tuning: tuningSchema,
+};
+
+// Registration order matters: a schema must be added before anything that
+// $refs it by $id is compiled. Leaf schemas first, composites after.
+for (const name of ['action-bindings', 'system-pack-selection'] as const) {
+  const schema = SCHEMA_DOCUMENTS[name];
+  ajv.addSchema(schema, schema.$id);
+}
+for (const name of ['game-definition', 'preset-definition', 'game-settings', 'tuning'] as const) {
+  const schema = SCHEMA_DOCUMENTS[name];
+  ajv.addSchema(schema, schema.$id);
+}
+
+const VALIDATORS: Readonly<Record<SchemaName, ValidateFunction>> = Object.fromEntries(
+  SCHEMA_NAMES.map((name) => {
+    const schema = SCHEMA_DOCUMENTS[name];
+    const validate = ajv.getSchema(schema.$id);
+    if (!validate) {
+      throw new Error(`Schema "${name}" (${schema.$id}) failed to register with Ajv.`);
+    }
+    return [name, validate];
+  }),
+) as Record<SchemaName, ValidateFunction>;
+
+export function schemaIdFor(name: SchemaName): string {
+  return SCHEMA_DOCUMENTS[name].$id;
+}
+
+export function schemaDocumentFor(name: SchemaName): SchemaDocument {
+  return SCHEMA_DOCUMENTS[name];
+}
+
+function toIssue(documentId: string, error: ErrorObject): ValidationIssue {
+  const instancePath = error.instancePath.length > 0 ? error.instancePath : '/';
+  return { documentId, instancePath, message: error.message ?? 'is invalid' };
+}
+
+/**
+ * Validate `data` against a named schema. Never throws - callers that want
+ * fail-fast behaviour should use `validateDocumentOrThrow`.
+ *
+ * Error quality bar: `/player/jumpVelocity must be number`, not
+ * "invalid configuration". `instancePath` and `message` are kept separate so
+ * callers can format them however a CLI, a test assertion or a UI needs.
+ */
+export function validateDocument<T = unknown>(
+  schemaName: SchemaName,
+  documentId: string,
+  data: unknown,
+): ValidationResult<T> {
+  const validate = VALIDATORS[schemaName];
+  const valid = validate(data);
+  if (valid) {
+    return { valid: true, errors: [], value: data as T };
+  }
+  const errors = (validate.errors ?? []).map((error) => toIssue(documentId, error));
+  return { valid: false, errors, value: undefined };
+}
+
+export function formatIssue(issue: ValidationIssue): string {
+  return `${issue.documentId}: ${issue.instancePath} ${issue.message}`;
+}
+
+/** Thrown by `validateDocumentOrThrow`. Carries the same located detail as ValidationIssue. */
+export class SchemaValidationError extends Error {
+  readonly documentId: string;
+  readonly schemaId: string;
+  readonly issues: readonly ValidationIssue[];
+
+  constructor(documentId: string, schemaId: string, issues: readonly ValidationIssue[]) {
+    super(
+      `${documentId} failed schema validation against ${schemaId}:\n` +
+        issues.map((issue) => `  - ${issue.instancePath} ${issue.message}`).join('\n'),
+    );
+    this.name = 'SchemaValidationError';
+    this.documentId = documentId;
+    this.schemaId = schemaId;
+    this.issues = issues;
+  }
+}
+
+/** Validate and reject malformed content immediately, with a located error. */
+export function validateDocumentOrThrow<T = unknown>(
+  schemaName: SchemaName,
+  documentId: string,
+  data: unknown,
+): T {
+  const result = validateDocument<T>(schemaName, documentId, data);
+  if (!result.valid) {
+    throw new SchemaValidationError(documentId, schemaIdFor(schemaName), result.errors);
+  }
+  return result.value as T;
+}

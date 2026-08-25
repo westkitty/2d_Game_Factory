@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:sw2d:schema:game-definition:v1",
+  "title": "GameDefinition",
+  "description": "Mirrors @sw2d/contracts GameDefinition (game.ts). defaultSettings mirrors Partial<Omit<GameSettings, 'schemaVersion'>> - the same fields as GameSettings minus schemaVersion, all optional.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "displayName", "version", "schemaVersion", "bindings", "systemPacks", "viewport"],
+  "properties": {
+    "id": { "type": "string", "minLength": 1 },
+    "displayName": { "type": "string", "minLength": 1 },
+    "version": { "type": "string", "minLength": 1 },
+    "schemaVersion": { "type": "integer", "minimum": 1 },
+    "bindings": { "$ref": "urn:sw2d:schema:action-bindings:v1" },
+    "systemPacks": {
+      "type": "array",
+      "items": { "$ref": "urn:sw2d:schema:system-pack-selection:v1" }
+    },
+    "defaultSettings": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "masterVolume": { "type": "number", "minimum": 0, "maximum": 1 },
+        "musicVolume": { "type": "number", "minimum": 0, "maximum": 1 },
+        "sfxVolume": { "type": "number", "minimum": 0, "maximum": 1 },
+        "muted": { "type": "boolean" },
+        "reducedMotion": { "type": "boolean" },
+        "screenShake": { "type": "number", "minimum": 0, "maximum": 1 },
+        "highContrast": { "type": "boolean" },
+        "touchControls": { "type": "string", "enum": ["auto", "on", "off"] }
+      }
+    },
+    "viewport": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["width", "height"],
+      "properties": {
+        "width": { "type": "integer", "exclusiveMinimum": 0 },
+        "height": { "type": "integer", "exclusiveMinimum": 0 }
+      }
+    }
+  }
+}

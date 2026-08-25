@@ -17,7 +17,7 @@ export default defineConfig({
   },
   optimizeDeps: {
     // Workspace packages are consumed as TypeScript source, not prebundled.
-    exclude: ['@sw2d/contracts', '@sw2d/runtime'],
+    exclude: ['@sw2d/contracts', '@sw2d/runtime', '@sw2d/schemas'],
   },
   server: { port: 5173, strictPort: true },
 });

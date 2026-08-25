@@ -1,0 +1,15 @@
+{
+  "id": "test-preset-dup",
+  "displayName": "Test Preset Dup",
+  "family": "platforming",
+  "maturity": "recipe",
+  "controllerFamilies": ["platform"],
+  "requiredSystemPacks": [{ "packId": "combat" }],
+  "optionalSystemPacks": [{ "packId": "combat" }],
+  "defaultConfig": {},
+  "requiredContentRoles": [],
+  "supportedInputModes": ["keyboard"],
+  "starterScene": "PlayScene",
+  "validationProfile": "default",
+  "knownLimitations": []
+}

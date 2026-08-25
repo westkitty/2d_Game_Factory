@@ -1,0 +1,13 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:sw2d:schema:system-pack-selection:v1",
+  "title": "SystemPackSelection",
+  "description": "Mirrors @sw2d/contracts SystemPackSelection (systems.ts). config is intentionally unconstrained: it is Partial<PackConfig> and pack-specific.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["packId"],
+  "properties": {
+    "packId": { "type": "string", "minLength": 1 },
+    "config": {}
+  }
+}

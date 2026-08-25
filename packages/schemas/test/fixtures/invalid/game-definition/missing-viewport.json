@@ -1,0 +1,8 @@
+{
+  "id": "test-game",
+  "displayName": "Test Game",
+  "version": "0.1.0",
+  "schemaVersion": 1,
+  "bindings": {},
+  "systemPacks": []
+}

@@ -8,6 +8,77 @@ Detail for each architectural decision lives in `docs/architecture/adr/`. This f
 
 ---
 
+## Phase 2 - Schema, Registry, and Content Foundation (2026-08-25, Sonnet 5)
+
+### Decisions
+
+**Schema/type parity by `satisfies`-typed fixture, not a generator.** Each of the five schema
+targets gets one TypeScript object literal typed `satisfies <ContractInterface>`; a test asserts
+`Object.keys(fixture)` equals the schema's declared property-key set, and that the fixture
+validates. The compiler enforces the fixture has every required field and no extra one; the
+runtime assertion ties that to the schema. No `ts-json-schema-generator` or reverse codegen was
+added - a new dependency for one direction of a two-direction sync would have been the larger
+architectural commitment, and the field-name-set check is the strongest thing available without
+one. Documented residual limitation directly in `packages/schemas/test/parity.test.ts`: this does
+not prove every field's *type constraint* matches (a schema narrowed to a numeric range with a
+plain `number` TS type would not be caught by parity alone) - the targeted negative fixtures in
+`validator.test.ts` cover that for the fields where it matters.
+
+**`ContentDocumentEnvelope<T>` closes the `ContentBundle.data` hole without giving `@sw2d/contracts`
+an ajv dependency.** Contracts stays validator-agnostic - it knows the shape of "a validated
+document" (`schemaId`, `valid`, `value`), not how validation happens. The actual document
+registry (which document name maps to which schema) lives in `@sw2d/schemas`, which is allowed to
+depend on Ajv. This mirrors the `SystemPackDefinition` split: contracts owns the shape, the
+implementing package owns the mechanism.
+
+**`assets`/`ui` in the starter's content have no JSON Schema yet, only a `satisfies`-then-cast at
+the JSON import site.** A JSON import infers widened primitives (`role: string`, not the
+`AssetRole` union), so `satisfies` alone cannot narrow it - the assertion in
+`starter/src/content.ts` is compile-time trust, not a runtime check. Building a real asset schema
+belongs to Phase 6's Tiled/theme pipeline (`MASTER_PROJECT.md` §12/§14), not to inventing one
+early against §12's explicit instruction not to build ahead of a phase's real scope.
+
+**`SystemPackDefinition.configSchemaId` stays unenforced.** Enforcing it means
+`SystemHostImpl.install()` (`packages/runtime`) calling the validator before a pack installs -
+exactly the kind of `packages/runtime/**` edit Phase 2 was required to avoid. Left as declared
+metadata, same state as Phase 1 left it, for whichever phase is next permitted to touch runtime.
+
+**Preset dependency-order determinism is not duplicated.** `resolveInstallOrder`
+(`@sw2d/runtime`, Phase 1) already resolves `SystemPackDefinition` dependency graphs
+deterministically, with real cycle-detection coverage. `PresetDefinition.requiredSystemPacks` /
+`optionalSystemPacks` carry no dependency edges of their own (just a pack id and opaque config),
+so a preset cannot represent a cycle at that level - only a `SystemPackDefinition` graph can.
+Reimplementing that logic inside `@sw2d/schemas` to get a second, schemas-owned test suite would
+have been duplicated, drift-prone code for coverage that already exists and stays untouched.
+Phase 2 instead added the one cross-field rule JSON Schema cannot express by itself: rejecting a
+pack id duplicated across a preset's required and optional lists
+(`validatePresetComposition`).
+
+### The gotcha worth flagging for later schema/JSON work
+
+**`exactOptionalPropertyTypes: true` rejects `key: possiblyUndefinedValue` on an optional
+property**, even though the property itself is optional. Reading `content.ui` from a
+`{ ui?: Partial<UiCopy> }`-typed JSON import produces `Partial<UiCopy> | undefined`; assigning
+that directly to another `ui?: Partial<UiCopy>` property fails to typecheck, because "optional"
+under this flag means "may be absent," not "may be `undefined`." The fix is a conditional spread
+(`...(value !== undefined ? { key: value } : {})`) so the key is omitted rather than present with
+an explicit `undefined`. See `starter/src/content.ts`. Anyone building the Phase 6 theme/asset
+loader on the same JSON-import pattern will hit this.
+
+### Rejected during this phase
+
+- **A schema for `assets`/`ui`.** See "Decisions" above - reserved for Phase 6, not invented
+  early to make the schemas directory look more complete.
+- **A second schema-validation or codegen dependency** for stronger parity guarantees. The
+  `satisfies`-fixture approach was judged the smallest robust option; a generator would be a
+  bigger, unrequested architectural commitment for marginal additional coverage.
+- **Import attributes (`with { type: 'json' }`) for the JSON schema imports.** Plain
+  `import x from './y.json'` already works under this repo's `resolveJsonModule` +
+  `moduleResolution: "bundler"` configuration across `tsc`, Vite and Vitest; the assertion syntax
+  added risk without a demonstrated need.
+
+---
+
 ## Phase 1 - Establishment and Architecture Foundation (2026-08-24, Opus 5)
 
 ### Decisions

@@ -30,6 +30,19 @@ which satisfies every dependency's engine range; CI and contributors should pref
 All four are dev/build-time or bundled; the shipped artefact contains only Phaser plus project
 code. None require an account, a registry beyond npm, or network access at runtime.
 
+### Added in Phase 2 (2026-08-25, Sonnet 5)
+
+| Package | Version | License | Source | Purpose |
+|---|---|---|---|---|
+| `ajv` | 8.20.0 | MIT | https://www.npmjs.com/package/ajv | JSON Schema validator backing `@sw2d/schemas`. Pinned to the exact version recorded as deferred in Phase 1. |
+| `ajv-formats` | 3.0.1 | MIT | https://www.npmjs.com/package/ajv-formats | Registers Ajv's standard format keywords. No current schema declares a `format` yet - registered for the schemas Phase 6+ will add (dates, URLs) rather than an immediate need. |
+
+Both are direct dependencies of `@sw2d/schemas` only. `npm install` reported 8 packages added, 0
+vulnerabilities, no postinstall network activity. `@sw2d/starter` also depends on `@sw2d/schemas`
+(it validates `content/game.json` and `content/tuning.json` at load), so Ajv is now bundled into
+the production build. Measured effect: 1.4 MB -> 1.538 MB minified (366 kB -> 407 kB gzip). Still
+a single self-contained static bundle; no new runtime network surface.
+
 ### Install-script and telemetry check
 
 `npm install` reported 51 packages added, 0 vulnerabilities. No selected direct dependency runs
@@ -60,7 +73,7 @@ routing stays fully type-checked. **Delete that file when upstream typings catch
 |---|---|---|
 | React / Vue / Svelte / Redux | rejected | `MASTER_PROJECT.md` §3.4. The runtime is Phaser; DOM UI is plain elements and CSS. |
 | A second game engine (Excalibur, KAPLAY) | rejected | Architectural references only. One engine. |
-| Ajv + `ajv-formats` | **deferred to Phase 2** | Verified current: ajv 8.20.0 (MIT), ajv-formats 3.0.1 (MIT). Phase 1 has no schema to validate, so installing it now would be a dependency without a consumer. |
+| Ajv + `ajv-formats` | **installed in Phase 2** | See "Added in Phase 2" above. |
 | Playwright | **deferred** | See [ADR-0008](adr/0008-phase1-validation-strategy.md). Browser journeys become a package in the QA phase; Phase 1's flow was validated in a real browser without adding the dependency. |
 | jsdom / happy-dom | rejected for now | Only needed to run Phaser headlessly under Vitest. Phase 1's unit layer is engine-free by design and needs no DOM. |
 | Any font, art or audio package | rejected | Fonts are system stacks; placeholder art is generated; cues are synthesised. Nothing to license and nothing to fetch. |

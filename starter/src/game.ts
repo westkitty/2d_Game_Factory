@@ -1,25 +1,25 @@
 import type { GameDefinition } from '@sw2d/contracts';
+import { validateDocumentOrThrow } from '@sw2d/schemas';
 import { PLACEHOLDER_MOVER_PACK } from './game-specific/placeholderMoverPack.ts';
+import gameData from '../content/game.json';
 
 /**
- * The declarative description of this game.
- *
- * Everything a normal game changes is here or in content.ts. Phase 2 moves this
- * shape into schema-validated JSON; the field names are already the ones the
- * schema will use.
+ * The declarative description of this game, loaded from JSON and validated
+ * against the GameDefinition schema before anything else touches it. A
+ * malformed content/game.json fails right here, with a located error,
+ * instead of surfacing later at whatever line first reads a bad field.
  */
-export const STARTER_GAME: GameDefinition = {
-  id: 'sw2d-foundation-slice',
-  displayName: 'SW2D Foundation Slice',
-  version: '0.1.0',
-  schemaVersion: 1,
-  viewport: { width: 960, height: 540 },
-  // Factory defaults apply for every action not restated here.
-  bindings: {},
-  systemPacks: [
-    { packId: PLACEHOLDER_MOVER_PACK.id, config: {} },
-  ],
-  defaultSettings: {
-    masterVolume: 0.7,
-  },
-};
+export const STARTER_GAME: GameDefinition = validateDocumentOrThrow<GameDefinition>(
+  'game-definition',
+  'content/game.json',
+  gameData,
+);
+
+// A schema can check shape; it cannot know which packs a specific game wires
+// up. This is the game's own responsibility, not the validator's.
+if (!STARTER_GAME.systemPacks.some((selection) => selection.packId === PLACEHOLDER_MOVER_PACK.id)) {
+  throw new Error(
+    `content/game.json must select system pack "${PLACEHOLDER_MOVER_PACK.id}" ` +
+      '(main.ts installs it directly and expects the definition to agree).',
+  );
+}

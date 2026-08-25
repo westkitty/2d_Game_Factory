@@ -1,0 +1,65 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:sw2d:schema:preset-definition:v1",
+  "title": "PresetDefinition",
+  "description": "Mirrors @sw2d/contracts PresetDefinition (presets.ts). A preset is a composition recipe: requiredSystemPacks/optionalSystemPacks reference SystemPackSelection, never engine internals.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "displayName",
+    "family",
+    "maturity",
+    "controllerFamilies",
+    "requiredSystemPacks",
+    "optionalSystemPacks",
+    "defaultConfig",
+    "requiredContentRoles",
+    "supportedInputModes",
+    "starterScene",
+    "validationProfile",
+    "knownLimitations"
+  ],
+  "properties": {
+    "id": { "type": "string", "minLength": 1 },
+    "displayName": { "type": "string", "minLength": 1 },
+    "family": { "type": "string", "minLength": 1 },
+    "maturity": {
+      "type": "string",
+      "enum": ["recipe", "smoke-validated", "proof-validated", "experimental"]
+    },
+    "controllerFamilies": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "enum": ["platform", "top-down", "vehicle", "grid", "pointer", "ui-simulation"]
+      }
+    },
+    "requiredSystemPacks": {
+      "type": "array",
+      "items": { "$ref": "urn:sw2d:schema:system-pack-selection:v1" }
+    },
+    "optionalSystemPacks": {
+      "type": "array",
+      "items": { "$ref": "urn:sw2d:schema:system-pack-selection:v1" }
+    },
+    "defaultConfig": { "type": "object" },
+    "requiredContentRoles": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "supportedInputModes": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "enum": ["keyboard", "pointer", "touch", "gamepad"] }
+    },
+    "defaultBindings": { "$ref": "urn:sw2d:schema:action-bindings:v1" },
+    "starterScene": { "type": "string", "minLength": 1 },
+    "validationProfile": { "type": "string", "minLength": 1 },
+    "knownLimitations": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  }
+}
