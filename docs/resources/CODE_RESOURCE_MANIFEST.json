@@ -1,0 +1,60 @@
+{
+  "$comment": "Direct code dependencies. Governed by resource-policy.json and MASTER_PROJECT.md section 20.2.",
+  "manifestVersion": 1,
+  "updated": "2026-08-24",
+  "dependencies": [
+    {
+      "name": "phaser",
+      "exactVersion": "4.2.1",
+      "canonicalSource": "https://www.npmjs.com/package/phaser",
+      "repository": "https://github.com/phaserjs/phaser",
+      "license": "MIT",
+      "purpose": "Game runtime: scene manager, arcade physics, WebGL/Canvas renderer, texture cache.",
+      "shippedInBuild": true,
+      "hasInstallScripts": false,
+      "introducesNetworkOrTelemetry": false,
+      "removalPath": "Replacing the runtime engine is an architecture change (ADR-0001), not a dependency swap."
+    },
+    {
+      "name": "typescript",
+      "exactVersion": "7.0.2",
+      "canonicalSource": "https://www.npmjs.com/package/typescript",
+      "repository": "https://github.com/microsoft/TypeScript",
+      "license": "Apache-2.0",
+      "purpose": "Static checking across all packages. Runs with --noEmit; Vite/esbuild transpiles.",
+      "shippedInBuild": false,
+      "hasInstallScripts": false,
+      "introducesNetworkOrTelemetry": false,
+      "removalPath": "Downgrade to 6.0.3 is a drop-in. Not on the runtime path."
+    },
+    {
+      "name": "vite",
+      "exactVersion": "8.2.2",
+      "canonicalSource": "https://www.npmjs.com/package/vite",
+      "repository": "https://github.com/vitejs/vite",
+      "license": "MIT",
+      "purpose": "Development server and production bundler for the browser target.",
+      "shippedInBuild": false,
+      "hasInstallScripts": false,
+      "introducesNetworkOrTelemetry": false,
+      "notes": "Optional analytics is not configured and nothing opts into it.",
+      "removalPath": "Replaceable by another bundler; only starter/vite.config.ts and the build scripts depend on it."
+    },
+    {
+      "name": "vitest",
+      "exactVersion": "4.1.11",
+      "canonicalSource": "https://www.npmjs.com/package/vitest",
+      "repository": "https://github.com/vitest-dev/vitest",
+      "license": "MIT",
+      "purpose": "Unit test runner. Shares Vite's transform, so there is no second build configuration.",
+      "shippedInBuild": false,
+      "hasInstallScripts": false,
+      "introducesNetworkOrTelemetry": false,
+      "removalPath": "Test-only. Replaceable by any TypeScript-aware runner."
+    }
+  ],
+  "verifiedButNotInstalled": [
+    { "name": "ajv", "exactVersion": "8.20.0", "license": "MIT", "plannedPhase": 2, "reason": "No schema exists to validate yet." },
+    { "name": "ajv-formats", "exactVersion": "3.0.1", "license": "MIT", "plannedPhase": 2, "reason": "Companion to ajv." }
+  ]
+}

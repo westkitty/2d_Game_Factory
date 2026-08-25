@@ -1,0 +1,30 @@
+{
+  "name": "sw2d-game-factory",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Stinky Weasel 2D Browser Game Factory - reusable, local-first, offline-capable 2D browser game production system.",
+  "type": "module",
+  "license": "UNLICENSED",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "workspaces": [
+    "packages/*",
+    "starter"
+  ],
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "dev": "npm run dev --workspace @sw2d/starter",
+    "build": "npm run build --workspace @sw2d/starter",
+    "preview": "npm run preview --workspace @sw2d/starter",
+    "check:offline": "node tools/scripts/check-offline-build.mjs",
+    "validate": "npm run typecheck && npm run test && npm run build && npm run check:offline"
+  },
+  "devDependencies": {
+    "typescript": "7.0.2",
+    "vite": "8.2.2",
+    "vitest": "4.1.11"
+  }
+}

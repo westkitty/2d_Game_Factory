@@ -1,0 +1,18 @@
+{
+  "name": "@sw2d/starter",
+  "version": "0.1.0",
+  "private": true,
+  "description": "SW2D Phase 1 vertical slice: the smallest useful proof that the reusable runtime boots, plays, pauses, resumes and restarts.",
+  "type": "module",
+  "license": "UNLICENSED",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview --port 4173 --strictPort"
+  },
+  "dependencies": {
+    "@sw2d/contracts": "0.1.0",
+    "@sw2d/runtime": "0.1.0",
+    "phaser": "4.2.1"
+  }
+}

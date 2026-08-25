@@ -1,0 +1,11 @@
+{
+  "extends": "./tsconfig.base.json",
+  "include": [
+    "packages/*/src/**/*.ts",
+    "packages/*/test/**/*.ts",
+    "starter/src/**/*.ts",
+    "starter/vite.config.ts",
+    "tools/**/*.ts"
+  ],
+  "exclude": ["**/node_modules", "**/dist"]
+}

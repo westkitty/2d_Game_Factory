@@ -1,0 +1,72 @@
+{
+  "$comment": "Resource governance for the SW2D factory. Governed by MASTER_PROJECT.md section 20. Unverified provenance means a resource does not enter production.",
+  "policyVersion": 1,
+  "updated": "2026-08-24",
+  "defaults": {
+    "prefer": [
+      "free resources",
+      "permissive licenses",
+      "original project code",
+      "local assets",
+      "removable dependencies",
+      "no accounts",
+      "no telemetry",
+      "no runtime network access"
+    ],
+    "acceptableLicenses": ["MIT", "Apache-2.0", "BSD-2-Clause", "BSD-3-Clause", "ISC", "CC0-1.0", "CC-BY-4.0"],
+    "requiresExplicitUserApproval": [
+      "any purchase",
+      "creating an account",
+      "accepting custom marketplace terms",
+      "enabling telemetry or analytics",
+      "adding a native binary",
+      "adding a closed-source runtime dependency",
+      "using a redistribution-restricted asset",
+      "adding a package registry beyond npm"
+    ],
+    "forbiddenAtRuntime": [
+      "CDN-hosted code",
+      "remote webfonts",
+      "remote artwork or audio",
+      "telemetry",
+      "analytics",
+      "remote configuration",
+      "dynamically evaluated remote code",
+      "required cloud save"
+    ]
+  },
+  "codeDependencies": {
+    "manifest": "docs/resources/CODE_RESOURCE_MANIFEST.json",
+    "notices": "docs/resources/THIRD_PARTY_NOTICES.md",
+    "recordBeforeInstalling": [
+      "name",
+      "exactVersion",
+      "canonicalSource",
+      "license",
+      "purpose",
+      "hasInstallScripts",
+      "introducesNetworkOrTelemetry",
+      "removalPath"
+    ]
+  },
+  "assets": {
+    "$comment": "No third-party visual or audio asset exists in this repository yet. Placeholder art is generated in-process and audio cues are synthesised. Create docs/resources/VISUAL_ASSET_MANIFEST.json and AUDIO_ASSET_MANIFEST.json when the first third-party asset is introduced, not before.",
+    "visualManifest": "docs/resources/VISUAL_ASSET_MANIFEST.json",
+    "audioManifest": "docs/resources/AUDIO_ASSET_MANIFEST.json",
+    "rejections": "docs/resources/RESOURCE_REJECTIONS.md",
+    "recordPerAsset": [
+      "exactItemIdentity",
+      "originalSource",
+      "license",
+      "attributionRequirements",
+      "modificationStatus",
+      "localPath"
+    ],
+    "prohibitedSources": [
+      {
+        "source": "westkitty/c_chase",
+        "reason": "No software license is attached and audio/visual clearance is unconfirmed. Behavioural lessons and inspected numeric tuning values may be carried forward with attribution; assets may not."
+      }
+    ]
+  }
+}
