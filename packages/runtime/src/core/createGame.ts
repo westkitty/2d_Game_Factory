@@ -195,6 +195,28 @@ export async function createGame(options: CreateGameOptions): Promise<GameRuntim
   );
   audio.applySettings(settings.get());
 
+  // The accessibility projection is derived at read time, so a settings write
+  // already re-projects it live - but the OS-level half of that projection
+  // (prefers-reduced-motion, pointer: coarse) can change while the tab stays
+  // open, with no settings write to trigger a re-read. matchMedia's own
+  // change event is the natural, non-polling signal for that (Phase 6's
+  // theme/UI layer is the first real consumer of AccessibilityStateImpl's
+  // previously-unwired refreshEnvironment()). Guarded like
+  // readAccessibilityEnvironment() itself: environments without matchMedia
+  // (Vitest's Node environment, older browsers) simply get no listener.
+  const mediaQueries = [
+    globalThis.matchMedia?.('(prefers-reduced-motion: reduce)'),
+    globalThis.matchMedia?.('(pointer: coarse)'),
+  ].filter((query): query is MediaQueryList => query !== undefined);
+  const onEnvironmentChange = (): void => {
+    accessibility.refreshEnvironment();
+    events.emit('accessibility:changed', {});
+  };
+  for (const query of mediaQueries) query.addEventListener('change', onEnvironmentChange);
+  rootBag.addFn(() => {
+    for (const query of mediaQueries) query.removeEventListener('change', onEnvironmentChange);
+  });
+
   // Web Audio must be created inside a real user gesture; nothing is assumed
   // about autoplay. The listener removes itself once unlocked.
   const unlockAudio = (): void => {

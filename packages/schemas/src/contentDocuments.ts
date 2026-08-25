@@ -30,11 +30,25 @@ export const CONTENT_DOCUMENTS: Readonly<Record<string, ContentDocumentRegistryE
 
 export type ContentDocumentName = keyof typeof CONTENT_DOCUMENTS;
 
+/**
+ * Document names under this prefix validate against 'level-document' without
+ * an entry per level id. Levels are ordinary game content (content/levels/**
+ * in the protected-boundary table) - authoring a new one must not require
+ * editing this package.
+ */
+const LEVEL_DOCUMENT_PREFIX = 'levels/';
+
+function schemaNameFor(documentName: string): SchemaName | undefined {
+  if (documentName.startsWith(LEVEL_DOCUMENT_PREFIX)) return 'level-document';
+  return CONTENT_DOCUMENTS[documentName]?.schemaName;
+}
+
 export class UnknownContentDocumentError extends Error {
   constructor(documentName: string, known: readonly string[]) {
     super(
       `Content document "${documentName}" has no registered schema. ` +
-        `Known content documents: ${known.length > 0 ? known.join(', ') : '(none)'}.`,
+        `Known content documents: ${known.length > 0 ? known.join(', ') : '(none)'}, ` +
+        `or a name starting with "${LEVEL_DOCUMENT_PREFIX}".`,
     );
     this.name = 'UnknownContentDocumentError';
   }
@@ -51,16 +65,16 @@ export function validateContentBundleData(
 ): Readonly<Record<string, ContentDocumentEnvelope>> {
   const result: Record<string, ContentDocumentEnvelope> = {};
   for (const [documentName, raw] of Object.entries(data)) {
-    const entry = CONTENT_DOCUMENTS[documentName];
-    if (!entry) {
+    const schemaName = schemaNameFor(documentName);
+    if (!schemaName) {
       throw new UnknownContentDocumentError(documentName, Object.keys(CONTENT_DOCUMENTS));
     }
-    const validation = validateDocument(entry.schemaName, documentName, raw);
+    const validation = validateDocument(schemaName, documentName, raw);
     if (!validation.valid) {
-      throw new SchemaValidationError(documentName, schemaIdFor(entry.schemaName), validation.errors);
+      throw new SchemaValidationError(documentName, schemaIdFor(schemaName), validation.errors);
     }
     result[documentName] = {
-      schemaId: schemaIdFor(entry.schemaName),
+      schemaId: schemaIdFor(schemaName),
       valid: true,
       value: validation.value,
     };

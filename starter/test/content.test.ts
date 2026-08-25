@@ -51,4 +51,17 @@ describe('malformed starter content fails before runtime use', () => {
     const malformedTuning = { ...tuningData, player: { ...tuningData.player, jumpVelocity: 'fast' } };
     expect(() => validateContentBundleData({ tuning: malformedTuning })).toThrow(SchemaValidationError);
   });
+
+  it('rejects a malformed asset entry - the Phase 5/6 known gap, now closed at the content boundary', () => {
+    const malformedAssets = [{ role: 'not-a-real-role', key: 'x', spec: { kind: 'generated', width: 1, height: 1, fill: '#fff' } }];
+    expect(() => validateDocumentOrThrow('content-assets', 'content/content.json#assets', malformedAssets)).toThrow(
+      SchemaValidationError,
+    );
+  });
+
+  it('rejects a malformed ui copy override', () => {
+    expect(() => validateDocumentOrThrow('ui-copy', 'content/content.json#ui', { title: 123 })).toThrow(
+      SchemaValidationError,
+    );
+  });
 });

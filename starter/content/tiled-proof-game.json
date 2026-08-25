@@ -1,0 +1,16 @@
+{
+  "id": "sw2d-tiled-proof",
+  "displayName": "SW2D Tiled Proof",
+  "version": "0.1.0",
+  "schemaVersion": 1,
+  "viewport": { "width": 960, "height": 540 },
+  "bindings": {},
+  "systemPacks": [
+    { "packId": "sw2d.world", "config": {} },
+    { "packId": "sw2d.world-entities", "config": {} },
+    { "packId": "starter.tiled-level", "config": {} }
+  ],
+  "defaultSettings": {
+    "masterVolume": 0.7
+  }
+}

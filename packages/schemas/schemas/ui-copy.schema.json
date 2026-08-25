@@ -1,0 +1,18 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:sw2d:schema:ui-copy:v1",
+  "title": "UiCopy",
+  "description": "Mirrors @sw2d/contracts Partial<UiCopy> (ui.ts). Every field is optional: an omitted field falls back to DEFAULT_UI_COPY. A leaf schema referenced by theme-manifest and validated directly for ContentBundle.ui.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "title": { "type": "string", "minLength": 1 },
+    "subtitle": { "type": "string", "minLength": 1 },
+    "startPrompt": { "type": "string", "minLength": 1 },
+    "playHint": { "type": "string", "minLength": 1 },
+    "pausedHeading": { "type": "string", "minLength": 1 },
+    "pausedResume": { "type": "string", "minLength": 1 },
+    "pausedRestart": { "type": "string", "minLength": 1 },
+    "pausedQuit": { "type": "string", "minLength": 1 }
+  }
+}

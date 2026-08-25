@@ -1,7 +1,8 @@
 # Architecture Overview
 
-Status: Phase 5 (Opus 5) - architecture integration gate A passed with targeted repairs. See
-[`PHASE5_ARCHITECTURE_GATE_A.md`](PHASE5_ARCHITECTURE_GATE_A.md). Governing spec: [`MASTER_PROJECT.md`](../../MASTER_PROJECT.md).
+Status: Phase 6 (Sonnet 5) complete - Tiled/theme/accessibility/resource content pipeline. Gate A
+(Phase 5, Opus 5) passed with targeted repairs; see [`PHASE5_ARCHITECTURE_GATE_A.md`](PHASE5_ARCHITECTURE_GATE_A.md).
+Governing spec: [`MASTER_PROJECT.md`](../../MASTER_PROJECT.md).
 
 ## The thesis
 
@@ -25,11 +26,17 @@ packages/runtime/     @sw2d/runtime     the reusable machine. Depends on contrac
 packages/schemas/     @sw2d/schemas     JSON Schema + Ajv validation + content-document registry
                                         + generic schema/pack-config-validator registration.
                                         Depends on contracts + ajv + ajv-formats. No Phaser.
-packages/packs/       @sw2d/packs       nine reusable system pack cores (combat, AI, world,
-                                        progression, arcade, puzzle, simulation, narrative,
-                                        strategy). Depends on contracts + schemas. No Phaser.
-starter/              @sw2d/starter     one game composing the runtime, loading validated JSON
-                                        content through @sw2d/schemas.
+packages/packs/       @sw2d/packs       ten reusable system pack cores (combat, AI, world,
+                                        world-entities, progression, arcade, puzzle, simulation,
+                                        narrative, strategy). Depends on contracts + schemas. No
+                                        Phaser.
+packages/content-pipeline/ @sw2d/content-pipeline  Tiled JSON normalization, the semantic
+                                        object-class catalog, theme resolution. Depends on
+                                        contracts only. No Phaser, no Ajv - see ADR-0014.
+starter/              @sw2d/starter     two games composing the runtime: the Phase 1-5 foundation
+                                        slice (index.html) and the Phase 6 Tiled/theme proof
+                                        (tiled-proof.html), both loading validated JSON content
+                                        through @sw2d/schemas.
 tools/scripts/                          repository-level checks (offline build guard).
 ```
 
@@ -125,7 +132,10 @@ reverse, and rolls back a partial install. One host per scene lifetime is the wh
 disposing the scene disposes the host, which disposes every pack.
 
 **Nine reusable pack cores exist in `@sw2d/packs`** (Phase 4): combat, AI, world, progression,
-arcade, puzzle, simulation, narrative, strategy. Each is a foundational capability - a health/
+arcade, puzzle, simulation, narrative, strategy - plus a tenth, Phase 6's `world.entities` entity
+registry, alongside `worldPack`'s `world.state` (see "Content pipeline" below and
+[ADR-0014](adr/0014-content-pipeline-and-entity-registry.md)). Each Phase 4 core is a foundational
+capability - a health/
 damage model, an agent-state vocabulary, a resource ledger - not a full genre system; see each
 file's doc comment for the exact line drawn (e.g. combat has no weapons or projectiles, AI has no
 pathfinding). Every pack publishes exactly one capability and depends on other packs only by
@@ -257,6 +267,71 @@ the runtime still only ever sees a `ContentBundle`. `ContentBundle.data` entries
 UI wording follows the same rule: the runtime knows *that* the game is paused and supplies
 neutral fallbacks; `ContentBundle.ui` supplies the words. No game identity, lore or joke
 belongs in runtime code.
+
+## Content pipeline (Phase 6): Tiled, entity registry, themes
+
+Full rationale: [ADR-0014](adr/0014-content-pipeline-and-entity-registry.md).
+
+```text
+Tiled JSON (content/levels/*.json)
+  -> @sw2d/content-pipeline normalizeTiledMap()   (transform + semantic class validation)
+  -> @sw2d/schemas level-document.schema.json     (shape validation, content boundary)
+  -> ContentBundle.data['levels/<id>']            (a ContentDocumentEnvelope<NormalizedLevel>)
+  -> @sw2d/packs world.entities (entity registry) (dispatch to a scene-scoped factory)
+  -> scene-scoped game code                        (spawns/behaves - starter/src/game-specific/)
+```
+
+**Tiled ingestion** (`@sw2d/content-pipeline`) is renderer-independent and validator-independent:
+no Phaser, no Ajv. It supports orthogonal, finite maps; `tilelayer` (name/dimensions only - Phase 6
+does not render tile images, see ADR-0014) and `objectgroup` layers; objects with a numeric id, an
+x/y/width/height rectangle, a `class`/`type` naming one of nineteen catalog classes (the eighteen
+MASTER_PROJECT.md section 6 requires, plus `Solid` for collision/platform geometry), and
+string/int/float/bool custom properties. Any other orientation, an infinite map, or an unsupported
+layer type fails with a named `UnsupportedTiledFeatureError`; an object naming a class outside the
+catalog fails with `UnknownTiledObjectClassError` in strict mode (the default) or is skipped with a
+warning when `strict: false`. A missing or mistyped required property fails with
+`TiledObjectPropertyError`, naming the map, object id, class and property.
+
+**The entity registry** is `@sw2d/packs`' tenth capability, `world.entities`, alongside
+`worldPack`'s `world.state` - exactly the room ADR-0011 reserved. It stores
+`(object, context) => result` factories keyed by class id: `register()` (duplicate registration
+throws), `dispatch()` (returns `undefined`, not an error, when no factory is registered - most
+catalog classes have none, which is expected). Phaser-free like every other `@sw2d/packs` core;
+rendering factories are registered and typed against `SceneContext` by scene-scoped game code, the
+same widening-cast pattern Phase 4 accepted for `puzzlePack`.
+
+**Theme contract.** A `ThemeManifest` (`@sw2d/contracts` `theme.ts`, validated by
+`@sw2d/schemas` `theme-manifest.schema.json`) carries `assets` (the same `AssetDescriptor[]` shape
+`ContentBundle.assets` already uses), `tokens`/`highContrastTokens` (a small CSS-custom-property
+palette for DOM UI), `fonts` (system stacks only, never a remote URL) and an optional `ui` copy
+override - never gameplay, tuning or system-pack data. `resolveTheme(theme, accessibility)`
+(`@sw2d/content-pipeline`) is a pure function: it swaps in `highContrastTokens` exactly when
+`accessibility.highContrast` is true, otherwise returns `tokens` unchanged. Two themes exist
+(`starter/content/themes/default`, `.../neon`); loading the same level under each produces
+byte-identical `ContentBundle.data` - asserted directly, not just documented - because
+`resolveTheme` and `normalizeTiledMap` never read each other's input.
+
+**The known asset/UI validation gap is closed.** `content-assets.schema.json` and
+`ui-copy.schema.json` (both leaves, also `$ref`-ed by `theme-manifest.schema.json`) now validate
+`ContentBundle.assets`/`.ui` the same way `game-definition`/`tuning` already were - the compile-time
+`satisfies`-then-cast trust Phase 2 left as a documented, deliberate gap is gone. A malformed asset
+role or a non-string UI field now fails at the content boundary, before a `ContentBundle` exists.
+
+**Resource governance is executable.** `@sw2d/schemas`' `validateResourceManifest` validates a
+`ResourceManifest`'s shape (Ajv, `resource-manifest.schema.json`/`resource-record.schema.json`)
+and the cross-record rules JSON Schema cannot express - duplicate ids, a third-party record with no
+`originalSource`, an *approved* record whose license is outside `resource-policy.json`'s
+`acceptableLicenses` or whose `localPath` is empty. `docs/resources/VISUAL_ASSET_MANIFEST.json`
+records the fifteen generated-texture assets Phase 1-6 actually ship (foundation-slice content plus
+both themes), every one `project-owned`/`generated` - proving the pipeline validates real records,
+not synthetic fixtures.
+
+**Environment refresh is wired.** `AccessibilityStateImpl.refreshEnvironment()` existed since
+Phase 1 with no caller. `createGame` (`packages/runtime/src/core/createGame.ts`) now listens for
+`matchMedia('(prefers-reduced-motion: reduce)')`/`matchMedia('(pointer: coarse)')` change events -
+guarded like `readAccessibilityEnvironment()` itself, disposed through the existing `rootBag` - and
+re-projects accessibility state live when the OS preference changes mid-session, not just on a
+settings write.
 
 ## The protected boundary
 

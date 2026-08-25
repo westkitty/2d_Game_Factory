@@ -1,5 +1,5 @@
 import type { AssetDescriptor, ContentBundle, ContentSource, UiCopy } from '@sw2d/contracts';
-import { validateContentBundleData } from '@sw2d/schemas';
+import { validateContentBundleData, validateDocumentOrThrow } from '@sw2d/schemas';
 import rawContent from '../content/content.json';
 import tuningData from '../content/tuning.json';
 
@@ -11,37 +11,38 @@ import tuningData from '../content/tuning.json';
  * @sw2d/contracts describes: the runtime never changes, only what feeds it
  * does.
  *
- * `assets`/`ui` have no JSON Schema yet (that is theme/asset-pipeline work
- * reserved for a later phase); `satisfies` below still gives compile-time
- * shape checking against the same contracts types the runtime consumes.
- * `data` documents (currently just `tuning`) are the part Phase 2 gates
- * through @sw2d/schemas at runtime, via the content-document registry -
- * malformed data fails right here, before a ContentBundle is ever produced.
+ * `assets`/`ui` now have a JSON Schema (Phase 6 closes the gap left open
+ * since Phase 2/5 - see docs/architecture/PHASE5_ARCHITECTURE_GATE_A.md's
+ * schema-boundary finding). `data` documents (`tuning`) are validated through
+ * the content-document registry, the same mechanism as before.
  */
 interface RawGameContent {
   readonly id: string;
   readonly schemaVersion: number;
-  readonly assets: readonly AssetDescriptor[];
-  readonly ui?: Partial<UiCopy>;
 }
 
-// A plain JSON import infers widened primitives (role: string, not AssetRole),
-// so `satisfies` cannot narrow it the way a TS literal could. This assertion
-// is compile-time trust only, not a runtime check - see the file comment
-// above on why assets/ui have no schema yet.
 const content = rawContent as RawGameContent;
 
 export const starterContent: ContentSource = {
   id: content.id,
   load: async (): Promise<ContentBundle> => {
+    const assets = validateDocumentOrThrow<readonly AssetDescriptor[]>(
+      'content-assets',
+      'content/content.json#assets',
+      rawContent.assets,
+    );
+    const ui =
+      rawContent.ui !== undefined
+        ? validateDocumentOrThrow<Partial<UiCopy>>('ui-copy', 'content/content.json#ui', rawContent.ui)
+        : undefined;
     const data = validateContentBundleData({ tuning: tuningData });
     return {
       id: content.id,
       schemaVersion: content.schemaVersion,
-      assets: content.assets,
+      assets,
       // exactOptionalPropertyTypes: omit the key entirely rather than set it
       // to undefined when content.json has no `ui` override.
-      ...(content.ui !== undefined ? { ui: content.ui } : {}),
+      ...(ui !== undefined ? { ui } : {}),
       data,
     };
   },

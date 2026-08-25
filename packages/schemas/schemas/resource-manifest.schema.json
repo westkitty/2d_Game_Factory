@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:sw2d:schema:resource-manifest:v1",
+  "title": "ResourceManifest",
+  "description": "Mirrors @sw2d/contracts ResourceManifest (resources.ts) - one category's resource manifest file (e.g. docs/resources/VISUAL_ASSET_MANIFEST.json).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["manifestVersion", "updated", "category", "records"],
+  "properties": {
+    "$comment": { "type": "string" },
+    "manifestVersion": { "type": "integer", "minimum": 1 },
+    "updated": { "type": "string", "minLength": 1 },
+    "category": { "type": "string", "enum": ["code", "visual", "audio", "font"] },
+    "records": {
+      "type": "array",
+      "items": { "$ref": "urn:sw2d:schema:resource-record:v1" }
+    }
+  }
+}

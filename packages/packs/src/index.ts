@@ -37,6 +37,13 @@ export {
 export { worldPack, type WorldService } from './world/worldPack.ts';
 
 export {
+  entityRegistryPack,
+  DuplicateEntityFactoryError,
+  type EntityFactory,
+  type EntityRegistry,
+} from './world/entityRegistryPack.ts';
+
+export {
   progressionPack,
   PROGRESSION_CONFIG_SCHEMA_ID,
   type ProgressionConfig,

@@ -1,0 +1,65 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:sw2d:schema:level-document:v1",
+  "title": "NormalizedLevel",
+  "description": "Mirrors @sw2d/contracts NormalizedLevel (level.ts) - the output of @sw2d/content-pipeline's Tiled normalizer, not raw Tiled JSON. Validated as a ContentBundle.data document (document name 'levels/<id>') the same way tuning.json is.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "id", "mapWidth", "mapHeight", "tileWidth", "tileHeight", "tileLayers", "solids", "objects"],
+  "properties": {
+    "schemaVersion": { "type": "integer", "minimum": 1 },
+    "id": { "type": "string", "minLength": 1 },
+    "mapWidth": { "type": "integer", "exclusiveMinimum": 0 },
+    "mapHeight": { "type": "integer", "exclusiveMinimum": 0 },
+    "tileWidth": { "type": "integer", "exclusiveMinimum": 0 },
+    "tileHeight": { "type": "integer", "exclusiveMinimum": 0 },
+    "tileLayers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "widthInTiles", "heightInTiles"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "widthInTiles": { "type": "integer", "exclusiveMinimum": 0 },
+          "heightInTiles": { "type": "integer", "exclusiveMinimum": 0 }
+        }
+      }
+    },
+    "solids": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["x", "y", "width", "height"],
+        "properties": {
+          "x": { "type": "number" },
+          "y": { "type": "number" },
+          "width": { "type": "number", "exclusiveMinimum": 0 },
+          "height": { "type": "number", "exclusiveMinimum": 0 }
+        }
+      }
+    },
+    "objects": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "class", "name", "x", "y", "width", "height", "properties"],
+        "properties": {
+          "id": { "type": "integer" },
+          "class": { "type": "string", "minLength": 1 },
+          "name": { "type": "string" },
+          "x": { "type": "number" },
+          "y": { "type": "number" },
+          "width": { "type": "number", "minimum": 0 },
+          "height": { "type": "number", "minimum": 0 },
+          "properties": {
+            "type": "object",
+            "additionalProperties": { "anyOf": [{ "type": "string" }, { "type": "number" }, { "type": "boolean" }] }
+          }
+        }
+      }
+    }
+  }
+}

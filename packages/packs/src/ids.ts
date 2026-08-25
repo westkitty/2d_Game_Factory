@@ -18,6 +18,7 @@ export const PACK_IDS = {
   combat: 'sw2d.combat',
   ai: 'sw2d.ai',
   world: 'sw2d.world',
+  worldEntities: 'sw2d.world-entities',
   progression: 'sw2d.progression',
   arcade: 'sw2d.arcade',
   puzzle: 'sw2d.puzzle',
@@ -30,6 +31,8 @@ export const CAPABILITY_IDS = {
   combat: 'combat.health',
   ai: 'ai.state',
   world: 'world.state',
+  /** Phase 6: entity registry, sitting alongside world.state exactly as ADR-0011 anticipated. */
+  entities: 'world.entities',
   progression: 'progression.state',
   arcade: 'arcade.score',
   puzzle: 'puzzle.state',

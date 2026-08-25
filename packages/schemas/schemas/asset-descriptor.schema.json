@@ -1,0 +1,57 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:sw2d:schema:asset-descriptor:v1",
+  "title": "AssetDescriptor",
+  "description": "Mirrors @sw2d/contracts AssetDescriptor/AssetSpec (content.ts). A leaf schema referenced by content-assets and theme-manifest.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["role", "key", "spec"],
+  "properties": {
+    "role": {
+      "type": "string",
+      "enum": [
+        "player",
+        "enemy",
+        "pickup",
+        "tile",
+        "platform",
+        "background",
+        "particle",
+        "hazard",
+        "checkpoint",
+        "exit",
+        "ui.panel",
+        "ui.button",
+        "ui.cursor"
+      ]
+    },
+    "key": { "type": "string", "minLength": 1 },
+    "spec": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "width", "height", "fill"],
+          "properties": {
+            "kind": { "const": "generated" },
+            "width": { "type": "integer", "exclusiveMinimum": 0 },
+            "height": { "type": "integer", "exclusiveMinimum": 0 },
+            "fill": { "type": "string", "minLength": 1 },
+            "stroke": { "type": "string", "minLength": 1 },
+            "strokeWidth": { "type": "number", "minimum": 0 },
+            "cornerRadius": { "type": "number", "minimum": 0 }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "url"],
+          "properties": {
+            "kind": { "const": "image" },
+            "url": { "type": "string", "minLength": 1 }
+          }
+        }
+      ]
+    }
+  }
+}

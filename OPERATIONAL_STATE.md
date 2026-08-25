@@ -2,7 +2,7 @@
 
 Project: **Stinky Weasel 2D Browser Game Factory** (`sw2d`)
 Repository: `westkitty/2d_Game_Factory`
-State revision: **5**
+State revision: **6**
 Updated: 2026-08-25
 
 Read this before doing anything. Governing spec: [`MASTER_PROJECT.md`](MASTER_PROJECT.md).
@@ -12,20 +12,21 @@ Workflow: [`docs/AGENT_WORKFLOW.md`](docs/AGENT_WORKFLOW.md).
 
 ## Current phase
 
-**Phase 5 - Architecture Integration Gate A - COMPLETE (Opus 5).**
+**Phase 6 - Tiled, Theme, Accessibility, and Resource Pipeline - COMPLETE (Sonnet 5).**
 
-Gate verdict: **PASS WITH TARGETED REPAIRS.** Full report:
-[`docs/architecture/PHASE5_ARCHITECTURE_GATE_A.md`](docs/architecture/PHASE5_ARCHITECTURE_GATE_A.md).
+Full architecture rationale:
+[ADR-0014](docs/architecture/adr/0014-content-pipeline-and-entity-registry.md).
 
-Next owner: **Sonnet 5, Phase 6** (Tiled, Theme, Accessibility, and Resource Pipeline). See
-[Next bounded action](#next-bounded-action).
+Next owner: **Sonnet 5, Phase 7A** (Preset Catalog Families A-C). See
+[Next bounded action](#next-bounded-action). **Do not execute Phase 7A yet** - this revision only
+records it as the next bounded action.
 
 ## Current baseline
 
 | Item | Value |
 |---|---|
 | Branch | `main` |
-| Workspaces | `@sw2d/contracts`, `@sw2d/runtime`, `@sw2d/schemas`, `@sw2d/packs`, `@sw2d/starter` |
+| Workspaces | `@sw2d/contracts`, `@sw2d/content-pipeline`, `@sw2d/runtime`, `@sw2d/schemas`, `@sw2d/packs`, `@sw2d/starter` |
 | Node (supported) | `>=22.12.0`; target 24.x LTS (`.nvmrc` = 24) |
 | Node (dev host used) | 26.7.0, npm 11.19.0 |
 | Phaser | 4.2.1 (MIT) |
@@ -37,7 +38,8 @@ Next owner: **Sonnet 5, Phase 6** (Tiled, Theme, Accessibility, and Resource Pip
 | Runtime version constant | `0.1.0` |
 | Debug snapshot version | `1` |
 | Settings schema version | `1` |
-| Schema versions (all Phase 2 schemas) | `v1` (encoded in each schema's `$id`, e.g. `urn:sw2d:schema:game-definition:v1`) |
+| Schema versions (all schemas, Phase 2 and Phase 6) | `v1` (encoded in each schema's `$id`, e.g. `urn:sw2d:schema:game-definition:v1`, `urn:sw2d:schema:theme-manifest:v1`) |
+| Starter entry points | `index.html` (Phase 1-5 foundation slice, untouched) + `tiled-proof.html` (Phase 6 content-pipeline proof) - one Vite multi-page build, both covered by `npm run build`/`check:offline` |
 
 Full rationale: [`docs/architecture/DEPENDENCY_BASELINE.md`](docs/architecture/DEPENDENCY_BASELINE.md).
 
@@ -227,6 +229,84 @@ and this revision's validation run (Phase 5).
   quit-to-title released every counter to zero. Frames were clocked manually via
   `game.loop.step(t)`, same pre-existing limitation as previous revisions.
 
+- **(Phase 6)** Tiled JSON normalizes to a validated, semantic level document without touching
+  Phaser: `@sw2d/content-pipeline`'s `normalizeTiledMap()` transforms `starter/content/levels/intro.json`
+  into a `NormalizedLevel`, which `@sw2d/schemas`' `level-document.schema.json` then validates as a
+  `ContentBundle.data['levels/intro']` document - the same two-stage gate `tuning.json` has had
+  since Phase 2. 17 focused tests (`normalize.test.ts`) cover: tile-layer/solid/object
+  normalization; the legacy `type` field as a class-name fallback; rejecting non-orthogonal
+  orientation, infinite maps and unsupported layer types by name; rejecting an unknown object class
+  in strict mode and skipping it (with a warning) when `strict: false`; rejecting a missing or
+  wrong-typed required property, naming the object and property; rejecting malformed top-level
+  structure.
+- **(Phase 6)** The object-class catalog (`@sw2d/content-pipeline`'s `objectClasses.ts`) recognises
+  all eighteen classes `MASTER_PROJECT.md` section 6 requires, plus `Solid` for collision/platform
+  geometry - 7 tests, including that every required class is present and that a missing/mistyped
+  required or optional property is rejected by name.
+- **(Phase 6)** The entity registry (`@sw2d/packs`' tenth capability, `world.entities`,
+  `entityRegistryPack`) dispatches a normalized object to a registered factory by class, rejects a
+  duplicate registration (`DuplicateEntityFactoryError`), and returns `undefined` - not an error -
+  for a recognised class with no registered factory. 6 tests in `entityRegistry.test.ts`; included
+  in `capabilityIds.test.ts`'s governance suite alongside the nine Phase 4 packs.
+- **(Phase 6)** The theme contract (`ThemeManifest` in `@sw2d/contracts`, validated by
+  `theme-manifest.schema.json`) is proven by two real themes (`starter/content/themes/default`,
+  `.../neon`) and `resolveTheme()`'s 7 unit tests, **plus a real-browser proof**: the Tiled-proof
+  page (`tiled-proof.html`) loads either theme from a `?theme=` query parameter, resolves it to CSS
+  custom properties on `document.documentElement`, and a same-scripted playthrough under both
+  themes produced identical gameplay state (spawn `{x:60,y:478}`, `checkpointActive:
+  "checkpoint-1"`, `collectiblesCollected: 1`, `hazardsTouched: 1` at the same world position) while
+  `--sw2d-accent`/`--sw2d-bg` differed (`#65d0a8`/`#0b0d13` default vs `#ff5ad1`/`#0a0014` neon).
+  `starter/test/tiledProofContent.test.ts` asserts the same thing without a browser: re-normalizing
+  the level directly equals what `tiledProofContent.load()` produces, regardless of which theme is
+  selected.
+- **(Phase 6)** The known asset/UI schema gap (flagged in Phase 2, re-confirmed in Phase 5's gate
+  report) is closed: `content-assets.schema.json`/`ui-copy.schema.json` now validate
+  `ContentBundle.assets`/`.ui` for **both** starter games. `starter/src/content.ts` (the original
+  foundation-slice content source) now calls `validateDocumentOrThrow('content-assets', ...)`/
+  `('ui-copy', ...)` instead of a compile-time-only `satisfies`-then-cast; a malformed asset role or
+  UI field now fails at the content boundary - asserted in `starter/test/content.test.ts`'s two new
+  tests, and structurally true for the Tiled-proof page too (its theme's `assets`/`ui` are validated
+  as part of the whole `theme-manifest` document).
+- **(Phase 6)** `highContrast` now renders something real, closing a Phase 1-5 "persisted but
+  unrendered" gap: `resolveTheme(theme, accessibility)` swaps a theme's `highContrastTokens` in for
+  its base `tokens` exactly when `accessibility.highContrast` is true. **Verified live in a real
+  browser**: `settings.patch({ highContrast: true })` changed `--sw2d-accent`/`--sw2d-bg`/
+  `--sw2d-text` from the neon theme's own palette to `#ffe14d`/`#000000`/`#ffffff` (both themes
+  share the same `highContrastTokens`), with the DOM touch-control panels visibly re-coloured in a
+  screenshot at a 375x812 mobile viewport.
+- **(Phase 6)** `AccessibilityStateImpl.refreshEnvironment()` has a real caller: `createGame`
+  listens for `matchMedia('(prefers-reduced-motion: reduce)')`/`('(pointer: coarse)')` change
+  events and re-projects accessibility state live, guarded like `readAccessibilityEnvironment()`
+  itself and disposed through the existing `rootBag`. Unit-tested directly
+  (`projection.test.ts`'s new test calls `refreshEnvironment()` and asserts the projection updates
+  without a settings write); the `matchMedia` wiring itself is browser-only and covered by the
+  Phase 6 browser regression, the same disclosure Phase 1's `visibilitychange`/`pointerdown`
+  listeners already carry.
+- **(Phase 6)** Reduced motion now suppresses a second, newly-introduced motion effect: the
+  Tiled-proof page's touch-button active-state CSS transition (`--sw2d-motion-duration`, 120ms ->
+  0ms). Verified live: `settings.patch({ reducedMotion: true })` set it to `0ms`. The original
+  foundation-slice page (`index.html`/`main.ts`) is unchanged and still only honours reduced motion
+  at the title prompt, per Phase 1-5's existing scope.
+- **(Phase 6)** Resource governance is executable, not documentary: `validateResourceManifest()`
+  (`@sw2d/schemas`) validates a manifest's shape (Ajv) plus duplicate-id, missing-`originalSource`
+  and license-policy rules JSON Schema cannot express - 7 unit tests plus 2 tests running it against
+  the real `docs/resources/VISUAL_ASSET_MANIFEST.json` (15 records, all `project-owned`/`generated`,
+  covering every generated texture the foundation slice and both themes actually ship).
+- **(Phase 6)** The Tiled-proof browser journey, run against the production build on port 4188 (not
+  4173): boot -> title -> CONFIRM -> play -> player spawns at the level's `PlayerSpawn` object
+  (`{x:60, y:478}` after settling, matching the Tiled object at `x:60,y:440`) -> walking right
+  triggers, in order and from Tiled data alone: `Checkpoint` (`worldPack.activateCheckpoint`,
+  `checkpointActive: "checkpoint-1"`), `Collectible` (`collectiblesCollected: 1`, the sprite
+  destroyed), `Hazard` (`hazardsTouched: 1`, deduplicated by object id), `Exit`
+  (`world.setFlag('level.cleared.exit-1', true)`, `cleared: true`) -> PAUSE -> resume -> 8
+  consecutive pause-menu restarts, every listener count and the live Phaser GameObject count
+  (10) flat throughout -> zero console errors -> `performance.getEntriesByType('resource')`
+  returned only same-origin `localhost:4188` entries -> a 375x812 mobile viewport showed unclipped,
+  correctly re-themed touch controls. The original foundation-slice journey (`index.html`) was
+  re-run in full first and remains unchanged: `context.disposables` is now 7 (was 6), the expected
+  +1 from the new `matchMedia` listener registration; every other counter, movement/jump values and
+  the flat GameObject count (5) matched Phase 5's evidence exactly.
+
 ## Implemented but unverified
 
 These exist in source and type-check, but have **no** executed evidence yet. Do not treat as
@@ -245,21 +325,44 @@ working.
   Still true: only `progressionPack`, `arcadePack` and `starter.placeholder-mover` have config
   schemas; the other seven Phase 4 packs declare no `configSchemaId` (either no config, or -
   `puzzlePack` - config that is inherently non-serializable functions).
-- Image-backed (`kind: 'image'`) assets - code path exists, unused; no theme/asset pipeline yet
-  (Phase 6).
-- `starter/src/content.ts`'s `assets`/`ui` fields have **no JSON Schema**, only a TypeScript
-  `satisfies`-then-assert against `AssetDescriptor`/`UiCopy` at the JSON import site (JSON
-  imports infer widened primitives, e.g. `role: string` not `AssetRole`, so `satisfies` alone
-  cannot narrow them - see the comment in `starter/src/content.ts`). A malformed
-  `content.json` asset entry is not currently rejected at the content boundary the way
-  `game.json` and `tuning.json` are. Deliberately out of scope: an asset/theme schema belongs to
-  Phase 6's Tiled/theme pipeline, not Phase 2's five named contract types.
+- Image-backed (`kind: 'image'`) assets - code path exists (`queueImageAssets`), still unused: both
+  Phase 6 themes use `kind: 'generated'` exclusively, matching the project's no-binary-art baseline.
+  The theme pipeline (Phase 6) now exists, but nothing has exercised the image-loading branch of it
+  yet.
+- **(Phase 2/5, closed in Phase 6)** ~~`starter/src/content.ts`'s `assets`/`ui` fields have no JSON
+  Schema~~ - see the Phase 6 "known asset/UI schema gap" entry above.
 - `InputDeviceAdapter.poll()` - unit-tested for call cadence; no polling device (gamepad) exists.
 - `WebAudioBus.musicNode` - wired into the gain graph, nothing plays through it.
 - `SaveStore.migrate` - unit-tested; never exercised against a real schema change.
-- `AccessibilityStateImpl.refreshEnvironment()` - no caller re-reads media queries yet.
-- `highContrast` - persisted and projected; nothing renders differently for it.
-- Reduced motion is honoured by the title prompt only; no other motion exists to suppress.
+- **(Phase 1-5, closed in Phase 6)** ~~`AccessibilityStateImpl.refreshEnvironment()` - no caller~~ -
+  see the Phase 6 entry above. Still unverified: real OS-level `prefers-reduced-motion`/
+  `pointer: coarse` *changing* mid-session on real hardware - only `refreshEnvironment()`'s direct
+  unit test and the `matchMedia` API's existence were exercised, not a live OS preference flip.
+- **(Phase 1-5, closed in Phase 6 for the Tiled-proof page only)** ~~`highContrast` - persisted and
+  projected; nothing renders differently for it~~ - see the Phase 6 entry above. The **original**
+  foundation-slice page (`index.html`) still renders nothing differently for `highContrast`; only
+  `tiled-proof.html`'s theme/CSS layer projects it. Closing it for the foundation slice too was not
+  required this phase and was not attempted, to avoid an unforced change to the Phase 1-5 proof.
+- **(Phase 1-5, closed in Phase 6 for the Tiled-proof page only)** ~~Reduced motion is honoured by
+  the title prompt only~~ - `tiled-proof.html`'s touch-button transition now honours it too (see the
+  Phase 6 entry above). `index.html`/`main.ts` is unchanged and still only honours it at the title
+  prompt.
+- **(Phase 6)** Tile-*image* rendering: `normalizeTiledMap` records a tile layer's name and
+  dimensions only; it does not read per-cell GID data, resolve a tileset, or draw tiles. Every
+  visual/collidable surface in the Phase 6 proof comes from object-layer `Solid` rectangles. See
+  [ADR-0014](docs/architecture/adr/0014-content-pipeline-and-entity-registry.md)'s "Rejected"
+  section - a deliberate, documented scope boundary, not an oversight.
+- **(Phase 6)** Thirteen of the nineteen object-class catalog entries (`Enemy`, `Powerup`,
+  `Spring`, `Updraft`, `DashPanel`, `Trigger`, `CameraZone`, `MusicZone`, `DialogueTrigger`,
+  `BossTrigger`, `SpawnZone`, `Objective`, `Interactable`) normalize and validate correctly (proven
+  by `objectClasses.test.ts`) but have **no registered entity-registry factory anywhere** - the
+  Phase 6 proof level only contains the five classes it actually demonstrates
+  (`PlayerSpawn`/`Checkpoint`/`Collectible`/`Hazard`/`Exit`) plus `Solid`. Per the phase's own
+  acceptance contract ("not every class needs full gameplay behaviour"), not a gap to close later
+  without a real consumer.
+- **(Phase 6)** `normalizeTiledMap`'s `strict: false` (skip-unknown-class) mode is unit-tested but
+  has no real caller anywhere in the starter - both content sources use the default (`strict:
+  true`). A bounded, already-implemented option for whichever phase first needs lenient ingestion.
 - **(Phase 3)** `topDownController`, `vehicleController`, `gridController`,
   `pointerActionController`, `uiSimulationController` - each has focused deterministic unit
   coverage against a real `ActionInputHost`, per the Phase 3 acceptance contract (only the
@@ -302,14 +405,14 @@ working.
   throttling was observed this revision (a `space` keypress did not visibly advance past the
   title scene in the hidden automation pane); not investigated further, as it is pre-existing QA
   debt out of Phase 2's scope, not a regression.
-- **Bundle size**: 1.5387 MB minified (407.08 kB gzip), up from 1.4 MB / 366 kB in Phase 1 because
-  `@sw2d/schemas` (Ajv + ajv-formats) is bundled into the starter, which validates its own content
-  at boot in production too. Grew by ~120 bytes this revision even though the starter does not
-  import `@sw2d/packs` at all - `@sw2d/schemas`' `validator.ts` (already imported by the starter)
-  gained `registerSchema`/`validateBySchemaId`/`UnregisteredSchemaError`, sharing the module with
-  code the starter already pulls in, so Rollup keeps the whole file rather than tree-shaking the
-  unused additions individually. Benign; not investigated further. No code splitting. Acceptable
-  for a self-contained static game; revisit only against a real target.
+- **Bundle size**: the shared chunk (`@sw2d/schemas` + Ajv/ajv-formats, now six more schemas) is
+  1,544.26 kB minified / 407.61 kB gzip - essentially unchanged from Phase 5's 1.5387 MB / 407.08 kB
+  (new JSON Schema documents are small relative to Ajv itself). Two page-specific chunks now exist:
+  `main` (the foundation slice, 3.98 kB / 2.03 kB gzip - unchanged) and `tiledProof` (15.63 kB /
+  5.32 kB gzip - `@sw2d/content-pipeline` plus `@sw2d/packs`' three installed packs plus
+  `tiledLevelPack.ts`), both loading the same shared chunk. No code splitting beyond Vite's default
+  multi-entry chunking. Acceptable for a self-contained static game; revisit only against a real
+  target.
 - **Phaser 4.2.1 typings gap** patched locally in `packages/runtime/src/phaser-augmentations.d.ts`.
   Delete it when upstream declares those `SceneManager` methods.
 - JSON Schema validation now exists for GameDefinition, PresetDefinition, SystemPackSelection,
@@ -375,54 +478,133 @@ Breaking one of these is an architecture change, not a bug fix. Escalate rather 
 20. A pack publishes every capability id it declares in `provides`, during `install()`
     (ADR-0013). `resolveInstallOrder` satisfies other packs' dependencies from that declaration,
     so it is a contract, not documentation.
+21. `@sw2d/content-pipeline` owns Tiled ingestion and theme resolution and stays Phaser-free and
+    Ajv-free (ADR-0014). Its object-class catalog is fixed at nineteen classes; add one only for a
+    genuine second real consumer, not speculatively.
+22. A theme document (`ThemeManifest`) carries only `assets`/`tokens`/`fonts`/`ui` - never
+    gameplay, tuning or system-pack data (ADR-0014). `resolveTheme()` is the mechanical guarantee:
+    it reads and returns only those four fields.
 
 ## Validation matrix
 
 | Layer | State | Command |
 |---|---|---|
-| Static / schema | TypeScript passing; JSON Schema exists for 5 contract types + 1 content document + 3 pack config schemas (progression, arcade, starter placeholder-mover) | `npm run typecheck` |
-| Unit | 213 tests passing (58 Phase 1 + 29 Phase 2 + 35 Phase 3 + 78 Phase 4 + 13 Phase 5) | `npm test` |
-| Build | passing | `npm run build` |
+| Static / schema | TypeScript passing; JSON Schema exists for 5 contract types + 1 content document + 6 Phase 6 content-pipeline documents (asset-descriptor, ui-copy, content-assets, theme-manifest, resource-record/-manifest, level-document) + 3 pack config schemas (progression, arcade, starter placeholder-mover) | `npm run typecheck` |
+| Unit | 279 tests passing (58 Phase 1 + 29 Phase 2 + 35 Phase 3 + 78 Phase 4 + 13 Phase 5 + 66 Phase 6) | `npm test` |
+| Build | passing (two-page build: `index.html` + `tiled-proof.html`) | `npm run build` |
 | Offline (static guard) | passing | `npm run check:offline` |
 | Runtime integration | proven manually in-browser, **not automated** | see ADR-0008 |
-| Browser journeys | not automated; boot/title/move/jump/dash/pause/resume/8x restart/quit/fresh-run re-verified manually this revision after the `createGame`/`PlayScene`/`SystemHostImpl` changes | Phase 2+ (QA package still unbuilt) |
+| Browser journeys | not automated; **both** starter pages re-verified manually this revision on port 4188 - the original boot/title/move/jump/pause/resume/8x-restart/quit/fresh-run journey (unchanged from Phase 5), and the new Tiled-proof journey (boot/title/play/spawn-from-level-data/checkpoint/collectible/hazard/exit/pause/resume/8x-restart/theme-swap/high-contrast/reduced-motion/mobile-viewport) | Phase 2+ (QA package still unbuilt) |
 | Proof regression | none - no proof games exist | Phase 10 |
 | Pack composition | real `SystemHostImpl` + `resolveInstallOrder` + `CapabilityRegistryImpl` installing all nine Phase 4 packs together, plus config-validation, declared-`provides` and throwing-teardown failure paths, automated | `packages/runtime/test/packsComposition.test.ts` |
-| Capability-id governance | pattern, uniqueness and pack-id/capability-id split, automated | `packages/packs/test/capabilityIds.test.ts` |
+| Capability-id governance | pattern, uniqueness and pack-id/capability-id split, automated for all ten packs including Phase 6's `entityRegistryPack` | `packages/packs/test/capabilityIds.test.ts` |
+| Tiled/theme/resource content pipeline | normalization, object-class catalog, entity-registry dispatch, theme resolution and resource governance, all automated; the real `docs/resources/VISUAL_ASSET_MANIFEST.json` and the real `starter/content/levels/intro.json` are both exercised directly, not only synthetic fixtures | `packages/content-pipeline/test/**`, `packages/schemas/test/contentPipeline.test.ts`, `packages/schemas/test/resourceGovernance.test.ts`, `packages/packs/test/entityRegistry.test.ts`, `starter/test/tiledProofContent.test.ts`, `starter/test/resourceGovernance.test.ts` |
 
 `npm run validate` runs typecheck + test + build + offline guard. All four passed this revision.
 
 ## Pending work
 
-Phases 6-12 are unstarted. See `MASTER_PROJECT.md` §38 for the routed plan and owners.
+Phases 7-12 are unstarted. See `MASTER_PROJECT.md` §38 for the routed plan and owners.
 
 ## Next bounded action
 
-**Phase 6 - Sonnet 5 - Tiled, Theme, Accessibility, and Resource Pipeline.**
+**Phase 7A - Sonnet 5 - Preset Catalog Families A-C** (platforming, top-down action, shooter -
+preset recipes 1-27).
 
-Not executed this revision. Gate A passed, so the Phase 1-4 boundaries are settled and Phase 6 may
-build on them. Read
-[`docs/architecture/PHASE5_ARCHITECTURE_GATE_A.md`](docs/architecture/PHASE5_ARCHITECTURE_GATE_A.md)
-first - specifically "Phase 6 readiness" and the deferred-decision triggers.
+Not executed this revision - Phase 6 explicitly stops before it. What Sonnet may assume, and what
+is protected, going into Phase 7A:
 
-What Sonnet may assume, and what is protected:
-
-- Package boundaries and dependency direction are settled. `@sw2d/contracts` keeps zero
-  dependencies; `@sw2d/runtime` never imports a schema library.
-- `GameContext` is **closed** for Phase 6. Theme and asset work goes through the existing `assets`
-  and `content` fields; anything engine-specific extends `SceneContext`; anything a game can run
-  without is a system pack.
-- Capability ids follow ADR-0011 and a test enforces it.
-- Phase 6's events are declared where Phase 6's systems live, never in `@sw2d/contracts`
-  (ADR-0012).
-- A pack's `configSchemaId` and `provides` are both enforced at install (ADR-0013).
-- The first schema task is the known `assets`/`ui` gap (see "Implemented but unverified"), which
-  was deliberately reserved for this phase rather than guessed at in Phase 2.
-
-Do **not** pre-emptively solve any deferred item in the gate report - each names its own trigger.
-Do not build the Playwright/QA package; that is still its own phase.
+- Package boundaries and dependency direction are settled through Phase 6: `@sw2d/contracts` keeps
+  zero dependencies; `@sw2d/runtime` never imports a schema library or `@sw2d/content-pipeline`;
+  `@sw2d/content-pipeline` stays Phaser-free and Ajv-free (ADR-0014).
+- `GameContext` is **still closed** - Phase 6 added zero fields to it, the same negative-evidence
+  pattern Phase 5's gate found for Phase 4. Level/theme/entity-registry work goes through the
+  existing `content`/`assets` fields and the `world.entities` capability, not a new context field.
+- A preset's `requiredContentRoles` can now legitimately include a level document
+  (`levels/<id>`, validated against `level-document.schema.json`) and a theme
+  (`theme-manifest.schema.json`) - both real, schema-validated document types a preset recipe can
+  reference starting now.
+- The object-class catalog is fixed at nineteen classes (protected invariant 21). If a preset family
+  genuinely needs a twentieth, that is the second real consumer the deferral in ADR-0014 was
+  written for - not a reason to add speculative classes ahead of one.
+- Capability ids follow ADR-0011 and a test enforces it; the `world` family now has two members
+  (`world.state`, `world.entities`) as ADR-0011 anticipated - a preset needing camera zones or
+  transitions adds `world.camera-zones` etc. alongside them, not a new family.
+- Do not build the Playwright/QA package; that is still its own phase.
+- Do not attempt tile-*image* rendering (ADR-0014's explicit deferral) unless a preset family
+  cannot be represented with `Solid`-object collision geometry - and if so, treat it as a genuine
+  Opus-escalation-worthy architecture question (a new resource-governance and rendering path), not
+  a Sonnet-local addition.
 
 ## Revision history
+
+### Revision 6 - 2026-08-25 (Sonnet 5)
+Phase 6 complete: Tiled, Theme, Accessibility, and Resource Pipeline. New package
+`@sw2d/content-pipeline` (Tiled JSON normalization, the nineteen-class object-class catalog, theme
+resolution - Phaser-free, Ajv-free, depends on `@sw2d/contracts` only) plus three new shared data
+types in `@sw2d/contracts` (`NormalizedLevel`, `ThemeManifest`, `ResourceRecord`/`ResourceManifest`)
+and a tenth `@sw2d/packs` capability, `world.entities` (`entityRegistryPack`), sitting alongside
+`worldPack`'s `world.state` exactly where ADR-0011 reserved room for it. Full rationale:
+[ADR-0014](docs/architecture/adr/0014-content-pipeline-and-entity-registry.md).
+
+Closed the known asset/UI schema gap flagged in Phase 2 and re-confirmed in Phase 5's gate report:
+six new `@sw2d/schemas` documents (`asset-descriptor`, `ui-copy`, `content-assets`,
+`theme-manifest`, `resource-record`/`-manifest`, `level-document`) now validate `ContentBundle`'s
+`assets`/`ui` fields and the new Tiled/theme/resource document types at the content boundary, the
+same guarantee `game-definition`/`tuning` have had since Phase 2. Resource governance is now
+executable (`validateResourceManifest`, duplicate-id/license-policy checks JSON Schema cannot
+express) and proven against a real manifest, `docs/resources/VISUAL_ASSET_MANIFEST.json` (15
+records covering every generated texture the project actually ships, all `project-owned`).
+
+Built a real Tiled-JSON-to-playable-level pipeline: `starter/content/levels/intro.json` (a
+hand-authored, valid Tiled export - ground + two platforms as `Solid` objects, `PlayerSpawn`,
+`Checkpoint`, two `Collectible`s, a `Hazard`, an `Exit`) normalizes through
+`@sw2d/content-pipeline`, validates through `@sw2d/schemas`, and drives an entirely new system pack,
+`starter/src/game-specific/tiledLevelPack.ts` - a second worked example of the protected boundary
+alongside `placeholderMoverPack.ts`, reading `platformController` intent exactly the same way, with
+level layout, spawn point and every semantic object sourced from Tiled JSON rather than a
+TypeScript coordinate array. Two tiny local themes (`default`, `neon`) prove theme/gameplay
+separation: loading the same level under either theme produces byte-identical `ContentBundle.data`,
+asserted directly (`starter/test/tiledProofContent.test.ts`) and confirmed live in a browser
+(identical spawn position, checkpoint id, collectible/hazard counts across a scripted playthrough
+under both themes, with only `--sw2d-accent`/`--sw2d-bg`/etc. differing). `highContrast` now
+projects a real visual change for the first time since Phase 1 (theme `highContrastTokens`, browser
+-verified live via `settings.patch`); reduced motion now suppresses a second motion effect (a touch
+-button CSS transition); `AccessibilityStateImpl.refreshEnvironment()` finally has a caller
+(`createGame` now listens for `matchMedia` change events, guarded and disposed the same way every
+other environment-sourced listener in that file already is).
+
+Deliberately shipped as a **second, separate static page** (`tiled-proof.html`, one more entry in
+`starter/vite.config.ts`'s multi-page build) rather than a change to `index.html`/`main.ts`/
+`placeholderMoverPack.ts` - MASTER_PROJECT.md section 8 explicitly allows a dedicated fixture, and
+this way the already-verified Phase 1-5 browser journey carries zero risk from Phase 6's changes.
+Proven: the full original journey (boot, title, movement `vx 220`/dash `385`, jump `vy -430` only
+when grounded, pause, resume, 8 pause-menu restarts, quit-to-title, fresh run) was re-run against
+the production build and matched Phase 5's evidence exactly, with one expected, explained change -
+`context.disposables` is now 7 (was 6), the new `matchMedia` listener registration.
+
+The Tiled-proof page's own journey was run in full against the production build (port 4188, not
+4173): boot -> title -> play -> player spawns at the level's `PlayerSpawn` position -> walking
+right triggers `Checkpoint`/`Collectible`/`Hazard`/`Exit` in sequence, each from Tiled data through
+the entity registry, `Checkpoint` and `Exit` both driving Phase 4's previously-unwired `worldPack`
+for the first real time -> pause -> resume -> 8 restarts with every listener count and the live
+Phaser GameObject count (10) flat -> zero console errors -> only same-origin network requests -> a
+375x812 mobile viewport showed correctly re-themed, unclipped touch controls.
+
+66 new tests (279 total, up from 213): 10 Tiled normalization, 7 object-class catalog, 7 theme
+resolution (`@sw2d/content-pipeline`); 6 entity registry (`@sw2d/packs`, plus inclusion in the
+existing capability-id governance suite); 14 schema/type parity plus 7 resource-governance
+(`@sw2d/schemas`); 2 asset/UI content-boundary rejection tests plus 10 Tiled-proof-content plus 2
+real-manifest resource-governance tests (starter); 1 `refreshEnvironment()` unit test (runtime).
+`npm run validate` passed (typecheck, 279 tests, two-page build, offline guard).
+
+Object-class catalog is deliberately fixed at nineteen (the required eighteen plus `Solid`), not an
+extensible registry - `@sw2d/content-pipeline` has exactly one real consumer this phase. Tile-*image*
+rendering is explicitly out of scope and documented as such, not silently dropped: every
+visual/collidable surface in the proof comes from object-layer `Solid` rectangles and the existing
+generated-texture pipeline. `GameContext` reviewed and left unchanged - the entity registry, theme
+resolution and resource governance all compose through existing `content`/`assets` fields and one
+new capability id, adding zero fields, the same negative-evidence pattern the last two gates found.
 
 ### Revision 5 - 2026-08-25 (Opus 5)
 Phase 5 complete. Architecture Integration Gate A: **PASS WITH TARGETED REPAIRS**

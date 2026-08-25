@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "id": "neon",
+  "displayName": "Neon",
+  "assets": [
+    {
+      "role": "player",
+      "key": "theme/neon/player",
+      "spec": { "kind": "generated", "width": 28, "height": 44, "fill": "#ff5ad1", "stroke": "#1a0018", "strokeWidth": 2, "cornerRadius": 10 }
+    },
+    {
+      "role": "platform",
+      "key": "theme/neon/platform",
+      "spec": { "kind": "generated", "width": 64, "height": 16, "fill": "#1c1240", "stroke": "#7a5cff", "strokeWidth": 2 }
+    },
+    {
+      "role": "pickup",
+      "key": "theme/neon/pickup",
+      "spec": { "kind": "generated", "width": 14, "height": 14, "fill": "#5affe0", "cornerRadius": 7 }
+    },
+    {
+      "role": "hazard",
+      "key": "theme/neon/hazard",
+      "spec": { "kind": "generated", "width": 20, "height": 18, "fill": "#ff3860", "stroke": "#3a0010", "strokeWidth": 2 }
+    },
+    {
+      "role": "checkpoint",
+      "key": "theme/neon/checkpoint",
+      "spec": { "kind": "generated", "width": 20, "height": 24, "fill": "#5ac8ff", "stroke": "#00263a", "strokeWidth": 2 }
+    },
+    {
+      "role": "exit",
+      "key": "theme/neon/exit",
+      "spec": { "kind": "generated", "width": 22, "height": 44, "fill": "#c9ff5a", "stroke": "#2a3a00", "strokeWidth": 2 }
+    }
+  ],
+  "tokens": {
+    "background": "#0a0014",
+    "panel": "#1c1240",
+    "panelActive": "#2c1c66",
+    "text": "#f2e8ff",
+    "accent": "#ff5ad1",
+    "border": "#7a5cff"
+  },
+  "fonts": {
+    "ui": "ui-monospace, SFMono-Regular, Menlo, Consolas, monospace"
+  },
+  "ui": {
+    "title": "SW2D TILED PROOF",
+    "subtitle": "phase 6 content pipeline - neon theme"
+  },
+  "highContrastTokens": {
+    "background": "#000000",
+    "panel": "#000000",
+    "panelActive": "#1a1a1a",
+    "text": "#ffffff",
+    "accent": "#ffe14d",
+    "border": "#ffffff"
+  }
+}

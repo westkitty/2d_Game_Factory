@@ -38,3 +38,10 @@ export {
   validatePresetComposition,
   type PackSelectionCheckIssue,
 } from './presetComposition.ts';
+
+export {
+  ResourceGovernanceError,
+  validateResourceManifest,
+  type ResourcePolicy,
+  type ResourceGovernanceIssue,
+} from './resourceGovernance.ts';

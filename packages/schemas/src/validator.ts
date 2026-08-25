@@ -7,6 +7,13 @@ import gameDefinitionSchema from '../schemas/game-definition.schema.json';
 import presetDefinitionSchema from '../schemas/preset-definition.schema.json';
 import gameSettingsSchema from '../schemas/game-settings.schema.json';
 import tuningSchema from '../schemas/tuning.schema.json';
+import assetDescriptorSchema from '../schemas/asset-descriptor.schema.json';
+import uiCopySchema from '../schemas/ui-copy.schema.json';
+import contentAssetsSchema from '../schemas/content-assets.schema.json';
+import themeManifestSchema from '../schemas/theme-manifest.schema.json';
+import resourceRecordSchema from '../schemas/resource-record.schema.json';
+import resourceManifestSchema from '../schemas/resource-manifest.schema.json';
+import levelDocumentSchema from '../schemas/level-document.schema.json';
 
 /**
  * Ajv-based validation for every schema this package owns.
@@ -23,7 +30,14 @@ export type SchemaName =
   | 'game-definition'
   | 'preset-definition'
   | 'game-settings'
-  | 'tuning';
+  | 'tuning'
+  | 'asset-descriptor'
+  | 'ui-copy'
+  | 'content-assets'
+  | 'theme-manifest'
+  | 'resource-record'
+  | 'resource-manifest'
+  | 'level-document';
 
 export const SCHEMA_NAMES: readonly SchemaName[] = [
   'action-bindings',
@@ -32,6 +46,13 @@ export const SCHEMA_NAMES: readonly SchemaName[] = [
   'preset-definition',
   'game-settings',
   'tuning',
+  'asset-descriptor',
+  'ui-copy',
+  'content-assets',
+  'theme-manifest',
+  'resource-record',
+  'resource-manifest',
+  'level-document',
 ];
 
 /** One located problem: which document, where in it, and what is wrong. */
@@ -62,15 +83,31 @@ const SCHEMA_DOCUMENTS: Readonly<Record<SchemaName, SchemaDocument>> = {
   'preset-definition': presetDefinitionSchema,
   'game-settings': gameSettingsSchema,
   tuning: tuningSchema,
+  'asset-descriptor': assetDescriptorSchema,
+  'ui-copy': uiCopySchema,
+  'content-assets': contentAssetsSchema,
+  'theme-manifest': themeManifestSchema,
+  'resource-record': resourceRecordSchema,
+  'resource-manifest': resourceManifestSchema,
+  'level-document': levelDocumentSchema,
 };
 
 // Registration order matters: a schema must be added before anything that
 // $refs it by $id is compiled. Leaf schemas first, composites after.
-for (const name of ['action-bindings', 'system-pack-selection'] as const) {
+for (const name of ['action-bindings', 'system-pack-selection', 'asset-descriptor', 'ui-copy', 'resource-record'] as const) {
   const schema = SCHEMA_DOCUMENTS[name];
   ajv.addSchema(schema, schema.$id);
 }
-for (const name of ['game-definition', 'preset-definition', 'game-settings', 'tuning'] as const) {
+for (const name of [
+  'game-definition',
+  'preset-definition',
+  'game-settings',
+  'tuning',
+  'content-assets',
+  'theme-manifest',
+  'resource-manifest',
+  'level-document',
+] as const) {
   const schema = SCHEMA_DOCUMENTS[name];
   ajv.addSchema(schema, schema.$id);
 }

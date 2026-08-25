@@ -8,6 +8,107 @@ Detail for each architectural decision lives in `docs/architecture/adr/`. This f
 
 ---
 
+## Phase 6 - Tiled, Theme, Accessibility, and Resource Pipeline (2026-08-25, Sonnet 5)
+
+Full architecture rationale:
+[ADR-0014](docs/architecture/adr/0014-content-pipeline-and-entity-registry.md).
+
+### Decisions
+
+**A new package, not a bigger `@sw2d/schemas` or `@sw2d/packs`.** Tiled ingestion needs real
+transform logic (per-class required-property checks with located errors) that JSON Schema cannot
+express cleanly, and it needs zero Ajv/Phaser dependency. Cramming it into `@sw2d/schemas` would
+have blurred a boundary Phase 5's gate specifically praised for staying narrow ("the model scales -
+do not generalise it further"); cramming it into `@sw2d/packs` would have given a stateless
+transform a capability-installation lifecycle it does not need. `@sw2d/content-pipeline` depends on
+`@sw2d/contracts` only - the same "does this actually need Phaser or a validator" test every
+existing package boundary in this project has passed.
+
+**Three new shared types went into `@sw2d/contracts`, not into whichever package produces them
+first.** `NormalizedLevel`, `ThemeManifest`, `ResourceRecord`/`ResourceManifest` are each consumed
+by two or three packages that must not depend on each other's implementation
+(`content-pipeline` produces them, `schemas` validates them, `packs`' entity registry consumes
+one of them). Exactly the reasoning that put `AssetDescriptor`/`ContentBundle` in contracts back in
+Phase 1 - and, on the negative side, `GameContext` gained zero fields from any of this, the same
+evidence Phase 4 and Phase 5 both produced independently.
+
+**Two-stage Tiled validation, not one.** `normalizeTiledMap` (hand-written, `@sw2d/content-pipeline`)
+does the transform and the semantic checks a schema cannot express well (per-class required
+properties, unknown-class rejection with a real object id in the message).
+`level-document.schema.json` (`@sw2d/schemas`) then validates *its output* at the content boundary,
+the same guarantee `tuning.json` has had since Phase 2. Neither stage validates raw Tiled JSON
+directly against a schema - Tiled's own on-disk format is an authoring-tool detail this factory
+does not commit to mirroring exactly, and MASTER_PROJECT.md section 6 explicitly says "do not
+attempt every Tiled feature."
+
+**The entity registry is `world.entities`, the entity registry's factories are Phaser-free by
+type, but the *pack that registers real factories* is scene-scoped.** `EntityRegistry<TContext>`
+is generic; the concrete `EntityRegistryImpl` stores `(object, context) => result` and never
+inspects `context`, so it is honestly typed as `EntityRegistry<GameContext>` at the pack-definition
+level and widened to `EntityRegistry<SceneContext>` at the one real call site
+(`starter/src/game-specific/tiledLevelPack.ts`) - identical to the widening cast Phase 4 already
+accepted for `puzzlePack`'s `PuzzleService<TState>`. Reusing an already-reviewed pattern instead of
+inventing a second one.
+
+**Tile-image rendering is out of scope, on purpose, not by oversight.** `normalizeTiledMap` records
+a tile layer's name and dimensions and stops there; every collidable/visual surface in the Phase 6
+proof is a `Solid`-classed object-layer rectangle, rendered with the same generated-texture pipeline
+every other sprite in this project uses. Reading Tiled's per-cell GID data and resolving a tileset
+image is real work with a real resource-governance question behind it (a tileset PNG needs a
+provenance record) that no Phase 6 proof actually needs answered.
+
+**The Tiled-proof page is a second static entry, not a change to the first.** MASTER_PROJECT.md
+section 8 explicitly allows this ("the existing starter should load this level *or* a dedicated
+small Phase 6 content fixture"). Given a choice between risking the hard-won Phase 1-5 evidence
+(`context.disposables` flat at 6 across 8 restarts, zero console errors, `vx`/`vy` values matching a
+schema-validated config) and adding one more `<script>` entry to a Vite multi-page build, the second
+was strictly cheaper and strictly safer. `placeholderMoverPack.ts` was not read for edits, only for
+its *pattern* - `tiledLevelPack.ts` is a second worked example of the protected boundary, not a
+replacement for the first.
+
+**`highContrast` and `refreshEnvironment()` were closed inside `resolveTheme()`/`createGame()`
+respectively, not by adding new `GameContext` fields.** Both were flagged as gaps as far back as
+Phase 1-3 ("persisted and projected; nothing renders differently for it" / "no caller re-reads
+media queries yet"). Phase 6 is the first phase with an actual presentation layer (the theme/CSS
+pipeline) for `highContrast` to affect, and the first phase to introduce a plausible caller for
+`refreshEnvironment()` - MASTER_PROJECT.md section 12's own instruction ("do not create polling
+simply to mark this item used") is exactly why neither was closed earlier. `matchMedia`'s `change`
+event is a real, non-polling signal; wiring it inside `createGame` next to the existing
+`visibilitychange` listener reuses a pattern already reviewed, rather than adding a new one.
+
+### The pattern this phase kept finding
+
+Every one of Phase 5's five defects was "a declaration nothing evaluates." Phase 6 did not repeat
+that shape anywhere it touched - the object-class catalog's required properties are checked
+(`validateObjectProperties`, with tests for both a missing and a mistyped property); a pack's
+`provides: [CAPABILITY_IDS.entities]` is real (checked by the existing Phase 5 `provides`
+enforcement, for free); the two themes' `assets` arrays are schema-validated, not just
+TypeScript-satisfied. The one place a declaration-vs-behaviour gap could plausibly have crept back
+in - "not every object class needs a registered factory" - is explicit in the entity registry's own
+contract (`dispatch()` returns `undefined`, not an error, for a recognised-but-unregistered class),
+so an author cannot mistake "the catalog knows this class" for "something happens when it appears."
+
+### Rejected during this phase
+
+- **An extensible, runtime-registered object-class catalog.** MASTER_PROJECT.md section 13.1
+  permits it; Phase 6 has one real consumer (the proof level) and no second one, which is exactly
+  invariant 14's bar for a new abstraction. Deferred with a trigger: a second content-authoring
+  consumer (a Phase 7+ preset) needing a class outside the fixed nineteen.
+- **Live in-page theme hot-swapping.** `ContentSource.load()` has always been a one-shot call at
+  `createGame()` time; making it swappable mid-session is a materially bigger runtime change no
+  Phase 6 acceptance criterion actually needs. The query-parameter-selected, load-time theme choice
+  proves theme/gameplay separation just as well and costs nothing new in the runtime.
+- **Rendering Tiled tile images.** See "Decisions" above.
+- **Wiring the Tiled proof into `index.html`.** See "Decisions" above.
+- **A `PackConfigValidator`-style dependency-inversion for resource governance**, so
+  `@sw2d/schemas` would not need `resource-policy.json` passed in. Unnecessary: `resource-policy.json`
+  lives at the repository root, `validateResourceManifest` is a pure function that takes a
+  `ResourcePolicy` object, and the one real caller (a test, today; `@sw2d/cli`'s future `doctor`
+  command) already has to read the file anyway. Passing data in beats reaching a path out of the
+  package.
+
+---
+
 ## Phase 5 - Architecture Integration Gate A (2026-08-25, Opus 5)
 
 Verdict: **PASS WITH TARGETED REPAIRS**. Full report:

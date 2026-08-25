@@ -1,0 +1,20 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:sw2d:schema:resource-record:v1",
+  "title": "ResourceRecord",
+  "description": "Mirrors @sw2d/contracts ResourceRecord (resources.ts). Per-record shape only; duplicate-id and license-policy checks are cross-record rules JSON Schema cannot express - see validateResourceManifest in @sw2d/schemas.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "category", "sourceKind", "license", "attributionRequired", "modificationStatus", "localPath", "status"],
+  "properties": {
+    "id": { "type": "string", "minLength": 1 },
+    "category": { "type": "string", "enum": ["code", "visual", "audio", "font"] },
+    "sourceKind": { "type": "string", "enum": ["project-owned", "third-party"] },
+    "originalSource": { "type": "string", "minLength": 1 },
+    "license": { "type": "string", "minLength": 1 },
+    "attributionRequired": { "type": "boolean" },
+    "modificationStatus": { "type": "string", "enum": ["unmodified", "modified", "generated"] },
+    "localPath": { "type": "string", "minLength": 1 },
+    "status": { "type": "string", "enum": ["approved", "pending", "rejected"] }
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:sw2d:schema:content-assets:v1",
+  "title": "ContentAssets",
+  "description": "Mirrors @sw2d/contracts readonly AssetDescriptor[] - the ContentBundle.assets field. Closes the Phase 5 known gap: content.json's assets array had no runtime schema, only compile-time trust.",
+  "type": "array",
+  "items": { "$ref": "urn:sw2d:schema:asset-descriptor:v1" }
+}

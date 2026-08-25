@@ -59,6 +59,17 @@ describe('AccessibilityStateImpl', () => {
     expect(new AccessibilityStateImpl(offPhone, phone).touchControlsVisible).toBe(false);
   });
 
+  it('refreshEnvironment() re-projects a changed OS preference without a settings write', () => {
+    const state = new AccessibilityStateImpl(settingsStore(), desktop);
+    expect(state.reducedMotion).toBe(false);
+    expect(state.coarsePointer).toBe(false);
+
+    state.refreshEnvironment({ coarsePointer: true, prefersReducedMotion: true });
+
+    expect(state.reducedMotion).toBe(true);
+    expect(state.coarsePointer).toBe(true);
+  });
+
   it('reports audio disabled when muted or at zero master volume', () => {
     const settings = settingsStore();
     const state = new AccessibilityStateImpl(settings, desktop);

@@ -12,6 +12,8 @@
   },
   "dependencies": {
     "@sw2d/contracts": "0.1.0",
+    "@sw2d/content-pipeline": "0.1.0",
+    "@sw2d/packs": "0.1.0",
     "@sw2d/runtime": "0.1.0",
     "@sw2d/schemas": "0.1.0",
     "phaser": "4.2.1"

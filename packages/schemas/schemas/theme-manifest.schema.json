@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:sw2d:schema:theme-manifest:v1",
+  "title": "ThemeManifest",
+  "description": "Mirrors @sw2d/contracts ThemeManifest (theme.ts). A theme supplies presentation for the runtime's semantic asset roles and UI state; it must never carry gameplay/tuning/system-pack data.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "id", "displayName", "assets", "tokens", "fonts"],
+  "properties": {
+    "schemaVersion": { "type": "integer", "minimum": 1 },
+    "id": { "type": "string", "minLength": 1 },
+    "displayName": { "type": "string", "minLength": 1 },
+    "assets": {
+      "type": "array",
+      "items": { "$ref": "urn:sw2d:schema:asset-descriptor:v1" }
+    },
+    "tokens": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["background", "panel", "panelActive", "text", "accent", "border"],
+      "properties": {
+        "background": { "type": "string", "minLength": 1 },
+        "panel": { "type": "string", "minLength": 1 },
+        "panelActive": { "type": "string", "minLength": 1 },
+        "text": { "type": "string", "minLength": 1 },
+        "accent": { "type": "string", "minLength": 1 },
+        "border": { "type": "string", "minLength": 1 }
+      }
+    },
+    "fonts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ui"],
+      "properties": {
+        "ui": { "type": "string", "minLength": 1 }
+      }
+    },
+    "ui": { "$ref": "urn:sw2d:schema:ui-copy:v1" },
+    "highContrastTokens": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "background": { "type": "string", "minLength": 1 },
+        "panel": { "type": "string", "minLength": 1 },
+        "panelActive": { "type": "string", "minLength": 1 },
+        "text": { "type": "string", "minLength": 1 },
+        "accent": { "type": "string", "minLength": 1 },
+        "border": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}
