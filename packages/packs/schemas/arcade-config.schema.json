@@ -1,0 +1,12 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:sw2d:schema:pack-arcade-config:v1",
+  "title": "ArcadePackConfig",
+  "description": "Mirrors @sw2d/packs' ArcadeConfig. Both fields optional.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "startingLives": { "type": "integer", "minimum": 0 },
+    "comboWindowMs": { "type": "integer", "exclusiveMinimum": 0 }
+  }
+}

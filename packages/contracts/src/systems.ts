@@ -61,6 +61,25 @@ export interface SystemPackSelection {
 }
 
 /**
+ * Validates a system pack's config against the schema its definition names
+ * via `configSchemaId`.
+ *
+ * `@sw2d/runtime` depends on this interface only, never on a concrete schema
+ * library - `@sw2d/schemas` (or any other validator) supplies an
+ * implementation at the composition boundary, where `SystemHostImpl` is
+ * constructed. Contracts stays validator-agnostic, the same split used for
+ * `ContentSource`/`ContentDocumentEnvelope`.
+ */
+export interface PackConfigValidator {
+  /**
+   * Validate `config` for `packId` against `configSchemaId`. Returns the
+   * config to install with (typically unchanged) or throws with a located,
+   * readable error describing what is wrong.
+   */
+  validate(configSchemaId: string, packId: string, config: unknown): unknown;
+}
+
+/**
  * Installs a selection of packs in dependency order and tears them down in
  * reverse. One host instance per scene lifetime; disposing it is what makes
  * restart clean.

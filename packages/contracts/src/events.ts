@@ -24,6 +24,22 @@ export interface GameEventMap {
   'settings:changed': { readonly reason: 'patch' | 'reset' | 'load' };
   'accessibility:changed': Record<string, never>;
   'audio:unlocked': Record<string, never>;
+
+  // Phase 4 system pack events. One or two per family, added only where a
+  // cross-system reaction is plausible (HUD, other packs) - not for every
+  // internal mutation. See @sw2d/packs.
+  'combat:entityDamaged': { readonly entityId: string; readonly amount: number; readonly current: number };
+  'combat:entityDied': { readonly entityId: string };
+  'ai:stateChanged': { readonly agentId: string; readonly from: string; readonly to: string };
+  'world:flagChanged': { readonly flag: string; readonly value: boolean };
+  'world:checkpointActivated': { readonly checkpointId: string };
+  'progression:currencyChanged': { readonly currency: number; readonly delta: number };
+  'progression:unlockChanged': { readonly flag: string; readonly unlocked: boolean };
+  'arcade:scoreChanged': { readonly score: number; readonly delta: number };
+  'puzzle:solved': { readonly puzzleId: string };
+  'simulation:resourceChanged': { readonly resourceId: string; readonly amount: number; readonly delta: number };
+  'narrative:flagChanged': { readonly flag: string; readonly value: boolean };
+  'strategy:turnChanged': { readonly team: string; readonly turnNumber: number };
 }
 
 export type GameEventName = keyof GameEventMap & string;

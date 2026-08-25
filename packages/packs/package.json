@@ -1,8 +1,8 @@
 {
-  "name": "@sw2d/runtime",
+  "name": "@sw2d/packs",
   "version": "0.1.0",
   "private": true,
-  "description": "Reusable SW2D runtime: scene lifecycle, semantic input, persistence, audio, accessibility, content, debug. Phaser-backed.",
+  "description": "Reusable, renderer-independent system pack cores: combat, AI, world, progression, arcade, puzzle, simulation, narrative, strategy.",
   "type": "module",
   "license": "UNLICENSED",
   "exports": {
@@ -16,10 +16,6 @@
   "sideEffects": false,
   "dependencies": {
     "@sw2d/contracts": "0.1.0",
-    "phaser": "4.2.1"
-  },
-  "devDependencies": {
-    "@sw2d/packs": "0.1.0",
     "@sw2d/schemas": "0.1.0"
   }
 }

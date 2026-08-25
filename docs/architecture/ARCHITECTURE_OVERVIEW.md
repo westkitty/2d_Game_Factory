@@ -1,6 +1,6 @@
 # Architecture Overview
 
-Status: Phase 3 (Sonnet 5). Governing spec: [`MASTER_PROJECT.md`](../../MASTER_PROJECT.md).
+Status: Phase 4 (Sonnet 5). Governing spec: [`MASTER_PROJECT.md`](../../MASTER_PROJECT.md).
 
 ## The thesis
 
@@ -21,15 +21,19 @@ Making a normal new game must not require editing the machine.
 ```text
 packages/contracts/   @sw2d/contracts   engine-agnostic interfaces. No dependencies at all.
 packages/runtime/     @sw2d/runtime     the reusable machine. Depends on contracts + phaser.
-packages/schemas/     @sw2d/schemas     JSON Schema + Ajv validation + content-document registry.
+packages/schemas/     @sw2d/schemas     JSON Schema + Ajv validation + content-document registry
+                                        + generic schema/pack-config-validator registration.
                                         Depends on contracts + ajv + ajv-formats. No Phaser.
+packages/packs/       @sw2d/packs       nine reusable system pack cores (combat, AI, world,
+                                        progression, arcade, puzzle, simulation, narrative,
+                                        strategy). Depends on contracts + schemas. No Phaser.
 starter/              @sw2d/starter     one game composing the runtime, loading validated JSON
                                         content through @sw2d/schemas.
 tools/scripts/                          repository-level checks (offline build guard).
 ```
 
-Only packages with a real Phase 1 consumer exist. Empty directories that merely match a
-diagram are worse than no directory, because they imply work that has not happened.
+Only packages with a real consumer exist. Empty directories that merely match a diagram are
+worse than no directory, because they imply work that has not happened.
 
 ### Why `contracts` is separate from `runtime`
 
@@ -51,7 +55,6 @@ Reserved names and boundaries, so later phases do not have to relitigate them:
 
 ```text
 packages/presets/   @sw2d/presets   the 74 preset recipes and the catalogue.
-packages/packs/     @sw2d/packs     reusable system packs (combat, AI, world, ...).
 packages/cli/       @sw2d/cli       the `sw2d` factory CLI.
 packages/qa/        @sw2d/qa        browser journeys and proof-game harness.
 ```
@@ -108,6 +111,28 @@ it before any pack existed.
 `SystemHostImpl` owns one scene's packs. It installs in dependency order, tears down in
 reverse, and rolls back a partial install. One host per scene lifetime is the whole leak story:
 disposing the scene disposes the host, which disposes every pack.
+
+**Nine reusable pack cores exist in `@sw2d/packs`** (Phase 4): combat, AI, world, progression,
+arcade, puzzle, simulation, narrative, strategy. Each is a foundational capability - a health/
+damage model, an agent-state vocabulary, a resource ledger - not a full genre system; see each
+file's doc comment for the exact line drawn (e.g. combat has no weapons or projectiles, AI has no
+pathfinding). Every pack publishes exactly one capability and depends on other packs only by
+capability id: `aiPack` reads `combat`'s service (`context.capabilities.require<CombatService>('combat')`)
+with `CombatService` imported as a *type* only, never `combatPack.ts`'s implementation. None
+imports Phaser; all are typed against plain `GameContext`, not `SceneContext`.
+
+**Config validation is dependency-inverted** (Phase 4, [ADR-0010](adr/0010-pack-config-validation.md)).
+`@sw2d/contracts` declares `PackConfigValidator { validate(configSchemaId, packId, config): unknown }`;
+`SystemHostImpl`'s constructor takes one as an optional third argument and, when supplied,
+validates a pack's config (rolling back on failure through the same path a failed `install()`
+already used) before that pack's `install()` runs. `@sw2d/schemas` supplies the concrete
+implementation (`packConfigValidator`); `@sw2d/runtime` itself still imports neither Ajv nor
+`@sw2d/schemas` - its dependency graph is unchanged. Enforcement is opt-in per host instance: the
+starter's `PlayScene` still constructs its host with two arguments, so
+`starter.placeholder-mover`'s `configSchemaId` remains declared-but-unenforced in the actual
+running game, exactly as every phase before Phase 4 left it. Only packs with real,
+JSON-serializable config get a schema (`progressionPack`, `arcadePack`); `puzzlePack`'s config is
+functions (`createInitialState`, `isSolved`) and correctly has none.
 
 ## Semantic input
 

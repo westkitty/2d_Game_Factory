@@ -47,7 +47,7 @@ export interface ValidationResult<T = unknown> {
   readonly value: T | undefined;
 }
 
-interface SchemaDocument {
+export interface SchemaDocument {
   readonly $id: string;
   readonly [key: string]: unknown;
 }
@@ -152,6 +152,51 @@ export function validateDocumentOrThrow<T = unknown>(
   const result = validateDocument<T>(schemaName, documentId, data);
   if (!result.valid) {
     throw new SchemaValidationError(documentId, schemaIdFor(schemaName), result.errors);
+  }
+  return result.value as T;
+}
+
+export class UnregisteredSchemaError extends Error {
+  constructor(schemaId: string) {
+    super(`No schema is registered for id "${schemaId}". Call registerSchema() before validating against it.`);
+    this.name = 'UnregisteredSchemaError';
+  }
+}
+
+/**
+ * Register an additional JSON Schema (identified by its own `$id`) into the
+ * shared Ajv instance, for later validation by raw schema id via
+ * `validateBySchemaId`.
+ *
+ * For packages that own schemas this one does not - e.g. `@sw2d/packs`' pack
+ * config schemas - without each standing up a second Ajv instance. Idempotent:
+ * registering the same `$id` twice (e.g. a module re-evaluated across test
+ * files) is a no-op rather than an Ajv duplicate-schema error.
+ */
+export function registerSchema(schema: SchemaDocument): void {
+  if (ajv.getSchema(schema.$id)) return;
+  ajv.addSchema(schema, schema.$id);
+}
+
+/** Like `validateDocument`, but by a raw schema id rather than one of this package's fixed `SchemaName`s. */
+export function validateBySchemaId<T = unknown>(
+  schemaId: string,
+  documentId: string,
+  data: unknown,
+): ValidationResult<T> {
+  const validate = ajv.getSchema(schemaId);
+  if (!validate) throw new UnregisteredSchemaError(schemaId);
+  const valid = validate(data);
+  if (valid) return { valid: true, errors: [], value: data as T };
+  const errors = (validate.errors ?? []).map((error) => toIssue(documentId, error));
+  return { valid: false, errors, value: undefined };
+}
+
+/** Like `validateDocumentOrThrow`, but by a raw schema id. */
+export function validateBySchemaIdOrThrow<T = unknown>(schemaId: string, documentId: string, data: unknown): T {
+  const result = validateBySchemaId<T>(schemaId, documentId, data);
+  if (!result.valid) {
+    throw new SchemaValidationError(documentId, schemaId, result.errors);
   }
   return result.value as T;
 }

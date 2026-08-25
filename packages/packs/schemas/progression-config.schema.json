@@ -1,0 +1,12 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:sw2d:schema:pack-progression-config:v1",
+  "title": "ProgressionPackConfig",
+  "description": "Mirrors @sw2d/packs' ProgressionConfig. Both fields optional; omitted means start at zero.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "startingCurrency": { "type": "integer", "minimum": 0 },
+    "startingXp": { "type": "integer", "minimum": 0 }
+  }
+}

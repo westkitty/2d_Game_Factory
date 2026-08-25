@@ -1,6 +1,7 @@
 import type {
   GameContext,
   InstalledSystemPack,
+  PackConfigValidator,
   SystemHost,
   SystemPackDefinition,
   SystemPackSelection,
@@ -17,12 +18,25 @@ import { resolveInstallOrder } from './resolveInstallOrder.ts';
 export class SystemHostImpl<TContext extends GameContext> implements SystemHost {
   readonly #context: TContext;
   readonly #registry: ReadonlyMap<string, SystemPackDefinition<never, TContext>>;
+  readonly #validator: PackConfigValidator | undefined;
   #installed: InstalledSystemPack[] = [];
   #disposed = false;
 
-  constructor(context: TContext, definitions: readonly SystemPackDefinition<never, TContext>[]) {
+  /**
+   * `validator` is optional and dependency-inverted: this host never imports
+   * a schema library itself (`@sw2d/contracts`'s `PackConfigValidator` is
+   * just an interface). When omitted, `configSchemaId` stays declared but
+   * unenforced, exactly as before this parameter existed - existing callers
+   * that construct a host with two arguments are unaffected.
+   */
+  constructor(
+    context: TContext,
+    definitions: readonly SystemPackDefinition<never, TContext>[],
+    validator?: PackConfigValidator,
+  ) {
     this.#context = context;
     this.#registry = new Map(definitions.map((definition) => [definition.id, definition]));
+    this.#validator = validator;
   }
 
   get installed(): readonly InstalledSystemPack[] {
@@ -39,12 +53,12 @@ export class SystemHostImpl<TContext extends GameContext> implements SystemHost 
     for (const selection of order) {
       const definition = this.#registry.get(selection.packId)!;
       try {
-        this.#installed.push(
-          definition.install(this.#context, selection.config as never),
-        );
+        const config = this.#validatedConfig(definition, selection.config);
+        this.#installed.push(definition.install(this.#context, config as never));
       } catch (error) {
-        // Roll back everything already installed so a partial install never
-        // leaves orphaned listeners behind.
+        // Roll back everything already installed so a partial install - or a
+        // config that fails validation - never leaves orphaned listeners
+        // behind.
         this.dispose();
         throw new Error(
           `[sw2d] system pack "${selection.packId}" failed to install: ${String(error)}`,
@@ -52,6 +66,12 @@ export class SystemHostImpl<TContext extends GameContext> implements SystemHost 
         );
       }
     }
+  }
+
+  /** No-op when the pack declares no schema, or no validator was supplied. */
+  #validatedConfig(definition: SystemPackDefinition<never, TContext>, config: unknown): unknown {
+    if (!definition.configSchemaId || !this.#validator) return config;
+    return this.#validator.validate(definition.configSchemaId, definition.id, config);
   }
 
   update(deltaMs: number): void {

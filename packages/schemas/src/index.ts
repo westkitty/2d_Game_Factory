@@ -8,15 +8,22 @@
 export {
   SCHEMA_NAMES,
   formatIssue,
+  registerSchema,
   schemaDocumentFor,
   schemaIdFor,
+  validateBySchemaId,
+  validateBySchemaIdOrThrow,
   validateDocument,
   validateDocumentOrThrow,
   SchemaValidationError,
+  UnregisteredSchemaError,
+  type SchemaDocument,
   type SchemaName,
   type ValidationIssue,
   type ValidationResult,
 } from './validator.ts';
+
+export { packConfigValidator } from './packConfigValidator.ts';
 
 export {
   CONTENT_DOCUMENTS,

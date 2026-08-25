@@ -8,6 +8,99 @@ Detail for each architectural decision lives in `docs/architecture/adr/`. This f
 
 ---
 
+## Phase 4 - Reusable System Pack Core (2026-08-25, Sonnet 5)
+
+### Decisions
+
+**Nine independent, small implementations, not one shared abstraction, for the first pass.**
+Combat's health clamp, simulation's resource ledger, arcade's score/lives and progression's
+currency/XP/items all reimplement the same shape: `Math.max(0, value + delta)`, emit an event on
+actual change. World's and narrative's flag stores are likewise near-identical
+(`Set<string>` + no-op-on-no-change + emit). Unifying either pair into a shared primitive was
+judged premature: this is the *first* pass at every one of these families, and a shared
+abstraction designed from one example each is a guess, not a generalisation. Four correct,
+independent, well-tested implementations are safer than one clever one built too early. Flagged
+directly for Phase 5 Opus review (see below) rather than silently deferred.
+
+**`configSchemaId` enforcement is dependency-inverted, not imported** ([ADR-0010](docs/architecture/adr/0010-pack-config-validation.md)).
+`@sw2d/runtime` gained an optional `PackConfigValidator` parameter on `SystemHostImpl`, not a
+dependency on Ajv or `@sw2d/schemas`. The same shape as ADR-0005's `ContentSource`: the runtime
+declares the boundary, a composition root fills it. This was the deliberate alternative to the
+two options the phase brief explicitly ruled out (importing a schema library into runtime, or
+putting schema machinery into contracts).
+
+**Only two packs get real config schemas.** `progressionPack` and `arcadePack` have
+JSON-serializable, install-time-meaningful config. The other seven either take no config
+(combat, AI, world, simulation, narrative, strategy) or take config that cannot be a JSON Schema
+at all - `puzzlePack`'s `createInitialState`/`isSolved` are functions. Declaring a
+`configSchemaId` for a pack with nothing to validate would have been decoration, not
+architecture; the phase brief's own instruction ("add configuration schemas only for packs that
+actually have config") is the reason, not an afterthought.
+
+**AI depends on combat by capability id, reading a typed service, to prove the rule with a real
+case.** `aiPack.isAgentAlive()` calls `context.capabilities.require<CombatService>('combat')`,
+importing `CombatService` as a type only. This is the first Phase 4 pack-to-pack dependency the
+project has - Phase 1's `resolveInstallOrder` tests used synthetic fakes because no real pack
+existed yet. Proving "packs depend on capabilities, never modules" against an invented example is
+weaker evidence than proving it against a real one.
+
+**`undefined`, not `never`, is the config type for packs with no config.** The existing contract
+(`SystemPackDefinition<TConfig = unknown, ...>`) makes a definition's `install()` require its
+declared `TConfig` as a second, non-optional parameter at every call site, even though the
+*implementation* can validly take fewer parameters (TypeScript's bivariant method checking).
+`SystemPackDefinition<never, GameContext>` would make that second parameter literally
+unconstructible outside an unsafe cast; `SystemPackDefinition<undefined, GameContext>` lets every
+call site simply pass `undefined`. A small, purely call-site-ergonomics decision, recorded because
+the next family added to `@sw2d/packs` will hit the same choice.
+
+### Rejected during this phase
+
+- **A shared `BoundedCounter`/`FlagStore` primitive for combat/simulation/arcade/progression and
+  world/narrative.** See "Decisions" above - deferred to Phase 5 Opus review, not built on a
+  sample size of one-to-two consumers per shape.
+- **Wiring any Phase 4 pack into the starter.** The phase brief's own acceptance contract only
+  required a real consumer for Phase 3's platform controller; Phase 4's packs are proven through
+  unit tests and a real-`SystemHostImpl` composition test. Inventing a starter demo to "prove" a
+  pack family works would have been exactly the kind of ungrounded scope expansion the phase
+  explicitly warned against ("do not scaffold empty future packages" / "do not build nine visual
+  demo games").
+- **A pack-owned schema registry that `@sw2d/schemas` imports from `@sw2d/packs`.** Would invert
+  the dependency the wrong way (schemas depending on packs) for no real benefit over each pack
+  registering its own schema at module load.
+
+### Questions for Phase 5 (Opus) - explicitly not solved here
+
+Recorded per the phase brief's own instruction not to preemptively fix these on Sonnet:
+
+1. **Shared low-level primitive candidates.** Combat/simulation/arcade/progression's bounded
+   numeric mutation, and world/narrative's flag stores (see "Decisions"). Worth unifying once a
+   third real consumer exists, or worth keeping independent because the *events* each emits
+   differ enough (`combat:entityDamaged` vs `progression:currencyChanged` vs
+   `simulation:resourceChanged`) that a shared primitive would need to be event-agnostic and
+   therefore less useful than it looks?
+2. **`GameContext` pressure.** No Phase 4 pack needed a new `GameContext` field - all nine use
+   only `events` and `capabilities`, already present since Phase 1. Worth flagging anyway: Phase 6
+   (Tiled/theme) and Phase 4's own eventual consumers (a game wiring these packs into real scenes)
+   are the first places genuinely likely to want something `GameContext` does not yet expose.
+3. **Pack API shape asymmetry.** `puzzlePack` is generic (`PuzzleService<TState>`) where the other
+   eight are concrete. Its `SystemPackDefinition` value has to be widened (`as PuzzleConfig`) at
+   every call site because one non-generic pack value cannot itself be generic over a caller's
+   state type (see test-file comment in `packages/packs/test/puzzle.test.ts`). Tolerable for one
+   family; worth a real design pass if a second generic-state family (e.g. a future strategy
+   board-state pack) arrives.
+4. **Config validator injection scope.** Enforcement is opt-in per `SystemHostImpl` instance
+   today - nothing wires `packConfigValidator` into the starter's real `PlayScene`, so
+   `configSchemaId` is enforced in tests but not in the one real running game. Is per-instance
+   opt-in the right default going forward, or should `createGame()`/`CreateGameOptions` grow a
+   validator option so real games get enforcement without each one remembering to wire it?
+5. **Capability id collision risk at scale.** Nine flat string ids (`combat`, `ai`, `world`, ...)
+   work cleanly now. With dozens of future packs (Phase 4's own family list is not exhaustive -
+   `MASTER_PROJECT.md` §9 names sixteen pack families total), is a flat namespace still
+   sufficient, or does capability-id governance need a convention (prefixing, a registry doc)
+   before Phase 7's 74 presets start selecting packs at scale?
+
+---
+
 ## Phase 3 - Controller Families (2026-08-25, Sonnet 5)
 
 ### Decisions

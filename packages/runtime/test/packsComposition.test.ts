@@ -1,0 +1,232 @@
+import { describe, expect, it } from 'vitest';
+import type { GameContext, SystemPackDefinition, SystemPackSelection } from '@sw2d/contracts';
+import {
+  aiPack,
+  arcadePack,
+  combatPack,
+  narrativePack,
+  progressionPack,
+  puzzlePack,
+  simulationPack,
+  strategyPack,
+  worldPack,
+  type AiService,
+  type ArcadeService,
+  type CombatService,
+  type NarrativeService,
+  type ProgressionService,
+  type PuzzleService,
+  type SimulationService,
+  type StrategyService,
+  type WorldService,
+} from '@sw2d/packs';
+import { packConfigValidator } from '@sw2d/schemas';
+import { CapabilityRegistryImpl } from '../src/core/CapabilityRegistryImpl.ts';
+import { EventBusImpl } from '../src/core/EventBusImpl.ts';
+import { SystemHostImpl } from '../src/core/SystemHostImpl.ts';
+
+/**
+ * The Phase 4 composition proof: the real SystemHostImpl, resolveInstallOrder
+ * (exercised internally by SystemHostImpl.install()) and CapabilityRegistryImpl
+ * install every Phase 4 pack family together, exactly as a game's PlayScene
+ * would. No pack here is a fake - these are the actual @sw2d/packs
+ * definitions.
+ */
+
+function createContext(): GameContext & { events: EventBusImpl; capabilities: CapabilityRegistryImpl } {
+  const events = new EventBusImpl();
+  const capabilities = new CapabilityRegistryImpl();
+  return { events, capabilities } as unknown as GameContext & {
+    events: EventBusImpl;
+    capabilities: CapabilityRegistryImpl;
+  };
+}
+
+const ALL_NINE_PACKS: readonly SystemPackDefinition<never, GameContext>[] = [
+  combatPack,
+  aiPack,
+  worldPack,
+  progressionPack,
+  arcadePack,
+  puzzlePack,
+  simulationPack,
+  narrativePack,
+  strategyPack,
+];
+
+const puzzleConfig = {
+  createInitialState: () => ({ moves: 0 }),
+  isSolved: (state: { moves: number }) => state.moves >= 3,
+};
+
+const ALL_NINE_SELECTIONS: readonly SystemPackSelection[] = [
+  { packId: combatPack.id },
+  { packId: aiPack.id }, // depends on combat - must resolve after it
+  { packId: worldPack.id },
+  { packId: progressionPack.id, config: { startingCurrency: 20, startingXp: 0 } },
+  { packId: arcadePack.id, config: { startingLives: 3 } },
+  { packId: puzzlePack.id, config: puzzleConfig },
+  { packId: simulationPack.id },
+  { packId: narrativePack.id },
+  { packId: strategyPack.id },
+];
+
+describe('Phase 4 pack composition (real SystemHostImpl + resolveInstallOrder + CapabilityRegistryImpl)', () => {
+  it('installs all nine families, publishes every capability, and every pack API operates', () => {
+    const context = createContext();
+    const host = new SystemHostImpl(context, ALL_NINE_PACKS);
+
+    host.install(ALL_NINE_SELECTIONS);
+
+    const expectedCapabilities = [
+      'ai',
+      'arcade',
+      'combat',
+      'narrative',
+      'progression',
+      'puzzle',
+      'simulation',
+      'strategy',
+      'world',
+    ];
+    expect(context.capabilities.list()).toEqual(expectedCapabilities);
+    expect(host.installed.map((pack) => pack.id).sort()).toEqual(
+      [
+        combatPack.id,
+        aiPack.id,
+        worldPack.id,
+        progressionPack.id,
+        arcadePack.id,
+        puzzlePack.id,
+        simulationPack.id,
+        narrativePack.id,
+        strategyPack.id,
+      ].sort(),
+    );
+
+    // Exercise a real cross-pack interaction: AI's isAgentAlive reads combat
+    // by capability id, both installed through the same real host.
+    const combat = context.capabilities.require<CombatService>('combat');
+    const ai = context.capabilities.require<AiService>('ai');
+    combat.register('goblin', 5);
+    ai.register('goblin');
+    expect(ai.isAgentAlive('goblin')).toBe(true);
+    combat.damage('goblin', 5, 0);
+    expect(ai.isAgentAlive('goblin')).toBe(false);
+
+    // Spot-check one API per remaining family.
+    context.capabilities.require<WorldService>('world').setFlag('intro-seen', true);
+    expect(context.capabilities.require<WorldService>('world').hasFlag('intro-seen')).toBe(true);
+
+    expect(context.capabilities.require<ProgressionService>('progression').currency()).toBe(20);
+    expect(context.capabilities.require<ArcadeService>('arcade').lives()).toBe(3);
+    expect(context.capabilities.require<PuzzleService>('puzzle').isSolved()).toBe(false);
+    expect(context.capabilities.require<SimulationService>('simulation').resource('wood')).toBe(0);
+    context.capabilities.require<NarrativeService>('narrative').goTo('intro');
+    expect(context.capabilities.require<NarrativeService>('narrative').currentNode()).toBe('intro');
+    context.capabilities.require<StrategyService>('strategy').registerTeam('red');
+    expect(context.capabilities.require<StrategyService>('strategy').activeTeam()).toBeNull();
+
+    // update(deltaMs) reaches every pack that declared one (arcade, simulation).
+    host.update(16.6667);
+    expect(context.capabilities.require<ArcadeService>('arcade').elapsedMs()).toBeCloseTo(16.6667, 4);
+
+    host.dispose();
+
+    expect(context.capabilities.list()).toEqual([]);
+    expect(host.installed).toEqual([]);
+  });
+
+  it('installs a real dependency (ai -> combat) in a correct, deterministic order', () => {
+    const context = createContext();
+    const host = new SystemHostImpl(context, [combatPack, aiPack]);
+
+    // Selection order is reversed from dependency order; resolveInstallOrder
+    // must still install combat before ai regardless.
+    host.install([{ packId: aiPack.id }, { packId: combatPack.id }]);
+
+    expect(host.installed.map((pack) => pack.id)).toEqual([combatPack.id, aiPack.id]);
+  });
+
+  it('fails with a missing-dependency error when combat is not selected', () => {
+    const context = createContext();
+    const host = new SystemHostImpl(context, [combatPack, aiPack]);
+
+    expect(() => host.install([{ packId: aiPack.id }])).toThrow(/combat/);
+    // Nothing partially installed.
+    expect(context.capabilities.list()).toEqual([]);
+  });
+
+  it('fails with a duplicate-capability error when two real/fake packs both provide "combat"', () => {
+    const context = createContext();
+    const duplicateCombatPack: SystemPackDefinition<never, GameContext> = {
+      id: 'test.duplicate-combat',
+      version: '0.0.0',
+      provides: ['combat'],
+      dependencies: [],
+      install: () => ({ id: 'test.duplicate-combat', dispose: () => undefined }),
+    };
+    const host = new SystemHostImpl(context, [combatPack, duplicateCombatPack]);
+
+    expect(() =>
+      host.install([{ packId: combatPack.id }, { packId: 'test.duplicate-combat' }]),
+    ).toThrow(/combat.*provided by both/s);
+  });
+
+  describe('configSchemaId enforcement (dependency-inverted validator)', () => {
+    it('is unenforced without a validator: an out-of-range config installs silently', () => {
+      const context = createContext();
+      const host = new SystemHostImpl(context, [progressionPack]); // no validator
+
+      expect(() =>
+        host.install([{ packId: progressionPack.id, config: { startingCurrency: -5 } }]),
+      ).not.toThrow();
+      // The bad value made it all the way into the service, unvalidated.
+      expect(context.capabilities.require<ProgressionService>('progression').currency()).toBe(-5);
+    });
+
+    it('is enforced with packConfigValidator: an out-of-range config is rejected before install', () => {
+      const context = createContext();
+      const host = new SystemHostImpl(context, [progressionPack], packConfigValidator);
+
+      expect(() =>
+        host.install([{ packId: progressionPack.id, config: { startingCurrency: -5 } }]),
+      ).toThrow(/startingCurrency/);
+      expect(context.capabilities.has('progression')).toBe(false);
+    });
+
+    it('accepts a valid config with the validator wired in', () => {
+      const context = createContext();
+      const host = new SystemHostImpl(context, [progressionPack], packConfigValidator);
+
+      host.install([{ packId: progressionPack.id, config: { startingCurrency: 100 } }]);
+
+      expect(context.capabilities.require<ProgressionService>('progression').currency()).toBe(100);
+    });
+
+    it('rolls back an already-installed pack when a later pack fails config validation', () => {
+      const context = createContext();
+      const host = new SystemHostImpl(context, [combatPack, progressionPack], packConfigValidator);
+
+      expect(() =>
+        host.install([
+          { packId: combatPack.id },
+          { packId: progressionPack.id, config: { startingCurrency: 'a lot' } },
+        ]),
+      ).toThrow();
+
+      // combat installed successfully before progression's config failed -
+      // the whole batch must roll back, not just the failing pack.
+      expect(context.capabilities.list()).toEqual([]);
+      expect(host.installed).toEqual([]);
+    });
+
+    it('leaves packs with no configSchemaId unaffected by the validator', () => {
+      const context = createContext();
+      const host = new SystemHostImpl(context, [worldPack], packConfigValidator);
+
+      expect(() => host.install([{ packId: worldPack.id }])).not.toThrow();
+      expect(context.capabilities.has('world')).toBe(true);
+    });
+  });
+});
