@@ -10,6 +10,7 @@ export * from './actions.ts';
 export * from './audio.ts';
 export * from './content.ts';
 export * from './context.ts';
+export * from './controllers.ts';
 export * from './debug.ts';
 export * from './disposable.ts';
 export * from './events.ts';

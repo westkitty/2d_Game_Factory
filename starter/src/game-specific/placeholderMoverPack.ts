@@ -1,22 +1,26 @@
 import Phaser from 'phaser';
 import type { InstalledSystemPack } from '@sw2d/contracts';
-import type { SceneContext, ScenePackDefinition } from '@sw2d/runtime';
+import { platformController, type SceneContext, type ScenePackDefinition } from '@sw2d/runtime';
 
 /**
  * Game-specific extension: a controllable placeholder actor.
  *
  * This lives in the *game*, not the runtime, and that is the whole point of the
- * file. It proves three boundaries at once:
+ * file. It proves four boundaries at once:
  *
  *   1. a game can add real behaviour without editing @sw2d/runtime;
  *   2. SystemPackDefinition/InstalledSystemPack is a working contract, not a
  *      speculative interface;
  *   3. gameplay reads semantic actions only - it never sees a key code, so the
- *      same code is driven by keyboard and by the on-screen touch buttons.
+ *      same code is driven by keyboard and by the on-screen touch buttons;
+ *   4. movement reads platform *intent* (`platformController.read`), not raw
+ *      `ActionInput`, directly - the controller answers "what does the player
+ *      intend", this file answers "how does the body move" (velocity,
+ *      gravity, the jump-vs-grounded decision).
  *
- * Real platform movement (coyote time, jump buffering, variable jump height,
- * double jump) belongs to the platform controller family in Phase 3. This is
- * deliberately the minimum that proves the wiring.
+ * Real platform movement systems (coyote time, jump buffering, variable jump
+ * height, double jump) belong to a movement system pack in a later phase.
+ * This is deliberately the minimum that proves the wiring.
  */
 export interface PlaceholderMoverConfig {
   readonly moveSpeed: number;
@@ -31,6 +35,19 @@ const DEFAULT_CONFIG: PlaceholderMoverConfig = {
   jumpVelocity: -430,
   gravity: 1100,
 };
+
+/**
+ * Run a disposal step that may legitimately no-op if Phaser has already torn
+ * the target down as part of its own scene shutdown. Logged, not swallowed
+ * silently, so a genuinely unexpected failure is still visible.
+ */
+function safely(step: () => void): void {
+  try {
+    step();
+  } catch (error) {
+    console.debug('[sw2d] starter.placeholder-mover: disposal step skipped (scene already tearing down)', error);
+  }
+}
 
 export const PLACEHOLDER_MOVER_PACK: ScenePackDefinition<Partial<PlaceholderMoverConfig>> = {
   id: 'starter.placeholder-mover',
@@ -81,18 +98,16 @@ export const PLACEHOLDER_MOVER_PACK: ScenePackDefinition<Partial<PlaceholderMove
 
       update(): void {
         if (disposed) return;
-        const input = context.input;
-        const direction = input.axis('MOVE_LEFT', 'MOVE_RIGHT');
-        const speed =
-          settings.moveSpeed * (input.isDown('DASH') ? settings.dashMultiplier : 1);
+        const intent = platformController.read(context.input);
+        const speed = settings.moveSpeed * (intent.dashHeld ? settings.dashMultiplier : 1);
 
-        player.setVelocityX(direction * speed);
-        if (direction !== 0) player.setFlipX(direction < 0);
+        player.setVelocityX(intent.moveAxis * speed);
+        if (intent.moveAxis !== 0) player.setFlipX(intent.moveAxis < 0);
 
-        // Claimed, not merely read: the CONFIRM that started the run must not
-        // also make the player jump on the first frame of gameplay.
-        const wantsJump = input.consumePress('JUMP') || input.consumePress('CONFIRM');
-        if (wantsJump && player.body.blocked.down) {
+        // intent.jumpPressed is already a claimed edge (platformController
+        // calls consumePress('JUMP')), so this can only fire once per press
+        // no matter how many other systems also read the controller.
+        if (intent.jumpPressed && player.body.blocked.down) {
           player.setVelocityY(settings.jumpVelocity);
           context.audio.playCue('ui.confirm');
         }
@@ -102,10 +117,22 @@ export const PLACEHOLDER_MOVER_PACK: ScenePackDefinition<Partial<PlaceholderMove
         if (disposed) return;
         disposed = true;
         debugHandle.dispose();
-        scene.physics.world.removeCollider(collider);
-        player.destroy();
-        ground.clear(true, true);
-        ground.destroy(true);
+        // A restart queues a stop and an immediate start of the same scene in
+        // one batch (SceneRouterImpl.restartRun); by the time this runs, the
+        // scene's physics world/groups can already be gone - Phaser tears
+        // down a stopped scene's own display list and physics bodies itself.
+        // Each step below is independently guarded so a mid-teardown scene
+        // cannot abort the steps after it (a throw from `removeCollider`
+        // used to skip `player.destroy()`/`ground.destroy()` entirely - a
+        // real leak the flat disposable-count evidence did not catch, since
+        // SystemHostImpl.dispose() clears its own bookkeeping regardless of
+        // whether an individual pack's dispose() throws).
+        safely(() => scene.physics.world?.removeCollider(collider));
+        safely(() => player.destroy());
+        safely(() => {
+          ground.clear(true, true);
+          ground.destroy(true);
+        });
       },
     };
   },

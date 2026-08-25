@@ -1,6 +1,6 @@
 # Architecture Overview
 
-Status: Phase 1 baseline (Opus 5). Governing spec: [`MASTER_PROJECT.md`](../../MASTER_PROJECT.md).
+Status: Phase 3 (Sonnet 5). Governing spec: [`MASTER_PROJECT.md`](../../MASTER_PROJECT.md).
 
 ## The thesis
 
@@ -64,6 +64,7 @@ Rule for creating one: it exists when it has a consumer, not when it appears in 
 core/       GameContext assembly, event bus, capability registry, system host,
             pack dependency resolution, disposable bags, createGame().
 input/      Semantic action host + keyboard and pointer/touch adapters.
+controllers/  Six stateless controller families interpreting ActionInput into intent.
 scenes/     Boot / Title / Play / Pause, the scene router, SceneContext.
 persistence/  Storage driver, namespaced versioned save store, settings store.
 accessibility/ Live projection of settings + device capability.
@@ -127,6 +128,52 @@ Two rules make this more than an indirection layer:
 Phaser's own keyboard plugin is disabled (`input: { keyboard: false }`) so nothing else can
 consume a key behind the semantic layer's back.
 
+## Controller families
+
+A layer between semantic input and gameplay:
+
+```text
+physical adapters  ->  semantic actions  ->  controllers  ->  gameplay / system packs
+   (keyboard, pointer)     (ActionInput)      (intent)          (bodies, AI, UI, economy)
+```
+
+```ts
+interface Controller<TIntent> {
+  read(input: ActionInput): TIntent;
+}
+```
+
+Six families exist in `packages/runtime/src/controllers/`, each a stateless singleton:
+`platformController`, `topDownController`, `vehicleController`, `gridController`,
+`pointerActionController`, `uiSimulationController`. A controller answers "what does the player
+intend?" - never "how does the body move, race, navigate or fire?" That stays with a movement or
+gameplay system pack. None owns a listener, a timer, or frame advancement; none is `Disposable`,
+because none allocates anything to dispose.
+
+**Claimed vs. observed fields.** Most intent fields are plain, non-mutating reads (`isDown`,
+`justPressed`, `axis`, `value`) - any number of systems may read them in the same frame and agree.
+A small, deliberate set are claimed via `consumePress`, because they represent a discrete,
+single-owner, mode-changing decision in the same class [ADR-0003](adr/0003-semantic-input-ownership.md)
+names: `PlatformIntent.jumpPressed`, and `UiSimulationIntent.confirmPressed`/`cancelPressed`/
+`pausePressed`. Getting this line wrong either way reopens either a leaked-double-effect bug or an
+unreadable exclusive lock; see the Phase 3 entry in `PROJECT_BIBLE.md` for the reasoning.
+
+**Bounded diagonal movement.** `topDownController` scales the whole `(moveX, moveY)` vector, not
+each axis independently, so pressing two cardinal directions at once cannot exceed length 1 -
+without this, digital 8-way input would move `sqrt(2)` times faster on a diagonal.
+
+**Honest pointer support.** `pointerActionController` exposes only the press-style actions
+`ActionInput` genuinely has (`primaryPressed`, `secondaryPressed`, `interactPressed`,
+`confirmPressed`, `cancelPressed`). It does not invent cursor coordinates, hover state or drag
+deltas - `ActionInput` has none. A spatial pointer service is a real, bounded future capability,
+not something to fake with always-zero fields.
+
+**Real consumer.** `starter/src/game-specific/placeholderMoverPack.ts` calls
+`platformController.read(context.input)` and uses the returned intent (`moveAxis`, `jumpPressed`,
+`dashHeld`) to drive Arcade Physics - the controller supplies intent, the pack still owns "how the
+body moves" (velocity, gravity, the jump-vs-grounded decision). The other five families are proven
+by focused unit fixtures against a real `ActionInputHost`, not a real scene yet.
+
 ## Scene lifecycle
 
 ```text
@@ -164,7 +211,8 @@ src/game-specific/**      shared controllers
 ```
 
 `starter/src/game-specific/placeholderMoverPack.ts` demonstrates the boundary: it adds real,
-controllable behaviour as a system pack, from the game side, with the runtime untouched.
+controllable behaviour as a system pack, from the game side, reading `platformController` intent
+rather than raw input, with the runtime untouched.
 
 To add a reusable extension: state why existing capability is insufficient, add the smallest
 reusable piece, add regression coverage, rerun affected proofs. If three games independently

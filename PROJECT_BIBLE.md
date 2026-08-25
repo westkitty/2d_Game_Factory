@@ -8,6 +8,100 @@ Detail for each architectural decision lives in `docs/architecture/adr/`. This f
 
 ---
 
+## Phase 3 - Controller Families (2026-08-25, Sonnet 5)
+
+### Decisions
+
+**Controllers are stateless singleton objects, not classes with a lifecycle.** Every family is a
+plain `{ read(input: ActionInput): TIntent }` value. No `Disposable`, no constructor, no held
+state. The forcing test: nothing a controller needs to compute (an axis, a bounded vector, a
+claimed edge) requires memory across calls - `ActionInputHost` already remembers frame-to-frame
+state, so a controller reading it doesn't need to. This directly satisfies §4's "disposable only
+if it actually allocates state/resources": none do, so none are `Disposable`, and there is nothing
+to leak by construction rather than by discipline.
+
+**Exactly one family (`jumpPressed` in `PlatformIntent`, and `confirmPressed`/`cancelPressed`/
+`pausePressed` in `UiSimulationIntent`) calls `consumePress`; everything else is a plain,
+non-claiming read.** The line is: a field is claimed only when it represents a genuinely discrete,
+single-owner, mode-changing decision - jump-trigger, confirm, cancel, pause - the same class ADR-
+0003 names explicitly. Movement axes, held state, and navigation are observational: several
+systems may reasonably want to see them in the same frame without racing each other for
+ownership. Getting this line wrong in either direction was the main design risk of the whole
+phase - too little claiming reintroduces c_chase-style double-consumption; too much claiming turns
+a read into an exclusive lock nothing else can observe.
+
+**The `Controller<TIntent>` contract lives in `@sw2d/contracts`, not `@sw2d/runtime`.** It depends
+on nothing but `ActionInput` (already contracts-owned), so it costs nothing to keep
+engine-agnostic, and doing so is what lets `packages/schemas` or a future `packages/cli` reason
+about controller shapes without pulling in Phaser - the same argument that put `SystemPackDefinition`
+in contracts during Phase 1.
+
+**`topDownController` scales the whole `(moveX, moveY)` vector, not each axis independently, when
+diagonal magnitude exceeds 1.** Clamping each axis to its own [-1, 1] range would still let a
+diagonal press produce `sqrt(2)` total speed - exactly the bug the phase's acceptance contract
+named. Scaling the vector preserves direction and guarantees `length <= 1` for any input,
+digital or analog, which is why the fixture test asserts the *vector's* magnitude, not each
+component.
+
+**`pointerActionController` exposes only press-style actions and says so in its own doc comment,
+rather than stubbing spatial fields.** `MASTER_PROJECT.md` §9.6's "hover, drag/drop, targeting,
+placement, camera pan" vision for the pointer pack needs a spatial pointer service (world-space
+cursor position, hover targets, drag deltas) that `ActionInput` does not have today. Inventing
+placeholder `x`/`y`/`hover` fields that always read `0`/`false` would look complete and lie by
+omission the first time someone builds a placement mechanic against them. Recorded as a bounded
+future capability instead - a real `packages/runtime` addition for whichever phase needs
+tower-defense-style placement or drag-drop, not a Phase 3 problem to fake around. This did **not**
+rise to an Opus escalation: the existing `ActionInput` contract is not blocking Phase 3's actual
+scope (press-style controllers), only a not-yet-required future one.
+
+### The bug the regression check earned its keep on
+
+**Restarting through the pause menu threw inside the placeholder mover's `dispose()`, and had
+since Phase 1.** `SceneRouterImpl.restartRun()` queues `stop(play)` and an immediate `start(play)`
+for the *same* scene key in one batch (`#clearPause()`, then stop, then `#switchTo`). By the time
+the pack's teardown ran - during the queued stop's shutdown processing - Phaser's own physics
+world/group teardown for that scene could already have run, so
+`scene.physics.world.removeCollider(collider)` threw `TypeError: Cannot read properties of null`.
+`SystemHostImpl.dispose()` catches and logs a per-pack disposal failure by design (so one pack's
+bad teardown cannot block the others) - but *within* that one pack's `dispose()`, the throw still
+aborted execution before `player.destroy()` and `ground.destroy()` ran. Every restart through the
+pause menu therefore leaked one player sprite and one platform group, forever.
+
+Why Phase 1's own evidence missed it: `DisposableBagImpl.dispose()` and `SystemHostImpl.dispose()`
+both clear their bookkeeping (`#items`/`#installed`) *before* iterating to dispose each entry, so
+the "flat disposable count" proof Phase 1 recorded is insensitive to an individual entry's
+`dispose()` throwing partway through - the *count* of things the bag tracked returns to zero
+either way. The leak was in Phaser's own object graph, one level below anything `OPERATIONAL_STATE.md`
+was checking. Console output was not part of Phase 1's browser-check evidence; this phase's
+regression pass added it, specifically because refactoring the mover's `update()` was reason
+enough to distrust the untouched `dispose()` too.
+
+The fix is scoped entirely to `starter/src/game-specific/placeholderMoverPack.ts` (a `safely()`
+helper wrapping each physics-touching teardown step independently) - not `packages/runtime/**`,
+because the actual defect is this one pack assuming its scene's physics world outlives its own
+teardown, which is a pack-local assumption, not a shared architectural one. `SystemHostImpl`'s
+catch-and-continue behaviour is correct and untouched.
+
+**Lesson for whoever writes the next system pack's `dispose()`:** a scene-shutdown-triggered
+teardown cannot assume the scene's built-in systems (physics world, groups, cameras) are still
+alive. Guard each step, or order cleanup so pure-JS state (event listeners, timers, in-memory
+counters) is released before anything that touches a Phaser-owned object.
+
+### Rejected during this phase
+
+- **A spatial pointer service**, to make `pointerActionController` feel more complete. See
+  "Decisions" above - a real, bounded future capability, not built ahead of a real consumer.
+- **A parallel edge tracker for `gridController`.** `ActionInputHost.justPressed` already
+  guarantees exactly one true frame per physical press; reimplementing that inside the controller
+  would have been the "second edge state machine" §11 explicitly forbids, for no benefit.
+- **Wiring the other five controllers into real scenes** (e.g. having `PauseScene`/`TitleScene`
+  consume `uiSimulationController`) to make them feel more "real." The phase's acceptance contract
+  only requires a real consumer for the platform family; retrofitting scenes that already work,
+  and are covered by the pause/resume regression lock, for a family with no real UI to drive yet
+  would have been unjustified risk to a protected invariant for no Phase 3 requirement.
+
+---
+
 ## Phase 2 - Schema, Registry, and Content Foundation (2026-08-25, Sonnet 5)
 
 ### Decisions

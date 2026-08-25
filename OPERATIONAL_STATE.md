@@ -2,7 +2,7 @@
 
 Project: **Stinky Weasel 2D Browser Game Factory** (`sw2d`)
 Repository: `westkitty/2d_Game_Factory`
-State revision: **2**
+State revision: **3**
 Updated: 2026-08-25
 
 Read this before doing anything. Governing spec: [`MASTER_PROJECT.md`](MASTER_PROJECT.md).
@@ -12,9 +12,9 @@ Workflow: [`docs/AGENT_WORKFLOW.md`](docs/AGENT_WORKFLOW.md).
 
 ## Current phase
 
-**Phase 2 - Schema, Registry, and Content Foundation - COMPLETE (Sonnet 5).**
+**Phase 3 - Controller Families - COMPLETE (Sonnet 5).**
 
-Next owner: **Sonnet 5, Phase 3**. See [Next bounded action](#next-bounded-action).
+Next owner: **Sonnet 5, Phase 4**. See [Next bounded action](#next-bounded-action).
 
 ## Current baseline
 
@@ -40,15 +40,20 @@ Full rationale: [`docs/architecture/DEPENDENCY_BASELINE.md`](docs/architecture/D
 ## Verified capabilities
 
 Backed by the evidence in [`docs/qa/PHASE1_VALIDATION.md`](docs/qa/PHASE1_VALIDATION.md) (Phase 1)
-and this revision's validation run (Phase 2).
+and this revision's validation run (Phase 3).
 
-- `npm install`, `npm run typecheck`, `npm test` (87 tests), `npm run build` and
+- `npm install`, `npm run typecheck`, `npm test` (122 tests), `npm run build` and
   `npm run check:offline` all pass.
 - Boot -> title -> start -> controllable placeholder actor -> pause -> resume -> restart works
-  end to end in a real browser against the production build.
-- Restart is clean: 8 consecutive restarts plus a quit-to-title and a fresh run left every
-  live-resource counter flat (input adapters, context disposables, scene disposables, installed
-  packs, debug contributions). Quitting to the title released all of them to zero.
+  end to end in a real browser against the production build. **(Phase 3)** Re-verified against the
+  platform-controller-driven mover specifically: horizontal movement and jump were confirmed
+  through real Arcade Physics (`vx`, `vy`, `onGround` read from the live debug snapshot), not
+  just "no console error."
+- Restart is clean: 8 consecutive restarts via the pause menu plus a quit-to-title and a fresh run
+  left every live-resource counter flat (input adapters, context disposables, scene disposables,
+  installed packs, debug contributions) **and, newly checked this revision, every live Phaser
+  GameObject count flat too** (`playScene.children.list.length` stayed at 5 across all 8
+  restarts). Quitting to the title released all counters to zero.
 - Semantic input drives gameplay from both keyboard and DOM touch controls, with no duplicated
   game logic for touch.
 - One press produces one effect across overlapping scenes (`consumePress`).
@@ -86,6 +91,43 @@ and this revision's validation run (Phase 2).
   asserts a `game.json` missing `viewport` and a `tuning.json` with a wrong-typed field both
   throw `SchemaValidationError` from the content loader, not from wherever gameplay code first
   touches the bad field.
+- **(Phase 3)** Six controller families exist (`platform`, `top-down`, `vehicle`, `grid`,
+  `pointer-action`, `ui-simulation`), each a stateless `Controller<TIntent>` in
+  `packages/runtime/src/controllers/` reading only `@sw2d/contracts`'s `ActionInput`. 35 focused
+  tests across seven files in `packages/runtime/test/controllers/`. Every controller's declared
+  own-keys are exactly `['read']` (asserted directly) - no controller owns a listener, a timer or
+  frame advancement to leak.
+- **(Phase 3)** The platform family has a real consumer:
+  `starter/src/game-specific/placeholderMoverPack.ts` now calls `platformController.read(context.input)`
+  instead of reading `ActionInput` directly, and supplies only "how the body moves" (velocity,
+  gravity, the jump-vs-grounded decision) - verified in a real browser through actual Arcade
+  Physics state, not just a passing build.
+- **(Phase 3)** The pause/resume double-consumption regression class (ADR-0003) is covered at the
+  controller layer, not just the scene layer: `uiSimulationController`'s `confirmPressed` /
+  `cancelPressed` / `pausePressed` claim their edge via `consumePress`, and
+  `uiSimulationController.test.ts` asserts a second same-frame reader sees `false`. Re-verified
+  live in-browser this revision too (see "Restart is clean" above and the fixed-bug note below).
+- **(Phase 3)** `topDownController`'s diagonal-movement bound is enforced and tested: pressing two
+  cardinal directions at once produces a `(moveX, moveY)` vector whose length is <= 1, not
+  `sqrt(2)` - `moveMagnitude` and the vector components are asserted numerically in
+  `topDownController.test.ts`.
+- **(Phase 3) Bug found and fixed, not merely discovered.** Restarting through the pause menu
+  (`SECONDARY_ACTION` inside `PauseScene`) throws inside
+  `starter/src/game-specific/placeholderMoverPack.ts`'s `dispose()`:
+  `SceneRouterImpl.restartRun()` queues a stop and an immediate start of the same scene in one
+  batch, so by the time the pack's teardown runs, the scene's physics world/groups can already be
+  gone. The old code (`scene.physics.world.removeCollider(collider); player.destroy(); ...`)
+  threw on the first line and silently skipped `player.destroy()`/`ground.destroy()` for every
+  such restart - a real per-restart GameObject leak that the existing flat-disposable-count
+  evidence never caught, because `SystemHostImpl.dispose()` and `DisposableBagImpl.dispose()`
+  both clear their own bookkeeping *before* iterating, so their counters read flat regardless of
+  whether an individual pack's `dispose()` throws partway through. Fixed by wrapping each
+  physics-touching teardown step independently (`safely()` helper, game-specific file only); a
+  real browser check across 8 pause-menu restarts now shows zero console errors and a flat
+  GameObject count (previously: one caught-and-logged error per restart). This was pre-existing
+  Phase 1 code, unrelated to the `update()` refactor - `dispose()` was untouched by the platform
+  controller change and had carried this defect since Phase 1's manual validation, which checked
+  disposable counts but not console output during restart.
 
 ## Implemented but unverified
 
@@ -118,15 +160,32 @@ working.
 - `AccessibilityStateImpl.refreshEnvironment()` - no caller re-reads media queries yet.
 - `highContrast` - persisted and projected; nothing renders differently for it.
 - Reduced motion is honoured by the title prompt only; no other motion exists to suppress.
+- **(Phase 3)** `topDownController`, `vehicleController`, `gridController`,
+  `pointerActionController`, `uiSimulationController` - each has focused deterministic unit
+  coverage against a real `ActionInputHost`, per the Phase 3 acceptance contract (only the
+  platform family required a real in-game consumer). None is wired into the starter or any scene
+  yet. Do not treat "tested" as "exercised by a real game" for these five.
+- **(Phase 3)** Spatial pointer state (world-space cursor position, hover targets, drag vectors)
+  is explicitly **not** implemented. `ActionInput` has no cursor coordinates today, and
+  `pointerActionController` only exposes the press-style actions the current semantic layer
+  honestly supports (`primaryPressed`, `secondaryPressed`, `interactPressed`, `confirmPressed`,
+  `cancelPressed`). A full pointer/placement controller (needed for tower-defense-style placement,
+  drag-drop, hover feedback) needs a spatial pointer service added to `@sw2d/contracts`/
+  `@sw2d/runtime` first - a bounded future capability, not a Phase 3 gap to silently work around.
+  See `PROJECT_BIBLE.md`'s Phase 3 entry for the reasoning.
+- **(Phase 3)** `SystemPackDefinition.configSchemaId` remains declared-but-unenforced (unchanged
+  from Phase 2 - Phase 3's runtime changes were additive, in `controllers/`, and did not touch
+  `SystemHostImpl.install()`).
 
 ## Known failures / gaps
 
 - **The browser journey is not automated.** It was driven manually and does not re-run on
   commit. Highest-value QA debt. See [ADR-0008](docs/architecture/adr/0008-phase1-validation-strategy.md).
-  Still true in Phase 2; a light manual smoke check confirmed the JSON content path boots
-  cleanly, but the full boot -> play -> pause -> restart journey was not manually replayed this
-  revision (per the master plan: rerun only when a change demonstrates impact, and Phase 2 never
-  touches `packages/runtime/**`).
+  Still true after Phase 3; this revision's manual pass was the most thorough since Phase 1
+  (boot, title-confirm, movement, jump, pause, resume, 8x restart-via-pause-menu, quit-to-title,
+  fresh run, all read from the live debug snapshot and Phaser's own scene object list, not just a
+  screenshot) because the controller refactor touched the real gameplay consumer - but it is still
+  a manual script run once by hand, not a re-runnable check.
 - **Frames in that journey were clocked manually** via `game.loop.step(t)`, because the
   automation surface keeps the browser pane hidden and rAF is throttled there. The code path is
   the production one; the clock is not wall-clock. FPS under real pacing is unmeasured. The same
@@ -186,34 +245,60 @@ Breaking one of these is an architecture change, not a bug fix. Escalate rather 
 | Layer | State | Command |
 |---|---|---|
 | Static / schema | TypeScript passing; JSON Schema exists for 5 contract types + 1 content document | `npm run typecheck` |
-| Unit | 87 tests passing (58 Phase 1 + 29 Phase 2) | `npm test` |
+| Unit | 122 tests passing (58 Phase 1 + 29 Phase 2 + 35 Phase 3) | `npm test` |
 | Build | passing | `npm run build` |
 | Offline (static guard) | passing | `npm run check:offline` |
 | Runtime integration | proven manually in-browser, **not automated** | see ADR-0008 |
-| Browser journeys | not automated; Phase 2 content-boundary boot re-verified manually this revision | Phase 2+ (QA package still unbuilt) |
+| Browser journeys | not automated; Phase 3 controller/restart regression re-verified manually this revision (most thorough since Phase 1) | Phase 2+ (QA package still unbuilt) |
 | Proof regression | none - no proof games exist | Phase 10 |
 
 `npm run validate` runs typecheck + test + build + offline guard. All four passed this revision.
 
 ## Pending work
 
-Phases 3-12 are unstarted. See `MASTER_PROJECT.md` §38 for the routed plan and owners.
+Phases 4-12 are unstarted. See `MASTER_PROJECT.md` §38 for the routed plan and owners.
 
 ## Next bounded action
 
-**Phase 3 - Sonnet 5 - Controller Families.**
+**Phase 4 - Sonnet 5 - Reusable System Pack Core.**
 
-Implement the six controller families named in `MASTER_PROJECT.md` §10 (platform, top-down,
-vehicle, grid, pointer, UI/simulation) against the semantic input layer, with minimal
-demonstration fixtures. Acceptance: every controller consumes the same `ActionInput` surface, no
-controller duplicates physical-input plumbing, lifecycle/disposal stays clean, and focused
-controller tests pass. This will very likely require real `packages/runtime/**` changes (Phase 2
-was the last phase required to leave it untouched) - read `MASTER_PROJECT.md` §10 and the
-"System packs" / "Semantic input" sections of `docs/architecture/ARCHITECTURE_OVERVIEW.md`
-before starting. Do not start Phase 4 in the same pass. Keep the repository runnable at the
-phase boundary.
+Implement first versions of the combat, AI, world, progression, arcade, puzzle, simulation,
+narrative and strategy system pack families (`MASTER_PROJECT.md` §9, §38 Phase 4), scoped by
+the controller families Phase 3 established. Acceptance: dependency graph validates (reuse
+`resolveInstallOrder`, unchanged since Phase 1), install/dispose is tested per pack, no pack
+requires unrelated genre content, and packs interact only through `GameContext`/capability ids -
+never by importing each other's modules or reaching into a controller's internals. Read
+`MASTER_PROJECT.md` §8-§9 and the "System packs" section of
+`docs/architecture/ARCHITECTURE_OVERVIEW.md` before starting. If a pack's install-time
+configuration needs schema validation, wire it through the existing `@sw2d/schemas` validator
+(`SystemPackDefinition.configSchemaId` is still declared-but-unenforced - Phase 4 is a reasonable
+place to close that, since it is the first phase to install real packs with real config shapes).
+Do not start Phase 5 in the same pass. Keep the repository runnable at the phase boundary.
 
 ## Revision history
+
+### Revision 3 - 2026-08-25 (Sonnet 5)
+Phase 3 complete. Added `Controller<TIntent>` and six intent types
+(`PlatformIntent`/`TopDownIntent`/`VehicleIntent`/`GridIntent`/`PointerActionIntent`/
+`UiSimulationIntent`) to `@sw2d/contracts` (small, dependency-free, per §4's own permission); six
+stateless controller implementations under `packages/runtime/src/controllers/`, exported from
+`@sw2d/runtime`. `platformController` has a real consumer: refactored
+`starter/src/game-specific/placeholderMoverPack.ts` to read platform intent instead of raw
+`ActionInput`, preserving observable behaviour except for one deliberate, analyzed cleanup
+(dropped a `consumePress('CONFIRM')` fallback in the jump trigger that was proven inert - see
+`PROJECT_BIBLE.md`). The other five families got focused deterministic unit coverage (35 new
+tests total) rather than a real consumer, per the phase's own acceptance contract.
+`uiSimulationController` reproduces and passes the pause/resume double-consumption regression
+test the phase required. `topDownController` enforces and tests the diagonal-magnitude bound.
+`pointerActionController` deliberately does not invent spatial pointer data. Along the way, a
+real, pre-existing Phase 1 defect was found and fixed: restarting through the pause menu threw
+inside the placeholder mover's `dispose()` because Phaser's physics world can already be torn
+down by the time a batched stop+restart's teardown runs, which silently skipped
+`player.destroy()`/`ground.destroy()` on every such restart - a leak the existing flat-counter
+evidence could not see. Fixed with per-step disposal guards in the game-specific file only; a
+manual browser regression across 8 pause-menu restarts, a quit-to-title and a fresh run now shows
+zero console errors and a flat live-GameObject count, in addition to the flat listener counts
+Phase 1 already checked. `npm run validate` passed (typecheck, 122 tests, build, offline guard).
 
 ### Revision 2 - 2026-08-25 (Sonnet 5)
 Phase 2 complete. `@sw2d/schemas` created: JSON Schema (draft-07) for GameDefinition,

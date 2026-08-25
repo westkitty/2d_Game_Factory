@@ -19,6 +19,15 @@ export { KeyboardAdapter } from './input/KeyboardAdapter.ts';
 export { PointerAdapter } from './input/PointerAdapter.ts';
 export { DEFAULT_BINDINGS, mergeBindings } from './input/defaultBindings.ts';
 
+export {
+  platformController,
+  topDownController,
+  vehicleController,
+  gridController,
+  pointerActionController,
+  uiSimulationController,
+} from './controllers/index.ts';
+
 export { LocalStorageDriver, MemoryStorageDriver } from './persistence/LocalStorageDriver.ts';
 export { SaveStoreImpl } from './persistence/SaveStoreImpl.ts';
 export {
