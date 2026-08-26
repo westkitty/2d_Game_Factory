@@ -28,8 +28,6 @@ export function el<K extends keyof HTMLElementTagNameMap>(
   const node = document.createElement(tag);
   if (options.class) node.className = options.class;
   if (options.text !== undefined) node.textContent = options.text;
-  // Only ever used with strings this module itself builds - never with
-  // anything that came from a file name, an asset or the network.
   if (options.html !== undefined) node.innerHTML = options.html;
   if (options.title) node.title = options.title;
   if (options.disabled !== undefined && 'disabled' in node) (node as HTMLButtonElement).disabled = options.disabled;
@@ -72,7 +70,6 @@ export function field(labelText: string, control: HTMLElement, hint?: string): H
   return el('label', { class: 'field' }, el('span', { text: labelText }), control, hint ? el('div', { class: 'faint', text: hint, style: { 'font-size': '11px', 'margin-top': '3px' } }) : null);
 }
 
-/** A `<select>` whose option values are ids and whose labels are human text. */
 export function select(
   options: readonly { readonly value: string; readonly label: string }[],
   value: string,
@@ -97,7 +94,6 @@ export function toast(message: string, kind: 'ok' | 'warn' | 'err' = 'ok', durat
   window.clearTimeout(toastTimer);
 }
 
-/** Formats a byte count the way a person reads it. */
 export function formatBytes(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
@@ -110,15 +106,16 @@ export function maturityBadgeClass(maturity: string): string {
   return 'badge badge--recipe';
 }
 
-/** Plain-English starter-kit depth. Never dresses a recipe preset up as a proven one (F15). */
+/** Starter depth and preset evidence maturity are separate claims. */
 export function depthLabel(depth: string): string {
-  if (depth === 'rich-proof-kit') return 'Rich starter kit';
+  if (depth === 'rich-proof-kit' || depth === 'rich-starter-kit') return 'Rich starter kit';
   if (depth === 'smoke-kit') return 'Smoke-validated demo';
   return 'Generated shell';
 }
 
 export function depthExplanation(depth: string): string {
   if (depth === 'rich-proof-kit') return 'A playable starting point derived from a committed, proof-validated game: a designed level, real mechanics, and your art wired in.';
+  if (depth === 'rich-starter-kit') return 'A designed playable starter with real genre mechanics and semantic-role art. It is richer than a generated shell, but it does not change the preset’s evidence maturity.';
   if (depth === 'smoke-kit') return 'A working composition with a committed browser-smoke-tested demo behind it, but no deep proof game. Expect a starting point, not a finished genre.';
   return 'A working generated shell: it boots, installs its packs and takes input. The genre mechanics are yours to write.';
 }
