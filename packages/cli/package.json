@@ -12,6 +12,10 @@
     ".": {
       "types": "./src/index.ts",
       "default": "./src/index.ts"
+    },
+    "./factory": {
+      "types": "./src/factory.ts",
+      "default": "./src/factory.ts"
     }
   },
   "types": "./src/index.ts",

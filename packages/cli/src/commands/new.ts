@@ -1,9 +1,17 @@
-import { UnknownPresetError, getPreset } from '@sw2d/presets';
-import { buildGameFiles, findUnresolvedTokens, writeGameFiles } from '../generator/generate.ts';
-import { assertDoesNotExist, GAMES_ROOT, resolveUnder } from '../paths.ts';
-import { assertValidSlug, InvalidSlugError } from '../slug.ts';
+import { UnknownPresetError } from '@sw2d/presets';
+import { OverlayContainmentError, createGame } from '../factory.ts';
+import { TargetExistsError } from '../paths.ts';
+import { InvalidSlugError } from '../slug.ts';
 import { parseArgs } from '../args.ts';
 
+/**
+ * `sw2d new <game-id> --preset <preset-id>`.
+ *
+ * A thin argv wrapper over `createGame` in `../factory.ts` - the one canonical
+ * generation path, shared with the workbench host so the two can never drift
+ * into different factories. Everything this file adds is argv parsing and
+ * turning a thrown error into an exit code plus a message a person can act on.
+ */
 export async function run(args: readonly string[]): Promise<number> {
   const { positional, flags } = parseArgs(args);
   const gameId = positional[0];
@@ -15,44 +23,24 @@ export async function run(args: readonly string[]): Promise<number> {
   }
 
   try {
-    assertValidSlug('game id', gameId);
-  } catch (error) {
-    if (error instanceof InvalidSlugError) {
-      console.error(error.message);
-      return 1;
-    }
-    throw error;
-  }
-
-  let preset;
-  try {
-    preset = getPreset(presetId);
+    const result = createGame({ gameId, presetId });
+    console.log(`Generated "${result.gameId}" from preset "${result.presetId}" at games/${result.gameId}/.`);
+    console.log(`Next: npm install && npm run sw2d -- validate ${result.gameId}`);
+    return 0;
   } catch (error) {
     if (error instanceof UnknownPresetError) {
       console.error(error.message);
       console.error('Run: npm run sw2d -- list-presets');
       return 1;
     }
+    if (error instanceof InvalidSlugError || error instanceof TargetExistsError || error instanceof OverlayContainmentError) {
+      console.error(error.message);
+      return 1;
+    }
+    if (error instanceof Error && error.message.startsWith('Generator error:')) {
+      console.error(error.message);
+      return 1;
+    }
     throw error;
   }
-
-  const targetPath = resolveUnder(GAMES_ROOT, gameId);
-  try {
-    assertDoesNotExist(`Game "${gameId}"`, targetPath);
-  } catch (error) {
-    console.error((error as Error).message);
-    return 1;
-  }
-
-  const files = buildGameFiles(gameId, preset);
-  const unresolved = findUnresolvedTokens(files);
-  if (unresolved.length > 0) {
-    console.error(`Internal generator error: unresolved template token(s) ${unresolved.join(', ')}. Not writing "${gameId}".`);
-    return 1;
-  }
-
-  writeGameFiles(files, targetPath);
-  console.log(`Generated "${gameId}" from preset "${presetId}" at games/${gameId}/.`);
-  console.log(`Next: npm install && npm run sw2d -- validate ${gameId}`);
-  return 0;
 }
