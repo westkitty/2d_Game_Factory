@@ -3,12 +3,12 @@ import { PRESETS, materializeStarterPlan } from '../src/index.ts';
 
 /**
  * Starter-materialization proof (MASTER_PROJECT.md section 16, extended by
- * Phase 7B section 13): all 49 recipes go through the same pure path and
- * come out with a deterministic, complete plan. Not a functional demo and
- * not the file-generating CLI - both remain Phase 8.
+ * Phase 7B section 13 and Phase 7C section 13): all 74 recipes go through
+ * the same pure path and come out with a deterministic, complete plan. Not
+ * a functional demo and not the file-generating CLI - both remain Phase 8.
  */
 describe('materializeStarterPlan', () => {
-  it('materializes all 49 presets without throwing', () => {
+  it('materializes all 74 presets without throwing', () => {
     for (const preset of PRESETS) {
       expect(() => materializeStarterPlan(preset), preset.id).not.toThrow();
     }

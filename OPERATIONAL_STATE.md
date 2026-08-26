@@ -2,7 +2,7 @@
 
 Project: **Stinky Weasel 2D Browser Game Factory** (`sw2d`)
 Repository: `westkitty/2d_Game_Factory`
-State revision: **8**
+State revision: **9**
 Updated: 2026-08-25
 
 Read this before doing anything. Governing spec: [`MASTER_PROJECT.md`](MASTER_PROJECT.md).
@@ -12,14 +12,14 @@ Workflow: [`docs/AGENT_WORKFLOW.md`](docs/AGENT_WORKFLOW.md).
 
 ## Current phase
 
-**Phase 7B - Preset Catalog Families D-F - COMPLETE (Sonnet 5).**
+**Phase 7C - Preset Catalog Families G-I - COMPLETE (Sonnet 5). The 74-preset catalog is done.**
 
-No new ADR this revision - Phase 7B extended the Phase 7A catalog and package boundary
-(ADR-0015) without changing either; see the Phase 7B entries in "Verified capabilities" and
-`PROJECT_BIBLE.md` for what was decided.
+No new ADR this revision - Phase 7C extended the Phase 7A/7B catalog and package boundary
+(ADR-0015) without changing either, the third phase in a row to prove it generalises cleanly; see
+the Phase 7C entries in "Verified capabilities" and `PROJECT_BIBLE.md` for what was decided.
 
-Next owner: **Sonnet 5, Phase 7C** (Preset Catalog Families G-I). See
-[Next bounded action](#next-bounded-action). **Do not execute Phase 7C yet** - this revision only
+Next owner: **Sonnet 5, Phase 8** (Factory CLI and 12 Representative Demos). See
+[Next bounded action](#next-bounded-action). **Do not execute Phase 8 yet** - this revision only
 records it as the next bounded action.
 
 ## Current baseline
@@ -362,6 +362,40 @@ and this revision's validation run (Phase 5).
   generator. `docs/presets/PRESET_CATALOG.md` and `PRESET_CAPABILITY_MATRIX.md` were regenerated
   from a fresh 49-entry catalog dump (not hand-edited into their Phase 7A shape), grouped by family
   with a "(Phase 7A)"/"(Phase 7B)" label per section.
+- **(Phase 7C)** `@sw2d/presets` reaches its final size: 74 presets, exactly the catalog
+  MASTER_PROJECT.md section 21 names, no more and no fewer. Family G Simulation/management (8),
+  Family H Narrative/exploration (7), Family I Party/toy/weird (10) - the exact ids section 4
+  names - appended after the untouched Phase 7A+7B 49
+  (`packages/presets/test/catalog.test.ts` asserts the first 49 entries are byte-identical in id
+  and order to the frozen Phase 7A/7B list). Every new recipe is `maturity: 'recipe'`, schema-valid,
+  passes `validatePresetComposition`, references only real pack ids and real controller families,
+  and resolves through the real `resolveInstallOrder`. No recipe in Family G/H/I selects `sw2d.ai`
+  - MASTER_PROJECT.md section 9's explicit instruction not to select AI "merely to simulate
+  customers/animals if the current AI capability does not actually represent those behaviors" -
+  so the `aiPack`-requires-`combatPack` rule has no new cases to satisfy this phase. 279 new tests
+  across the existing seven `packages/presets/test/` files (no new test files, the third phase in a
+  row to extend rather than duplicate the suites).
+- **(Phase 7C)** `sw2d.simulation` - the one pack with zero preset consumers through Phase 7A and
+  7B - now has 9 required and 10 total (required + optional) consumers, all in Family G, whose
+  identity is genuinely "a resource ledger plus timed jobs" (`simulationPack`'s own scope). **All
+  ten current packs now have at least one preset consumer** -
+  `docs/presets/PRESET_CAPABILITY_MATRIX.md`'s "Full pack-consumer coverage" table reports the
+  exact required/total count for every pack across all 74 recipes, not just a pass/fail claim.
+- **(Phase 7C)** Three new validation profiles registered (`simulation-management-recipe`,
+  `narrative-exploration-recipe`, `party-toy-weird-recipe`), bringing the bounded total to nine -
+  exactly one per registered family, matching the nine families exactly, and the catalog's own
+  final size (MASTER_PROJECT.md section 14/6/8, unchanged rule applied a third time).
+- **(Phase 7C)** The ADR-0015 package boundary held with zero changes for the third phase running:
+  no new subpath, no barrel import, `@sw2d/presets`' `package.json` dependency shape unchanged and
+  still proven by `packages/presets/test/packageBoundary.test.ts`. `npm run build`'s emitted chunk
+  hashes are byte-identical to Phase 7B's.
+- **(Phase 7C)** `materializeStarterPlan` and both preset docs now cover the complete 74-preset
+  catalog, still through the exact same code path Phase 7A wrote. `docs/presets/PRESET_CATALOG.md`
+  and `PRESET_CAPABILITY_MATRIX.md` were regenerated from a fresh 74-entry catalog dump, grouped by
+  family with a "(Phase 7A/7B/7C)" label per section; the capability matrix gained a dedicated
+  "Full pack-consumer coverage" table (required-count and total-reference-count per pack) that did
+  not exist before this phase, since Phase 7A/7B never had a reason to report full coverage while a
+  zero-consumer pack remained.
 
 ## Implemented but unverified
 
@@ -444,17 +478,16 @@ working.
   to them. The events exist, are typed, and are asserted to fire with the right payload in each
   pack's own tests - but no cross-pack event *subscription* is exercised yet, only direct
   capability calls.
-- **(Phase 7A/7B)** All 49 presets are `maturity: 'recipe'` and stay that way, by design - a
-  registered recipe is not a smoke-validated genre or a proof-validated one (MASTER_PROJECT.md
-  section 5). None has generated an actual starter shell (no file-generating CLI exists -
-  Phase 8), none has been smoke-tested in a browser (12 representative demos - also Phase 8), and
-  none has an end-to-end proof journey (five deep proofs - Phase 10). Every current pack is now
-  selected by at least one recipe except `sw2d.simulation` - Phase 7B's Family F gave
-  `sw2d.strategy` its first four real consumers; `sw2d.simulation` remains the one exception,
-  unreferenced until Phase 7C's simulation/management family.
-- **(Phase 7A/7B)** `materializeStarterPlan`'s output (`StarterPlan`) has never been consumed by
+- **(Phase 7A/7B/7C, closed)** ~~Every current pack is now selected by at least one recipe except
+  `sw2d.simulation`~~ - closed in Phase 7C: Family G gives `sw2d.simulation` 9 required consumers.
+  **All 74 presets are `maturity: 'recipe'`** and stay that way, by design - a registered recipe is
+  not a smoke-validated genre or a proof-validated one (MASTER_PROJECT.md section 5). None has
+  generated an actual starter shell (no file-generating CLI exists - Phase 8), none has been
+  smoke-tested in a browser (12 representative demos - also Phase 8), and none has an end-to-end
+  proof journey (five deep proofs - Phase 10).
+- **(Phase 7A/7B/7C)** `materializeStarterPlan`'s output (`StarterPlan`) has never been consumed by
   anything that writes a file or renders content - proven only to be pure, deterministic, and
-  structurally complete for all 49 recipes. Whether its shape is actually sufficient for Phase 8's
+  structurally complete for all 74 recipes. Whether its shape is actually sufficient for Phase 8's
   CLI to generate a running game is untested until Phase 8 tries.
 
 ## Known failures / gaps
@@ -560,69 +593,149 @@ Breaking one of these is an architecture change, not a bug fix. Escalate rather 
 
 | Layer | State | Command |
 |---|---|---|
-| Static / schema | TypeScript passing; JSON Schema exists for 5 contract types + 1 content document + 6 Phase 6 content-pipeline documents (asset-descriptor, ui-copy, content-assets, theme-manifest, resource-record/-manifest, level-document) + 3 pack config schemas (progression, arcade, starter placeholder-mover); all 49 presets validate against `preset-definition:v1` | `npm run typecheck` |
-| Unit | 690 tests passing (58 Phase 1 + 29 Phase 2 + 35 Phase 3 + 78 Phase 4 + 13 Phase 5 + 66 Phase 6 + 232 Phase 7A + 179 Phase 7B) | `npm test` |
-| Build | passing (two-page build: `index.html` + `tiled-proof.html`, byte-identical output to Phase 7A/6 - `@sw2d/presets` is not consumed by the starter) | `npm run build` |
+| Static / schema | TypeScript passing; JSON Schema exists for 5 contract types + 1 content document + 6 Phase 6 content-pipeline documents (asset-descriptor, ui-copy, content-assets, theme-manifest, resource-record/-manifest, level-document) + 3 pack config schemas (progression, arcade, starter placeholder-mover); all 74 presets validate against `preset-definition:v1` | `npm run typecheck` |
+| Unit | 892 tests passing (58 Phase 1 + 29 Phase 2 + 35 Phase 3 + 78 Phase 4 + 13 Phase 5 + 66 Phase 6 + 232 Phase 7A + 179 Phase 7B + 279 Phase 7C) | `npm test` |
+| Build | passing (two-page build: `index.html` + `tiled-proof.html`, byte-identical output to Phase 7B/7A/6 - `@sw2d/presets` is not consumed by the starter) | `npm run build` |
 | Offline (static guard) | passing | `npm run check:offline` |
 | Runtime integration | proven manually in-browser, **not automated** | see ADR-0008 |
-| Browser journeys | not automated; **not re-run this revision** - Phase 7B is metadata/catalog work outside their impact radius (three new catalog files plus edits confined to `packages/presets/**` and `docs/presets/**`, zero `package.json` changes), and `npm run build`'s byte-identical output is the evidence for that claim. Phase 6's evidence (both starter pages) stands unchanged. | Phase 2+ (QA package still unbuilt) |
+| Browser journeys | not automated; **not re-run this revision** - Phase 7C is metadata/catalog work outside their impact radius (three new catalog files plus edits confined to `packages/presets/**` and `docs/presets/**`, zero `package.json` changes), and `npm run build`'s byte-identical output is the evidence for that claim. Phase 6's evidence (both starter pages) stands unchanged. | Phase 2+ (QA package still unbuilt) |
 | Proof regression | none - no proof games exist | Phase 10 |
 | Pack composition | real `SystemHostImpl` + `resolveInstallOrder` + `CapabilityRegistryImpl` installing all nine Phase 4 packs together, plus config-validation, declared-`provides` and throwing-teardown failure paths, automated | `packages/runtime/test/packsComposition.test.ts` |
 | Capability-id governance | pattern, uniqueness and pack-id/capability-id split, automated for all ten packs including Phase 6's `entityRegistryPack` | `packages/packs/test/capabilityIds.test.ts` |
 | Tiled/theme/resource content pipeline | normalization, object-class catalog, entity-registry dispatch, theme resolution and resource governance, all automated; the real `docs/resources/VISUAL_ASSET_MANIFEST.json` and the real `starter/content/levels/intro.json` are both exercised directly, not only synthetic fixtures | `packages/content-pipeline/test/**`, `packages/schemas/test/contentPipeline.test.ts`, `packages/schemas/test/resourceGovernance.test.ts`, `packages/packs/test/entityRegistry.test.ts`, `starter/test/tiledProofContent.test.ts`, `starter/test/resourceGovernance.test.ts` |
-| Preset catalog integrity | exact shape (49/49, exact ids, 10/10/7/5/10/7 family counts, deterministic order, Phase 7A's 27 preserved as the first 27 entries), schema/composition validation, real pack-id and controller-family checks, real `resolveInstallOrder` dependency resolution, maturity/gamepad/limitation honesty, deterministic materialization, docs-sync, all automated | `packages/presets/test/**` |
+| Preset catalog integrity | **complete**: exact shape (74/74, exact ids, 10/10/7/5/10/7/8/7/10 family counts, deterministic order, Phase 7A+7B's 49 preserved as the first 49 entries), schema/composition validation, real pack-id and controller-family checks, real `resolveInstallOrder` dependency resolution, maturity/gamepad/limitation honesty, deterministic materialization, docs-sync, full pack-consumer coverage, all automated | `packages/presets/test/**` |
 
 `npm run validate` runs typecheck + test + build + offline guard. All four passed this revision.
 
 ## Pending work
 
-Phases 7C-12 are unstarted. See `MASTER_PROJECT.md` §38 for the routed plan and owners.
+Phases 8-12 are unstarted. See `MASTER_PROJECT.md` §38 for the routed plan and owners.
 
 ## Next bounded action
 
-**Phase 7C - Sonnet 5 - Preset Catalog Families G-I** (simulation/management, narrative/
-exploration, party/toy/weird - preset recipes 50-74, the final 25).
+**Phase 8 - Sonnet 5 - Factory CLI and 12 Representative Demos.**
 
-Not executed this revision - Phase 7B explicitly stops before it. What Sonnet may assume, and what
-is protected, going into Phase 7C:
+Not executed this revision - Phase 7C explicitly stops before it. The Phase 7 catalog (all 74
+recipes) is now the finished input Phase 8 consumes. What Sonnet may assume, and what is
+protected, going into Phase 8:
 
-- `@sw2d/presets` exists with the exact shape Phase 7C extends: `PRESETS`/`getPreset`/`listPresets`/
-  `getPresetsByFamily`/`materializeStarterPlan` in `packages/presets/src/`, one catalog file per
-  family under `src/catalog/`, `definePreset`/`pack`/`LIMITATIONS`/`VALIDATION_PROFILES` in
-  `src/shared.ts` - reuse these rather than inventing a second authoring pattern. Phase 7B changed
-  none of this shape, only added three more catalog files and shared constants through it.
-- The 49 Family A-F ids and their catalog order are frozen by
-  `packages/presets/test/catalog.test.ts`; Phase 7C adds the final 25 recipes to the *same*
-  `PRESETS` array, it does not replace or reorder the first 49. Update that test's expected id
-  list and family-count map in the same change that adds the new recipes - do not leave it
-  silently wrong. After Phase 7C the catalog must contain all 74 `MASTER_PROJECT.md` names, with
-  no further families to add.
+- `@sw2d/presets` is complete and frozen in shape: `PRESETS` (74, deterministic order),
+  `getPreset`/`listPresets`/`getPresetsByFamily`, and `materializeStarterPlan` -> `StarterPlan`
+  (identity, controller families, required/optional pack selections, content roles, starter scene,
+  validation profile) in `packages/presets/src/`. Phase 8's CLI (`npm run sw2d -- new <game-id>
+  --preset <preset-id>`, per MASTER_PROJECT.md section 25) is the *first real consumer* of
+  `StarterPlan` - nothing has ever turned one into a file yet; that is exactly Phase 8's job.
+- No further preset families exist to add. Do not create a 75th preset or an 8th validation-profile
+  family; `packages/presets/test/catalog.test.ts` fails immediately on a count, id, order or
+  duplicate drift, and `ALL_VALIDATION_PROFILES` is asserted to have exactly nine.
 - `@sw2d/presets`' production dependency shape is closed and proven
-  (`packageBoundary.test.ts`): `@sw2d/contracts` + `@sw2d/packs`'s `./ids` subpath only - Phase 7B
-  needed zero changes to it, the strongest evidence yet that the Phase 5 trigger's repair (ADR-0015)
-  generalises cleanly. If Phase 7C needs anything else pack-related in production code, that is a
-  new instance of the same trigger - apply the same subpath-export pattern, do not import a barrel.
-- `VALIDATION_PROFILES` is bounded at six (three Phase 7A + three Phase 7B, MASTER_PROJECT.md
-  section 14). Simulation/narrative/party recipes need their own profile(s) - add only as many as
-  the new families' actual differences justify, the same bounded-set reasoning both prior phases
-  used, not one per recipe.
-- `sw2d.simulation` is the one pack with zero consumers across all 49 current recipes (every other
-  pack, including `sw2d.strategy` since Phase 7B, is now selected by at least one recipe) - Phase
-  7C's simulation/management family is very likely its first real preset consumer.
-- `aiPack.dependencies = ['combat.health']` is the one non-trivial cross-pack dependency among the
-  ten current packs; any Phase 7C recipe selecting `sw2d.ai` anywhere must also select
-  `sw2d.combat` as *required*, or `resolveInstallOrder` will correctly refuse it - the same rule
-  every Phase 7A/7B recipe follows (see `packages/presets/src/catalog/topDownAction.ts`'s or
-  `strategyDefense.ts`'s file comment).
-- Maturity stays `'recipe'` for all of 7C, same as 7A/7B - do not promote toward
-  `smoke-validated`/`proof-validated` (Phase 8/10's job).
-- Do not build the Playwright/QA package or Phase 8's CLI; both remain their own phases.
-- Do not attempt tile-*image* rendering (ADR-0014's deferral), a spatial pointer service (deferred
-  since Phase 3/5), or any narrative/dialogue-branching engine merely because a simulation, party
-  or narrative recipe would benefit - state the gap in `knownLimitations` instead, the same
-  pattern every Phase 7A/7B recipe with a missing capability already follows.
+  (`packageBoundary.test.ts`): `@sw2d/contracts` + `@sw2d/packs`'s `./ids` subpath only - three
+  phases in a row needed zero changes to it. Phase 8's CLI is the first package with a genuinely
+  new reason to touch pack/runtime surfaces (it must actually generate files, install dependencies,
+  and likely construct a real `GameDefinition`/`ContentBundle`) - investigate the Phase 5 trigger
+  again before choosing its dependency shape, the same way Phase 7A did, rather than assuming
+  ADR-0015's exact subpaths are automatically sufficient for a different kind of consumer.
+- **All ten packs now have at least one preset consumer** (`docs/presets/PRESET_CAPABILITY_MATRIX.md`'s
+  "Full pack-consumer coverage" table has the exact counts) - Phase 8's 12 representative demos and
+  Phase 10's five deep proofs are the first phases that actually *install* any of them in a running
+  game; a pack being "selected by a preset" and a pack being "exercised by a playing game" remain
+  two different, both-still-true-separately claims.
+- `requiredContentRoles` across the 74 recipes name both schema-backed roles (`tuning`, `levels`)
+  and conceptual ones with no schema yet (`dialogue`, `exhibits`, `puzzles`, `microgames`,
+  `characters`, `recipes`, `items`) - every conceptual role has a `knownLimitations` entry stating
+  it is not yet content-authorable. Phase 8 must not silently assume a schema exists for any of
+  these; inventing one to make a specific demo easier is exactly the kind of scope creep
+  MASTER_PROJECT.md section 10 (Phase 7C) and section 8/9 (earlier phases) both warn against
+  unless the demo genuinely requires it and the addition is bounded and justified on its own.
+- Maturity promotion (`recipe` -> `smoke-validated`) belongs to Phase 8's 12 representative demos
+  specifically, per MASTER_PROJECT.md section 5's "smoke-validated" definition - do not promote a
+  preset's maturity merely because the CLI can generate its starter shell; promotion requires the
+  demo to actually run.
+- Do not build the Playwright/QA package; that remains its own phase (Phase 2+'s standing debt,
+  unaffected by Phase 7).
+- Do not implement any of the ~40 missing mechanics named across all 74 recipes'
+  `knownLimitations` (vehicle physics, ball/paddle bounce, board-puzzle engines, tower/RTS/tactics
+  systems, customer/colonist/creature AI, dialogue renderers, drag/drop, drawing, fishing, cooking,
+  photography, etc.) merely to make one of the 12 representative demos feel complete - a smoke demo
+  proves the *composition* is real, not that the genre is finished (MASTER_PROJECT.md section 23:
+  "may use deliberately simple placeholder art... must demonstrate that its core composition is
+  real, not merely registered").
 
 ## Revision history
+
+### Revision 9 - 2026-08-25 (Sonnet 5)
+Phase 7C complete: Preset Catalog Families G-I - **the 74-preset catalog is finished**. Extended
+`@sw2d/presets` from 49 to exactly 74 recipes - Family G Simulation/management (8), Family H
+Narrative/exploration (7), Family I Party/toy/weird (10), the exact ids MASTER_PROJECT.md
+section 4 names, appended after the untouched Phase 7A+7B 49. No ADR this revision - the ADR-0015
+package boundary held with zero changes for the third phase in a row, the strongest evidence yet
+that the repair generalises: three different families, three different authors' worth of
+reasoning about controllers and packs, and the same `@sw2d/contracts` + `@sw2d/packs`'s `./ids`
+subpath dependency shape every time.
+
+The catalog's one standing gap closed this phase: `sw2d.simulation` had zero preset consumers
+through Phase 7A and 7B (flagged honestly in both phases' own "Known failures/gaps" entries rather
+than forced early). Family G gives it 9 required and 10 total consumers, because a management/
+simulation loop is genuinely built from `simulationPack`'s resource ledger - not manufactured for
+coverage; `sw2d.ai` was correspondingly *never* selected anywhere in Families G-I, honouring
+MASTER_PROJECT.md section 9's explicit instruction not to select AI "merely to simulate customers/
+animals if the current AI capability does not actually represent those behaviors." **All ten
+current packs now have at least one preset consumer** - `docs/presets/PRESET_CAPABILITY_MATRIX.md`
+gained a "Full pack-consumer coverage" table reporting the exact required/total count per pack
+across all 74 recipes, the first time this needed reporting (Phase 7A/7B always had a known
+zero-consumer exception to name instead of a table to build).
+
+Two shared `LIMITATIONS` constants added (`customerEconomy` across `shopkeeper`/`tycoon-lite`/
+`restaurant`, `creatureSimulation` across `pet-creature`/`virtual-pet`/`aquarium-terrarium` -
+`creatureSimulation` is this phase's one *cross-family* reuse, shared between Family G and Family
+I); every other Phase 7C limitation is a single-use inline string, the same "two or more recipes"
+bar Phase 7B established. Three new validation profiles
+(`simulation-management-recipe`/`narrative-exploration-recipe`/`party-toy-weird-recipe`) bring the
+bounded total to exactly nine - one per registered family, matching the catalog's own final family
+count for the first time (nine families, nine profiles).
+
+Controller routing followed MASTER_PROJECT.md section 6's per-recipe guidance precisely rather
+than defaulting broadly: Family G stayed `ui-simulation`-only throughout (confirm/cancel/navigate
+already covers shop/farm/pet menu interaction honestly; adding `pointer` to "customer-facing"
+recipes was considered and rejected as an unjustified claim over what `ui-simulation` alone already
+provides). Family H used the master plan's own per-recipe assignments exactly (`top-down` for
+`exploration-game`, `pointer`+`ui-simulation` for `point-and-click`/`escape-room`,
+`top-down`+`pointer` for `investigation-game`/`museum-exhibit` where both are separately
+justified). Family I applied the same restraint Family H modelled: `pointer` only where a
+recipe's identity is genuinely pointer-shaped (`physics-toy`, `drawing-game`,
+`dress-up-character-toy`, `sandbox-playground`, `photography-game`), `ui-simulation` everywhere
+else (`microgame-collection`, `local-party-game`, `virtual-pet`, `fishing-game`, `cooking-game`).
+
+Catalog validation, materialization and both docs all extended through the exact same paths Phase
+7A wrote, the third phase running - no second validator, no second materializer, no second doc
+generator. `packages/presets/test/catalog.test.ts` now asserts the first 49 entries are
+byte-identical in id and order to the frozen Phase 7A+7B list, alongside the pre-existing first-27
+check. `docs/presets/PRESET_CATALOG.md` and `PRESET_CAPABILITY_MATRIX.md` were regenerated in
+full from a fresh 74-entry catalog dump (the same disposable-test-harness technique every prior
+phase used, removed from the tree afterward), covering all nine families with "(Phase
+7A)"/"(Phase 7B)"/"(Phase 7C)" labels.
+
+279 new tests (892 total, up from 613), all in the seven `packages/presets/test/` files Phase 7A
+already created - no new test files, the third phase in a row where every suite was already
+generic enough over `PRESETS` to need only its hardcoded id/count/profile/foundational-pack-set
+expectations updated (`catalog.test.ts`'s exact-id list and family counts, `honesty.test.ts`'s 25
+new required-limitation cases plus `sw2d.simulation`/`sw2d.narrative` added to the
+"foundational, non-genre-complete" pack set, `schemaValidation.test.ts`'s profile count 6 -> 9).
+`npm run validate` passed (typecheck, 892 tests, build, offline guard); build output
+byte-identical to Phase 7B's, so neither starter browser journey was re-run - Phase 7C touched
+only `packages/presets/**` and `docs/presets/**`, nothing the starter imports.
+
+`GameContext` untouched. No new controller, system-pack family, or engine capability was added to
+satisfy any recipe; every recipe that would need one (offline-progress/prestige economy balancing,
+customer/colonist/creature AI, crop-growth systems, branching-dialogue rendering, spatial pointer
+targeting/hover/drag, text-command parsing, evidence-linking, exhibit presentation,
+escape-room puzzle grammar, microgame scheduling, local multiplayer input routing, advanced
+physics, wardrobe drag/drop, sandbox authoring, canvas drawing, casting/fishing, cooking
+sequencing, camera/photography scoring) states the gap in `knownLimitations` instead, per the
+phase's own explicit non-goals list. This closes the preset-catalog arc MASTER_PROJECT.md sections
+21-24 describe: **74 registered recipes, honestly labelled, real compositions of real packs and
+controllers, materializable through one shared path** - the input Phase 8's CLI and 12
+representative demos now consume.
 
 ### Revision 8 - 2026-08-25 (Sonnet 5)
 Phase 7B complete: Preset Catalog Families D-F. `@sw2d/presets` extended from 27 to exactly 49

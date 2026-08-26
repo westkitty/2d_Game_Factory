@@ -1,11 +1,13 @@
 # Preset Catalog
 
-49 registered composition recipes across six families - Phase 7A (platforming,
-top-down action, shooter, 27 recipes) plus Phase 7B (vehicle/movement, puzzle/arcade,
-strategy/defense, 22 more). A recipe is a composition of real controller families and
-real `@sw2d/packs` system packs - never an engine fork (MASTER_PROJECT.md section 3.1).
-Every recipe below is `maturity: "recipe"`: none has a functional smoke demo (Phase 8)
-or a deep end-to-end proof (Phase 10) yet.
+All 74 registered composition recipes across nine families - Phase 7A (platforming,
+top-down action, shooter, 27 recipes), Phase 7B (vehicle/movement, puzzle/arcade,
+strategy/defense, 22 more), and Phase 7C (simulation/management, narrative/exploration,
+party/toy/weird, the final 25). This completes the catalog MASTER_PROJECT.md section 21
+names - no further families remain. A recipe is a composition of real controller
+families and real `@sw2d/packs` system packs - never an engine fork (MASTER_PROJECT.md
+section 3.1). Every recipe below is `maturity: "recipe"`: none has a functional smoke
+demo (Phase 8) or a deep end-to-end proof (Phase 10) yet.
 
 Source of truth: `packages/presets/src/catalog/*.ts`. This file is mechanically checked
 against the catalog by `packages/presets/test/catalog.test.ts` (exact id/count/family
@@ -13,7 +15,7 @@ match) and `packages/presets/test/docsSync.test.ts` - if the catalog changes, up
 file in the same change.
 
 See also: [`PRESET_CAPABILITY_MATRIX.md`](PRESET_CAPABILITY_MATRIX.md) for the pack/
-controller/input-mode breakdown.
+controller/input-mode breakdown and full pack-consumer coverage.
 
 ## Platforming (Phase 7A)
 
@@ -94,6 +96,46 @@ controller/input-mode breakdown.
 | `base-defense` | Base Defense | top-down | tuning, levels | recipe |
 | `territory-control` | Territory Control | top-down | tuning, levels | recipe |
 
+## Simulation / management (Phase 7C)
+
+| id | display name | controller(s) | content roles | maturity |
+|---|---|---|---|---|
+| `idle-incremental` | Idle Incremental | ui-simulation | tuning | recipe |
+| `shopkeeper` | Shopkeeper | ui-simulation | tuning | recipe |
+| `tycoon-lite` | Tycoon Lite | ui-simulation | tuning | recipe |
+| `farming-lite` | Farming Lite | ui-simulation | tuning | recipe |
+| `pet-creature` | Pet Creature | ui-simulation | tuning | recipe |
+| `colony-lite` | Colony Lite | ui-simulation | tuning | recipe |
+| `restaurant` | Restaurant | ui-simulation | tuning | recipe |
+| `aquarium-terrarium` | Aquarium / Terrarium | ui-simulation | tuning | recipe |
+
+## Narrative / exploration (Phase 7C)
+
+| id | display name | controller(s) | content roles | maturity |
+|---|---|---|---|---|
+| `exploration-game` | Exploration Game | top-down | tuning, levels | recipe |
+| `visual-novel` | Visual Novel | ui-simulation | tuning, dialogue | recipe |
+| `point-and-click` | Point and Click | pointer, ui-simulation | tuning, levels, dialogue | recipe |
+| `interactive-fiction-hybrid` | Interactive Fiction Hybrid | ui-simulation | tuning, dialogue | recipe |
+| `investigation-game` | Investigation Game | top-down, pointer | tuning, levels, dialogue | recipe |
+| `museum-exhibit` | Museum Exhibit | top-down, pointer | tuning, levels, exhibits | recipe |
+| `escape-room` | Escape Room | pointer, ui-simulation | tuning, puzzles | recipe |
+
+## Party / toy / weird (Phase 7C)
+
+| id | display name | controller(s) | content roles | maturity |
+|---|---|---|---|---|
+| `microgame-collection` | Microgame Collection | ui-simulation | tuning, microgames | recipe |
+| `local-party-game` | Local Party Game | ui-simulation | tuning | recipe |
+| `physics-toy` | Physics Toy | pointer | tuning | recipe |
+| `virtual-pet` | Virtual Pet | ui-simulation | tuning | recipe |
+| `dress-up-character-toy` | Dress-Up Character Toy | pointer, ui-simulation | tuning, characters | recipe |
+| `sandbox-playground` | Sandbox Playground | pointer, ui-simulation | tuning, levels | recipe |
+| `drawing-game` | Drawing Game | pointer | tuning | recipe |
+| `fishing-game` | Fishing Game | ui-simulation | tuning | recipe |
+| `cooking-game` | Cooking Game | ui-simulation | tuning, recipes | recipe |
+| `photography-game` | Photography Game | top-down, pointer | tuning, levels | recipe |
+
 ## Key limitations by recipe
 
 Every recipe with a real, currently-missing capability states it explicitly - this is
@@ -151,3 +193,28 @@ do yet. See each recipe's `knownLimitations` in source for the complete list.
 | `turn-based-tactics` | Grid/strategy foundations exist, but movement range, attack range, pathfinding, and turn-action resolution are not reusable systems yet. |
 | `base-defense` | Wave spawning/targeting/base-damage orchestration is not a reusable system yet. |
 | `territory-control` | Reusable capture-zone/territory ownership/scoring mechanics do not exist yet. |
+| `idle-incremental` | The simulation/resource core exists, but full offline-progress/catch-up, prestige, and large economy balancing are not production systems. |
+| `shopkeeper` | No complete customer AI, demand/economy model, queue/placement UI, or content-authored production chain exists. |
+| `tycoon-lite` | No complete customer AI, demand/economy model, queue/placement UI, or content-authored production chain exists. |
+| `farming-lite` | No reusable crop-growth/season/plot-interaction system exists. |
+| `pet-creature` | No reusable needs/behavior/relationship/creature simulation exists beyond foundational resources/state. |
+| `colony-lite` | No colonist needs, assignment AI, pathfinding, construction placement, or colony simulation exists. |
+| `restaurant` | No complete customer AI, demand/economy model, queue/placement UI, or content-authored production chain exists. |
+| `aquarium-terrarium` | No reusable needs/behavior/relationship/creature simulation exists beyond foundational resources/state. |
+| `exploration-game` | A world graph, room transitions and a map system are not yet implemented; only flat single-level Tiled maps plus world flags/checkpoints exist (Phase 6). |
+| `visual-novel` | Narrative state exists, but no full content-authored branching dialogue renderer/portrait presentation system exists. |
+| `point-and-click` | Spatial pointer position, hover targets, and world-coordinate click targeting remain unimplemented. |
+| `interactive-fiction-hybrid` | No dedicated parser/text-command system exists. |
+| `investigation-game` | No evidence-board/deduction/linking system exists. |
+| `museum-exhibit` | No dedicated exhibit/codex presentation framework exists beyond general world/narrative/UI foundations. |
+| `escape-room` | puzzlePack's config (createInitialState/isSolved) is functions, not JSON-serializable data, so puzzle definitions are not currently content-authorable through a schema; they are written as game-specific TypeScript. |
+| `microgame-collection` | No microgame scheduler/rotation/meta-framework exists. |
+| `local-party-game` | No multi-player/local multi-device input routing exists. |
+| `physics-toy` | Optional advanced rigid-body/constraint physics has not been implemented. |
+| `virtual-pet` | No reusable needs/behavior/relationship/creature simulation exists beyond foundational resources/state. |
+| `dress-up-character-toy` | No spatial drag/drop wardrobe/attachment system exists. |
+| `sandbox-playground` | No generalized authoring/editing sandbox exists. |
+| `drawing-game` | No spatial pointer drawing/canvas-stroke input service exists. |
+| `fishing-game` | No reusable casting/line/tension/fish behavior system exists. |
+| `cooking-game` | No reusable ingredient/recipe/action-sequence cooking system exists. |
+| `photography-game` | No reusable camera/framing/scoring/photo-capture gameplay system exists. |

@@ -16,11 +16,13 @@ import { SCENE_KEYS, type ControllerFamily, type InputMode, type PresetDefinitio
 
 /**
  * One per family - Phase 7A registered three (platforming, top-down action,
- * shooter); Phase 7B adds three more (vehicle/movement, puzzle/arcade,
- * strategy/defense), per MASTER_PROJECT.md section 14's bounded-set rule.
- * Not one per recipe - families D/E/F do not differ from each other at the
- * validation-profile level within a family yet, so a tenth or eleventh
- * profile would be decoration.
+ * shooter); Phase 7B added three more (vehicle/movement, puzzle/arcade,
+ * strategy/defense); Phase 7C adds the final three (simulation/management,
+ * narrative/exploration, party/toy/weird) - nine total, matching the nine
+ * registered families exactly, per MASTER_PROJECT.md section 14's
+ * bounded-set rule. Not one per recipe - no family's recipes differ from
+ * each other at the validation-profile level yet, so a tenth profile would
+ * be decoration.
  */
 export const VALIDATION_PROFILES = {
   platform: 'platform-recipe',
@@ -29,6 +31,9 @@ export const VALIDATION_PROFILES = {
   vehicleMovement: 'vehicle-movement-recipe',
   puzzleArcade: 'puzzle-arcade-recipe',
   strategyDefense: 'strategy-defense-recipe',
+  simulationManagement: 'simulation-management-recipe',
+  narrativeExploration: 'narrative-exploration-recipe',
+  partyToyWeird: 'party-toy-weird-recipe',
 } as const;
 
 export type ValidationProfileId = (typeof VALIDATION_PROFILES)[keyof typeof VALIDATION_PROFILES];
@@ -83,6 +88,11 @@ export const LIMITATIONS = {
   raceOrchestration: 'Lap/checkpoint/time-trial race orchestration is not a dedicated reusable system yet.',
   advancedPhysics: 'Optional advanced rigid-body/constraint physics has not been implemented.',
   ballPaddleSystem: 'No reusable ball/paddle collision-and-bounce system exists yet.',
+  // Phase 7C additions - same "two or more recipes" bar as Phase 7B's four.
+  customerEconomy:
+    'No complete customer AI, demand/economy model, queue/placement UI, or content-authored production chain exists.',
+  creatureSimulation:
+    'No reusable needs/behavior/relationship/creature simulation exists beyond foundational resources/state.',
 } as const;
 
 export interface PresetSpec {

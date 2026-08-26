@@ -3,9 +3,11 @@
  *
  * Phase 7A: families A-C (platforming, top-down action, shooter), 27
  * recipes. Phase 7B: families D-F (vehicle/movement, puzzle/arcade,
- * strategy/defense), 22 more - 49 total. Every recipe is a composition of
- * real controller families and real @sw2d/packs system packs - never a fork
- * of the runtime. Production code here depends on @sw2d/contracts and
+ * strategy/defense), 22 more - 49. Phase 7C: families G-I (simulation/
+ * management, narrative/exploration, party/toy/weird), the final 25 - 74
+ * total, completing the catalog. Every recipe is a composition of real
+ * controller families and real @sw2d/packs system packs - never a fork of
+ * the runtime. Production code here depends on @sw2d/contracts and
  * @sw2d/packs' side-effect-free `ids` subpath only: no Ajv, no Phaser
  * (ADR-0015).
  */
@@ -17,6 +19,9 @@ export { SHOOTER_PRESETS } from './catalog/shooter.ts';
 export { VEHICLE_MOVEMENT_PRESETS } from './catalog/vehicleMovement.ts';
 export { PUZZLE_ARCADE_PRESETS } from './catalog/puzzleArcade.ts';
 export { STRATEGY_DEFENSE_PRESETS } from './catalog/strategyDefense.ts';
+export { SIMULATION_MANAGEMENT_PRESETS } from './catalog/simulationManagement.ts';
+export { NARRATIVE_EXPLORATION_PRESETS } from './catalog/narrativeExploration.ts';
+export { PARTY_TOY_WEIRD_PRESETS } from './catalog/partyToyWeird.ts';
 
 export { materializeStarterPlan, type StarterPlan } from './materialize.ts';
 

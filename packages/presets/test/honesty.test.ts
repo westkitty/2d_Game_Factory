@@ -2,10 +2,11 @@ import { describe, expect, it } from 'vitest';
 import { PRESETS } from '../src/index.ts';
 
 /**
- * Honesty checks MASTER_PROJECT.md sections 5, 12/9 and 13 require directly:
- * maturity never overstated, gamepad never claimed, and the specific
- * recipes the master plan names (Phase 7A section 12, Phase 7B section 9)
- * must carry their required knownLimitations text.
+ * Honesty checks MASTER_PROJECT.md sections 5, 12/9/11 and 13 require
+ * directly: maturity never overstated, gamepad never claimed, and the
+ * specific recipes the master plan names (Phase 7A section 12, Phase 7B
+ * section 9, Phase 7C section 11) must carry their required
+ * knownLimitations text.
  */
 
 describe('maturity honesty', () => {
@@ -74,6 +75,31 @@ describe('required knownLimitations (MASTER_PROJECT.md section 12)', () => {
     { id: 'turn-based-tactics', pattern: /movement range, attack range, pathfinding, and turn-action resolution/ },
     { id: 'base-defense', pattern: /Wave spawning\/targeting\/base-damage orchestration/ },
     { id: 'territory-control', pattern: /Reusable capture-zone\/territory ownership\/scoring mechanics/ },
+    // Phase 7C (MASTER_PROJECT.md section 11)
+    { id: 'idle-incremental', pattern: /offline-progress\/catch-up, prestige, and large economy balancing/ },
+    { id: 'shopkeeper', pattern: /No complete customer AI, demand\/economy model/ },
+    { id: 'tycoon-lite', pattern: /No complete customer AI, demand\/economy model/ },
+    { id: 'restaurant', pattern: /No complete customer AI, demand\/economy model/ },
+    { id: 'farming-lite', pattern: /No reusable crop-growth\/season\/plot-interaction system/ },
+    { id: 'pet-creature', pattern: /No reusable needs\/behavior\/relationship\/creature simulation/ },
+    { id: 'virtual-pet', pattern: /No reusable needs\/behavior\/relationship\/creature simulation/ },
+    { id: 'aquarium-terrarium', pattern: /No reusable needs\/behavior\/relationship\/creature simulation/ },
+    { id: 'colony-lite', pattern: /No colonist needs, assignment AI, pathfinding, construction placement/ },
+    { id: 'visual-novel', pattern: /no full content-authored branching dialogue renderer/ },
+    { id: 'point-and-click', pattern: /Spatial pointer position, hover targets, and world-coordinate click targeting/ },
+    { id: 'interactive-fiction-hybrid', pattern: /No dedicated parser\/text-command system/ },
+    { id: 'investigation-game', pattern: /No evidence-board\/deduction\/linking system/ },
+    { id: 'museum-exhibit', pattern: /No dedicated exhibit\/codex presentation framework/ },
+    { id: 'escape-room', pattern: /No content-authored escape-room puzzle grammar/ },
+    { id: 'microgame-collection', pattern: /No microgame scheduler\/rotation\/meta-framework/ },
+    { id: 'local-party-game', pattern: /No multi-player\/local multi-device input routing/ },
+    { id: 'physics-toy', pattern: /Optional advanced rigid-body\/constraint physics has not been implemented/ },
+    { id: 'dress-up-character-toy', pattern: /No spatial drag\/drop wardrobe\/attachment system/ },
+    { id: 'sandbox-playground', pattern: /No generalized authoring\/editing sandbox/ },
+    { id: 'drawing-game', pattern: /No spatial pointer drawing\/canvas-stroke input service/ },
+    { id: 'fishing-game', pattern: /No reusable casting\/line\/tension\/fish behavior system/ },
+    { id: 'cooking-game', pattern: /No reusable ingredient\/recipe\/action-sequence cooking system/ },
+    { id: 'photography-game', pattern: /No reusable camera\/framing\/scoring\/photo-capture gameplay system/ },
   ];
 
   cases.forEach(({ id, pattern }, index) => {
@@ -87,11 +113,15 @@ describe('required knownLimitations (MASTER_PROJECT.md section 12)', () => {
   });
 
   it('no preset has an empty knownLimitations array while depending on a foundational (non-genre-complete) pack', () => {
-    // combat, ai, puzzle and (Phase 7B) strategy are explicitly "foundational core, not a full
-    // genre system" (see each pack's own doc comment - strategyPack.ts: "the minimal turn/team/
-    // selection basis future strategy systems build on ... no pathfinding ... RTS commands") -
-    // any preset requiring one honestly has at least one limitation.
-    const foundational = new Set(['sw2d.combat', 'sw2d.ai', 'sw2d.puzzle', 'sw2d.strategy']);
+    // combat, ai, puzzle, strategy and (Phase 7C) simulation, narrative are all explicitly
+    // "foundational core, not a full genre system" (see each pack's own doc comment -
+    // simulationPack.ts literally names this family's own recipes as what it is not: "a
+    // deterministic resource ledger plus a timed-job primitive ... No farms, shops, restaurants,
+    // colonies, needs AI or tycoon UI here"; narrativePack.ts: "lightweight state for later visual
+    // novel/adventure systems ... No scripting language, renderer, portrait system, dialogue graph
+    // loader ... quest framework here") - any preset requiring one honestly has at least one
+    // limitation.
+    const foundational = new Set(['sw2d.combat', 'sw2d.ai', 'sw2d.puzzle', 'sw2d.strategy', 'sw2d.simulation', 'sw2d.narrative']);
     for (const preset of PRESETS) {
       const requiresFoundational = preset.requiredSystemPacks.some((s) => foundational.has(s.packId));
       if (requiresFoundational) {

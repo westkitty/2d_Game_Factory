@@ -1,9 +1,10 @@
 # Preset Capability Matrix
 
 Which real `@sw2d/packs` packs, controller families, input modes and validation profile
-each of the 49 registered recipes actually composes. Pack ids are shown without the
-`sw2d.` prefix for width; `PACK_IDS`/`CAPABILITY_IDS` in `packages/packs/src/ids.ts` carry
-the real values. Mechanically checked against the catalog by
+each of the 74 registered recipes actually composes - the complete catalog
+(MASTER_PROJECT.md section 21). Pack ids are shown without the `sw2d.` prefix for width;
+`PACK_IDS`/`CAPABILITY_IDS` in `packages/packs/src/ids.ts` carry the real values.
+Mechanically checked against the catalog by
 `packages/presets/test/catalogPackIntegrity.test.ts` (every pack id here is real and
 every selection set resolves through the real `resolveInstallOrder`) and
 `packages/presets/test/docsSync.test.ts`.
@@ -87,25 +88,70 @@ every selection set resolves through the real `resolveInstallOrder`) and
 | `base-defense` | world, world-entities, combat | ai, progression | top-down | keyboard, touch | strategy-defense-recipe |
 | `territory-control` | world, world-entities, strategy, combat | ai | top-down | keyboard, touch | strategy-defense-recipe |
 
-## Real pack ids referenced above
+## Simulation / management (Phase 7C)
 
-| short id | real pack id | capability id |
-|---|---|---|
-| combat | `sw2d.combat` | `combat.health` |
-| ai | `sw2d.ai` | `ai.state` |
-| world | `sw2d.world` | `world.state` |
-| world-entities | `sw2d.world-entities` | `world.entities` |
-| progression | `sw2d.progression` | `progression.state` |
-| arcade | `sw2d.arcade` | `arcade.score` |
-| puzzle | `sw2d.puzzle` | `puzzle.state` |
-| narrative | `sw2d.narrative` | `narrative.state` |
-| strategy | `sw2d.strategy` | `strategy.turns` |
+| id | required packs | optional packs | controller(s) | input modes | validation profile |
+|---|---|---|---|---|---|
+| `idle-incremental` | simulation, progression | arcade | ui-simulation | keyboard, touch | simulation-management-recipe |
+| `shopkeeper` | simulation, progression | world | ui-simulation | keyboard, touch | simulation-management-recipe |
+| `tycoon-lite` | simulation, progression | arcade | ui-simulation | keyboard, touch | simulation-management-recipe |
+| `farming-lite` | simulation, world | progression | ui-simulation | keyboard, touch | simulation-management-recipe |
+| `pet-creature` | simulation, progression | world | ui-simulation | keyboard, touch | simulation-management-recipe |
+| `colony-lite` | simulation, world | progression | ui-simulation | keyboard, touch | simulation-management-recipe |
+| `restaurant` | simulation, progression | arcade | ui-simulation | keyboard, touch | simulation-management-recipe |
+| `aquarium-terrarium` | simulation | progression | ui-simulation | keyboard, touch | simulation-management-recipe |
 
-`sw2d.simulation` is not referenced by any Family A-F recipe - it belongs to genres
-Phase 7C registers (simulation/management).
+## Narrative / exploration (Phase 7C)
+
+| id | required packs | optional packs | controller(s) | input modes | validation profile |
+|---|---|---|---|---|---|
+| `exploration-game` | world, world-entities | narrative | top-down | keyboard, touch | narrative-exploration-recipe |
+| `visual-novel` | narrative | progression | ui-simulation | keyboard, touch | narrative-exploration-recipe |
+| `point-and-click` | narrative, world, world-entities | puzzle | pointer, ui-simulation | keyboard, pointer, touch | narrative-exploration-recipe |
+| `interactive-fiction-hybrid` | narrative | world | ui-simulation | keyboard, touch | narrative-exploration-recipe |
+| `investigation-game` | narrative, world, world-entities | puzzle | top-down, pointer | keyboard, pointer, touch | narrative-exploration-recipe |
+| `museum-exhibit` | world, world-entities | narrative | top-down, pointer | keyboard, pointer, touch | narrative-exploration-recipe |
+| `escape-room` | puzzle | narrative, world | pointer, ui-simulation | keyboard, pointer, touch | narrative-exploration-recipe |
+
+## Party / toy / weird (Phase 7C)
+
+| id | required packs | optional packs | controller(s) | input modes | validation profile |
+|---|---|---|---|---|---|
+| `microgame-collection` | arcade | progression | ui-simulation | keyboard, touch | party-toy-weird-recipe |
+| `local-party-game` | arcade | combat | ui-simulation | keyboard, touch | party-toy-weird-recipe |
+| `physics-toy` | - | puzzle | pointer | keyboard, pointer, touch | party-toy-weird-recipe |
+| `virtual-pet` | simulation, progression | world | ui-simulation | keyboard, touch | party-toy-weird-recipe |
+| `dress-up-character-toy` | - | progression | pointer, ui-simulation | keyboard, pointer, touch | party-toy-weird-recipe |
+| `sandbox-playground` | world, world-entities | puzzle | pointer, ui-simulation | keyboard, pointer, touch | party-toy-weird-recipe |
+| `drawing-game` | - | arcade | pointer | keyboard, pointer, touch | party-toy-weird-recipe |
+| `fishing-game` | arcade | progression | ui-simulation | keyboard, touch | party-toy-weird-recipe |
+| `cooking-game` | arcade | progression, simulation | ui-simulation | keyboard, touch | party-toy-weird-recipe |
+| `photography-game` | world, world-entities | arcade | top-down, pointer | keyboard, pointer, touch | party-toy-weird-recipe |
+
+## Full pack-consumer coverage (all 74 recipes)
+
+| short id | real pack id | capability id | recipes requiring it | recipes referencing it (required or optional) |
+|---|---|---|---|---|
+| combat | `sw2d.combat` | `combat.health` | 22 | 26 |
+| ai | `sw2d.ai` | `ai.state` | 5 | 15 |
+| world | `sw2d.world` | `world.state` | 31 | 44 |
+| world-entities | `sw2d.world-entities` | `world.entities` | 27 | 36 |
+| progression | `sw2d.progression` | `progression.state` | 11 | 26 |
+| arcade | `sw2d.arcade` | `arcade.score` | 14 | 41 |
+| puzzle | `sw2d.puzzle` | `puzzle.state` | 6 | 10 |
+| simulation | `sw2d.simulation` | `simulation.resources` | 9 | 10 |
+| narrative | `sw2d.narrative` | `narrative.state` | 4 | 8 |
+| strategy | `sw2d.strategy` | `strategy.turns` | 4 | 4 |
+
+**All ten current packs have at least one preset consumer** as of Phase 7C - the last
+gap (`sw2d.simulation`) is closed by Family G, whose recipes are built around a
+resource ledger by genuine identity, not to manufacture coverage (see
+`packages/presets/src/catalog/simulationManagement.ts`).
 
 ## Validation profiles
 
-Six, one per registered family (MASTER_PROJECT.md section 14 - a bounded set, not one
-per recipe): `platform-recipe`, `top-down-action-recipe`, `shooter-recipe` (Phase 7A),
-`vehicle-movement-recipe`, `puzzle-arcade-recipe`, `strategy-defense-recipe` (Phase 7B).
+Nine, one per registered family (MASTER_PROJECT.md section 14/6/8 - a bounded set, not
+one per recipe): `platform-recipe`, `top-down-action-recipe`, `shooter-recipe` (Phase 7A),
+`vehicle-movement-recipe`, `puzzle-arcade-recipe`, `strategy-defense-recipe` (Phase 7B),
+`simulation-management-recipe`, `narrative-exploration-recipe`, `party-toy-weird-recipe`
+(Phase 7C).

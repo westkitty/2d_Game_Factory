@@ -5,6 +5,9 @@ import { SHOOTER_PRESETS } from './catalog/shooter.ts';
 import { VEHICLE_MOVEMENT_PRESETS } from './catalog/vehicleMovement.ts';
 import { PUZZLE_ARCADE_PRESETS } from './catalog/puzzleArcade.ts';
 import { STRATEGY_DEFENSE_PRESETS } from './catalog/strategyDefense.ts';
+import { SIMULATION_MANAGEMENT_PRESETS } from './catalog/simulationManagement.ts';
+import { NARRATIVE_EXPLORATION_PRESETS } from './catalog/narrativeExploration.ts';
+import { PARTY_TOY_WEIRD_PRESETS } from './catalog/partyToyWeird.ts';
 
 /**
  * The preset catalogue.
@@ -12,9 +15,10 @@ import { STRATEGY_DEFENSE_PRESETS } from './catalog/strategyDefense.ts';
  * A plain, frozen array assembled once at module load - no registry object,
  * no registration step, no dynamic/plugin discovery (MASTER_PROJECT.md
  * section 47 rules those out, and nothing here needs them). Catalogue order
- * is deterministic: family A, then B, then C, then D, then E, then F, each
- * in the order its own source file declares - the same array every import
- * produces. Phase 7A's 27 (A-C) are untouched; Phase 7B appends D-F.
+ * is deterministic: family A through I, each in the order its own source
+ * file declares - the same array every import produces. Phase 7A's 27 (A-C)
+ * and Phase 7B's 22 (D-F) are untouched; Phase 7C appends G-I, completing
+ * all 74 recipes MASTER_PROJECT.md section 21 names.
  */
 export const PRESETS: readonly PresetDefinition[] = Object.freeze([
   ...PLATFORMING_PRESETS,
@@ -23,6 +27,9 @@ export const PRESETS: readonly PresetDefinition[] = Object.freeze([
   ...VEHICLE_MOVEMENT_PRESETS,
   ...PUZZLE_ARCADE_PRESETS,
   ...STRATEGY_DEFENSE_PRESETS,
+  ...SIMULATION_MANAGEMENT_PRESETS,
+  ...NARRATIVE_EXPLORATION_PRESETS,
+  ...PARTY_TOY_WEIRD_PRESETS,
 ]);
 
 const BY_ID: ReadonlyMap<string, PresetDefinition> = new Map(PRESETS.map((preset) => [preset.id, preset]));

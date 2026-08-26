@@ -8,6 +8,94 @@ Detail for each architectural decision lives in `docs/architecture/adr/`. This f
 
 ---
 
+## Phase 7C - Preset Catalog Families G-I (2026-08-25, Sonnet 5) - catalog complete
+
+No new ADR - the third phase in a row where extending ADR-0015's package boundary and Phase 7A's
+authoring pattern required zero changes to either. That is itself the finding worth recording: the
+repair generalises across genuinely different kinds of recipes (menu-driven sims, dialogue-heavy
+narrative games, pointer-driven toys), not just the two Phase 7B happened to add.
+
+### Decisions
+
+**`sw2d.simulation`'s zero-consumer gap was closed by genre fit, not by assignment.** Phase 7A and
+7B both flagged it honestly rather than forcing an unnatural recipe to reference it early - the
+right call, confirmed in hindsight: Family G's eight recipes are *defined* by "a resource ledger
+plus timed jobs" (`simulationPack`'s own scope), so the pack became central without anyone
+deciding to manufacture coverage. The tell that this was genuine fit and not padding: `sw2d.ai` is
+selected by *zero* Family G-I recipes, even though several (colony-lite, pet-creature, shopkeeper)
+are exactly the kind of recipe a less careful catalog would reach for "AI" to describe. Section 9's
+instruction not to select AI "merely to simulate customers/animals if the current AI capability
+does not actually represent those behaviors" was followed to the letter: `aiPack`'s
+idle/patrol/chase/flee vocabulary does not represent a shop customer, a farm animal or a colonist,
+so none of these recipes claims it, and every one instead names the real gap
+(`LIMITATIONS.customerEconomy`, `LIMITATIONS.creatureSimulation`, or an inline colony-specific
+string) in `knownLimitations`.
+
+**`creatureSimulation` is this phase's one deliberately cross-family shared constant.**
+`pet-creature` (Family G) and `virtual-pet`/`aquarium-terrarium` (Family G and I respectively)
+share identical wording because they share an identical real gap - a creature/needs/relationship
+simulation beyond `simulationPack`'s foundational resource ledger. Phase 7B's shared constants
+were all reused *within* one family; this is the first constant reused *across* two families,
+which is exactly what the "share only when wording is genuinely reused" rule should produce when
+two unrelated-looking families turn out to need the same honest sentence.
+
+**Family G stayed `ui-simulation`-only, deliberately, even where `pointer` was tempting.**
+Shop/restaurant/tycoon recipes "feel" like they want tap-to-select item interaction, but
+`UiSimulationIntent`'s `confirmPressed`/`navigateLeftPressed`/etc. already cover menu-style
+selection completely honestly - adding `pointer` on top would have been a controller-family claim
+with no real capability behind it beyond what `ui-simulation` already provides. Reconsidered and
+rejected mid-authoring, not left ambiguous: the first draft of `shopkeeper`/`restaurant` included
+`pointer`, removed once it was clear nothing about "press-style pointer" adds anything
+"confirm-style ui-simulation" does not already honestly claim.
+
+**Family H followed the master plan's own per-recipe assignments exactly, including its
+dual-controller cases (`point-and-click`, `investigation-game`, `museum-exhibit`).** Two
+controllers on one recipe is not a new pattern - Phase 7A's `puzzle-platformer`
+(`platform`+`grid`) and Phase 7B's `tower-defense` (`grid`+`pointer`) already established it - but
+Family H is the first family where a *majority* of recipes (4 of 7) genuinely need two. That is a
+property of narrative/exploration games actually combining locomotion and interaction, not a
+loosening of the "smallest honest composition" rule; each dual-controller recipe's own file
+comment states which controller does which job.
+
+**Family I's controller choices were the most judgment-heavy of the whole catalog, and each was
+argued from the recipe's real identity, not from a family default.** `physics-toy` and
+`drawing-game` get bare `pointer` (no secondary controller) because tapping/dragging genuinely is
+their whole interaction model. `fishing-game` and `cooking-game` - which read as "should be
+pointer" on a first pass - were deliberately assigned `ui-simulation` alone instead: casting and
+chopping are both single-press-timing actions `confirmPressed`/`primaryPressed` already covers
+honestly, and claiming `pointer` for them would have been exactly the unjustified-claim mistake
+avoided in Family G. `photography-game` is the one Family I recipe combining `top-down` (walking a
+Tiled level to find a subject) with `pointer` (framing/capturing) - the same justified-dual pattern
+Family H established, applied because photography genuinely has both a locomotion half and an
+aiming half.
+
+### Rejected during this phase
+
+- **`pointer` on Family G's customer-facing recipes** (`shopkeeper`, `tycoon-lite`, `restaurant`).
+  See "Decisions" above.
+- **`sw2d.ai` on any Family G-I recipe.** MASTER_PROJECT.md section 9's explicit instruction; see
+  "Decisions" above.
+- **A tenth or eleventh validation profile** for finer Family G/H/I granularity. Nothing about
+  `idle-incremental` vs. `colony-lite`, or `visual-novel` vs. `escape-room`, differs at the
+  validation-profile level yet - the same reasoning Phase 7A/7B already applied to their own
+  families.
+- **Building any of the roughly twenty missing systems Family G-I's `knownLimitations` name**
+  (offline-progress/prestige economy, customer/colonist/creature AI, crop-growth systems,
+  branching-dialogue rendering, evidence-linking, exhibit presentation, escape-room puzzle
+  grammar, microgame scheduling, local multiplayer routing, wardrobe drag/drop, sandbox
+  authoring, canvas drawing, fishing/cooking sequencing, photography scoring) to make a recipe
+  feel more finished. Every one is a `knownLimitations` entry instead, per the phase's own
+  explicit non-goals list and the master plan's standing rule: registering a recipe is not
+  permission to implement its defining mechanic.
+- **A generic "content role is conceptual" shared limitation constant.** Considered for the nine
+  recipes whose `requiredContentRoles` include a not-yet-schema-backed role (`dialogue`,
+  `exhibits`, `puzzles`, `microgames`, `characters`, `recipes`). Rejected because each recipe's
+  *specific* required limitation text (section 11) already states the underlying gap precisely
+  enough that a second, vaguer, generic sentence on top would have been redundant rather than
+  additionally honest.
+
+---
+
 ## Phase 7B - Preset Catalog Families D-F (2026-08-25, Sonnet 5)
 
 No new ADR - this phase's job was to prove ADR-0015 and Phase 7A's authoring pattern generalise,

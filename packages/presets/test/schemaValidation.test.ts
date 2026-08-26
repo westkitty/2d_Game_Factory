@@ -4,7 +4,7 @@ import { PRESETS } from '../src/index.ts';
 import { ALL_VALIDATION_PROFILES } from '../src/shared.ts';
 
 /**
- * Schema and cross-field composition validation for all 49 recipes.
+ * Schema and cross-field composition validation for all 74 recipes.
  *
  * @sw2d/schemas is a devDependency here, not a production one - this file
  * proves the catalog against the real Ajv-backed validator without making
@@ -28,14 +28,14 @@ describe('every preset passes cross-field composition validation', () => {
   }
 });
 
-describe('validationProfile is one of the six bounded profiles (three per phase, one per family)', () => {
+describe('validationProfile is one of the nine bounded profiles (one per registered family)', () => {
   for (const preset of PRESETS) {
     it(`${preset.id} references a known validation profile`, () => {
       expect(ALL_VALIDATION_PROFILES).toContain(preset.validationProfile);
     });
   }
 
-  it('exactly six validation profiles exist - one per registered family, never one per recipe', () => {
-    expect(ALL_VALIDATION_PROFILES).toHaveLength(6);
+  it('exactly nine validation profiles exist - one per registered family, never one per recipe', () => {
+    expect(ALL_VALIDATION_PROFILES).toHaveLength(9);
   });
 });
