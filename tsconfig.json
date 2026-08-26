@@ -12,7 +12,12 @@
     "demos/*/vite.config.ts",
     "proofs/*/src/**/*.ts",
     "proofs/*/tests/**/*.ts",
-    "proofs/*/vite.config.ts"
+    "proofs/*/vite.config.ts",
+    "workbench/server/**/*.ts",
+    "workbench/shared/**/*.ts",
+    "workbench/src/**/*.ts",
+    "workbench/test/**/*.ts",
+    "workbench/vite.config.ts"
   ],
   "exclude": [
     "**/node_modules",
