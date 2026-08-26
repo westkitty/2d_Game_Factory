@@ -15,7 +15,7 @@
 
 import { spawn } from 'node:child_process';
 import { existsSync } from 'node:fs';
-import { createGame } from '@sw2d/cli/factory';
+import { createGame, ensureWorkspaceInstalled } from '@sw2d/cli/factory';
 import { getPreset } from '@sw2d/presets';
 import type { ProjectDocument } from '../shared/types.ts';
 import { DEFAULT_PANEL_STATE } from '../shared/types.ts';
@@ -151,16 +151,16 @@ function requireProject(gameId: string): string {
 
 /**
  * Links a freshly-created game into the npm workspace so its `@sw2d/*` and
- * `phaser` imports resolve from the repository's own `node_modules`. Same
- * step `sw2d validate` performs, for the same reason - idempotent and cheap
- * when nothing changed.
+ * `phaser` imports resolve from the repository's own `node_modules`.
+ *
+ * This deliberately delegates to the CLI's canonical workspace helper. That
+ * helper is offline-only and package-lock-free, so creating or operating on a
+ * scratch game cannot dirty the tracked lockfile and cannot silently reach the
+ * registry.
  */
 export async function ensureWorkspaceLinked(handle?: JobHandle): Promise<void> {
   handle?.setStep('Linking workspace');
-  const result = await runProcess('npm', ['install', '--no-audit', '--no-fund'], REPO_ROOT, handle);
-  if (result.code !== 0) {
-    throw new Error(`npm install failed while linking the workspace:\n${tailLines(result.stderr || result.stdout).join('\n')}`);
-  }
+  await ensureWorkspaceInstalled();
 }
 
 export interface PipelineOutcome {
