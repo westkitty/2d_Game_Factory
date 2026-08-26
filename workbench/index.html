@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="dark" />
+    <!-- Suppresses the browser's automatic /favicon.ico request, the same way every SW2D page does. -->
+    <link rel="icon" href="data:," />
+    <title>SW2D Workbench</title>
+  </head>
+  <body>
+    <div id="app" class="app" aria-busy="true">
+      <div class="boot">Starting the workbench…</div>
+    </div>
+    <div id="toasts" class="toasts" role="status" aria-live="polite"></div>
+    <noscript>The workbench requires JavaScript.</noscript>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

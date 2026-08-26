@@ -11,6 +11,7 @@
   "workspaces": [
     "packages/*",
     "starter",
+    "workbench",
     "games/*",
     "demos/*",
     "proofs/*"
@@ -19,7 +20,12 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "dev": "npm run dev --workspace @sw2d/starter",
+    "dev": "npm run workbench:dev",
+    "workbench:dev": "node workbench/server/main.ts",
+    "workbench:build": "vite build --config workbench/vite.config.ts",
+    "workbench:start": "node workbench/server/main.ts --production",
+    "workbench:test": "vitest run workbench/test",
+    "starter:dev": "npm run dev --workspace @sw2d/starter",
     "build": "npm run build --workspace @sw2d/starter",
     "preview": "npm run preview --workspace @sw2d/starter",
     "check:offline": "node tools/scripts/check-offline-build.mjs",
@@ -29,6 +35,7 @@
     "qa:responsive": "node tools/scripts/qa-responsive.ts",
     "release:verify": "node tools/scripts/release-verify.ts",
     "qa:matrix": "node tools/scripts/generated-runtime-matrix.ts",
+    "qa:workbench": "node workbench/qa/runWorkbenchQa.ts",
     "validate": "npm run typecheck && npm run test && npm run build && npm run check:offline"
   },
   "devDependencies": {
