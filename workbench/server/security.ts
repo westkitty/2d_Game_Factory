@@ -69,16 +69,34 @@ function hostOf(value: string): string | null {
   }
 }
 
+function hostHeaderName(hostHeader: string | undefined): string | null {
+  if (!hostHeader) return null;
+  try {
+    return new URL(`http://${hostHeader}`).hostname;
+  } catch {
+    return null;
+  }
+}
+
 /**
- * Rejects any request whose `Origin` is not a loopback page.
+ * Rejects any request whose Host is not loopback, then applies the Origin rule.
+ *
+ * Host is checked *before* the missing-Origin safe-method exception. That is
+ * important for DNS-rebinding resistance: a cross-site GET commonly has no
+ * Origin header, so allowing it to return early before checking Host would
+ * leave the local service addressable through an attacker-controlled hostname.
  *
  * A same-origin `fetch` from the workbench page sends no `Origin` on GET, and
- * sends the workbench's own origin on everything else; a hostile page on the
- * public internet cannot forge either. Requests with no `Origin` are allowed
- * only for safe methods, so a cross-origin form POST (which browsers *do*
- * send an Origin for) can never slip through as "absent".
+ * sends the workbench's own origin on everything else. Requests with no
+ * `Origin` are allowed only for safe methods; state-changing requests must
+ * carry a loopback Origin.
  */
 export function assertAcceptableOrigin(method: string, origin: string | undefined, hostHeader: string | undefined): void {
+  const requestHost = hostHeaderName(hostHeader);
+  if (requestHost === null || !LOOPBACK_HOSTS.has(requestHost)) {
+    throw new SecurityError(403, `Refused: host "${hostHeader ?? ''}" is not loopback.`);
+  }
+
   const safeMethod = method === 'GET' || method === 'HEAD';
   if (origin === undefined || origin === 'null') {
     if (safeMethod) return;
@@ -87,12 +105,6 @@ export function assertAcceptableOrigin(method: string, origin: string | undefine
   const originHost = hostOf(origin);
   if (originHost === null || !LOOPBACK_HOSTS.has(originHost)) {
     throw new SecurityError(403, `Refused: origin "${origin}" is not a local workbench page.`);
-  }
-  if (hostHeader !== undefined) {
-    const hostName = hostHeader.replace(/:\d+$/, '');
-    if (!LOOPBACK_HOSTS.has(hostName)) {
-      throw new SecurityError(403, `Refused: host "${hostHeader}" is not loopback.`);
-    }
   }
 }
 
