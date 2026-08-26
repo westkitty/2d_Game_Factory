@@ -121,3 +121,4 @@ export { buildGameFiles, findUnresolvedTokens, writeGameFiles } from './generato
 export { generateGameManifest, generateResourceManifest, generateTheme, generateTiledLevel, generateTuning } from './generator/contentDocuments.ts';
 export { GAMES_ROOT, REPO_ROOT, PathEscapeError, TargetExistsError, assertDoesNotExist, resolveUnder } from './paths.ts';
 export { InvalidSlugError, assertValidSlug } from './slug.ts';
+export { WORKSPACE_INSTALL_ARGS, ensureWorkspaceInstalled } from './workspace.ts';
