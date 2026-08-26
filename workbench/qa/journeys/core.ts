@@ -215,16 +215,16 @@ export async function wbDerive001({ session, note }: JourneyContext): Promise<vo
   const stepCount = await session.count('.hist-row');
   expect(stepCount >= 5, `expected at least 4 recorded steps plus the source row, saw ${stepCount}`);
 
-  // Undo/redo is a cursor into the recipe, so it survives dimension changes.
-  const sizeAfterFour = await session.text('[data-testid="lab-size"]');
+  // Undo/redo is a cursor into the recipe. The last operation does not
+  // necessarily change dimensions, so the history's redo tail is the honest
+  // browser-visible oracle for whether the cursor actually moved.
+  expectEqual(await session.count('.hist-row--future'), 0, 'the recipe unexpectedly had a redo tail before undo');
   await session.clickText('↶');
   await session.page.waitForTimeout(400);
-  const sizeAfterUndo = await session.text('[data-testid="lab-size"]');
-  expect(sizeAfterUndo !== sizeAfterFour || true, 'undo produced no visible change');
+  expectEqual(await session.count('.hist-row--future'), 1, 'undo did not move one recipe step into the redo tail');
   await session.clickText('↷');
   await session.page.waitForTimeout(400);
-  const sizeAfterRedo = await session.text('[data-testid="lab-size"]');
-  expectEqual(sizeAfterRedo, sizeAfterFour, 'redo did not restore the pre-undo state');
+  expectEqual(await session.count('.hist-row--future'), 0, 'redo did not restore the undone recipe step');
 
   await session.clickText('Save as new asset');
   await session.page.waitForTimeout(2500);
@@ -249,7 +249,7 @@ export async function wbDerive001({ session, note }: JourneyContext): Promise<vo
   const afterReload = await session.count('.lib-item');
   expectEqual(afterReload, derivedCount, 'the derived asset did not survive a reload');
 
-  note(`${stepCount - 1} recipe steps, ${derived.length} derivative(s), source hash unchanged`);
+  note(`${stepCount - 1} recipe steps, ${derived.length} derivative(s), undo/redo cursor verified, source hash unchanged`);
 }
 
 // ---------------------------------------------------------------------------

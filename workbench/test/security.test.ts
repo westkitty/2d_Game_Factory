@@ -49,7 +49,7 @@ describe('origin policy', () => {
     expect(() => assertAcceptableOrigin('POST', 'null', '127.0.0.1:5199')).toThrow(SecurityError);
   });
 
-  it('allows a missing Origin only for safe methods', () => {
+  it('allows a missing Origin only for safe methods when Host is loopback', () => {
     expect(() => assertAcceptableOrigin('GET', undefined, '127.0.0.1:5199')).not.toThrow();
     expect(() => assertAcceptableOrigin('POST', undefined, '127.0.0.1:5199')).toThrow(SecurityError);
     expect(() => assertAcceptableOrigin('DELETE', undefined, '127.0.0.1:5199')).toThrow(SecurityError);
@@ -57,6 +57,12 @@ describe('origin policy', () => {
 
   it('rejects a non-loopback Host even when the Origin looks local', () => {
     expect(() => assertAcceptableOrigin('POST', 'http://127.0.0.1:5199', 'factory.example.com')).toThrow(SecurityError);
+  });
+
+  it('rejects a non-loopback or missing Host before the safe GET Origin exception', () => {
+    expect(() => assertAcceptableOrigin('GET', undefined, 'factory.example.com')).toThrow(SecurityError);
+    expect(() => assertAcceptableOrigin('HEAD', undefined, '127.0.0.1.evil.example')).toThrow(SecurityError);
+    expect(() => assertAcceptableOrigin('GET', undefined, undefined)).toThrow(SecurityError);
   });
 });
 
