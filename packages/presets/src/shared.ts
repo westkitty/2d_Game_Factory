@@ -14,11 +14,21 @@ import { SCENE_KEYS, type ControllerFamily, type InputMode, type PresetDefinitio
  * controller families PlayScene installs, not from a preset-specific scene.
  */
 
-/** Bounded to three - one per Phase 7A family - per MASTER_PROJECT.md section 14. */
+/**
+ * One per family - Phase 7A registered three (platforming, top-down action,
+ * shooter); Phase 7B adds three more (vehicle/movement, puzzle/arcade,
+ * strategy/defense), per MASTER_PROJECT.md section 14's bounded-set rule.
+ * Not one per recipe - families D/E/F do not differ from each other at the
+ * validation-profile level within a family yet, so a tenth or eleventh
+ * profile would be decoration.
+ */
 export const VALIDATION_PROFILES = {
   platform: 'platform-recipe',
   topDown: 'top-down-action-recipe',
   shooter: 'shooter-recipe',
+  vehicleMovement: 'vehicle-movement-recipe',
+  puzzleArcade: 'puzzle-arcade-recipe',
+  strategyDefense: 'strategy-defense-recipe',
 } as const;
 
 export type ValidationProfileId = (typeof VALIDATION_PROFILES)[keyof typeof VALIDATION_PROFILES];
@@ -65,6 +75,14 @@ export const LIMITATIONS = {
     'Item/collectible definitions beyond the Collectible Tiled object class (Phase 6) have no dedicated schema yet.',
   chasePressure:
     'A reusable chase/pursuit-pressure system does not exist yet; it must be authored as game-specific code, the same pattern starter/src/game-specific/ demonstrates.',
+  // Phase 7B additions - each reused by two or more recipes; a recipe-specific gap gets an
+  // inline string in its own catalog file instead (see platforming.ts's own comment on why:
+  // sharing text is a decision, not laziness, and inline is correct when nothing else repeats it).
+  vehicleIntentOnly:
+    'The vehicle controller supplies steering/throttle/brake intent only; no reusable vehicle-physics/drift/handling system exists.',
+  raceOrchestration: 'Lap/checkpoint/time-trial race orchestration is not a dedicated reusable system yet.',
+  advancedPhysics: 'Optional advanced rigid-body/constraint physics has not been implemented.',
+  ballPaddleSystem: 'No reusable ball/paddle collision-and-bounce system exists yet.',
 } as const;
 
 export interface PresetSpec {

@@ -2,6 +2,9 @@ import type { PresetDefinition } from '@sw2d/contracts';
 import { PLATFORMING_PRESETS } from './catalog/platforming.ts';
 import { TOP_DOWN_ACTION_PRESETS } from './catalog/topDownAction.ts';
 import { SHOOTER_PRESETS } from './catalog/shooter.ts';
+import { VEHICLE_MOVEMENT_PRESETS } from './catalog/vehicleMovement.ts';
+import { PUZZLE_ARCADE_PRESETS } from './catalog/puzzleArcade.ts';
+import { STRATEGY_DEFENSE_PRESETS } from './catalog/strategyDefense.ts';
 
 /**
  * The preset catalogue.
@@ -9,13 +12,17 @@ import { SHOOTER_PRESETS } from './catalog/shooter.ts';
  * A plain, frozen array assembled once at module load - no registry object,
  * no registration step, no dynamic/plugin discovery (MASTER_PROJECT.md
  * section 47 rules those out, and nothing here needs them). Catalogue order
- * is deterministic: family A, then B, then C, each in the order its own
- * source file declares - the same array every import produces.
+ * is deterministic: family A, then B, then C, then D, then E, then F, each
+ * in the order its own source file declares - the same array every import
+ * produces. Phase 7A's 27 (A-C) are untouched; Phase 7B appends D-F.
  */
 export const PRESETS: readonly PresetDefinition[] = Object.freeze([
   ...PLATFORMING_PRESETS,
   ...TOP_DOWN_ACTION_PRESETS,
   ...SHOOTER_PRESETS,
+  ...VEHICLE_MOVEMENT_PRESETS,
+  ...PUZZLE_ARCADE_PRESETS,
+  ...STRATEGY_DEFENSE_PRESETS,
 ]);
 
 const BY_ID: ReadonlyMap<string, PresetDefinition> = new Map(PRESETS.map((preset) => [preset.id, preset]));

@@ -8,6 +8,83 @@ Detail for each architectural decision lives in `docs/architecture/adr/`. This f
 
 ---
 
+## Phase 7B - Preset Catalog Families D-F (2026-08-25, Sonnet 5)
+
+No new ADR - this phase's job was to prove ADR-0015 and Phase 7A's authoring pattern generalise,
+not to make new architecture decisions. It did.
+
+### Decisions
+
+**Extend through the existing generic test suites; do not write a second set.** Every Phase 7A
+test file (`catalog.test.ts` excepted, which hardcodes ids by design) was already written as a
+loop over `PRESETS`, not a fixed list of 27 names. Adding 22 recipes to the catalog made those
+suites exercise 49 cases with zero code changes - only `catalog.test.ts`'s exact-id list,
+`honesty.test.ts`'s required-limitation cases, and `schemaValidation.test.ts`'s hardcoded profile
+count needed touching. This is the payoff of writing Phase 7A's tests generically in the first
+place, not a Phase 7B decision - but confirming it held, rather than assuming it would, is what
+this phase actually verified.
+
+**Four new shared `LIMITATIONS` entries, not thirteen.** Every Phase 7B recipe has at least one
+real limitation (MASTER_PROJECT.md section 9 names one per recipe or per small group), but only
+four pieces of wording are genuinely reused two or more times: vehicle-intent-only and
+race-orchestration text across all five Family D recipes, advanced-physics text across
+`physics-puzzle`/`pinball-lite`, and ball-paddle-system text across `breakout`/`pong`. Every other
+limitation - falling-block engine, match/cascade rules, tower pathfinding, RTS selection, tactics
+movement/attack ranges, wave/base-damage orchestration, territory/capture mechanics - is used by
+exactly one recipe and stays an inline string in that recipe's own catalog file. The phase brief
+was explicit about this trade-off ("add shared limitation constants only when wording is genuinely
+reused"), and getting it right matters: a shared constant for a single-use string would be one more
+name to look up for no reuse benefit, while inlining a genuinely-shared string would let two
+recipes' wording drift apart silently.
+
+**`sw2d.strategy` got its first real consumers; `sw2d.simulation` still has none, and that is
+recorded honestly rather than forced.** Family F (`auto-battler`, `simple-rts`,
+`turn-based-tactics`, `territory-control`) is exactly the family Phase 7A's own bible entry
+predicted would be `sw2d.strategy`'s first real consumer. `sw2d.simulation` had no natural fit in
+any of the 22 Phase 7B recipes - none of vehicle/movement, puzzle/arcade or strategy/defense is
+actually about a resource ledger with timed jobs, the capability `simulationPack` publishes. Add
+it to `docs/presets/PRESET_CAPABILITY_MATRIX.md` as unreferenced with a pointer to where it
+belongs (Phase 7C's simulation/management family) rather than bolt it onto a recipe that does not
+need it just to make the "every pack has a consumer" story tidier.
+
+**`tower-defense` and `territory-control` both select `sw2d.ai` optionally but `sw2d.combat`
+required.** `aiPack.dependencies = ['combat.health']` is the one non-trivial cross-pack dependency
+among all ten current packs, established as a Phase 7A rule
+(`packages/presets/src/catalog/topDownAction.ts`'s file comment: "any recipe selecting sw2d.ai
+anywhere also selects sw2d.combat as required"). Applying it correctly to two new recipes during
+authoring - not discovering it via a failing test afterward - is what "reuse the pattern" actually
+means in practice, not just reusing `definePreset`.
+
+**Controller choices followed the phase brief's own routing table exactly, including where it
+under-specifies.** `breakout`/`pong` are typed `top-down` for paddle movement, explicitly *not*
+because the ball has a controller - it does not, and `LIMITATIONS.ballPaddleSystem` says so
+directly. `maze-game` chose `grid` over `top-down` (the brief allowed either) because a maze is
+fundamentally a discrete-cell structure, matching `sokoban`'s and `tower-defense`'s reasoning
+elsewhere in the same family set. `pinball-lite`'s two-flipper input maps onto
+`UiSimulationIntent`'s `navigateLeftPressed`/`navigateRightPressed` more honestly than any other
+existing intent shape - not a perfect fit (nothing here is "the pinball controller"), but the
+closest real one, which is exactly what MASTER_PROJECT.md section 3.1 asks a preset recipe to be:
+a composition of what exists, not a placeholder for what does not.
+
+### Rejected during this phase
+
+- **A fourth, fifth or sixth Family D/E/F-specific validation profile.** Three new profiles (one
+  per family) were added; nothing about horizontal-shmup-style granularity (Phase 7A rejected the
+  same idea) applies any more here than it did there.
+- **A dedicated "vehicle" or "strategy" controller family.** Every Family D/F recipe uses one of
+  the six existing families; MASTER_PROJECT.md section 7 explicitly rules out inventing new ones,
+  and nothing about racing or RTS commands needed a new one - `vehicle` and `top-down`/`grid`
+  already cover the honest subset of behaviour these recipes can claim.
+- **Building any of the fourteen missing systems section 9 names** (vehicle physics, ball/paddle
+  bounce, falling-block/match-3 engines, tower placement/pathfinding, RTS selection, tactics
+  movement/attack ranges, wave orchestration, territory mechanics) to make a recipe feel more
+  complete. Every one is a `knownLimitations` entry instead - registering a recipe is not
+  permission to implement its defining mechanic, the phase brief's own words.
+- **Adding `sw2d.simulation` to a Family D/E/F recipe just to give it a consumer.** See
+  "Decisions" above.
+
+---
+
 ## Phase 7A - Preset Catalog Families A-C (2026-08-25, Sonnet 5)
 
 Full architecture rationale:
