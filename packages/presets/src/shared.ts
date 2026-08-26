@@ -75,7 +75,7 @@ export const LIMITATIONS = {
   climbingMechanics:
     'Wall-slide, wall-jump and ledge-grab movement mechanics are not yet implemented as reusable capabilities (MASTER_PROJECT.md section 9.2); vertical movement must be authored as game-specific code, the same pattern starter/src/game-specific/ demonstrates.',
   puzzleConfigIsCode:
-    "puzzlePack's config (createInitialState/isSolved) is functions, not JSON-serializable data, so puzzle definitions are not currently content-authorable through a schema; they are written as game-specific TypeScript.",
+    "puzzlePack's config (createInitialState/isSolved) is functions, not JSON-serializable data, so puzzle definitions are not content-authorable through a schema. The pack declares configSource: 'code' (ADR-0017) and a generated game supplies it from src/game-specific/packConfig.ts, which ships with a small working placeholder to replace - so the pack really installs, but the puzzle's own rules are game-specific TypeScript, not content.",
   itemDefinitions:
     'Item/collectible definitions beyond the Collectible Tiled object class (Phase 6) have no dedicated schema yet.',
   chasePressure:

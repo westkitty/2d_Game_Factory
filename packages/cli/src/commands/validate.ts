@@ -1,4 +1,4 @@
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { run as runProcess } from '../exec.ts';
 import { REPO_ROOT, GAMES_ROOT, resolveUnder } from '../paths.ts';
 import { InvalidSlugError, assertValidSlug } from '../slug.ts';
@@ -66,6 +66,13 @@ export async function run(args: readonly string[]): Promise<number> {
   let smokeOk = false;
   let smokeDetail = 'skipped: an earlier step failed';
   if (steps.every((s) => s.ok)) {
+    // What the game's own manifest says must install. Read here, in Node,
+    // rather than inside the page, so the oracle compares runtime truth
+    // against the declared contract instead of against itself.
+    const manifest = JSON.parse(readFileSync(`${gamePath}/content/game.json`, 'utf8')) as {
+      systemPacks?: readonly { packId: string }[];
+    };
+    const declaredPackIds = (manifest.systemPacks ?? []).map((selection) => selection.packId);
     const { findSystemChrome, runSmoke } = await import('@sw2d/qa');
     const chrome = findSystemChrome();
     browserAvailable = Boolean(chrome);
@@ -89,14 +96,24 @@ export async function run(args: readonly string[]): Promise<number> {
           await harness.keyTap('Space');
           await harness.stepFrames(5);
           const playing = await harness.evaluate(evalSnap);
+
+          // Phase 9 / Gate B: this used to assert only `installedPacks.length
+          // > 0`, while its own comment claimed "every declared pack
+          // installed". Those are not the same check, and the difference is
+          // exactly the class of bug this step exists to catch - a game whose
+          // manifest names a pack that never installs. Compare against what
+          // content/game.json actually declared.
+          const missingPacks = declaredPackIds.filter((id) => !playing.installedPacks.includes(id));
           return {
-            passed: playing.scene === 'sw2d.play' && playing.installedPacks.length > 0,
-            details: { title, playing },
+            passed: playing.scene === 'sw2d.play' && missingPacks.length === 0,
+            details: { title, playing, declaredPackIds, missingPacks },
           };
         },
       }).catch((error: unknown) => ({ passed: false, details: {}, failureReason: String(error), id: gameId, consoleErrors: [], externalRequests: [] }));
       smokeOk = result.passed;
-      smokeDetail = smokeOk ? 'boot smoke passed' : `smoke failed: ${result.failureReason ?? 'see console/network detail'}`;
+      smokeDetail = smokeOk
+        ? `boot smoke passed: entered sw2d.play with all ${declaredPackIds.length} declared pack(s) installed`
+        : `smoke failed: ${result.failureReason ?? JSON.stringify(result.details)}`;
     } else {
       smokeDetail = 'Browser smoke unavailable: no system Chrome found (see `npm run sw2d -- doctor`).';
     }

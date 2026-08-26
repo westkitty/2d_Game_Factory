@@ -121,3 +121,78 @@ describe('all 74 presets generate valid, token-free, schema-valid source', () =>
     expect(PRESETS.length).toBe(74);
   });
 });
+
+/**
+ * Phase 9 / Gate B. `content/game.json` can only ever hold JSON, so a pack
+ * whose config is functions (`configSource: 'code'` - `sw2d.puzzle` today)
+ * cannot be configured from there. Before this phase the generator wrote
+ * `config: {}` for it anyway: all six presets requiring it produced games that
+ * built cleanly and then threw `createInitialState is not a function` the
+ * instant the player pressed CONFIRM, taking the shell pack down with them via
+ * install rollback. The generated code seam replaces that silent falsehood.
+ */
+describe('code-configured packs get a real code seam, never a false JSON config', () => {
+  const puzzlePresets = PRESETS.filter((preset) =>
+    preset.requiredSystemPacks.some((selection) => selection.packId === 'sw2d.puzzle'),
+  );
+
+  it('the catalog still has presets requiring sw2d.puzzle (otherwise this suite is vacuous)', () => {
+    expect(puzzlePresets.length).toBeGreaterThan(0);
+  });
+
+  for (const preset of PRESETS) {
+    const needsCodeConfig = puzzlePresets.includes(preset);
+
+    it(`${preset.id} generates src/game-specific/packConfig.ts${needsCodeConfig ? ' with a working puzzle seed' : ''}`, () => {
+      const files = buildGameFiles('probe-game', preset);
+      const packConfig = files.get('src/game-specific/packConfig.ts');
+      expect(packConfig, preset.id).toBeDefined();
+      expect(packConfig, preset.id).toContain('export const PACK_CONFIG');
+
+      if (needsCodeConfig) {
+        // A real, callable default - not a `{}` placeholder that crashes on install.
+        expect(packConfig, preset.id).toContain("'sw2d.puzzle'");
+        expect(packConfig, preset.id).toContain('createInitialState');
+        expect(packConfig, preset.id).toContain('isSolved');
+      } else {
+        expect(packConfig, preset.id).not.toContain('createInitialState');
+      }
+    });
+
+    it(`${preset.id}'s main.ts passes packConfig to createGame`, () => {
+      const files = buildGameFiles('probe-game', preset);
+      const mainTs = files.get('src/main.ts')!;
+      expect(mainTs, preset.id).toContain('packConfig: PACK_CONFIG');
+      expect(mainTs, preset.id).toContain("from './game-specific/packConfig.ts'");
+    });
+  }
+});
+
+/**
+ * Phase 9 / Gate B. `content/tuning.json` was generated for all 74 presets,
+ * schema-validated by `tests/content.test.ts`, listed in the generated README
+ * as "tuning values" - and read by nothing. Its numbers were hard-coded in the
+ * shell templates instead, so editing the document changed nothing about the
+ * game. That is the "metadata never evaluated at runtime" shape this gate
+ * exists to catch, and it is only really fixed while the shells keep reading
+ * it.
+ */
+describe('content/tuning.json is actually consumed, not just validated', () => {
+  const MOVEMENT_SHELLS = ['platform', 'top-down'] as const;
+
+  for (const family of MOVEMENT_SHELLS) {
+    const preset = PRESETS.find((candidate) => candidate.controllerFamilies[0] === family)!;
+
+    it(`the ${family} shell reads the tuning document instead of hard-coding movement numbers`, () => {
+      const shell = buildGameFiles('probe-game', preset).get('src/game-specific/shellPack.ts')!;
+      expect(shell).toContain("const TUNING_DOCUMENT = 'tuning'");
+      expect(shell).toContain('readPlayerTuning(context)');
+      expect(shell).toContain('tuning.moveSpeed');
+      // The generator's own tuning document must supply every key the shell reads.
+      const tuning = JSON.parse(buildGameFiles('probe-game', preset).get('content/tuning.json')!) as {
+        player: Record<string, number>;
+      };
+      expect(Object.keys(tuning.player).sort()).toEqual(['gravity', 'jumpVelocity', 'moveSpeed']);
+    });
+  }
+});

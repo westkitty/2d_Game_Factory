@@ -19,6 +19,13 @@ export class SystemHostImpl<TContext extends GameContext> implements SystemHost 
   readonly #context: TContext;
   readonly #registry: ReadonlyMap<string, SystemPackDefinition<never, TContext>>;
   readonly #validator: PackConfigValidator | undefined;
+  /**
+   * Config supplied from the composition root, keyed by pack id. This is the
+   * only legitimate source for a `configSource: 'code'` pack, whose config
+   * carries functions and therefore cannot travel through a game definition's
+   * JSON `systemPacks[].config`.
+   */
+  readonly #packConfig: Readonly<Record<string, unknown>> | undefined;
   #installed: InstalledSystemPack[] = [];
   #disposed = false;
 
@@ -33,10 +40,12 @@ export class SystemHostImpl<TContext extends GameContext> implements SystemHost 
     context: TContext,
     definitions: readonly SystemPackDefinition<never, TContext>[],
     validator?: PackConfigValidator,
+    packConfig?: Readonly<Record<string, unknown>>,
   ) {
     this.#context = context;
     this.#registry = new Map(definitions.map((definition) => [definition.id, definition]));
     this.#validator = validator;
+    this.#packConfig = packConfig;
   }
 
   get installed(): readonly InstalledSystemPack[] {
@@ -53,7 +62,7 @@ export class SystemHostImpl<TContext extends GameContext> implements SystemHost 
     for (const selection of order) {
       const definition = this.#registry.get(selection.packId)!;
       try {
-        const config = this.#validatedConfig(definition, selection.config);
+        const config = this.#validatedConfig(definition, this.#resolveConfig(definition, selection.config));
         this.#installed.push(definition.install(this.#context, config as never));
         this.#assertProvidesPublished(definition);
       } catch (error) {
@@ -85,6 +94,30 @@ export class SystemHostImpl<TContext extends GameContext> implements SystemHost 
         `declared provides ${missing.map((id) => `"${id}"`).join(', ')} but did not publish it through context.capabilities.provide()`,
       );
     }
+  }
+
+  /**
+   * Resolves the config a pack installs with, then validates it.
+   *
+   * A `configSource: 'code'` pack ignores the selection's JSON config entirely
+   * and takes the composition root's `packConfig[packId]` instead. When that
+   * is absent the install is refused *here*, by name, rather than being handed
+   * an empty object that the pack then trips over several frames later with an
+   * opaque `TypeError` - the failure mode Gate B found in all six presets
+   * requiring `sw2d.puzzle`.
+   */
+  #resolveConfig(definition: SystemPackDefinition<never, TContext>, selectionConfig: unknown): unknown {
+    if (definition.configSource === 'code') {
+      const supplied = this.#packConfig?.[definition.id];
+      if (supplied === undefined) {
+        throw new Error(
+          `is code-configured (configSource: 'code') and must be given its config through createGame's packConfig["${definition.id}"]; ` +
+            'a game definition\'s systemPacks[].config cannot carry it, because that config is JSON and this pack\'s is not',
+        );
+      }
+      return supplied;
+    }
+    return selectionConfig;
   }
 
   /** No-op when the pack declares no schema, or no validator was supplied. */

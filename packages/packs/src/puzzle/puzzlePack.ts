@@ -10,6 +10,14 @@ import { CAPABILITY_IDS, PACK_IDS } from '../ids.ts';
  * this pack has no `configSchemaId` - functions cannot be JSON Schema
  * validated, and that is a legitimate reason for a pack to have no schema
  * (see MASTER_PROJECT.md §20 / the Phase 4 config-validation requirement).
+ *
+ * Phase 9 (Gate B) made that fact machine-readable rather than prose:
+ * `configSource: 'code'` is what tells the factory generator not to serialize
+ * an unusable `config: {}` into `content/game.json`, and what tells the
+ * composition root to supply this pack's config through `createGame`'s
+ * `packConfig` map instead. Before that field existed, all six presets
+ * requiring this pack generated games that built cleanly and then threw
+ * `createInitialState is not a function` the moment a player pressed CONFIRM.
  */
 
 export interface PuzzleConfig<TState = unknown> {
@@ -70,6 +78,7 @@ export const puzzlePack: SystemPackDefinition<PuzzleConfig, GameContext> = {
   version: '0.1.0',
   provides: [CAPABILITY_IDS.puzzle],
   dependencies: [],
+  configSource: 'code',
 
   install(context: GameContext, config: PuzzleConfig): InstalledSystemPack {
     const service = new PuzzleServiceImpl(config);

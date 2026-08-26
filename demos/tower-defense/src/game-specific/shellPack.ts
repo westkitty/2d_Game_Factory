@@ -1,8 +1,7 @@
 import type Phaser from 'phaser';
 import type { InstalledSystemPack } from '@sw2d/contracts';
-import { gridController, type SceneContext, type ScenePackDefinition } from '@sw2d/runtime';
+import { gridController, ProjectilePool, type SceneContext, type ScenePackDefinition } from '@sw2d/runtime';
 import { CAPABILITY_IDS, type CombatService, type ProgressionService } from '@sw2d/packs';
-import { ProjectilePool } from './projectilePool.ts';
 
 /**
  * Tower Defense demo (Phase 8 representative demo 9/12).

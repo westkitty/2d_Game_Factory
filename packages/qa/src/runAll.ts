@@ -89,9 +89,23 @@ async function runTarget(target: Target): Promise<{ id: string; ok: boolean; det
     run,
     ...(target.entryPath !== undefined ? { entryPath: target.entryPath } : {}),
   });
+  // On failure, print the spec's own recorded evidence. Before Phase 9 this
+  // reported only `failed:  consoleErrors=0 externalRequests=0` when a spec
+  // returned `passed: false` without a `failureReason` - which told a reader
+  // nothing at all about which assertion failed, and cost real diagnosis time
+  // when top-down-racer began failing. `details` is exactly what the spec
+  // chose to record as evidence, so it is what a failure should show.
   const detail = result.passed
     ? 'passed'
-    : `failed: ${result.failureReason ?? ''} consoleErrors=${result.consoleErrors.length} externalRequests=${result.externalRequests.length}`.trim();
+    : [
+        result.failureReason ? `failed: ${result.failureReason}` : 'failed',
+        `consoleErrors=${result.consoleErrors.length}`,
+        `externalRequests=${result.externalRequests.length}`,
+        result.consoleErrors.length > 0 ? `firstConsoleError=${result.consoleErrors[0]}` : '',
+        `details=${JSON.stringify(result.details)}`,
+      ]
+        .filter(Boolean)
+        .join(' ');
   return { id: target.id, ok: result.passed, detail };
 }
 

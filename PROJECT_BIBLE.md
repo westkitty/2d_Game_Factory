@@ -8,6 +8,129 @@ Detail for each architectural decision lives in `docs/architecture/adr/`. This f
 
 ---
 
+## Phase 9 - Architecture Integration Gate B (2026-08-26, Opus 5)
+
+**Verdict: PASS WITH TARGETED REPAIRS.** Full report:
+[`docs/architecture/PHASE9_ARCHITECTURE_GATE_B.md`](docs/architecture/PHASE9_ARCHITECTURE_GATE_B.md).
+
+### The lesson that cost the most to learn: building is not installing
+
+Phase 8 proved all 74 presets three ways - no unresolved tokens, schema-valid content, thirteen
+real `tsc` + `vite build` runs - and concluded "74 runnable starters." Every one of those checks
+was real. None of them ever executed `SystemHostImpl.install()`, because installation happens when
+a *run starts*, not when a bundle is produced. Six presets therefore shipped as starters that
+compiled perfectly, booted to a title screen, and died on the first CONFIRM with
+`TypeError: createInitialState is not a function`. Install rollback then removed the shell pack
+too, so those six had no gameplay whatsoever - not a missing puzzle service, an empty game.
+
+The general lesson, worth more than the specific bug: **a verification ladder proves exactly the
+code paths it executes, and no others.** "It builds for all 74" and "it runs for all 74" are
+different claims, and the gap between them is precisely where a composition system hides its
+falsehoods. Phase 8 even caught one instance of this itself (the `main.ts` "unknown pack"
+regression, handoff §2.1) and correctly diagnosed it as "metadata that declares a contract nothing
+evaluates" - but then fixed that one instance rather than the class, and the class bit again two
+sections later in the same document.
+
+The durable fix is the new
+[`tools/scripts/generated-runtime-matrix.ts`](tools/scripts/generated-runtime-matrix.ts): it
+derives runtime signatures **from the catalog rather than a hand-maintained list** - the pair
+`(primary controller shell, exact required pack set)`, 37 distinct values across 74 presets - and
+really plays one generated game per signature. A new preset with a new pack combination grows the
+matrix by itself. 34/40 at the reviewed baseline; 40/40 after repair.
+
+### The second lesson: a harness that does not own the clock is not deterministic
+
+`@sw2d/qa`'s central claim was fixed-step, deterministic frame advancement. It never stopped
+Phaser's `requestAnimationFrame` driver, so `stepFrames()` was *additive* to a live real-time loop.
+Measured: **~60 frames per second of drift with zero `stepFrames()` calls.** Every smoke spec had
+been nondeterministic since it was written; they mostly passed because most had wide margins.
+
+`top-down-racer` had the narrowest margin - equal-and-opposite steering taps - and was already
+failing roughly one run in three at the Phase 8 baseline, so `npm run qa:smoke` was 13/14, not the
+14/14 recorded. Its `smoke-validated` maturity was not evidence-backed on the day of this review.
+
+Phase 8 had already met this bug once and misread it: `stealth-game`'s flake was attributed to a
+"hairline margin against the deterministic-but-precise frame math" and fixed by widening a budget
+from 300 to 500 frames. The frame math was not precise; there was no determinism to be precise
+against. Widening the budget hid the symptom and left the cause running.
+
+**Lesson: when a test is flaky, distrust the harness before distrusting the margin.** A margin fix
+that works is indistinguishable from a margin fix that merely lowers the failure rate. The fix -
+`phaser.loop.stop()` on attach, leaving `step()` callable - took one line and turned six
+consecutive `top-down-racer` runs byte-identical, including final position.
+
+### Decisions
+
+**`ProjectilePool` promoted - but as game support, not a capability.** Phase 8 left this open with
+three consumers. Inspection settled it: the three copies are **byte-identical**, differing only in
+constructor arguments. Three independent consumers converging on the same interface with zero
+divergence is the strongest evidence available that an interface is finished, and Phase 10 adds
+consumers four and five. Deferring again meant five copies of a settled interface.
+
+It went to `packages/runtime/src/game-support/`, not `@sw2d/packs`, for a hard reason: it
+manipulates Phaser sprites and Arcade bodies, and every `@sw2d/packs` core is renderer-independent
+by contract. It has no capability id, no config schema, no install order. The parts a real
+`sw2d.projectiles` capability would have to decide - pooling policy, collision integration, whether
+damage-on-hit is first-class - are still undiscovered, and were deliberately left undiscovered.
+**Promote the proven interface; do not promote the unproven semantics with it.**
+
+**The puzzle-config gap was fixed with a declaration, not a DSL (ADR-0017).** The tempting fix was
+a JSON puzzle format the pack interprets. That is a universal puzzle DSL by another name, and
+sokoban, match-3 and falling-block puzzles do not share a rule format - any schema covering all
+three would either be an interpreter or validate nothing. The tempting *cheap* fix was to document
+the limitation at pack level, which is what Phase 8 did, and which leaves six broken starters while
+moving a falsehood between documents.
+
+What worked instead: make the JSON-vs-code distinction a field the system **routes on**
+(`configSource: 'json' | 'code'`), give code-configured packs a real composition-root path
+(`createGame({ packConfig })`), and have the generator emit a working, editable default into
+`src/game-specific/packConfig.ts` - normal game work, in the directory where every other
+game-specific mechanic already lives. The pack keeps its opaque `TState`; the generator stops
+serializing something that can never work; a missing code config now fails by name at install
+instead of as a `TypeError` several frames downstream.
+
+**Grid cursor stays unextracted, because there are two consumers, not three.** The handoff counted
+`sokoban`, `tower-defense` and `turn-based-tactics`. `sokoban` has no cursor at all -
+`gridController` moves the *player*, and CONFIRM/CANCEL mean reset/undo. Counting consumers by
+which module they import rather than by what they actually do inflated the trigger. The two real
+cursors are a four-line switch plus a clamp, where CONFIRM means structurally different things.
+
+**Platform movement stays duplicated, and that is correct.** Six lines, shared by two demos, and
+diverging in the third exactly where metroidvania's progression begins. An abstraction there would
+either absorb progression into movement or rename `platformController.read()`.
+
+### Rejected
+
+- **A JSON-serializable declarative puzzle format.** See ADR-0017's rejected section.
+- **Removing code-configured packs from generated `systemPacks`.** Removes the crash and the
+  capability, permanently stranding six presets in sokoban's hand-rolled workaround.
+- **A general `packConfig` override for any pack.** Would let a generated game quietly move
+  JSON-configurable tuning out of `content/**`, breaking the content-authoring boundary the whole
+  factory rests on. `SystemHostImpl` consults `packConfig` only for packs declaring
+  `configSource: 'code'`.
+- **Building spatial pointer.** No Phase 10 proof requires it; tower placement uses the existing
+  keyboard grid cursor, which now runs deterministically. It needs its own ADR on input ownership
+  when it comes, because hover has no press to claim and so does not fit `ActionInput` the way
+  ADR-0016's aim extension did.
+- **Deleting `materializeStarterPlan`.** It has no production consumer - the generator reads
+  `PresetDefinition` directly, so its docstring's claim that the CLI would consume it is false -
+  but removing public API is not a gate's job. Recorded with a trigger instead.
+- **Adding content schemas for `dialogue`/`recipes`/`characters`/etc.** Seven of the nine
+  `requiredContentRoles` claimed across the catalog have no schema, no generated document and no
+  pipeline. Designing them is real pipeline work, not a gate repair. Recorded with a trigger so a
+  Phase 10 proof cannot quietly invent a private format instead.
+
+### One more thing worth remembering
+
+`content/tuning.json` was generated for all 74 presets, schema-validated by every generated game's
+own test, and named in every generated README as "tuning values" - and read by absolutely nothing.
+The numbers lived as literals in the shell templates. It passed every check the repository had,
+because every check asked whether the document was *valid*, and none asked whether anything
+*consumed* it. **Validation is not consumption.** That is the same shape as the two headline
+findings, in a third place, and it is the shape to keep looking for.
+
+---
+
 ## Phase 8 - Factory CLI, Generated Starters, Browser QA, and 12 Representative Demos (2026-08-26, Sonnet 5)
 
 One new ADR ([0016](docs/architecture/adr/0016-aim-as-a-digital-axis-not-spatial-pointer.md)).

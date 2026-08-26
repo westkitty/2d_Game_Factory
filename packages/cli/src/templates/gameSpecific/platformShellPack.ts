@@ -17,6 +17,32 @@ import { platformController, type SceneContext, type ScenePackDefinition } from 
  */
 
 const LEVEL_DOCUMENT = 'levels/main';
+const TUNING_DOCUMENT = 'tuning';
+
+/**
+ * `content/tuning.json`, read for real.
+ *
+ * Phase 9 / Gate B found that every generated game validated this document and
+ * then never read a single value from it - the numbers below were hard-coded
+ * in the update loop instead, so editing `content/tuning.json` changed
+ * nothing. That made the generated README's "content/tuning.json (tuning
+ * values)" claim untrue. The fallbacks are the same numbers the generator
+ * writes, so a game with a hand-trimmed tuning document still runs.
+ */
+interface PlayerTuning {
+  readonly moveSpeed: number;
+  readonly jumpVelocity: number;
+  readonly gravity: number;
+}
+
+function readPlayerTuning(context: SceneContext): PlayerTuning {
+  const tuning = context.content.data[TUNING_DOCUMENT]?.value as { player?: Partial<PlayerTuning> } | undefined;
+  return {
+    moveSpeed: tuning?.player?.moveSpeed ?? 220,
+    jumpVelocity: tuning?.player?.jumpVelocity ?? 430,
+    gravity: tuning?.player?.gravity ?? 1100,
+  };
+}
 
 export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
   id: 'game.platform-shell',
@@ -26,6 +52,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
 
   install(context: SceneContext): InstalledSystemPack {
     const scene = context.scene;
+    const tuning = readPlayerTuning(context);
     const level = context.content.data[LEVEL_DOCUMENT]?.value as NormalizedLevel | undefined;
     const platformKey = context.assets.resolve('platform');
     const playerKey = context.assets.resolve('player');
@@ -45,7 +72,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     const player = scene.physics.add.sprite(spawnX, spawnY, playerKey);
     player.setCollideWorldBounds(true);
     player.body.setAllowGravity(true);
-    player.setGravityY(1100);
+    player.setGravityY(tuning.gravity);
     scene.physics.add.collider(player, ground);
 
     const debugHandle = context.debug.contribute('game.platform-shell', () => ({
@@ -64,10 +91,10 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       update(): void {
         if (disposed) return;
         const intent = platformController.read(context.input);
-        player.setVelocityX(intent.moveAxis * 220);
+        player.setVelocityX(intent.moveAxis * tuning.moveSpeed);
         if (intent.moveAxis !== 0) player.setFlipX(intent.moveAxis < 0);
         if (intent.jumpPressed && player.body.blocked.down) {
-          player.setVelocityY(-430);
+          player.setVelocityY(-tuning.jumpVelocity);
           context.audio.playCue('ui.confirm');
         }
       },

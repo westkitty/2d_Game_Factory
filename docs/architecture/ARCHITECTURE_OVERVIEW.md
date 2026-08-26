@@ -106,9 +106,26 @@ the context instead.
 ```ts
 interface SystemPackDefinition<TConfig, TContext extends GameContext> {
   id; version; provides; dependencies; optionalDependencies?; configSchemaId?;
+  configSource?: 'json' | 'code';   // default 'json'
   install(context: TContext, config: TConfig): InstalledSystemPack;
 }
 ```
+
+**A pack declares where its config comes from** ([ADR-0017](adr/0017-pack-config-source-json-or-code.md)).
+`'json'` (the default, and every pack but one) means config is data: it travels in
+`content/game.json`'s `systemPacks[].config`, a `configSchemaId` may validate it, and the factory
+generator can serialize it. `'code'` means config carries functions and can only be supplied at the
+composition root, through `createGame({ packConfig })` - `sw2d.puzzle`'s
+`createInitialState`/`isSolved` are the one case today. `SystemHostImpl` routes on the declaration
+and consults `packConfig` **only** for a code-configured pack, so this is not a general escape
+hatch: a JSON-configurable pack's tuning stays in `content/**` where content authors reach it. A
+code-configured pack with no code config is refused by name at install, not left to throw a
+`TypeError` from inside itself several frames later.
+
+Phase 9 added this because the distinction had been prose. The generator wrote `config: {}` for
+every required pack, so all six presets requiring `sw2d.puzzle` produced games that built cleanly
+and crashed on the first CONFIRM - proven, and then re-proven fixed, by
+[`tools/scripts/generated-runtime-matrix.ts`](../../tools/scripts/generated-runtime-matrix.ts).
 
 Packs depend on **capability ids**, never on another pack's module. `resolveInstallOrder()` is
 a pure function: it sorts by dependency, rejects cycles, duplicate ids, duplicate capabilities
@@ -349,7 +366,17 @@ rather than raw input, with the runtime untouched.
 
 To add a reusable extension: state why existing capability is insufficient, add the smallest
 reusable piece, add regression coverage, rerun affected proofs. If three games independently
-need the same extension, promote it to a shared pack.
+need the same extension, promote it.
+
+**Promote to the smallest home that fits, not automatically to a pack.** A renderer-independent
+service with real cross-pack semantics becomes a `@sw2d/packs` capability. A Phaser-coupled helper
+with a settled interface and no shared semantics becomes **game support** in
+`packages/runtime/src/game-support/` - no capability id, no config schema, no install order.
+`ProjectilePool` is the worked example (Phase 9): three demos had arrived at byte-identical copies,
+which is strong evidence the *interface* is finished, while pooling policy, collision integration
+and damage-on-hit remained undecided. Promoting the proven interface without the unproven semantics
+is the bounded move. It cannot live in `@sw2d/packs`, because every pack core is
+renderer-independent by contract and this touches sprites and bodies.
 
 ## Offline by construction
 
@@ -361,5 +388,25 @@ a request. A production build was observed loading exactly two same-origin resou
 ## Deliberate non-goals
 
 No ECS. No service-container framework. No scripting language. No editor. No backend. No
-plugin marketplace. Every abstraction here has at least one real consumer today; anything
-that did not was left out, including the parts a diagram would have suggested.
+plugin marketplace. No universal puzzle DSL ([ADR-0017](adr/0017-pack-config-source-json-or-code.md)).
+No spatial pointer / hover / world-space hit-testing - aim is a digital axis pair
+([ADR-0016](adr/0016-aim-as-a-digital-axis-not-spatial-pointer.md)), and spatial pointer stays
+deferred until a preset promoted past `recipe` genuinely cannot be built without it. Every
+abstraction here has at least one real consumer today; anything that did not was left out,
+including the parts a diagram would have suggested.
+
+## Browser QA owns the frame clock
+
+`@sw2d/qa` launches system Chrome through `playwright-core` (no bundled browser download), serves
+the build from an OS-assigned port, and drives real `KeyboardEvent`s through the semantic input
+layer. On attach it calls `phaser.loop.stop()`, tearing down Phaser's `requestAnimationFrame`
+driver while leaving `step()` callable, so `stepFrames(n)` advances **exactly** `n` frames and
+nothing else advances the loop.
+
+That last sentence is load-bearing and was not true before Phase 9: manual stepping used to be
+additive to a live real-time loop (~60 fps of drift with zero `stepFrames()` calls), which made
+every smoke spec nondeterministic and `top-down-racer` fail roughly one run in three.
+
+**Deterministic stepping is not performance evidence, and nothing may present it as such.** It
+proves behaviour reproducibly; it says nothing about frame budget or real-time smoothness, which
+remain unmeasured.

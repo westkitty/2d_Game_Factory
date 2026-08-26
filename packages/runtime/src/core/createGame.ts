@@ -57,6 +57,19 @@ export interface CreateGameOptions {
    * debug build warns when that is the case (ADR-0013).
    */
   readonly packConfigValidator?: PackConfigValidator;
+  /**
+   * Config supplied from code, keyed by pack id, for packs that declare
+   * `configSource: 'code'` - config that carries functions or other live
+   * values and therefore cannot travel through the game definition's JSON
+   * `systemPacks[].config`. `sw2d.puzzle` is the one such pack today
+   * (`createInitialState`/`isSolved`).
+   *
+   * This is deliberately *not* a general escape hatch for JSON-configurable
+   * packs: `SystemHostImpl` consults this map only for a pack whose definition
+   * declares `configSource: 'code'`, so a JSON pack's configuration stays
+   * where content authors can reach it (ADR-0015's schema/runtime boundary).
+   */
+  readonly packConfig?: Readonly<Record<string, unknown>>;
   /** Game-specific extensions. The only sanctioned way to add unique mechanics. */
   readonly extensions?: readonly GameExtension[];
   /** Enables development-only diagnostics. Defaults to import.meta.env.DEV. */
@@ -154,7 +167,7 @@ export async function createGame(options: CreateGameOptions): Promise<GameRuntim
 
   const boot = new BootScene(context);
   const title = new TitleScene(context);
-  const play = new PlayScene(context, options.packs ?? [], options.packConfigValidator);
+  const play = new PlayScene(context, options.packs ?? [], options.packConfigValidator, options.packConfig);
   const pause = new PauseScene(context);
   playScene = play;
 

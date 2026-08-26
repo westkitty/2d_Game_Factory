@@ -45,6 +45,23 @@ export interface SystemPackDefinition<
    * Declared here in Phase 1; enforced by the validator introduced in Phase 2.
    */
   readonly configSchemaId?: string;
+  /**
+   * Where this pack's `config` legitimately comes from.
+   *
+   * `'json'` (the default) means the config is plain data: a game definition's
+   * `systemPacks[].config` can carry it, a `configSchemaId` can validate it,
+   * and the factory generator can serialize it into `content/game.json`.
+   *
+   * `'code'` means the config is not expressible as JSON at all - it carries
+   * functions or other live values - so it can only be supplied at the
+   * composition root, through `createGame`'s `packConfig` map. A
+   * code-configured pack never has a `configSchemaId` (there is nothing a JSON
+   * Schema could validate), and `SystemHostImpl` refuses to install one whose
+   * config did not come from code rather than letting the pack itself throw a
+   * `TypeError` on a missing function. Declaring this is what stops the
+   * generator from serializing a `config: {}` that can never work.
+   */
+  readonly configSource?: 'json' | 'code';
   install(context: TContext, config: TConfig): InstalledSystemPack;
 }
 

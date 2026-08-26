@@ -43,12 +43,24 @@ smoke contract, the demo says so honestly rather than faking it:
   TypeScript functions, which cannot be expressed in JSON content. The demo implements the same
   `current`/`apply`/`undo`/`reset`/`isSolved` shape directly. Full finding:
   [`PHASE8_OPUS_GATE_B_HANDOFF.md` §8](../architecture/PHASE8_OPUS_GATE_B_HANDOFF.md#8-architectural-finding-sw2dpuzzles-config-is-not-json-serializable).
+  **Phase 9 update:** the underlying gap is repaired - the pack declares `configSource: 'code'` and
+  a generated game supplies its config from `src/game-specific/packConfig.ts`
+  ([ADR-0017](../architecture/adr/0017-pack-config-source-json-or-code.md)), so all six presets
+  requiring `sw2d.puzzle` now really install it. This demo still predates that path, so its
+  `smoke-validated` status proves the *mechanic*, not the generated composition - the generated
+  path is covered instead by
+  [`tools/scripts/generated-runtime-matrix.ts`](../../tools/scripts/generated-runtime-matrix.ts).
 - **`tower-defense`** places its one tower via a keyboard-driven grid cursor, not spatial pointer -
   the preset's own `knownLimitations` says so, and the Phase 8 directive explicitly allows
   keyboard/grid placement while spatial pointer stays deferred.
-- **`twin-stick-shooter`**, **`bullet-hell`**, and **`tower-defense`** all use the same small,
-  demo-support `ProjectilePool` helper (copied, not shared as a package) - see the handoff doc §7
-  for why it was not promoted to `@sw2d/packs` this phase.
+- **`twin-stick-shooter`**, **`bullet-hell`**, and **`tower-defense`** all use the same small
+  `ProjectilePool` helper. Phase 8 copied it three times; **Phase 9 promoted it** - the three
+  copies were byte-identical, which is strong evidence the interface was settled - to
+  `packages/runtime/src/game-support/projectilePool.ts`, exported from `@sw2d/runtime`. It is
+  deliberately game support, **not** a `@sw2d/packs` capability: no capability id, no config
+  schema, no install order, and it touches Phaser sprites, which every renderer-independent pack
+  core may not. Reasoning:
+  [Gate B §7.5](../architecture/PHASE9_ARCHITECTURE_GATE_B.md).
 
 ## Not committed
 

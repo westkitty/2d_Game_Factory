@@ -23,6 +23,8 @@ export class PlayScene extends Phaser.Scene {
   readonly #context: GameContext;
   readonly #packs: readonly ScenePackDefinition[];
   readonly #packConfigValidator: PackConfigValidator | undefined;
+  /** Code-supplied config for `configSource: 'code'` packs - see CreateGameOptions.packConfig. */
+  readonly #packConfig: Readonly<Record<string, unknown>> | undefined;
   #bag = new DisposableBagImpl('play-scene');
   #host: SystemHostImpl<SceneContext> | null = null;
 
@@ -30,11 +32,13 @@ export class PlayScene extends Phaser.Scene {
     context: GameContext,
     packs: readonly ScenePackDefinition[],
     packConfigValidator?: PackConfigValidator,
+    packConfig?: Readonly<Record<string, unknown>>,
   ) {
     super(SCENE_KEYS.play);
     this.#context = context;
     this.#packs = packs;
     this.#packConfigValidator = packConfigValidator;
+    this.#packConfig = packConfig;
   }
 
   /** Live pack ids, read by the debug snapshot. */
@@ -59,7 +63,7 @@ export class PlayScene extends Phaser.Scene {
     this.add.text(12, 10, copy.playHint, mutedStyle(13)).setScrollFactor(0).setDepth(1000);
 
     const sceneContext = createSceneContext(this.#context, this, this.#bag);
-    const host = new SystemHostImpl<SceneContext>(sceneContext, this.#packs, this.#packConfigValidator);
+    const host = new SystemHostImpl<SceneContext>(sceneContext, this.#packs, this.#packConfigValidator, this.#packConfig);
     this.#host = host;
     this.#bag.add(host);
     host.install(this.#context.definition.systemPacks);

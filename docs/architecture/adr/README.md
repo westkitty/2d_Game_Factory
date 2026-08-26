@@ -20,3 +20,4 @@ One short record per decision that constrains later work. No ADR for trivia.
 | [0014](0014-content-pipeline-and-entity-registry.md) | A dedicated content-pipeline package, entity-registry capability, and theme contract | 6 |
 | [0015](0015-preset-catalog-and-pack-metadata-boundary.md) | The preset catalog reaches pack identity through side-effect-free subpaths | 7 |
 | [0016](0016-aim-as-a-digital-axis-not-spatial-pointer.md) | Aim is a fourth digital axis, not spatial pointer | 8 |
+| [0017](0017-pack-config-source-json-or-code.md) | A pack declares whether its config is JSON or code | 9 |

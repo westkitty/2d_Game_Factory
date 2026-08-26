@@ -16,6 +16,7 @@ import { packConfigValidator } from '@sw2d/schemas';
 import { gameContent } from './content.ts';
 import { GAME_DEFINITION } from './game.ts';
 import { GAME_SPECIFIC_PACK } from './game-specific/shellPack.ts';
+import { PACK_CONFIG } from './game-specific/packConfig.ts';
 
 const gameRoot = document.querySelector<HTMLElement>('#game-root');
 const touchControls = document.querySelector<HTMLElement>('#touch-controls');
@@ -35,6 +36,10 @@ const runtime = await createGame({
   // Every pack that declares a configSchemaId is validated before it installs
   // (ADR-0013) - see docs/architecture/adr/0013-composition-root-enforces-pack-declarations.md.
   packConfigValidator,
+  // Config for packs that declare `configSource: 'code'` (functions, not JSON -
+  // sw2d.puzzle today). content/game.json cannot carry these; src/game-specific/
+  // can, and that is normal game work. See src/game-specific/packConfig.ts.
+  packConfig: PACK_CONFIG,
 });
 
 function syncTouchControls(): void {

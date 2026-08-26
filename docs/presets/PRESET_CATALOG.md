@@ -155,7 +155,7 @@ do yet. See each recipe's `knownLimitations` in source for the complete list.
 | `endless-runner` | No procedural level/segment generation exists yet; only hand-authored Tiled levels (Phase 6) are supported. |
 | `precision-platformer` | (none stated) |
 | `metroidvania` | A world graph, room transitions and a map system are not yet implemented; only flat single-level Tiled maps plus world flags/checkpoints exist (Phase 6). |
-| `puzzle-platformer` | puzzlePack's config (createInitialState/isSolved) is functions, not JSON-serializable data, so puzzle definitions are not currently content-authorable through a schema; they are written as game-specific TypeScript. |
+| `puzzle-platformer` | puzzlePack's config (createInitialState/isSolved) is functions, not JSON-serializable data, so puzzle definitions are not content-authorable through a schema. The pack declares configSource: 'code' (ADR-0017) and a generated game supplies it from src/game-specific/packConfig.ts, which ships with a small working placeholder to replace - so the pack really installs, but the puzzle's own rules are game-specific TypeScript, not content. |
 | `auto-runner` | No procedural level/segment generation exists yet; only hand-authored Tiled levels (Phase 6) are supported. |
 | `climbing-game` | Wall-slide, wall-jump and ledge-grab movement mechanics are not yet implemented as reusable capabilities (MASTER_PROJECT.md section 9.2); vertical movement must be authored as game-specific code, the same pattern starter/src/game-specific/ demonstrates. |
 | `grappling-platformer` | No advanced rope/constraint/grappling physics exists yet. |
@@ -182,12 +182,12 @@ do yet. See each recipe's `knownLimitations` in source for the complete list.
 | `time-trial-racer` | The vehicle controller supplies steering/throttle/brake intent only; no reusable vehicle-physics/drift/handling system exists. |
 | `endless-driving` | The vehicle controller supplies steering/throttle/brake intent only; no reusable vehicle-physics/drift/handling system exists. |
 | `boat-flight-racer` | The vehicle controller supplies steering/throttle/brake intent only; no reusable vehicle-physics/drift/handling system exists. |
-| `sokoban` | puzzlePack's config (createInitialState/isSolved) is functions, not JSON-serializable data, so puzzle definitions are not currently content-authorable through a schema; they are written as game-specific TypeScript. |
-| `match-puzzle` | puzzlePack's config (createInitialState/isSolved) is functions, not JSON-serializable data, so puzzle definitions are not currently content-authorable through a schema; they are written as game-specific TypeScript. |
-| `falling-block-puzzle` | puzzlePack's config (createInitialState/isSolved) is functions, not JSON-serializable data, so puzzle definitions are not currently content-authorable through a schema; they are written as game-specific TypeScript. |
+| `sokoban` | puzzlePack's config (createInitialState/isSolved) is functions, not JSON-serializable data, so puzzle definitions are not content-authorable through a schema. The pack declares configSource: 'code' (ADR-0017) and a generated game supplies it from src/game-specific/packConfig.ts, which ships with a small working placeholder to replace - so the pack really installs, but the puzzle's own rules are game-specific TypeScript, not content. |
+| `match-puzzle` | puzzlePack's config (createInitialState/isSolved) is functions, not JSON-serializable data, so puzzle definitions are not content-authorable through a schema. The pack declares configSource: 'code' (ADR-0017) and a generated game supplies it from src/game-specific/packConfig.ts, which ships with a small working placeholder to replace - so the pack really installs, but the puzzle's own rules are game-specific TypeScript, not content. |
+| `falling-block-puzzle` | puzzlePack's config (createInitialState/isSolved) is functions, not JSON-serializable data, so puzzle definitions are not content-authorable through a schema. The pack declares configSource: 'code' (ADR-0017) and a generated game supplies it from src/game-specific/packConfig.ts, which ships with a small working placeholder to replace - so the pack really installs, but the puzzle's own rules are game-specific TypeScript, not content. |
 | `breakout` | No reusable ball/paddle collision-and-bounce system exists yet. |
 | `pong` | No reusable ball/paddle collision-and-bounce system exists yet. |
-| `physics-puzzle` | puzzlePack's config (createInitialState/isSolved) is functions, not JSON-serializable data, so puzzle definitions are not currently content-authorable through a schema; they are written as game-specific TypeScript. |
+| `physics-puzzle` | puzzlePack's config (createInitialState/isSolved) is functions, not JSON-serializable data, so puzzle definitions are not content-authorable through a schema. The pack declares configSource: 'code' (ADR-0017) and a generated game supplies it from src/game-specific/packConfig.ts, which ships with a small working placeholder to replace - so the pack really installs, but the puzzle's own rules are game-specific TypeScript, not content. |
 | `maze-game` | (none stated) |
 | `rhythm-action` | No deterministic music-beat/audio-synchronization system exists yet. |
 | `reaction-timing` | Arcade timing state exists, but no specialized reaction-test flow is implemented. |
@@ -213,7 +213,7 @@ do yet. See each recipe's `knownLimitations` in source for the complete list.
 | `interactive-fiction-hybrid` | No dedicated parser/text-command system exists. |
 | `investigation-game` | No evidence-board/deduction/linking system exists. |
 | `museum-exhibit` | No dedicated exhibit/codex presentation framework exists beyond general world/narrative/UI foundations. |
-| `escape-room` | puzzlePack's config (createInitialState/isSolved) is functions, not JSON-serializable data, so puzzle definitions are not currently content-authorable through a schema; they are written as game-specific TypeScript. |
+| `escape-room` | puzzlePack's config (createInitialState/isSolved) is functions, not JSON-serializable data, so puzzle definitions are not content-authorable through a schema. The pack declares configSource: 'code' (ADR-0017) and a generated game supplies it from src/game-specific/packConfig.ts, which ships with a small working placeholder to replace - so the pack really installs, but the puzzle's own rules are game-specific TypeScript, not content. |
 | `microgame-collection` | No microgame scheduler/rotation/meta-framework exists. |
 | `local-party-game` | No multi-player/local multi-device input routing exists. |
 | `physics-toy` | Optional advanced rigid-body/constraint physics has not been implemented. |

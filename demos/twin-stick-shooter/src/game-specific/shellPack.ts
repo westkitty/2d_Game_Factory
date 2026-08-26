@@ -1,7 +1,6 @@
 import type { InstalledSystemPack, NormalizedLevel } from '@sw2d/contracts';
-import { topDownController, type SceneContext, type ScenePackDefinition } from '@sw2d/runtime';
+import { topDownController, ProjectilePool, type SceneContext, type ScenePackDefinition } from '@sw2d/runtime';
 import { CAPABILITY_IDS, type CombatService } from '@sw2d/packs';
-import { ProjectilePool } from './projectilePool.ts';
 
 /**
  * Twin-Stick Shooter demo (Phase 8 representative demo 4/12).

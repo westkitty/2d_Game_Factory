@@ -54,9 +54,17 @@ const ALL_NINE_PACKS: readonly SystemPackDefinition<never, GameContext>[] = [
   strategyPack,
 ];
 
-const puzzleConfig = {
-  createInitialState: () => ({ moves: 0 }),
-  isSolved: (state: { moves: number }) => state.moves >= 3,
+/**
+ * `sw2d.puzzle` declares `configSource: 'code'`, so its config travels through
+ * the composition root's `packConfig` map, never through a selection's JSON
+ * `config`. Phase 9 (Gate B) made that explicit after finding that every
+ * generated game selecting this pack crashed on install with `config: {}`.
+ */
+const PACK_CONFIG: Readonly<Record<string, unknown>> = {
+  [puzzlePack.id]: {
+    createInitialState: () => ({ moves: 0 }),
+    isSolved: (state: { moves: number }) => state.moves >= 3,
+  },
 };
 
 const ALL_NINE_SELECTIONS: readonly SystemPackSelection[] = [
@@ -65,7 +73,7 @@ const ALL_NINE_SELECTIONS: readonly SystemPackSelection[] = [
   { packId: worldPack.id },
   { packId: progressionPack.id, config: { startingCurrency: 20, startingXp: 0 } },
   { packId: arcadePack.id, config: { startingLives: 3 } },
-  { packId: puzzlePack.id, config: puzzleConfig },
+  { packId: puzzlePack.id, config: {} }, // JSON config is ignored for a code-configured pack - see PACK_CONFIG
   { packId: simulationPack.id },
   { packId: narrativePack.id },
   { packId: strategyPack.id },
@@ -74,7 +82,7 @@ const ALL_NINE_SELECTIONS: readonly SystemPackSelection[] = [
 describe('Phase 4 pack composition (real SystemHostImpl + resolveInstallOrder + CapabilityRegistryImpl)', () => {
   it('installs all nine families, publishes every capability, and every pack API operates', () => {
     const context = createContext();
-    const host = new SystemHostImpl(context, ALL_NINE_PACKS);
+    const host = new SystemHostImpl(context, ALL_NINE_PACKS, undefined, PACK_CONFIG);
 
     host.install(ALL_NINE_SELECTIONS);
 
@@ -303,5 +311,52 @@ describe('Phase 4 pack composition (real SystemHostImpl + resolveInstallOrder + 
       expect(() => host.install([{ packId: worldPack.id }])).not.toThrow();
       expect(context.capabilities.has('world.state')).toBe(true);
     });
+  });
+});
+
+describe("code-configured packs (configSource: 'code')", () => {
+  /**
+   * The exact Gate B regression: a generated `content/game.json` writes
+   * `config: {}` for every selected pack, which for `sw2d.puzzle` used to
+   * reach `config.createInitialState()` and throw an opaque `TypeError` from
+   * inside the pack, several frames after the real mistake. All six presets
+   * requiring this pack shipped that way. The refusal now names the pack, the
+   * reason and the fix.
+   */
+  it('refuses to install with a named, actionable error when no code config was supplied', () => {
+    // A failed install rolls the host back and disposes it, so each assertion
+    // needs its own host - the rollback itself is asserted elsewhere.
+    const attempt = (): void => {
+      const host = new SystemHostImpl(createContext(), ALL_NINE_PACKS);
+      host.install([{ packId: puzzlePack.id, config: {} }]);
+    };
+
+    expect(attempt).toThrow(/sw2d\.puzzle/);
+    expect(attempt).toThrow(/packConfig/);
+    expect(attempt).toThrow(/code-configured/);
+    // The old failure mode was an opaque TypeError from inside the pack itself.
+    expect(attempt).not.toThrow(/createInitialState is not a function/);
+  });
+
+  it('installs and publishes its capability when the composition root supplies the config', () => {
+    const context = createContext();
+    const host = new SystemHostImpl(context, ALL_NINE_PACKS, undefined, PACK_CONFIG);
+
+    host.install([{ packId: puzzlePack.id, config: {} }]);
+
+    expect(context.capabilities.has('puzzle.state')).toBe(true);
+    expect(context.capabilities.require<PuzzleService>('puzzle.state').isSolved()).toBe(false);
+    host.dispose();
+  });
+
+  it("ignores a selection's JSON config entirely for a code-configured pack", () => {
+    const context = createContext();
+    const host = new SystemHostImpl(context, ALL_NINE_PACKS, undefined, PACK_CONFIG);
+
+    // A JSON config that would be nonsense as a PuzzleConfig is simply not read.
+    host.install([{ packId: puzzlePack.id, config: { createInitialState: 'not a function' } }]);
+
+    expect(context.capabilities.require<PuzzleService>('puzzle.state').current()).toEqual({ moves: 0 });
+    host.dispose();
   });
 });

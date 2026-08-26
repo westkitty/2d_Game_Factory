@@ -16,7 +16,18 @@ export interface Harness {
   /** Navigate and wait until the runtime's debug global (window.__SW2D__) exists. */
   gotoAndWaitForRuntime(url: string, timeoutMs?: number): Promise<void>;
   evaluate<T>(fn: () => T): Promise<T>;
-  /** Advance the Phaser game loop `count` frames at a fixed 16.67ms step - not real time, the same technique docs/qa/PHASE1_VALIDATION.md discloses for the manual journeys this harness replaces. */
+  /**
+   * Advance the Phaser game loop exactly `count` frames at a fixed 16.67 ms
+   * step.
+   *
+   * This is the *only* thing that advances the loop: `gotoAndWaitForRuntime`
+   * stops Phaser's own requestAnimationFrame driver first (see
+   * `#stopRequestAnimationFrameLoop`). Without that, the game kept running in
+   * real wall-clock time between every CDP round trip and manual steps merely
+   * added to it - so "deterministic frame stepping" was not true, and specs
+   * with tight margins (top-down-racer's equal-and-opposite steering taps)
+   * failed intermittently. Phase 9 / Gate B found and fixed that.
+   */
   stepFrames(count: number): Promise<void>;
   /** Dispatch a real keydown+keyup for `code`, stepping a couple of frames between each so the semantic input layer's edge detection sees it. */
   keyTap(code: string): Promise<void>;
@@ -56,6 +67,27 @@ export async function launchHarness(): Promise<Harness> {
     await page.goto(url, { waitUntil: 'load' });
     await page.waitForFunction(() => Boolean((window as unknown as { __SW2D__?: unknown }).__SW2D__), undefined, {
       timeout: timeoutMs,
+    });
+    await stopRequestAnimationFrameLoop();
+  }
+
+  /**
+   * Hand the frame clock to the harness.
+   *
+   * Phaser's `TimeStep` drives itself from `requestAnimationFrame`. Calling
+   * `loop.step(t)` by hand does not replace that driver, it races it: between
+   * two `page.evaluate` calls the browser keeps painting, so the game advances
+   * by however many real frames the round trip happened to take. Measured on
+   * this harness before the fix: ~60 frames per second of drift with zero
+   * `stepFrames` calls. `loop.stop()` tears down the rAF callback (and the
+   * timeout fallback) while leaving `step()` callable, which is exactly the
+   * split this harness wants - after this, frame count is a pure function of
+   * how many frames a spec asked for.
+   */
+  async function stopRequestAnimationFrameLoop(): Promise<void> {
+    await page.evaluate(() => {
+      const loop = (window as unknown as { __SW2D__: { phaser: { loop: { stop(): void } } } }).__SW2D__.phaser.loop;
+      loop.stop();
     });
   }
 

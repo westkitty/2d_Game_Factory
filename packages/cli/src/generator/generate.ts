@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import type { PresetDefinition } from '@sw2d/contracts';
 import { shellFileFor, shellPackId } from './controllerTemplates.ts';
 import { generateGameManifest, generateTiledLevel, generateTheme, generateTuning } from './contentDocuments.ts';
+import { generatePackConfig } from './packConfig.ts';
 import { generateReadme } from './readme.ts';
 import { generateContentTest } from './testFile.ts';
 
@@ -43,6 +44,7 @@ export function buildGameFiles(gameId: string, preset: PresetDefinition): Map<st
   files.set('src/content.ts', readTemplate('src/content.ts.template').replaceAll('__GAME_ID__', gameId));
   files.set('src/game.ts', readTemplate('src/game.ts.template'));
   files.set('src/game-specific/shellPack.ts', readTemplate(`gameSpecific/${shellFile}`));
+  files.set('src/game-specific/packConfig.ts', generatePackConfig(preset));
 
   files.set(
     'content/game.json',

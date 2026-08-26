@@ -9,6 +9,32 @@ import { topDownController, type SceneContext, type ScenePackDefinition } from '
  */
 
 const LEVEL_DOCUMENT = 'levels/main';
+const TUNING_DOCUMENT = 'tuning';
+
+/**
+ * `content/tuning.json`, read for real.
+ *
+ * Phase 9 / Gate B found that every generated game validated this document and
+ * then never read a single value from it - the numbers below were hard-coded
+ * in the update loop instead, so editing `content/tuning.json` changed
+ * nothing. That made the generated README's "content/tuning.json (tuning
+ * values)" claim untrue. The fallbacks are the same numbers the generator
+ * writes, so a game with a hand-trimmed tuning document still runs.
+ */
+interface PlayerTuning {
+  readonly moveSpeed: number;
+  readonly jumpVelocity: number;
+  readonly gravity: number;
+}
+
+function readPlayerTuning(context: SceneContext): PlayerTuning {
+  const tuning = context.content.data[TUNING_DOCUMENT]?.value as { player?: Partial<PlayerTuning> } | undefined;
+  return {
+    moveSpeed: tuning?.player?.moveSpeed ?? 220,
+    jumpVelocity: tuning?.player?.jumpVelocity ?? 430,
+    gravity: tuning?.player?.gravity ?? 1100,
+  };
+}
 
 export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
   id: 'game.top-down-shell',
@@ -18,6 +44,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
 
   install(context: SceneContext): InstalledSystemPack {
     const scene = context.scene;
+    const tuning = readPlayerTuning(context);
     const level = context.content.data[LEVEL_DOCUMENT]?.value as NormalizedLevel | undefined;
     const playerKey = context.assets.resolve('player');
     const { width, height } = context.definition.viewport;
@@ -45,9 +72,8 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       update(): void {
         if (disposed) return;
         const intent = topDownController.read(context.input);
-        const speed = 200;
-        player.setVelocityX(intent.moveX * speed);
-        player.setVelocityY(intent.moveY * speed);
+        player.setVelocityX(intent.moveX * tuning.moveSpeed);
+        player.setVelocityY(intent.moveY * tuning.moveSpeed);
       },
 
       dispose(): void {

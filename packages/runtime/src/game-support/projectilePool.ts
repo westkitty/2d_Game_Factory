@@ -2,17 +2,30 @@ import type Phaser from 'phaser';
 
 /**
  * A small, bounded projectile-lifecycle helper: spawn a moving sprite,
- * advance it, expire it after a fixed lifetime or when it leaves the
- * world bounds, dispose cleanly.
+ * advance it, expire it after a fixed lifetime or when it leaves the world
+ * bounds, dispose cleanly.
  *
- * Demo-support code (MASTER_PROJECT.md section 13), not a promoted
- * `@sw2d/packs` capability: `twin-stick-shooter`, `bullet-hell` and
- * `tower-defense` all need substantially this same shape (the
- * three-consumer trigger section 15 names), but none needs persistence, a
- * config schema, or a capability id - copying this ~90-line file three
- * times is the smaller, more honest choice for Phase 8's smoke demos.
- * Recorded for Phase 9 Opus to review whether promotion is now warranted:
- * see docs/architecture/PHASE8_OPUS_GATE_B_HANDOFF.md.
+ * Promoted in Phase 9 (Gate B) from three byte-identical copies under
+ * `demos/{twin-stick-shooter,bullet-hell,tower-defense}/src/game-specific/`.
+ * The promotion argument is semantic stability, not line count: three
+ * independent consumers arrived at the *same* interface with zero divergence
+ * (only construction arguments differed), and Phase 10's twin-stick arena and
+ * tower-defense micro-map add two more. Deferring again would have meant five
+ * copies of an interface already proven stable.
+ *
+ * Deliberately **game support, not a system pack**. It has no capability id,
+ * no `configSchemaId`, no install order, and no persistence, because the
+ * things a `sw2d.projectiles` *capability* would have to decide - pooling
+ * policy, collision integration, whether damage-on-hit is first-class or
+ * caller-wired - are still undiscovered. Promoting the proven ~100 lines
+ * without promoting the unproven semantics is the bounded move; this is not a
+ * weapon framework and must not grow into one. A consumer still wires its own
+ * overlap/damage callbacks exactly as the three demos already do.
+ *
+ * It lives beside the controllers rather than in `@sw2d/packs` for a hard
+ * reason: it manipulates Phaser sprites and Arcade bodies, and every
+ * `@sw2d/packs` core is renderer-independent by contract. Putting it in
+ * `packages/packs` would have broken that invariant.
  */
 
 export interface ProjectileOptions {

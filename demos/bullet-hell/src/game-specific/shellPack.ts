@@ -1,6 +1,5 @@
 import type { InstalledSystemPack, NormalizedLevel } from '@sw2d/contracts';
-import { topDownController, type SceneContext, type ScenePackDefinition } from '@sw2d/runtime';
-import { ProjectilePool } from './projectilePool.ts';
+import { topDownController, ProjectilePool, type SceneContext, type ScenePackDefinition } from '@sw2d/runtime';
 
 /**
  * Bullet Hell demo (Phase 8 representative demo 6/12).

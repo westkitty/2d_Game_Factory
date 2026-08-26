@@ -28,6 +28,14 @@ export {
   uiSimulationController,
 } from './controllers/index.ts';
 
+/**
+ * Game support: shared, Phaser-coupled helpers that are neither a controller
+ * (stateless intent translation) nor a system pack (renderer-independent
+ * capability). Promoted only on proven, byte-identical duplication across
+ * three or more real consumers - see projectilePool.ts's own note.
+ */
+export { ProjectilePool, type ProjectileOptions } from './game-support/projectilePool.ts';
+
 export { LocalStorageDriver, MemoryStorageDriver } from './persistence/LocalStorageDriver.ts';
 export { SaveStoreImpl } from './persistence/SaveStoreImpl.ts';
 export {

@@ -2,7 +2,7 @@
 
 Project: **Stinky Weasel 2D Browser Game Factory** (`sw2d`)
 Repository: `westkitty/2d_Game_Factory`
-State revision: **10**
+State revision: **11**
 Updated: 2026-08-26
 
 Read this before doing anything. Governing spec: [`MASTER_PROJECT.md`](MASTER_PROJECT.md).
@@ -12,16 +12,27 @@ Workflow: [`docs/AGENT_WORKFLOW.md`](docs/AGENT_WORKFLOW.md).
 
 ## Current phase
 
-**Phase 8 - Factory CLI, Generated Starters, Browser QA, and 12 Representative Demos - COMPLETE
-(Sonnet 5).**
+**Phase 9 - Architecture Integration Gate B - COMPLETE (Opus 5). Verdict: PASS WITH TARGETED
+REPAIRS.**
 
-New ADR-0016 this revision (aim is a second digital axis, not spatial pointer - see
-[Revision 10](#revision-10---2026-08-26-sonnet-5)). Full architectural handoff:
-[`docs/architecture/PHASE8_OPUS_GATE_B_HANDOFF.md`](docs/architecture/PHASE8_OPUS_GATE_B_HANDOFF.md).
+Full gate report:
+[`docs/architecture/PHASE9_ARCHITECTURE_GATE_B.md`](docs/architecture/PHASE9_ARCHITECTURE_GATE_B.md).
+New ADR-0017 this revision (a pack declares whether its config is JSON or code).
 
-Next owner: **Opus 5, Phase 9** (Architecture Integration Gate B). See
-[Next bounded action](#next-bounded-action). **Do not execute Phase 9 yet** - this revision only
-records it as the next bounded action.
+Two Phase 8 claims were false when tested rather than read, and both are repaired at the cause:
+
+- **"All 74 presets generate a runnable starter" was untrue for six of them.** Building is not
+  installing. The six presets requiring `sw2d.puzzle` generated games that built cleanly and then
+  threw `createInitialState is not a function` on CONFIRM, taking the shell pack down through
+  install rollback. Now 40/40 distinct generated runtime compositions really enter play.
+- **"Deterministic frame stepping" was untrue.** The QA harness never stopped Phaser's own
+  `requestAnimationFrame` driver, so manual stepping was additive to a free-running real-time
+  loop (~60 fps of drift). `top-down-racer`'s smoke was already failing intermittently at the
+  Phase 8 baseline. Now measurably deterministic; `qa:smoke` is 14/14.
+
+Next owner: **Sonnet 5, Phase 10** (Five Deep Proof Games). See
+[Next bounded action](#next-bounded-action). **Do not execute Phase 10 from this revision** - it
+is recorded here as the next bounded action only.
 
 ## Current baseline
 
@@ -621,37 +632,122 @@ Phases 9-12 are unstarted. See `MASTER_PROJECT.md` §38 for the routed plan and 
 
 ## Next bounded action
 
-**Phase 9 - Opus 5 - Architecture Integration Gate B.**
+**Phase 10 - Sonnet 5 - Five Deep Proof Games.**
 
-Not executed this revision - Phase 8 explicitly stops before it. Full handoff:
-[`docs/architecture/PHASE8_OPUS_GATE_B_HANDOFF.md`](docs/architecture/PHASE8_OPUS_GATE_B_HANDOFF.md).
-Summary of what Phase 9 inherits and should weigh:
+Not executed this revision - Phase 9 is a gate and explicitly stops before it. Full readiness
+matrix and every deferred decision with its trigger:
+[`docs/architecture/PHASE9_ARCHITECTURE_GATE_B.md`](docs/architecture/PHASE9_ARCHITECTURE_GATE_B.md).
 
-- The generated-game architecture (six controller-family shell templates, deterministic
-  generation, the CLI's dependency boundaries) is built and evidenced for all 74 presets at two
-  tiers - exhaustive static/schema checks for all 74, real `npm install`+`tsc`+`vite build`
-  evidence for a 13-instance representative matrix. See handoff §1-3.
-- Twelve presets are `smoke-validated`; the rest remain `recipe`. See handoff §4-5 and
-  `docs/demos/DEMO_MATRIX.md`.
-- `TopDownIntent` gained `aimX`/`aimY`/`aimMagnitude` (ADR-0016) - a same-shape extension to the
-  existing digital-axis controller pattern, not a spatial pointer service. Spatial pointer/hover/
-  click targeting remains fully deferred. See handoff §6.
-- `ProjectilePool` (a small, bounded projectile-lifecycle helper) is used by three demos
-  (`twin-stick-shooter`, `bullet-hell`, `tower-defense`) but was **not** promoted to
-  `@sw2d/packs` this phase - copied, not shared. Opus should decide whether the three real
-  consumers are now enough to design a real capability against. See handoff §7.
-- `sw2d.puzzle`'s config requires TypeScript functions, not JSON data - a real, previously-
-  undiscovered incompatibility with the generator's JSON-only `content/game.json` composition
-  root. `sokoban` works around it by implementing equivalent state directly rather than selecting
-  the pack. Any future preset requiring `sw2d.puzzle` hits the same wall. See handoff §8.
-- Do not implement any of the ~40 missing mechanics still named across the 62 `recipe` presets'
-  `knownLimitations` merely because a demo phase exists now - Phase 8's demos prove composition
-  for twelve specific presets, not genre completeness for the other 62 (MASTER_PROJECT.md section
-  23 still applies unchanged).
-- `games/` (CLI-generated) and `demos/*/dist|pack|node_modules` (demo build artifacts) are
-  gitignored and were never committed; only demo source/content/scaffolding is.
+The five proofs and their readiness (none is blocked; proof D was blocked before this phase):
+
+| Proof | Reusable foundation | Expected game-specific work | Blocker |
+|---|---|---|---|
+| A. Cloud Chaser-style chase mini-level | `platform` shell, world/entities, Tiled pipeline, live `content/tuning.json`, `chase-platformer` demo | chase-pressure model, fail/finish, level authoring | none (chase pressure stays game-specific, correctly disclosed) |
+| B. Twin-stick arena | `top-down` shell, digital aim (ADR-0016), `sw2d.combat`, `ProjectilePool` (now in `@sw2d/runtime`) | waves/spawning, enemy behaviour, scoring, arena | none |
+| C. Tower-defense micro-map | `grid` shell + keyboard cursor, combat/progression/world | route data, tower/wave definitions, economy | none (spatial pointer explicitly not required) |
+| D. Sokoban puzzle | `grid` shell, `sw2d.puzzle` **now really installs from a generated starter**, `src/game-specific/packConfig.ts` seam | the puzzle's own state shape and rules, grid layout | none (was the hardest blocker before this phase) |
+| E. Tiny management toy | `ui-simulation` shell, simulation/progression, `SaveStore` proven under real reload | production/economy model, job queue, upgrades, DOM presentation | none, **unless** the production chain is meant to be content-authored - see the `requiredContentRoles` trigger below |
+
+Constraints Phase 10 inherits:
+
+- **Do not invent a private content format inside a proof.** `requiredContentRoles` claims nine
+  roles across the catalog, but only `tuning` and `levels` have a schema or pipeline; `dialogue`,
+  `characters`, `items`, `puzzles`, `recipes`, `microgames` and `exhibits` have none. A proof
+  needing authored content beyond `tuning`/`levels` must either add that role's schema and
+  pipeline properly, or drop the claim from the preset.
+- **Do not invent a universal puzzle DSL.** ADR-0017 deliberately did not. Proof D replaces the
+  generated placeholder in `src/game-specific/packConfig.ts`; it does not push a rule format into
+  the pack.
+- **Do not build spatial pointer.** Still deferred, and no proof requires it. Its trigger is a
+  preset promoted past `recipe` that cannot be built without world-space hit-testing
+  (`point-and-click`, `drawing-game`, `physics-puzzle`), and it needs its own ADR on input
+  ownership first.
+- **Do not extract a shared grid cursor yet.** There are two cursor consumers, not three
+  (`sokoban` has no cursor). Trigger and reasoning: gate report section 7.7.
+- **Do not treat deterministic frame stepping as performance evidence.** It is not, and nothing in
+  the repository may claim otherwise. Real performance measurement remains unmeasured.
+- Do not implement any of the ~40 missing mechanics named across the 62 `recipe` presets'
+  `knownLimitations` merely because a proof phase exists (MASTER_PROJECT.md section 23 unchanged).
+- No preset may reach `proof-validated` before its proof game actually exists and passes.
+- `games/` (CLI-generated) and `demos/*/dist|pack|node_modules` stay gitignored.
 
 ## Revision history
+
+### Revision 11 - 2026-08-26 (Opus 5)
+
+**Phase 9 - Architecture Integration Gate B. Verdict: PASS WITH TARGETED REPAIRS.**
+Full report: [`docs/architecture/PHASE9_ARCHITECTURE_GATE_B.md`](docs/architecture/PHASE9_ARCHITECTURE_GATE_B.md).
+
+New evidence built this revision:
+[`tools/scripts/generated-runtime-matrix.ts`](tools/scripts/generated-runtime-matrix.ts) - the
+generated-**runtime** composition matrix. `tools/scripts/build-matrix.ts` proves generated games
+build; building never runs `SystemHostImpl.install()`, so it cannot prove they enter play. The new
+matrix derives runtime signatures mechanically from the catalog - the pair
+`(primary controller shell, exact required pack set)`, which is **37 distinct values across the 74
+presets** - generates one real game per signature under `games/`, really builds it, then really
+plays it in system Chrome: press CONFIRM and assert `scene === 'sw2d.play'`, every required pack
+plus the shell pack present in `installedPacks`, and zero console errors. Every preset selecting
+`sw2d.puzzle` is covered individually (40 targets), and the script fails rather than skipping if a
+config-reading pack is uncovered.
+
+Claims corrected:
+
+- **"74 runnable starters" was false for six presets.** At the Phase 8 baseline the matrix scored
+  **34/40**: `sokoban`, `puzzle-platformer`, `match-puzzle`, `falling-block-puzzle`,
+  `physics-puzzle` and `escape-room` all threw
+  `TypeError: createInitialState is not a function` at install, and rollback then removed the shell
+  pack too - those games had no gameplay at all. Now **40/40**.
+- **"Deterministic frame stepping" was false.** Measured at baseline: the Phaser loop advanced ~60
+  frames per second with zero `stepFrames()` calls, because nothing stopped its
+  `requestAnimationFrame` driver. `npm run qa:smoke` was **13/14** at the reviewed baseline
+  (`top-down-racer`, reproduced 1-3 failures in 5) - not the 14/14 Phase 8 recorded. Phase 8's
+  stealth-game "hairline frame math" diagnosis was wrong for the same reason. Now 0 frames of
+  drift across a full second, and `top-down-racer` returns byte-identical results across six
+  consecutive runs. `qa:smoke` is **14/14**.
+- `content/tuning.json` was generated, schema-validated and README-advertised for all 74 presets -
+  and read by nothing. Its numbers were hard-coded in the shell templates.
+- `validate`'s browser oracle asserted `installedPacks.length > 0` while its own comment claimed
+  "every declared pack installed".
+- `materializeStarterPlan`'s docstring claims the CLI consumes it; the generator reads
+  `PresetDefinition` directly. Recorded, not repaired.
+
+Repairs (five, all bounded):
+
+1. **ADR-0017 - `SystemPackDefinition.configSource?: 'json' | 'code'`.** `puzzlePack` declares
+   `'code'`. `createGame({ packConfig })` carries code-supplied config through `PlayScene` to
+   `SystemHostImpl`, which routes on the declaration and refuses a missing code config **by name at
+   install** instead of letting the pack throw an opaque `TypeError` frames later. The generator
+   emits `src/game-specific/packConfig.ts` for every game (with a working placeholder puzzle for
+   the six presets that need one) and `main.ts` always passes it, so `main.ts` stays byte-identical
+   across all 74. No universal puzzle DSL was created.
+2. **QA harness owns the frame clock.** `gotoAndWaitForRuntime` calls `phaser.loop.stop()`,
+   leaving `step()` callable, so `stepFrames` is the only thing advancing the loop.
+3. **`content/tuning.json` made live.** The platform and top-down shells read
+   `moveSpeed`/`jumpVelocity`/`gravity` from the tuning document, with the generator's own numbers
+   as fallbacks. Guarded by a test.
+4. **`validate`'s oracle tightened** to compare `installedPacks` against the game's own
+   `content/game.json`; `qa:smoke` failures now print the spec's recorded `details` and first
+   console error instead of an empty reason.
+5. **`ProjectilePool` promoted** from three byte-identical demo copies to
+   `packages/runtime/src/game-support/projectilePool.ts`, exported from `@sw2d/runtime`.
+   Deliberately game support, not a system pack: no capability id, no config schema, no install
+   order - it manipulates Phaser sprites, and every `@sw2d/packs` core is renderer-independent by
+   contract. Pooling policy, collision integration and damage-on-hit were **not** promoted.
+
+Decisions recorded without code change: 74-preset composition **KEEP**; generated-game architecture
+**KEEP**; CLI/package boundaries **KEEP**; platform-movement duplication **KEEP** (six lines, and
+metroidvania's differs where its progression begins); grid cursor **DEFER** (two consumers, not
+three); ADR-0016 aim **KEEP**; spatial pointer **DEFER** with trigger; content-role schemas
+**DEFER** with trigger; QA architecture **KEEP** after repair.
+
+Maturity unchanged: exactly twelve `smoke-validated`, 62 `recipe`, zero `proof-validated`.
+`top-down-racer` retains its status because the cause of its intermittent failure - the harness -
+was repaired, not the assertion.
+
+Validation: `npm run typecheck`, `npm test` (**1743** tests, 65 files), `npm run build`,
+`npm run check:offline`, `npm run validate`, `npm run qa:smoke` (**14/14**), the generated-runtime
+signature matrix (**40/40**) and the representative real-build matrix all pass. The baseline was
+established before any edit, which is how the pre-existing `top-down-racer` failure was found.
 
 ### Revision 10 - 2026-08-26 (Sonnet 5)
 Phase 8 complete: Factory CLI, Generated Starters, Browser QA, and 12 Representative Demos. Full
