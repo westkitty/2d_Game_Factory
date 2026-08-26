@@ -413,9 +413,15 @@ const ROUTES: ReadonlyMap<string, Handler> = new Map<string, Handler>([
       // Rebuild what the host can (PNG sources); the rest is handed back to
       // the client, which has the decoders the host deliberately does not.
       const rebuild = result.changed ? rebuildStale(gameId, result.staleDerivedIds) : { rebuilt: [], deferredToClient: [] };
-      refreshBlueprint(gameId);
+      const blueprint = refreshBlueprint(gameId);
+      // The theme has to follow the new bytes: its texture key embeds the
+      // content hash, and the file shipped into public/ has to be replaced.
+      // Without this a reimport would update the library and leave the running
+      // game drawing the previous image (F07).
+      const synthesis = result.changed ? writeTheme({ gameId, assets: loadAssets(gameId), blueprint }) : null;
       return ok({
         asset: result.record,
+        ...(synthesis ? { synthesis: summariseSynthesis(synthesis) } : {}),
         changed: result.changed,
         staleDerivedIds: result.staleDerivedIds,
         rebuiltOnHost: rebuild.rebuilt,

@@ -270,7 +270,7 @@ export function renderAssetLab(host: HTMLElement): () => void {
         button('Variants…', () => openVariantsDialog(addStep), { class: 'btn btn--sm', title: 'Outline, shadow, silhouette, tint, damage flash' }),
       ),
       el('div', { class: 'grow' }),
-      el('span', { class: 'faint', text: raster ? `${raster.width}x${raster.height}` : '' }),
+      el('span', { class: 'faint', attrs: { 'data-testid': 'lab-size' }, text: raster ? `${raster.width}x${raster.height}` : '' }),
       button('Save as new asset', () => void saveDerived(), { class: 'btn btn--primary btn--sm', disabled: !dirty, title: dirty ? 'Store this as a new derived asset' : 'Make a change first' }),
     );
   }

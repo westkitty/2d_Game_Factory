@@ -104,8 +104,14 @@ function twoPieces(): Raster {
 function walkFrame(index: number): Raster {
   const base = weasel();
   const raster = createRaster(96, 128);
-  const lean = Math.round(Math.sin((index / 4) * Math.PI * 2) * 5);
-  compositeOver(raster, base, lean, index % 2 === 0 ? 0 : 2);
+  // Offsets chosen so no two frames are byte-identical. They were, once:
+  // a sine that returned to zero made frame 0 and frame 4 the same image, so
+  // the "separate group" fixture was silently a duplicate of the first frame.
+  // No zero offset: frame 0 must not be byte-identical to the base weasel
+  // fixture either, or the two would collide as duplicates across files.
+  const lean = [2, 4, -3, 6, -6][index % 5]!;
+  const bob = [1, 2, 3, 1, 4][index % 5]!;
+  compositeOver(raster, base, lean, bob);
   return raster;
 }
 

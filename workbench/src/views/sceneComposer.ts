@@ -132,12 +132,24 @@ export function renderSceneComposer(host: HTMLElement): () => void {
     return scene ? scene.mapHeight * scene.tileHeight : 544;
   }
 
-  function fit(): void {
+  /**
+   * True once the view has been fitted against a stage that actually had a
+   * size. Mounting can happen before layout settles, and a `fit()` against a
+   * zero-width rect silently leaves zoom at 1 and pan at 0 - so the level
+   * renders off-centre and every click lands somewhere other than where the
+   * user aimed. The ResizeObserver below fits again the first time the stage
+   * has real dimensions.
+   */
+  let fitted = false;
+
+  function fit(): boolean {
     const rect = stageWrap.getBoundingClientRect();
-    if (rect.width === 0) return;
+    if (rect.width === 0 || rect.height === 0) return false;
     zoom = Math.min(rect.width / worldWidth(), rect.height / worldHeight()) * 0.94;
     panX = (rect.width - worldWidth() * zoom) / 2;
     panY = (rect.height - worldHeight() * zoom) / 2;
+    fitted = true;
+    return true;
   }
 
   function toWorld(clientX: number, clientY: number): { x: number; y: number } {
@@ -384,7 +396,7 @@ export function renderSceneComposer(host: HTMLElement): () => void {
         button('Delete', () => { removeSelected(); paint(); }, { class: 'btn btn--sm btn--danger', disabled: selectedIds.length === 0 }),
       ),
       el('div', { class: 'toolgroup' },
-        button('Fit', () => { fit(); paintCanvas(); }, { class: 'btn btn--sm' }),
+        button('Fit', () => { fit(); paintCanvas(); }, { class: 'btn btn--sm', title: 'Fit the whole level in view' }),
         el('span', { class: 'faint', style: { 'font-size': '11px' }, text: `${Math.round(zoom * 100)}%` }),
       ),
       el('div', { class: 'grow' }),
@@ -516,7 +528,10 @@ export function renderSceneComposer(host: HTMLElement): () => void {
     paintCanvas();
   }
 
-  const observer = new ResizeObserver(() => paintCanvas());
+  const observer = new ResizeObserver(() => {
+    if (!fitted) fit();
+    paintCanvas();
+  });
   observer.observe(stageWrap);
   document.addEventListener('keydown', onKeyDown);
   replace(host, root);

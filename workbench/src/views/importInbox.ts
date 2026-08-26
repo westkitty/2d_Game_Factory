@@ -18,6 +18,7 @@ import * as api from '../api.ts';
 import { analyseFile, mapWithLimit } from '../image/clientImage.ts';
 import { openModal } from './modal.ts';
 import { errorText } from '../actions.ts';
+import { getState, update, type ProjectState } from '../state.ts';
 import { WORKBENCH_ASSET_ROLES, ROLE_LABELS, type ImportPlan, type Provenance, type StagedFile, type WorkbenchAssetRole } from '../../shared/types.ts';
 
 /** Matches the host's cap. Kept in step so a batch is not sent only to be refused. */
@@ -305,12 +306,17 @@ export function openImportInbox(options: ImportInboxOptions): void {
     };
     importButton.disabled = true;
     try {
-      const result = await api.post<{ assetIds: readonly string[] }>('/import/commit', {
+      const result = await api.post<{ assetIds: readonly string[]; state: ProjectState }>('/import/commit', {
         gameId: options.gameId,
         batchId,
         selections: [...selected.entries()].map(([stagingId, role]) => ({ stagingId, ...(role ? { role } : {}) })),
         provenance,
       });
+      // Apply the project state the commit returned here rather than leaving
+      // it to each caller's `onDone`. Every intake route ends in this one
+      // function, so doing it here is what makes "the library shows what you
+      // just imported" true no matter which button opened the inbox.
+      update({ current: result.state, selectedAssetId: result.assetIds[0] ?? getState().selectedAssetId });
       close();
       toast(`Imported ${result.assetIds.length} asset${result.assetIds.length === 1 ? '' : 's'}.`, 'ok');
       await options.onDone?.(result.assetIds);

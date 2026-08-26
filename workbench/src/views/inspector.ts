@@ -49,7 +49,10 @@ export function renderInspector(host: HTMLElement): () => void {
 
     return el(
       'div',
-      { class: `role-row role-row--${assignment.coverage}` },
+      // `data-role` is a stable hook for QA and for the role-swap shortcuts;
+      // the row's text starts with the swatch's "auto" label, so matching on
+      // text alone would be fragile.
+      { class: `role-row role-row--${assignment.coverage}`, attrs: { 'data-role': assignment.role } },
       swatch,
       el(
         'div',
@@ -58,10 +61,10 @@ export function renderInspector(host: HTMLElement): () => void {
         el('div', { class: 'faint truncate', style: { 'font-size': '11px' }, text: asset ? asset.displayName : 'generated from palette' }),
       ),
       asset
-        ? button('✕', () => void assignRole(assignment.role, null), { class: 'icon-btn', title: `Revert ${assignment.role} to generated art` })
+        ? button('✕', () => void assignRole(assignment.role, null), { class: 'icon-btn', attrs: { 'data-action': 'clear-role' }, title: `Revert ${assignment.role} to generated art` })
         : null,
       selected && selected.id !== assignment.assetId
-        ? button('←', () => void assignRole(assignment.role, selected.id), { class: 'icon-btn', title: `Use the selected asset for ${assignment.role}` })
+        ? button('←', () => void assignRole(assignment.role, selected.id), { class: 'icon-btn', attrs: { 'data-action': 'assign-role' }, title: `Use the selected asset for ${assignment.role}` })
         : null,
       button('⇪', () => {
         openImportInbox({
@@ -70,7 +73,7 @@ export function renderInspector(host: HTMLElement): () => void {
           title: `Import art for ${ROLE_LABELS[assignment.role]}`,
           onDone: () => refreshCurrent(),
         });
-      }, { class: 'icon-btn', title: `Import art straight into ${assignment.role}` }),
+      }, { class: 'icon-btn', attrs: { 'data-action': 'import-role' }, title: `Import art straight into ${assignment.role}` }),
     );
   }
 

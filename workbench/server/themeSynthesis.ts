@@ -14,6 +14,7 @@
  */
 
 import { copyFileSync, existsSync, readFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import type { AssetDescriptor, ThemeManifest } from '@sw2d/contracts';
 import { validateDocumentOrThrow } from '@sw2d/schemas';
 import type { AssetRecord, AssetsDocument, BlueprintDocument, WorkbenchAssetRole } from '../shared/types.ts';
@@ -21,6 +22,10 @@ import { provenanceAllowsShipping, provenanceBlocksRelease } from '../shared/typ
 import { writeJsonAtomic } from './atomicJson.ts';
 import { derivedAssetUrl, derivedAssetsDir, ensureDir, gameRoot, resolveContained } from './paths.ts';
 import { parseHexColor, toHexColor } from '../shared/image/raster.ts';
+
+function sha256Of(filePath: string): string {
+  return createHash('sha256').update(readFileSync(filePath)).digest('hex');
+}
 
 /** The roles a generated game's default theme has always supplied. Synthesis never emits fewer, so a swapped theme can never leave gameplay without a texture. */
 const CORE_ROLES: readonly WorkbenchAssetRole[] = ['player', 'enemy', 'platform', 'pickup', 'hazard', 'checkpoint', 'exit'];
@@ -219,12 +224,16 @@ export function writeTheme(input: SynthesisInput): SynthesisResult {
     if (descriptor.spec.kind !== 'image') continue;
     const fileName = descriptor.spec.url.split('/').pop()!;
     const destination = resolveContained(publicDir, fileName);
-    if (existsSync(destination)) continue;
     // A source asset assigned straight to a role lives under `.sw2d/`, which
-    // is never served. Copy it into the game's own public/ so the descriptor
-    // URL is real and same-origin.
+    // is never served, so it is copied into the game's own public/ to make the
+    // descriptor URL real and same-origin.
     const asset = input.assets.assets.find((candidate) => candidate.relativePath.endsWith(`/${fileName}`));
     if (!asset) continue;
+    // Compare content, not existence. A reimport keeps the asset id and
+    // therefore the file name, so an existence check would leave the *old*
+    // pixels shipped under a name the new theme now points at - the game
+    // would keep drawing the previous image with no sign anything was wrong.
+    if (existsSync(destination) && sha256Of(destination) === asset.sha256) continue;
     copyFileSync(resolveContained(gameRoot(input.gameId), asset.relativePath), destination);
   }
 
