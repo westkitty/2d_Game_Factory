@@ -191,6 +191,20 @@ export async function createGame(options: CreateGameOptions): Promise<GameRuntim
   });
   router.attach(game);
 
+  // Phaser.Scale.FIT measures `options.parent`'s box synchronously during
+  // `new Phaser.Game(...)`, above - before the browser has finished laying
+  // out the canvas it just inserted alongside its `#touch-controls` sibling.
+  // When `parent` is a flex/grid item sized by its own layout (this
+  // runtime's real index.html, not a `parent: document.body` fill-the-window
+  // setup), that first measurement can be taken before the parent's true,
+  // settled size exists, producing a canvas sized/centered for the wrong
+  // box (observed: off-screen top clipping in a short landscape viewport,
+  // self-correcting only once *something else* triggered a `resize` event).
+  // One `refresh()` after the browser's next paint re-measures the same
+  // parent once its layout is guaranteed final - cheap, idempotent, and
+  // exactly what `ScaleManager.refresh()` exists for.
+  requestAnimationFrame(() => game.scale.refresh());
+
   input.addAdapter(new KeyboardAdapter(input));
   input.addAdapter(new PointerAdapter(input, options.controlsRoot ?? document.body));
 

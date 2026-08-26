@@ -1,7 +1,7 @@
 {
-  "$comment": "Direct code dependencies. Governed by resource-policy.json and MASTER_PROJECT.md section 20.2.",
-  "manifestVersion": 1,
-  "updated": "2026-08-24",
+  "$comment": "Direct code dependencies. Governed by resource-policy.json and MASTER_PROJECT.md section 20.2. Phase 11 correction: ajv/ajv-formats moved here from verifiedButNotInstalled - they were installed and shipped as of Phase 2 (packages/schemas), this manifest just never caught up. See docs/resources/THIRD_PARTY_NOTICES.md's Phase 11 correction note.",
+  "manifestVersion": 2,
+  "updated": "2026-08-26",
   "dependencies": [
     {
       "name": "phaser",
@@ -14,6 +14,30 @@
       "hasInstallScripts": false,
       "introducesNetworkOrTelemetry": false,
       "removalPath": "Replacing the runtime engine is an architecture change (ADR-0001), not a dependency swap."
+    },
+    {
+      "name": "ajv",
+      "exactVersion": "8.20.0",
+      "canonicalSource": "https://www.npmjs.com/package/ajv",
+      "repository": "https://github.com/ajv-validator/ajv",
+      "license": "MIT",
+      "purpose": "JSON Schema validation. @sw2d/schemas is a `dependencies` entry of every generated game and validates content/pack-config documents at runtime (validateDocumentOrThrow, packConfigValidator), not only at CLI/build time.",
+      "shippedInBuild": true,
+      "hasInstallScripts": false,
+      "introducesNetworkOrTelemetry": false,
+      "removalPath": "Only replaceable together with @sw2d/schemas' validator implementation; not a drop-in swap."
+    },
+    {
+      "name": "ajv-formats",
+      "exactVersion": "3.0.1",
+      "canonicalSource": "https://www.npmjs.com/package/ajv-formats",
+      "repository": "https://github.com/ajv-validator/ajv-formats",
+      "license": "MIT",
+      "purpose": "Format validators (date-time etc.) for ajv. Shipped for the same reason as ajv above.",
+      "shippedInBuild": true,
+      "hasInstallScripts": false,
+      "introducesNetworkOrTelemetry": false,
+      "removalPath": "Companion to ajv; removal path is the same."
     },
     {
       "name": "typescript",
@@ -53,8 +77,5 @@
       "removalPath": "Test-only. Replaceable by any TypeScript-aware runner."
     }
   ],
-  "verifiedButNotInstalled": [
-    { "name": "ajv", "exactVersion": "8.20.0", "license": "MIT", "plannedPhase": 2, "reason": "No schema exists to validate yet." },
-    { "name": "ajv-formats", "exactVersion": "3.0.1", "license": "MIT", "plannedPhase": 2, "reason": "Companion to ajv." }
-  ]
+  "verifiedButNotInstalled": []
 }

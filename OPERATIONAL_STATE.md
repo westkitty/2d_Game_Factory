@@ -2,7 +2,7 @@
 
 Project: **Stinky Weasel 2D Browser Game Factory** (`sw2d`)
 Repository: `westkitty/2d_Game_Factory`
-State revision: **12**
+State revision: **13**
 Updated: 2026-08-26
 
 Read this before doing anything. Governing spec: [`MASTER_PROJECT.md`](MASTER_PROJECT.md).
@@ -12,30 +12,59 @@ Workflow: [`docs/AGENT_WORKFLOW.md`](docs/AGENT_WORKFLOW.md).
 
 ## Current phase
 
-**Phase 10 - Five Deep Proof Games - COMPLETE (Sonnet 5).**
+**Phase 11 - Release, Hardening, Documentation, and Cold-Start Preparation - COMPLETE (Sonnet 5).**
 
-Full report: [`docs/architecture/PHASE10_PROOF_HANDOFF.md`](docs/architecture/PHASE10_PROOF_HANDOFF.md);
-per-proof detail: [`docs/proofs/PROOF_MATRIX.md`](docs/proofs/PROOF_MATRIX.md).
+Full report: [`docs/architecture/PHASE11_FINAL_OPUS_HANDOFF.md`](docs/architecture/PHASE11_FINAL_OPUS_HANDOFF.md);
+cold-start entry point: [`docs/handoff/COLD_START_HANDOFF.md`](docs/handoff/COLD_START_HANDOFF.md);
+QA command reference: [`docs/qa/QA_MATRIX.md`](docs/qa/QA_MATRIX.md).
 
-Five committed proof games (`proofs/chase-platformer/`, `proofs/twin-stick-shooter/`,
-`proofs/tower-defense/`, `proofs/sokoban/`, `proofs/idle-incremental/`), each generated from the
-real factory path, each with a frozen `PROOF_CONTRACT.md` and a dedicated real-browser proof spec
-(`npm run qa:proof`, 5/5). All five presets promoted to `proof-validated`; the other seven Phase 8
-demo ids stay `smoke-validated`. Exact maturity split: 5 proof-validated, 7 smoke-validated, 62
-recipe, 0 experimental - matches the full 74-preset catalog.
+Phase 11 was not a feature-expansion phase - no new genre mechanics, no spatial pointer, no
+gamepad, no new controller families. It made the existing factory release-verifiable,
+mobile-hardened, and recoverable by a new agent with no chat memory:
 
-One shared-architecture repair surfaced and was fixed at the cause, not worked around: the QA
-harness's `stepFrames` reseeded its virtual clock from real `performance.now()` on every call, so a
-proof spec polling one frame at a time for tight coyote-time/jump-buffer timing saw near-zero
-effective deltas across consecutive calls instead of a true fixed-step timeline. The clock now
-persists on `window` across calls, seeded once. Regression evidence: `qa:smoke` stayed 14/14 and
-the generated-runtime matrix stayed 40/40 after the fix - every existing smoke spec (which always
-called `stepFrames` with one large count per call, never several small ones in a row) was
-unaffected by construction.
+- **Release packer hardened** (`sw2d pack`, `packages/cli/src/commands/pack.ts`): a per-game
+  `resources/RESOURCE_MANIFEST.json` (new - `generateResourceManifest()`) now records every
+  generated game's placeholder assets as honestly project-owned/generated, and `pack` validates it
+  against `resource-policy.json` *before* building - a missing, invalid, or non-`approved` record
+  blocks release packaging outright. A successful pack now also writes a deterministic
+  `RELEASE_MANIFEST.json`, a SHA-256 `SHA256SUMS` (`packages/cli/src/release/checksums.ts`), and a
+  mechanically-derived `THIRD_PARTY_NOTICES.txt` (`packages/cli/src/release/notices.ts`, walks the
+  real `@sw2d/*` → npm dependency graph rather than hand-listing packages). Proven via
+  `npm run release:verify`: 6/6 controller-shell families (fresh-generate → validate → pack →
+  verify manifest/checksums/resources → serve the packed dir through real Chrome → enter play →
+  verify every declared pack installs → zero console errors/external requests), plus one candidate
+  packed twice from identical source and diffed byte-identical.
+- **A real, confirmed responsive/mobile defect was found and fixed**, not merely tested for: the
+  new `npm run qa:responsive` (19 committed surfaces × 375x812 portrait / 844x390 landscape, real
+  Chromium touch/coarse-pointer emulation) failed 0/19 on its first run - `#app`'s `min-height:
+  100%` never gave the flex column a *definite* height, so the canvas's percentage-based
+  `max-height` never resolved and Phaser's `Scale.FIT` (`packages/runtime/src/core/createGame.ts`)
+  measured its parent's box before the browser's own layout had settled, sizing/centering the
+  canvas for the wrong box (touch controls clipped off-screen in landscape on every one of the 19
+  surfaces). Fixed with two small, well-scoped changes propagated identically to all 18 committed
+  `styles.css` copies plus the CLI template, and one `requestAnimationFrame(() => game.scale.
+  refresh())` in the shared runtime: `#app { height: 100% }` (was `min-height`) and
+  `requestAnimationFrame(() => game.scale.refresh())` after game construction. Re-ran
+  `qa:responsive` (19/19 pass), then the full regression ladder since this touched shared runtime
+  code and every generated game's CSS: 1781 unit tests, `qa:smoke` 14/14, `qa:proof` 5/5,
+  generated-runtime matrix 40/40 - all still green.
+- **A stale/inaccurate `THIRD_PARTY_NOTICES.md` was found and corrected**: it claimed "Phaser is
+  the only third-party code in the shipped artefact", but `@sw2d/schemas` (a `dependencies` entry
+  of every generated game) imports `ajv`/`ajv-formats` at runtime (`validateDocumentOrThrow`,
+  `packConfigValidator`), both of which are present in the actual built bundle
+  (`grep ajv starter/dist/assets/*.js` confirms it). Corrected in both
+  `docs/resources/THIRD_PARTY_NOTICES.md` and `docs/resources/CODE_RESOURCE_MANIFEST.json`, and
+  guarded going forward by `packages/cli/test/notices.test.ts` plus `pack`'s own
+  mechanically-derived notices, so this class of drift cannot recur silently.
+- **`OPERATIONAL_STATE.md`'s current-state sections were reconciled** against Phase 8-10 evidence
+  that had already superseded them but was never removed - see Revision 13 below for the exact
+  stale claims closed.
+- Cold-start documentation, a clean-build reproducibility proof, release-readiness documentation,
+  and the Phase 12 handoff packet were all produced this phase; see the linked documents above.
 
-Next owner: **Sonnet 5, Phase 11** (Release, Hardening, Documentation, and Cold-Start Preparation).
-See [Next bounded action](#next-bounded-action). **Do not execute Phase 11 from this revision** -
-it is recorded here as the next bounded action only.
+Next owner: **Opus 5, Phase 12** (Final Cross-System Acceptance and Cold-Start Gate).
+See [Next bounded action](#next-bounded-action). **Phase 12 was not executed this revision** - it
+is recorded here as the next bounded action only.
 
 ## Current baseline
 
@@ -509,19 +538,17 @@ working.
 
 ## Known failures / gaps
 
-- **The browser journey is not automated.** It was driven manually and does not re-run on
-  commit. Highest-value QA debt. See [ADR-0008](docs/architecture/adr/0008-phase1-validation-strategy.md).
-  Still true after Phase 3; this revision's manual pass was the most thorough since Phase 1
-  (boot, title-confirm, movement, jump, pause, resume, 8x restart-via-pause-menu, quit-to-title,
-  fresh run, all read from the live debug snapshot and Phaser's own scene object list, not just a
-  screenshot) because the controller refactor touched the real gameplay consumer - but it is still
-  a manual script run once by hand, not a re-runnable check.
-- **Frames in that journey were clocked manually** via `game.loop.step(t)`, because the
-  automation surface keeps the browser pane hidden and rAF is throttled there. The code path is
-  the production one; the clock is not wall-clock. FPS under real pacing is unmeasured. The same
-  throttling was observed this revision (a `space` keypress did not visibly advance past the
-  title scene in the hidden automation pane); not investigated further, as it is pre-existing QA
-  debt out of Phase 2's scope, not a regression.
+- **(Phase 2, closed in Phase 8/9)** ~~The browser journey is not automated. It was driven
+  manually and does not re-run on commit~~ - closed. Every committed surface now runs through
+  real system Chrome on every `npm run qa:smoke`/`qa:proof`/`release:verify`/`qa:responsive`
+  invocation, not a manual script run once by hand: 14 smoke targets (12 demos + 2 starter
+  pages), 5 deep proofs, 6 fresh-generated release candidates (one per controller-shell family),
+  and 19 surfaces across two viewport contexts (Phase 11). See ADR-0008 for the original decision
+  record and the Validation matrix below for current commands. Frame stepping is deterministic
+  (`packages/qa/src/harness.ts`'s virtual clock, hand the loop a fixed 16.67ms step per frame) -
+  that proves repeatable *behaviour*, never wall-clock performance; **FPS/frame-pacing under real
+  wall-clock timing remains genuinely unmeasured** (moved to Unknown below, where an unmeasured
+  fact belongs rather than a "known failure" - automation itself is no longer a gap).
 - **Bundle size**: the shared chunk (`@sw2d/schemas` + Ajv/ajv-formats, now six more schemas) is
   1,544.26 kB minified / 407.61 kB gzip - essentially unchanged from Phase 5's 1.5387 MB / 407.08 kB
   (new JSON Schema documents are small relative to Ajv itself). Two page-specific chunks now exist:
@@ -539,10 +566,20 @@ working.
 
 ## Unknown
 
-- Whether Phaser 4 can run headlessly under Vitest well enough to automate the journey without
-  degrading product code (`generateTexture` needs a renderer). Investigate before committing to
-  a headless approach.
-- Real-device touch behaviour; only synthetic touch-type pointer events were used.
+- **(Phase 2, superseded in Phase 8)** ~~Whether Phaser 4 can run headlessly under Vitest well
+  enough to automate the journey without degrading product code~~ - a different path was taken
+  instead of answering this directly: `@sw2d/qa` drives a real, visible-headed-capable system
+  Chrome via `playwright-core` (`packages/qa/src/harness.ts`), not headless Vitest. That closes
+  the automation gap this question was blocking without needing an answer to the original
+  question, which remains untried and moot.
+- **Real wall-clock performance/FPS is unmeasured.** Every automated browser journey
+  (`qa:smoke`/`qa:proof`/`release:verify`/`qa:responsive`) uses the QA harness's deterministic
+  fixed-step clock (`stepFrames()`, a fixed 16.67ms per stepped frame) - that proves repeatable
+  *behaviour*, not real-time frame pacing. No FPS claim exists anywhere in this repository's QA
+  evidence, and Phase 11 explicitly did not add one (out of scope by its own instructions).
+- Real-device touch behaviour; only synthetic touch-type pointer events (Chromium's
+  `hasTouch`/`isMobile` emulation, Phase 1's original manual pass, and Phase 11's `qa:responsive`
+  suite) have been exercised. No physical phone or tablet has touched this factory's output.
 - Gamepad adapter feasibility against the current `InputDeviceAdapter` shape.
 - Whether arcade physics suffices for every planned preset, or whether the optional advanced
   physics pack becomes necessary (`MASTER_PROJECT.md` §9.16).
@@ -611,9 +648,12 @@ Breaking one of these is an architecture change, not a bug fix. Escalate rather 
 | Layer | State | Command |
 |---|---|---|
 | Static / schema | TypeScript passing; JSON Schema exists for 5 contract types + 1 content document + 6 Phase 6 content-pipeline documents (asset-descriptor, ui-copy, content-assets, theme-manifest, resource-record/-manifest, level-document) + 3 pack config schemas (progression, arcade, starter placeholder-mover); all 74 presets validate against `preset-definition:v1` | `npm run typecheck` |
-| Unit | 1764 tests passing (58 Phase 1 + 29 Phase 2 + 35 Phase 3 + 78 Phase 4 + 13 Phase 5 + 66 Phase 6 + 232 Phase 7A + 179 Phase 7B + 279 Phase 7C + 620 Phase 8 + Phase 9/10 additions) | `npm test` |
+| Unit | 1781 tests passing (58 Phase 1 + 29 Phase 2 + 35 Phase 3 + 78 Phase 4 + 13 Phase 5 + 66 Phase 6 + 232 Phase 7A + 179 Phase 7B + 279 Phase 7C + 620 Phase 8 + Phase 9/10 additions + 17 Phase 11 - checksums, per-game resource manifest, mechanically-derived shipped-dependency resolution) | `npm test` |
 | Build | passing (two-page build: `index.html` + `tiled-proof.html`) | `npm run build` |
 | Offline (static guard) | passing | `npm run check:offline` |
+| Release packaging | `sw2d pack` produces a self-contained static pack with a deterministic `RELEASE_MANIFEST.json`, SHA-256 `SHA256SUMS`, and mechanically-derived `THIRD_PARTY_NOTICES.txt`; blocks packaging on missing/invalid/non-approved per-game resource manifests; one candidate proven byte-identical across two packs from identical source (Phase 11) | `npm run sw2d -- pack <game-id>` |
+| Release verification matrix | **6/6 controller-shell families pass**: fresh-generate → validate → pack → verify manifest/checksums/resource state → serve the packed dir (not `dist/`) through real Chrome → enter play → verify every declared pack installs → zero console errors → zero external requests (Phase 11) | `npm run release:verify` |
+| Responsive/mobile | **19/19 committed surfaces pass** at 375x812 portrait and 844x390 landscape (coarse-pointer/touch emulation via Chromium, not real hardware): no page overflow, canvas fits its box, touch controls visible/unclipped/>=44x44 (project standard 56x56), no duplicate DOM nodes across an in-page viewport switch, zero console errors. Found and fixed one real shared defect this way (see Revision 13) (Phase 11) | `npm run qa:responsive` |
 | Runtime integration | proven manually in-browser **and** automated via real Chrome (Phase 8) | see ADR-0008, `@sw2d/qa` |
 | Browser journeys | **automated for the first time this revision**: both starter pages (boot/title/play, movement, pause/resume, restart, and - for `tiled-proof.html` - a full Tiled-sourced checkpoint/collectible/hazard/exit walk) run through real system Chrome via `packages/qa/specs/starterFoundation.ts`/`starterTiledProof.ts`, replacing the manual checklist `docs/qa/PHASE1_VALIDATION.md` originally described | `npm run qa:smoke` |
 | Demo smoke (12 representative demos) | **all 12 pass real-browser smoke** - one demo per genre family, each proving its preset's defining mechanic via a committed Playwright spec against a real production build | `npm run qa:smoke`, `packages/qa/specs/*.ts`, see `docs/demos/DEMO_MATRIX.md` |
@@ -631,28 +671,113 @@ proportionate to run on demand, not on every typecheck. All passed this revision
 
 ## Pending work
 
-Phases 11-12 are unstarted. See `MASTER_PROJECT.md` §38 for the routed plan and owners.
+Phase 12 is unstarted. See `MASTER_PROJECT.md` §38 for the routed plan and owners.
 
 ## Next bounded action
 
-**Phase 11 - Sonnet 5 - Release, Hardening, Documentation, and Cold-Start Preparation.**
+**Phase 12 - Opus 5 - Final Cross-System Acceptance and Cold-Start Gate.**
 
-Not executed this revision - Phase 10 stops before it by its own instructions. See
-[`docs/architecture/PHASE10_PROOF_HANDOFF.md`](docs/architecture/PHASE10_PROOF_HANDOFF.md) for
-exact proof results, the one shared-architecture repair, remaining proof-specific shortcuts, and
-deferred triggers Phase 11 inherits unchanged:
+Not executed this revision - Phase 11 stops before it by its own instructions. See
+[`docs/architecture/PHASE11_FINAL_OPUS_HANDOFF.md`](docs/architecture/PHASE11_FINAL_OPUS_HANDOFF.md)
+for the full evidence packet (release-packer behaviour, checksum mechanism, release verification
+matrix, responsive/mobile matrix, clean-build reproducibility verdict, cold-start audit verdict,
+current maturity split, full QA command matrix) Phase 12 inherits:
 
 - Spatial pointer, a universal puzzle DSL, a shared grid-cursor abstraction, and content-role
   schemas beyond `tuning`/`levels` all remain deferred with the same triggers Phase 9 recorded -
-  none of the five proofs needed any of them, so none fired.
-- Performance remains unmeasured; deterministic frame stepping is determinism evidence only, never
-  a performance claim.
+  Phase 11 hardened release/QA/docs only and fired none of them.
+- Performance/FPS under real wall-clock timing remains unmeasured; deterministic frame stepping is
+  determinism evidence only, never a performance claim - Phase 11 did not add a performance claim.
+- Real-device touch remains unverified: Phase 11's `qa:responsive` emulates touch/coarse-pointer
+  via Chromium, which is not a physical phone or tablet.
 - Do not implement any of the missing mechanics named across the 62 `recipe` presets'
-  `knownLimitations` merely because a proof phase exists (MASTER_PROJECT.md section 23 unchanged).
+  `knownLimitations` merely because a proof/release phase exists (MASTER_PROJECT.md section 23
+  unchanged).
+- The project software license remains the explicit, unresolved user decision it was before Phase
+  11: `UNLICENSED`. Phase 11 proved technical release readiness (see
+  [`docs/release/RELEASE_READINESS.md`](docs/release/RELEASE_READINESS.md)) without choosing a
+  license or claiming public-distribution readiness.
 - `games/`, `demos/*/dist|pack|node_modules` and `proofs/*/dist|pack|node_modules` all stay
-  gitignored.
+  gitignored; Phase 11 added no exception.
 
 ## Revision history
+
+### Revision 13 - 2026-08-26 (Sonnet 5)
+
+**Phase 11 - Release, Hardening, Documentation, and Cold-Start Preparation. Status: COMPLETE.**
+Full report: [`docs/architecture/PHASE11_FINAL_OPUS_HANDOFF.md`](docs/architecture/PHASE11_FINAL_OPUS_HANDOFF.md).
+
+Not a feature-expansion phase. Summary in [Current phase](#current-phase) above; full detail in
+the linked handoff. Stale current-state claims found and reconciled this revision (with the
+specific evidence that supersedes each):
+
+- **"The browser journey is not automated"** (Known failures/gaps, dated to Phase 2) contradicted
+  this same document's own Validation matrix, which already said browser journeys were automated
+  "for the first time this revision" back in an earlier phase, and had stayed contradicted through
+  every subsequent revision since. Closed: real Chrome now drives every committed surface on every
+  `qa:smoke`/`qa:proof`/`release:verify`/`qa:responsive` run - not a one-off manual script.
+- **"Whether Phaser 4 can run headlessly under Vitest..."** (Unknown, dated to Phase 2) was never
+  actually answered - a different, already-shipped path (real Chrome via `playwright-core`) made
+  the question moot rather than resolving it. Marked superseded rather than left implying an open
+  investigation nobody intends to run.
+- `docs/resources/THIRD_PARTY_NOTICES.md`'s Phase 1 baseline claim ("Phaser is the only
+  third-party code in the shipped artefact") was checked against the real built bundle and found
+  false: `ajv`/`ajv-formats` are also shipped (via `@sw2d/schemas`, a `dependencies` entry of
+  every generated game, imported at runtime). Corrected in both that document and
+  `docs/resources/CODE_RESOURCE_MANIFEST.json` (which had also never been updated after those two
+  packages moved from `verifiedButNotInstalled` to actually-shipped), and now guarded by a
+  standing test plus `pack`'s own mechanically-derived notices.
+
+Genuinely real, still-open unknowns were **not** touched: real-device touch, gamepad feasibility,
+real wall-clock performance/FPS, the unresolved software-license decision, and every deferred
+architectural trigger from Phase 9/10 (spatial pointer, universal puzzle DSL, shared grid-cursor
+abstraction) all remain exactly as open as before - Phase 11 made them more explicit (moving the
+FPS claim out of "Known failures" and into "Unknown", where an unmeasured fact belongs), not
+resolved.
+
+Engineering work this revision (all verified with real command output, not asserted):
+
+- **Release packer hardened**, not replaced: `sw2d pack` (`packages/cli/src/commands/pack.ts`)
+  gained a resource-governance gate (blocks on a missing/invalid/non-`approved` per-game
+  `resources/RESOURCE_MANIFEST.json` - new, `generateResourceManifest()` in
+  `packages/cli/src/generator/contentDocuments.ts`, wired into every `sw2d new`), a deterministic
+  `RELEASE_MANIFEST.json`, a SHA-256 `SHA256SUMS` (`packages/cli/src/release/checksums.ts` - Node
+  `node:crypto`, no new dependency), and a mechanically-derived `THIRD_PARTY_NOTICES.txt`
+  (`packages/cli/src/release/notices.ts` - walks the real `@sw2d/*` → npm dependency graph from a
+  generated game's own `package.json`, not a hand-maintained list). New `npm run release:verify`
+  (`tools/scripts/release-verify.ts`) proves this end-to-end for one fresh-generated game per
+  controller-shell family (`traditional-platformer`/platform, `top-down-adventure`/top-down,
+  `asteroids-shooter`/vehicle, `sokoban`/grid+code-configured puzzle path, `gallery-shooter`/
+  pointer, `idle-incremental`/ui-simulation): 6/6 pass, including one candidate packed twice from
+  identical source and diffed byte-identical.
+- **Found and fixed a real responsive/mobile defect**, not merely tested for one: `npm run
+  qa:responsive` (new, `tools/scripts/qa-responsive.ts`, 19 committed surfaces × 375x812 portrait /
+  844x390 landscape via real Chromium touch/coarse-pointer emulation) failed 0/19 on its first
+  run - every surface's touch controls were clipped off-screen in landscape. Root cause (found by
+  direct DOM/computed-style inspection, not guessed): `#app { min-height: 100% }` never gave the
+  flex column a *definite* height for percentage-based `max-height` to resolve against, and
+  `Phaser.Scale.FIT` (`packages/runtime/src/core/createGame.ts`) measured its parent element's box
+  synchronously during `new Phaser.Game(...)` - before the browser had finished laying out the
+  canvas alongside its `#touch-controls` sibling - so it sized/centered the canvas for the wrong
+  box. Fixed with two small changes: `#app { height: 100% }` (was `min-height`), propagated
+  identically to the CLI template and all 18 committed `styles.css` copies (starter, 12 demos, 5
+  proofs - confirmed byte-identical after the change), plus one
+  `requestAnimationFrame(() => game.scale.refresh())` in the shared runtime to force a
+  re-measurement once layout is guaranteed settled. Re-ran `qa:responsive`: 19/19 pass. Because
+  this touched shared runtime code and every generated game's CSS, reran the full regression
+  ladder afterward: 1781 unit tests (`npm test`), `qa:smoke` 14/14, `qa:proof` 5/5,
+  generated-runtime matrix 40/40 - all still green, all preserved exactly.
+- New documentation: `docs/qa/QA_MATRIX.md`, `docs/handoff/COLD_START_HANDOFF.md`,
+  `docs/handoff/COLD_START_AUDIT.md`, `docs/release/CLEAN_BUILD_REPRODUCIBILITY.md`,
+  `docs/release/RELEASE_READINESS.md`, `release/README.md`,
+  `docs/architecture/PHASE11_FINAL_OPUS_HANDOFF.md`. `README.md` completed into a full cold-start
+  workflow reference. `PROJECT_BIBLE.md` gained an additive Phase 11 entry.
+
+Regression evidence preserved exactly: `npm run validate` PASS, `qa:smoke` 14/14, `qa:proof` 5/5,
+generated-runtime matrix 40/40, preset maturity split unchanged at 5 proof-validated /
+7 smoke-validated / 62 recipe / 0 experimental (74 total). Zero required external runtime network
+- reconfirmed by every offline guard run this revision, plus `release:verify`'s and
+`qa:responsive`'s own zero-external-request assertions.
 
 ### Revision 12 - 2026-08-26 (Sonnet 5)
 

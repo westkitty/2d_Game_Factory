@@ -8,6 +8,90 @@ Detail for each architectural decision lives in `docs/architecture/adr/`. This f
 
 ---
 
+## Phase 11 - Release, Hardening, Documentation, and Cold-Start Preparation (2026-08-26, Sonnet 5)
+
+**Status: COMPLETE.** Full report:
+[`docs/architecture/PHASE11_FINAL_OPUS_HANDOFF.md`](docs/architecture/PHASE11_FINAL_OPUS_HANDOFF.md).
+
+Not a feature-expansion phase. Two lessons cost real time to find; both are recorded here because
+neither would have been caught by reading code alone - only by actually running the thing.
+
+### The lesson that cost the most to learn: a directory named after a `.gitignore` pattern silently never gets committed
+
+New release-packaging source code was written at `packages/cli/src/release/{checksums,
+notices, releaseManifest}.ts` - a natural, readable name. `git status` and `git add -A` reported
+nothing wrong. `npm run typecheck` passed locally, every time, for the entire duration these files
+existed under that name. The bug was invisible from inside the working tree, because everything
+that mattered for local development (the files existed on disk, TypeScript's module resolution
+found them via relative paths, tests imported and passed) worked correctly - the files simply were
+never going to be part of the commit that shipped them, because `.gitignore` line 3 was a bare
+`release/`, which matches a directory of that name **at any depth**, not only at the repository
+root. It was written to keep a future *generated release output* directory out of git - but a
+gitignore pattern has no idea what's meant to live under a matching path; it silently swallows
+source code exactly as readily as build output.
+
+This was caught, not guessed at, by Phase 11's own §16 clean-build reproducibility proof: an
+isolated `git checkout-index --all` snapshot's `npm run typecheck` failed with "Cannot find
+module" errors the primary worktree never showed, because the snapshot only contained what git
+actually tracked. The same audit also caught that the same pattern would have swallowed
+`release/README.md` (a new, required, must-be-committed documentation file this phase also
+needed) the moment it was created. Both fixed: the source directory was renamed to
+`packages/cli/src/releasePackaging/`, and `.gitignore`'s `release/` was narrowed to `release/out/`
+- the actual generated-output path the original author almost certainly meant, matching
+`MASTER_PROJECT.md` §22's own naming.
+
+**Lesson: `git status` in the working tree proves a file exists on disk, never that it will
+actually be committed.** A gitignore pattern with no leading slash matches a basename anywhere in
+the tree - checking `git check-ignore -v <path>` (or, as this phase's own instructions already
+required, an isolated index-derived snapshot build) is the only way to catch this class of bug
+before it ships a broken commit. Section 16's clean-build proof is not optional bureaucracy; this
+is exactly the failure it exists to catch, and it caught a real one on its very first run.
+
+### A close second: a scale manager that measures its container before the container's layout has settled
+
+`npm run qa:responsive` (new this phase, 19 real-browser surfaces × 2 viewport contexts) failed
+19/19 on its first run - not a checker bug, a real one: every surface's touch controls were
+clipped off-screen in the 844×390 landscape context. Two compounding root causes, both found by
+direct DOM/computed-style inspection in a real headless Chrome instance, not guessed at from
+reading CSS:
+
+1. `#app { min-height: 100% }` never gives a flex column a **definite** height - `min-height`
+   constrains an `auto`-sized box from below, it does not itself count as a definite height for
+   percentage resolution. Every percentage-based sizing rule further down the tree (a canvas's
+   `max-height: 100%`, or a flex child's own flex-basis distribution) was therefore silently
+   inert.
+2. Independently, `Phaser.Scale.FIT` measures its `parent` element's box **synchronously inside
+   `new Phaser.Game(...)`** - before the browser has finished laying out the canvas it just
+   inserted alongside its `#touch-controls` sibling. On a fresh page load with no subsequent
+   resize event (the ordinary case for a real player), the very first size Phaser ever computes
+   can be wrong, and nothing corrects it afterward. This was confirmed empirically: dispatching a
+   synthetic `resize` event after the fact made Phaser re-measure and land on the *correct* box
+   every time - the container layout was always right; only the *timing* of Phaser's own
+   measurement was wrong.
+
+Fixed with two small, targeted changes rather than reworking the layout: `#app { height: 100% }`
+(a real, non-`min` definite height - propagated identically to all 18 committed `styles.css`
+copies plus the CLI template, confirmed byte-identical afterward), and one
+`requestAnimationFrame(() => game.scale.refresh())` immediately after game construction in
+`packages/runtime/src/core/createGame.ts`, forcing exactly one re-measurement once the browser's
+next paint guarantees layout is settled.
+
+**Lesson: a shared layout primitive (`min-height: 100%` used for "at least fill the viewport, grow
+if needed") and a third-party library's own internal sizing assumption (`Phaser.Scale.FIT` expects
+its parent's size to already be final at construction time) can each be individually defensible
+and still compound into a real, every-surface defect neither one would produce alone.** Finding
+it required literally measuring `getBoundingClientRect()` in a real browser at the exact viewport
+size that broke, not reasoning about the CSS in the abstract - the same reason this phase's
+`qa:responsive` suite exists as a real, running check rather than a design-review checklist.
+
+### What this phase did not do
+
+No new genre mechanics, no spatial pointer, no gamepad, no new controller family, no chosen
+software license. The full non-goals list is `MASTER_PROJECT.md`'s Phase 11 section - none of it
+was reopened.
+
+---
+
 ## Phase 10 - Five Deep Proof Games (2026-08-26, Sonnet 5)
 
 **Status: COMPLETE.** Full report:

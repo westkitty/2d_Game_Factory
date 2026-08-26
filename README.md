@@ -6,10 +6,16 @@ Not one game, and not a Phaser starter template: one runtime plus composable sys
 controller families, data-driven content, genre preset recipes and theme packs, so a new game is
 a *composition* rather than a fork.
 
-> **Status: Phase 10 of 12.** The runtime, ten system-pack cores, 74 genre preset recipes, a real
-> factory CLI, twelve generated real-browser-smoke-validated demo games, and five deeper
-> end-to-end proof games all exist and are validated.
-> [`OPERATIONAL_STATE.md`](OPERATIONAL_STATE.md) is the authority on what actually works.
+> **Status: Phase 11 of 12 complete.** The runtime, ten system-pack cores, 74 genre preset recipes
+> (5 proof-validated / 7 smoke-validated / 62 recipe / 0 experimental), a real factory CLI with a
+> release packer, twelve generated real-browser-smoke-validated demo games, five deeper end-to-end
+> proof games, a 6/6 real-browser release-verification matrix, and a 19-surface real-browser
+> responsive/mobile suite all exist and are validated. **Technically release-ready; the project's
+> public software license is still an unresolved user decision (`UNLICENSED`)** - see
+> [`docs/release/RELEASE_READINESS.md`](docs/release/RELEASE_READINESS.md).
+> [`OPERATIONAL_STATE.md`](OPERATIONAL_STATE.md) is the authority on what actually works; new to
+> this repository with no prior context? Start at
+> [`docs/handoff/COLD_START_HANDOFF.md`](docs/handoff/COLD_START_HANDOFF.md) instead.
 
 ## What is here today
 
@@ -47,9 +53,11 @@ touch controls appear automatically.
 ```bash
 npm run build      # production build -> starter/dist
 npm run preview    # serve the production build
-npm run validate   # typecheck + unit tests + build + offline guard
-npm run qa:smoke   # build and real-browser-smoke every demo + starter journey
-npm run qa:proof   # build and real-browser-prove every deep proof game
+npm run validate      # typecheck + unit tests + build + offline guard
+npm run qa:smoke      # build and real-browser-smoke every demo + starter journey
+npm run qa:proof      # build and real-browser-prove every deep proof game
+npm run qa:responsive # real-browser responsive/mobile check: 19 surfaces x 2 viewports
+npm run release:verify # generate+validate+pack+verify one game per controller-shell family
 ```
 
 ## The factory CLI
@@ -70,6 +78,17 @@ See [`docs/cli/CLI_REFERENCE.md`](docs/cli/CLI_REFERENCE.md) for full command do
 [`docs/demos/DEMO_MATRIX.md`](docs/demos/DEMO_MATRIX.md) for what each of the twelve committed
 `demos/` proves, and [`docs/proofs/PROOF_MATRIX.md`](docs/proofs/PROOF_MATRIX.md) for what each
 of the five committed `proofs/` proves.
+
+### Producing a release
+
+`sw2d pack <game-id>` builds a generated game and produces a self-contained, offline-verified
+release candidate at `games/<game-id>/pack/`: the built static game, a deterministic
+`RELEASE_MANIFEST.json`, a SHA-256 `SHA256SUMS`, and a mechanically-derived
+`THIRD_PARTY_NOTICES.txt`. It refuses to pack a game whose `resources/RESOURCE_MANIFEST.json` is
+missing, invalid, or contains an unapproved resource - unverified provenance never silently enters
+a release. See [`release/README.md`](release/README.md) for how to regenerate and verify a release
+candidate, and [`docs/release/RELEASE_READINESS.md`](docs/release/RELEASE_READINESS.md) for the
+current release-readiness state (technical readiness vs. the still-open license decision).
 
 ## The one rule
 
@@ -135,11 +154,22 @@ browser-level evidence is in [`docs/qa/PHASE1_VALIDATION.md`](docs/qa/PHASE1_VAL
 | [`docs/architecture/PHASE9_ARCHITECTURE_GATE_B.md`](docs/architecture/PHASE9_ARCHITECTURE_GATE_B.md) | Phase 9's architecture integration gate review |
 | [`docs/proofs/PROOF_MATRIX.md`](docs/proofs/PROOF_MATRIX.md) | the five `proofs/` games and what each proves |
 | [`docs/architecture/PHASE10_PROOF_HANDOFF.md`](docs/architecture/PHASE10_PROOF_HANDOFF.md) | Phase 10's handoff to Phase 11 |
+| [`docs/qa/QA_MATRIX.md`](docs/qa/QA_MATRIX.md) | every QA command, what it proves, and what it explicitly does not |
+| [`docs/release/RELEASE_READINESS.md`](docs/release/RELEASE_READINESS.md) | technical release readiness vs. the open license decision |
+| [`release/README.md`](release/README.md) | how to regenerate and verify a release candidate |
+| [`docs/resources/THIRD_PARTY_NOTICES.md`](docs/resources/THIRD_PARTY_NOTICES.md) | every third-party dependency actually shipped, with license text |
+| [`docs/handoff/COLD_START_HANDOFF.md`](docs/handoff/COLD_START_HANDOFF.md) | recover full working context with no chat history |
+| [`docs/handoff/COLD_START_AUDIT.md`](docs/handoff/COLD_START_AUDIT.md) | evidence-only audit of whether this repository is actually recoverable |
+| [`docs/release/CLEAN_BUILD_REPRODUCIBILITY.md`](docs/release/CLEAN_BUILD_REPRODUCIBILITY.md) | proof that an isolated, index-derived checkout installs/builds/validates/packs |
+| [`docs/architecture/PHASE11_FINAL_OPUS_HANDOFF.md`](docs/architecture/PHASE11_FINAL_OPUS_HANDOFF.md) | Phase 11's handoff to Phase 12 |
 
 ## Resuming work
 
 Read `OPERATIONAL_STATE.md`, run `npm run validate`, and continue from the recorded next bounded
-action. Full protocol in [`docs/AGENT_WORKFLOW.md`](docs/AGENT_WORKFLOW.md).
+action. Full protocol in [`docs/AGENT_WORKFLOW.md`](docs/AGENT_WORKFLOW.md). No memory of prior
+sessions and need to rebuild full context from the repository alone? Start at
+[`docs/handoff/COLD_START_HANDOFF.md`](docs/handoff/COLD_START_HANDOFF.md) instead - it is written
+for exactly that case.
 
 ## Reference material
 
@@ -149,6 +179,17 @@ exactly what this factory exists to replace. It carries no software licence and 
 clearance is unconfirmed, so none of its assets may enter this repository. See the extraction
 report.
 
+## Known high-level limitations
+
+Real-device touch (only Chromium touch/coarse-pointer emulation has been exercised), gamepad
+support, real wall-clock performance/FPS (all QA evidence is deterministic-frame-stepping
+evidence, never a performance claim), spatial pointer input, a universal puzzle DSL, and a shared
+grid-cursor abstraction are all deliberately deferred - see `OPERATIONAL_STATE.md`'s "Unknown" and
+"Implemented but unverified" sections for the full, current list and the trigger that would open
+each one.
+
 ## Licence
 
-Not yet chosen (`UNLICENSED`). Pick one before distributing anything built here.
+Not yet chosen (`UNLICENSED`). The factory is **technically** release-ready (see
+[`docs/release/RELEASE_READINESS.md`](docs/release/RELEASE_READINESS.md)); pick a license before
+distributing anything built here.

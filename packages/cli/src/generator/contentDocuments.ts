@@ -111,6 +111,37 @@ function paletteFor(themeId: string): Palette {
   return themeId === 'default' ? DEFAULT_PALETTE : ALTERNATE_PALETTE;
 }
 
+/** The same 7 roles generateTheme() always emits for a game's default theme - see that function above. */
+const THEME_ROLES = ['player', 'enemy', 'platform', 'pickup', 'hazard', 'checkpoint', 'exit'] as const;
+
+/**
+ * resources/RESOURCE_MANIFEST.json - a per-game ResourceManifest (@sw2d/contracts,
+ * validated by @sw2d/schemas' validateResourceManifest) recording that every
+ * asset a generated game ships is project-owned/generated placeholder
+ * content, not silently-unrecorded third-party material. Phase 11 section 6:
+ * "generated placeholder resources are honestly recorded", and `pack`
+ * validates this file before producing a release candidate. Mirrors the
+ * existing repo-level docs/resources/VISUAL_ASSET_MANIFEST.json convention
+ * (one record per theme role) rather than inventing a second shape.
+ */
+export function generateResourceManifest(gameId: string): Record<string, unknown> {
+  return {
+    manifestVersion: 1,
+    updated: 'generated-at-scaffold',
+    category: 'visual',
+    records: THEME_ROLES.map((role) => ({
+      id: `${gameId}.default.${role}`,
+      category: 'visual',
+      sourceKind: 'project-owned',
+      license: 'project-owned',
+      attributionRequired: false,
+      modificationStatus: 'generated',
+      localPath: 'content/themes/default/theme.json',
+      status: 'approved',
+    })),
+  };
+}
+
 /**
  * content/levels/<levelId>.json - a small, universal proof level using
  * exactly the Phase 6 object-class subset (ADR-0014): one Solid ground

@@ -3,7 +3,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { PresetDefinition } from '@sw2d/contracts';
 import { shellFileFor, shellPackId } from './controllerTemplates.ts';
-import { generateGameManifest, generateTiledLevel, generateTheme, generateTuning } from './contentDocuments.ts';
+import { generateGameManifest, generateResourceManifest, generateTiledLevel, generateTheme, generateTuning } from './contentDocuments.ts';
 import { generatePackConfig } from './packConfig.ts';
 import { generateReadme } from './readme.ts';
 import { generateContentTest } from './testFile.ts';
@@ -57,6 +57,7 @@ export function buildGameFiles(gameId: string, preset: PresetDefinition): Map<st
   files.set('content/tuning.json', JSON.stringify(generateTuning(), null, 2) + '\n');
   files.set('content/themes/default/theme.json', JSON.stringify(generateTheme('default', 'Default'), null, 2) + '\n');
   files.set('content/levels/main.json', JSON.stringify(generateTiledLevel(), null, 2) + '\n');
+  files.set('resources/RESOURCE_MANIFEST.json', JSON.stringify(generateResourceManifest(gameId), null, 2) + '\n');
 
   files.set('tests/content.test.ts', generateContentTest());
   files.set('README.md', generateReadme(gameId, displayName, preset));
