@@ -1,19 +1,19 @@
 import Ajv, { type ErrorObject, type ValidateFunction } from 'ajv';
 import addFormats from 'ajv-formats';
 
-import actionBindingsSchema from '../schemas/action-bindings.schema.json';
-import systemPackSelectionSchema from '../schemas/system-pack-selection.schema.json';
-import gameDefinitionSchema from '../schemas/game-definition.schema.json';
-import presetDefinitionSchema from '../schemas/preset-definition.schema.json';
-import gameSettingsSchema from '../schemas/game-settings.schema.json';
-import tuningSchema from '../schemas/tuning.schema.json';
-import assetDescriptorSchema from '../schemas/asset-descriptor.schema.json';
-import uiCopySchema from '../schemas/ui-copy.schema.json';
-import contentAssetsSchema from '../schemas/content-assets.schema.json';
-import themeManifestSchema from '../schemas/theme-manifest.schema.json';
-import resourceRecordSchema from '../schemas/resource-record.schema.json';
-import resourceManifestSchema from '../schemas/resource-manifest.schema.json';
-import levelDocumentSchema from '../schemas/level-document.schema.json';
+import actionBindingsSchema from '../schemas/action-bindings.schema.json' with { type: 'json' };
+import systemPackSelectionSchema from '../schemas/system-pack-selection.schema.json' with { type: 'json' };
+import gameDefinitionSchema from '../schemas/game-definition.schema.json' with { type: 'json' };
+import presetDefinitionSchema from '../schemas/preset-definition.schema.json' with { type: 'json' };
+import gameSettingsSchema from '../schemas/game-settings.schema.json' with { type: 'json' };
+import tuningSchema from '../schemas/tuning.schema.json' with { type: 'json' };
+import assetDescriptorSchema from '../schemas/asset-descriptor.schema.json' with { type: 'json' };
+import uiCopySchema from '../schemas/ui-copy.schema.json' with { type: 'json' };
+import contentAssetsSchema from '../schemas/content-assets.schema.json' with { type: 'json' };
+import themeManifestSchema from '../schemas/theme-manifest.schema.json' with { type: 'json' };
+import resourceRecordSchema from '../schemas/resource-record.schema.json' with { type: 'json' };
+import resourceManifestSchema from '../schemas/resource-manifest.schema.json' with { type: 'json' };
+import levelDocumentSchema from '../schemas/level-document.schema.json' with { type: 'json' };
 
 /**
  * Ajv-based validation for every schema this package owns.

@@ -44,6 +44,7 @@ export const SHOOTER_PRESETS: readonly PresetDefinition[] = [
 
   definePreset({
     id: 'bullet-hell',
+    maturity: 'smoke-validated',
     displayName: 'Bullet Hell',
     family: 'shooter',
     controllerFamilies: ['top-down'],

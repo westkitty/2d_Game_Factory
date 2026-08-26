@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import type { InstalledSystemPack } from '@sw2d/contracts';
 import { platformController, type SceneContext, type ScenePackDefinition } from '@sw2d/runtime';
 import { registerSchema } from '@sw2d/schemas';
-import placeholderMoverConfigSchema from '../../schemas/placeholder-mover-config.schema.json';
+import placeholderMoverConfigSchema from '../../schemas/placeholder-mover-config.schema.json' with { type: 'json' };
 
 /**
  * Game-specific extension: a controllable placeholder actor.

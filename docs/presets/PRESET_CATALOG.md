@@ -6,8 +6,14 @@ strategy/defense, 22 more), and Phase 7C (simulation/management, narrative/explo
 party/toy/weird, the final 25). This completes the catalog MASTER_PROJECT.md section 21
 names - no further families remain. A recipe is a composition of real controller
 families and real `@sw2d/packs` system packs - never an engine fork (MASTER_PROJECT.md
-section 3.1). Every recipe below is `maturity: "recipe"`: none has a functional smoke
-demo (Phase 8) or a deep end-to-end proof (Phase 10) yet.
+section 3.1). Twelve presets - one representative per genre family - are now
+`maturity: "smoke-validated"`: each has a real, generated demo game
+(`demos/<preset-id>/`) with a committed real-browser smoke test that passed against
+system Chrome (Phase 8 - see [`DEMO_MATRIX.md`](../demos/DEMO_MATRIX.md) and
+[`PHASE8_OPUS_GATE_B_HANDOFF.md`](../architecture/PHASE8_OPUS_GATE_B_HANDOFF.md)). The
+other 62 remain `maturity: "recipe"`: no functional demo yet. Zero presets are
+`"proof-validated"` - that is Phase 10's deeper end-to-end bar, not yet claimed by any
+recipe here.
 
 Source of truth: `packages/presets/src/catalog/*.ts`. This file is mechanically checked
 against the catalog by `packages/presets/test/catalog.test.ts` (exact id/count/family
@@ -21,11 +27,11 @@ controller/input-mode breakdown and full pack-consumer coverage.
 
 | id | display name | controller(s) | content roles | maturity |
 |---|---|---|---|---|
-| `traditional-platformer` | Traditional Platformer | platform | tuning, levels | recipe |
-| `chase-platformer` | Chase Platformer | platform | tuning, levels | recipe |
+| `traditional-platformer` | Traditional Platformer | platform | tuning, levels | smoke-validated |
+| `chase-platformer` | Chase Platformer | platform | tuning, levels | smoke-validated |
 | `endless-runner` | Endless Runner | platform | tuning, levels | recipe |
 | `precision-platformer` | Precision Platformer | platform | tuning, levels | recipe |
-| `metroidvania` | Metroidvania | platform | tuning, levels | recipe |
+| `metroidvania` | Metroidvania | platform | tuning, levels | smoke-validated |
 | `puzzle-platformer` | Puzzle Platformer | platform, grid | tuning, levels | recipe |
 | `auto-runner` | Auto Runner | platform | tuning, levels | recipe |
 | `climbing-game` | Climbing Game | platform | tuning, levels | recipe |
@@ -38,11 +44,11 @@ controller/input-mode breakdown and full pack-consumer coverage.
 |---|---|---|---|---|
 | `top-down-adventure` | Top-Down Adventure | top-down | tuning, levels | recipe |
 | `action-adventure` | Action Adventure | top-down | tuning, levels | recipe |
-| `twin-stick-shooter` | Twin-Stick Shooter | top-down | tuning, levels | recipe |
+| `twin-stick-shooter` | Twin-Stick Shooter | top-down | tuning, levels | smoke-validated |
 | `survivor-like` | Survivor-Like | top-down | tuning | recipe |
 | `dungeon-crawler` | Dungeon Crawler | top-down | tuning, levels | recipe |
 | `action-roguelite` | Action Roguelite | top-down | tuning, levels | recipe |
-| `stealth-game` | Stealth Game | top-down | tuning, levels | recipe |
+| `stealth-game` | Stealth Game | top-down | tuning, levels | smoke-validated |
 | `heist-game` | Heist Game | top-down | tuning, levels | recipe |
 | `arena-combat` | Arena Combat | top-down | tuning, levels | recipe |
 | `boss-rush` | Boss Rush | top-down | tuning, levels | recipe |
@@ -53,7 +59,7 @@ controller/input-mode breakdown and full pack-consumer coverage.
 |---|---|---|---|---|
 | `horizontal-shmup` | Horizontal Shmup | top-down | tuning | recipe |
 | `vertical-shmup` | Vertical Shmup | top-down | tuning | recipe |
-| `bullet-hell` | Bullet Hell | top-down | tuning | recipe |
+| `bullet-hell` | Bullet Hell | top-down | tuning | smoke-validated |
 | `asteroids-shooter` | Asteroids Shooter | vehicle | tuning | recipe |
 | `gallery-shooter` | Gallery Shooter | pointer | tuning | recipe |
 | `run-and-gun` | Run and Gun | platform | tuning, levels | recipe |
@@ -63,7 +69,7 @@ controller/input-mode breakdown and full pack-consumer coverage.
 
 | id | display name | controller(s) | content roles | maturity |
 |---|---|---|---|---|
-| `top-down-racer` | Top-Down Racer | vehicle | tuning, levels | recipe |
+| `top-down-racer` | Top-Down Racer | vehicle | tuning, levels | smoke-validated |
 | `kart-racer` | Kart Racer | vehicle | tuning, levels | recipe |
 | `time-trial-racer` | Time Trial Racer | vehicle | tuning, levels | recipe |
 | `endless-driving` | Endless Driving | vehicle | tuning | recipe |
@@ -73,7 +79,7 @@ controller/input-mode breakdown and full pack-consumer coverage.
 
 | id | display name | controller(s) | content roles | maturity |
 |---|---|---|---|---|
-| `sokoban` | Sokoban | grid | tuning | recipe |
+| `sokoban` | Sokoban | grid | tuning | smoke-validated |
 | `match-puzzle` | Match Puzzle | grid | tuning | recipe |
 | `falling-block-puzzle` | Falling Block Puzzle | grid, ui-simulation | tuning | recipe |
 | `breakout` | Breakout | top-down | tuning | recipe |
@@ -88,11 +94,11 @@ controller/input-mode breakdown and full pack-consumer coverage.
 
 | id | display name | controller(s) | content roles | maturity |
 |---|---|---|---|---|
-| `tower-defense` | Tower Defense | grid, pointer | tuning, levels | recipe |
+| `tower-defense` | Tower Defense | grid, pointer | tuning, levels | smoke-validated |
 | `lane-defense` | Lane Defense | grid, pointer | tuning, levels | recipe |
 | `auto-battler` | Auto Battler | ui-simulation | tuning | recipe |
 | `simple-rts` | Simple RTS | top-down | tuning, levels | recipe |
-| `turn-based-tactics` | Turn-Based Tactics | grid, ui-simulation | tuning, levels | recipe |
+| `turn-based-tactics` | Turn-Based Tactics | grid, ui-simulation | tuning, levels | smoke-validated |
 | `base-defense` | Base Defense | top-down | tuning, levels | recipe |
 | `territory-control` | Territory Control | top-down | tuning, levels | recipe |
 
@@ -100,7 +106,7 @@ controller/input-mode breakdown and full pack-consumer coverage.
 
 | id | display name | controller(s) | content roles | maturity |
 |---|---|---|---|---|
-| `idle-incremental` | Idle Incremental | ui-simulation | tuning | recipe |
+| `idle-incremental` | Idle Incremental | ui-simulation | tuning | smoke-validated |
 | `shopkeeper` | Shopkeeper | ui-simulation | tuning | recipe |
 | `tycoon-lite` | Tycoon Lite | ui-simulation | tuning | recipe |
 | `farming-lite` | Farming Lite | ui-simulation | tuning | recipe |
@@ -114,7 +120,7 @@ controller/input-mode breakdown and full pack-consumer coverage.
 | id | display name | controller(s) | content roles | maturity |
 |---|---|---|---|---|
 | `exploration-game` | Exploration Game | top-down | tuning, levels | recipe |
-| `visual-novel` | Visual Novel | ui-simulation | tuning, dialogue | recipe |
+| `visual-novel` | Visual Novel | ui-simulation | tuning, dialogue | smoke-validated |
 | `point-and-click` | Point and Click | pointer, ui-simulation | tuning, levels, dialogue | recipe |
 | `interactive-fiction-hybrid` | Interactive Fiction Hybrid | ui-simulation | tuning, dialogue | recipe |
 | `investigation-game` | Investigation Game | top-down, pointer | tuning, levels, dialogue | recipe |

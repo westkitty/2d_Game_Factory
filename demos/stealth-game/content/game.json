@@ -1,0 +1,32 @@
+{
+  "id": "stealth-game",
+  "displayName": "Stealth Game",
+  "version": "0.1.0",
+  "schemaVersion": 1,
+  "viewport": {
+    "width": 960,
+    "height": 540
+  },
+  "bindings": {},
+  "systemPacks": [
+    {
+      "packId": "sw2d.ai",
+      "config": {}
+    },
+    {
+      "packId": "sw2d.combat",
+      "config": {}
+    },
+    {
+      "packId": "sw2d.world",
+      "config": {}
+    },
+    {
+      "packId": "game.top-down-shell",
+      "config": {}
+    }
+  ],
+  "defaultSettings": {
+    "masterVolume": 0.7
+  }
+}

@@ -10,7 +10,9 @@
   },
   "workspaces": [
     "packages/*",
-    "starter"
+    "starter",
+    "games/*",
+    "demos/*"
   ],
   "scripts": {
     "typecheck": "tsc -p tsconfig.json --noEmit",
@@ -20,9 +22,12 @@
     "build": "npm run build --workspace @sw2d/starter",
     "preview": "npm run preview --workspace @sw2d/starter",
     "check:offline": "node tools/scripts/check-offline-build.mjs",
+    "sw2d": "node packages/cli/src/bin.ts",
+    "qa:smoke": "node packages/qa/src/runAll.ts",
     "validate": "npm run typecheck && npm run test && npm run build && npm run check:offline"
   },
   "devDependencies": {
+    "@types/node": "24.13.3",
     "typescript": "7.0.2",
     "vite": "8.2.2",
     "vitest": "4.1.11"

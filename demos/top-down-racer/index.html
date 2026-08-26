@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="dark" />
+    <!-- Suppresses the browser's automatic /favicon.ico request - see starter/index.html's identical tag for why. -->
+    <link rel="icon" href="data:," />
+    <title>Top Down Racer</title>
+  </head>
+  <body>
+    <main id="app">
+      <div id="game-root" aria-label="Game canvas"></div>
+
+      <!--
+        Touch controls bind by name through the semantic input layer. They are
+        ordinary DOM buttons: no gameplay code knows they exist.
+      -->
+      <div id="touch-controls" class="touch-controls" hidden>
+        <div class="touch-cluster touch-cluster--left">
+          <button type="button" class="touch-button" data-sw2d-action="MOVE_LEFT" aria-label="Move left">&#9664;</button>
+          <button type="button" class="touch-button" data-sw2d-action="MOVE_RIGHT" aria-label="Move right">&#9654;</button>
+        </div>
+        <div class="touch-cluster touch-cluster--right">
+          <button type="button" class="touch-button" data-sw2d-action="PAUSE" aria-label="Pause">II</button>
+          <button type="button" class="touch-button touch-button--primary" data-sw2d-action="CONFIRM" aria-label="Confirm">A</button>
+        </div>
+      </div>
+
+      <noscript>This game requires JavaScript.</noscript>
+    </main>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

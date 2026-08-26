@@ -45,6 +45,7 @@ export const TOP_DOWN_ACTION_PRESETS: readonly PresetDefinition[] = [
 
   definePreset({
     id: 'twin-stick-shooter',
+    maturity: 'smoke-validated',
     displayName: 'Twin-Stick Shooter',
     family: 'top-down-action',
     controllerFamilies: ['top-down'],
@@ -96,6 +97,7 @@ export const TOP_DOWN_ACTION_PRESETS: readonly PresetDefinition[] = [
 
   definePreset({
     id: 'stealth-game',
+    maturity: 'smoke-validated',
     displayName: 'Stealth Game',
     family: 'top-down-action',
     controllerFamilies: ['top-down'],

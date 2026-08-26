@@ -1,0 +1,20 @@
+{
+  "id": "sokoban",
+  "displayName": "Sokoban",
+  "version": "0.1.0",
+  "schemaVersion": 1,
+  "viewport": {
+    "width": 960,
+    "height": 540
+  },
+  "bindings": {},
+  "systemPacks": [
+    {
+      "packId": "game.grid-shell",
+      "config": {}
+    }
+  ],
+  "defaultSettings": {
+    "masterVolume": 0.7
+  }
+}

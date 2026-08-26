@@ -1,0 +1,61 @@
+{
+  "type": "map",
+  "orientation": "orthogonal",
+  "infinite": false,
+  "width": 30,
+  "height": 17,
+  "tilewidth": 32,
+  "tileheight": 32,
+  "layers": [
+    {
+      "type": "tilelayer",
+      "name": "Background",
+      "width": 30,
+      "height": 17
+    },
+    {
+      "type": "objectgroup",
+      "name": "Solids",
+      "objects": [
+        { "id": 1, "class": "Solid", "name": "Ground", "x": 0, "y": 500, "width": 960, "height": 40 },
+        { "id": 2, "class": "Solid", "name": "Blocking Wall", "x": 470, "y": 260, "width": 20, "height": 280 }
+      ]
+    },
+    {
+      "type": "objectgroup",
+      "name": "Entities",
+      "objects": [
+        {
+          "id": 3,
+          "class": "PlayerSpawn",
+          "name": "Start",
+          "x": 60,
+          "y": 440,
+          "width": 0,
+          "height": 0,
+          "properties": [{ "name": "facing", "type": "string", "value": "right" }]
+        },
+        {
+          "id": 4,
+          "class": "Powerup",
+          "name": "High Jump Boots",
+          "x": 10,
+          "y": 474,
+          "width": 16,
+          "height": 16,
+          "properties": [{ "name": "powerupType", "type": "string", "value": "high-jump-boots" }]
+        },
+        {
+          "id": 5,
+          "class": "Exit",
+          "name": "Level Exit",
+          "x": 900,
+          "y": 440,
+          "width": 24,
+          "height": 48,
+          "properties": [{ "name": "exitId", "type": "string", "value": "exit-1" }]
+        }
+      ]
+    }
+  ]
+}

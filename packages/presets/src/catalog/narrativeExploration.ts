@@ -36,6 +36,7 @@ export const NARRATIVE_EXPLORATION_PRESETS: readonly PresetDefinition[] = [
 
   definePreset({
     id: 'visual-novel',
+    maturity: 'smoke-validated',
     displayName: 'Visual Novel',
     family: 'narrative-exploration',
     controllerFamilies: ['ui-simulation'],

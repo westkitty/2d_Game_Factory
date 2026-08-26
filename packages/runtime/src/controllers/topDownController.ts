@@ -14,10 +14,18 @@ export const topDownController: Controller<TopDownIntent> = {
     const rawMagnitude = Math.hypot(rawX, rawY);
     const scale = rawMagnitude > 1 ? 1 / rawMagnitude : 1;
 
+    const rawAimX = input.axis('AIM_LEFT', 'AIM_RIGHT');
+    const rawAimY = input.axis('AIM_UP', 'AIM_DOWN');
+    const rawAimMagnitude = Math.hypot(rawAimX, rawAimY);
+    const aimScale = rawAimMagnitude > 1 ? 1 / rawAimMagnitude : 1;
+
     return {
       moveX: rawX * scale,
       moveY: rawY * scale,
       moveMagnitude: Math.min(rawMagnitude, 1),
+      aimX: rawAimX * aimScale,
+      aimY: rawAimY * aimScale,
+      aimMagnitude: Math.min(rawAimMagnitude, 1),
       primaryPressed: input.justPressed('PRIMARY_ACTION'),
       secondaryPressed: input.justPressed('SECONDARY_ACTION'),
       dashPressed: input.justPressed('DASH'),

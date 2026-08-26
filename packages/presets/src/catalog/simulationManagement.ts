@@ -31,6 +31,7 @@ import { LIMITATIONS, VALIDATION_PROFILES, definePreset, pack } from '../shared.
 export const SIMULATION_MANAGEMENT_PRESETS: readonly PresetDefinition[] = [
   definePreset({
     id: 'idle-incremental',
+    maturity: 'smoke-validated',
     displayName: 'Idle Incremental',
     family: 'simulation-management',
     controllerFamilies: ['ui-simulation'],

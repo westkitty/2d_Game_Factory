@@ -1,0 +1,59 @@
+{
+  "type": "map",
+  "orientation": "orthogonal",
+  "infinite": false,
+  "width": 30,
+  "height": 17,
+  "tilewidth": 32,
+  "tileheight": 32,
+  "layers": [
+    { "type": "tilelayer", "name": "Background", "width": 30, "height": 17 },
+    { "type": "objectgroup", "name": "Solids", "objects": [] },
+    {
+      "type": "objectgroup",
+      "name": "Entities",
+      "objects": [
+        {
+          "id": 1,
+          "class": "PlayerSpawn",
+          "name": "Start",
+          "x": 60,
+          "y": 270,
+          "width": 0,
+          "height": 0,
+          "properties": [{ "name": "facing", "type": "string", "value": "right" }]
+        },
+        {
+          "id": 2,
+          "class": "Checkpoint",
+          "name": "Checkpoint 1",
+          "x": 300,
+          "y": 254,
+          "width": 32,
+          "height": 32,
+          "properties": [{ "name": "checkpointId", "type": "string", "value": "cp1" }]
+        },
+        {
+          "id": 3,
+          "class": "Checkpoint",
+          "name": "Checkpoint 2",
+          "x": 580,
+          "y": 254,
+          "width": 32,
+          "height": 32,
+          "properties": [{ "name": "checkpointId", "type": "string", "value": "cp2" }]
+        },
+        {
+          "id": 4,
+          "class": "Checkpoint",
+          "name": "Finish",
+          "x": 880,
+          "y": 254,
+          "width": 32,
+          "height": 32,
+          "properties": [{ "name": "checkpointId", "type": "string", "value": "cp3-finish" }]
+        }
+      ]
+    }
+  ]
+}

@@ -17,7 +17,11 @@
     "INTERACT": { "$ref": "#/definitions/actionBinding" },
     "PAUSE": { "$ref": "#/definitions/actionBinding" },
     "CONFIRM": { "$ref": "#/definitions/actionBinding" },
-    "CANCEL": { "$ref": "#/definitions/actionBinding" }
+    "CANCEL": { "$ref": "#/definitions/actionBinding" },
+    "AIM_LEFT": { "$ref": "#/definitions/actionBinding" },
+    "AIM_RIGHT": { "$ref": "#/definitions/actionBinding" },
+    "AIM_UP": { "$ref": "#/definitions/actionBinding" },
+    "AIM_DOWN": { "$ref": "#/definitions/actionBinding" }
   },
   "definitions": {
     "actionBinding": {

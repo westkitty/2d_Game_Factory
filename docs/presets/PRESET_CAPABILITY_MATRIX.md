@@ -9,6 +9,11 @@ Mechanically checked against the catalog by
 every selection set resolves through the real `resolveInstallOrder`) and
 `packages/presets/test/docsSync.test.ts`.
 
+Maturity (`recipe` vs. `smoke-validated`) is not shown here - see
+[`PRESET_CATALOG.md`](PRESET_CATALOG.md) for that, and
+[`DEMO_MATRIX.md`](../demos/DEMO_MATRIX.md) for the twelve Phase 8 demos this matrix's
+pack/controller selections were actually exercised through.
+
 ## Platforming (Phase 7A)
 
 | id | required packs | optional packs | controller(s) | input modes | validation profile |

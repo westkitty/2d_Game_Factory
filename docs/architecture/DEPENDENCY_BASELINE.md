@@ -67,6 +67,36 @@ methods (`start`, `stop`, `pause`, `resume`, `run`, `isActive`, `isPaused`, `isS
 `packages/runtime/src/phaser-augmentations.d.ts` rather than cast at each call site, so scene
 routing stays fully type-checked. **Delete that file when upstream typings catch up.**
 
+### Added in Phase 8 (2026-08-26, Sonnet 5)
+
+| Package | Version | License | Source | Purpose |
+|---|---|---|---|---|
+| `@types/node` | 24.13.3 | MIT | https://www.npmjs.com/package/@types/node | Type declarations for the factory CLI's use of `node:fs`, `node:path`, `node:child_process`, `node:http` (`@sw2d/cli`, `@sw2d/qa`). Dev-only; `tsconfig.base.json`'s `types` array gained `"node"` alongside the existing `"vite/client"`. |
+| `playwright-core` | 1.62.1 | Apache-2.0 | https://www.npmjs.com/package/playwright-core | Drives a real, system-installed Chrome for `@sw2d/qa`'s browser smoke harness (`chromium.launch({ executablePath })`, never the bundled-browser path). |
+
+**Why `playwright-core`, not `playwright`:** the full `playwright` package's `install` script
+downloads and caches browser binaries (100+ MB) on `npm install` unless explicitly suppressed -
+exactly the "do not download a large bundled browser by default" dependency policy Phase 8's
+directive set. `playwright-core` (~13 MB) is the same driver API with **no such script** - verified
+directly against the installed package's own `package.json` (`"scripts"` is absent; no
+`postinstall`, no `preinstall`). `@sw2d/qa`'s `findSystemChrome()` locates a system-installed
+Chrome (checked env override, then platform-default install paths) and fails with a clear,
+actionable error (not a silent skip) if none is found - `doctor` and `validate` both surface that
+state honestly rather than reporting false success.
+
+**Install-script and telemetry check (Phase 8):** `npm install` after adding both packages reported
+no new postinstall/preinstall network activity; `playwright-core`'s own `package.json` declares no
+`scripts` block at all. Neither package enables telemetry by default and neither is on the shipped
+game-build path - both are dev-only, scoped to `@sw2d/cli`/`@sw2d/qa`, never bundled into a
+generated game or the starter's production build.
+
+**Removal path:** `@types/node` - remove from root `devDependencies`, remove `"node"` from
+`tsconfig.base.json`'s `types` array; only files using `node:*` imports (the CLI, the QA harness,
+build scripts) would need an alternate typing source. `playwright-core` - remove from
+`packages/qa/package.json`; `@sw2d/qa`'s browser-driving code (`harness.ts`, `browserPath.ts`)
+would need a replacement driver or removal, and `validate`'s browser-smoke step would need to
+report "unavailable" unconditionally rather than attempt one.
+
 ## Deliberately not installed
 
 | Candidate | Decision | Reason |
@@ -74,7 +104,7 @@ routing stays fully type-checked. **Delete that file when upstream typings catch
 | React / Vue / Svelte / Redux | rejected | `MASTER_PROJECT.md` §3.4. The runtime is Phaser; DOM UI is plain elements and CSS. |
 | A second game engine (Excalibur, KAPLAY) | rejected | Architectural references only. One engine. |
 | Ajv + `ajv-formats` | **installed in Phase 2** | See "Added in Phase 2" above. |
-| Playwright | **deferred** | See [ADR-0008](adr/0008-phase1-validation-strategy.md). Browser journeys become a package in the QA phase; Phase 1's flow was validated in a real browser without adding the dependency. |
+| Playwright (full package) | rejected in favor of `playwright-core` | See "Added in Phase 8" above. The full package's browser-download install script is exactly what the QA dependency policy rules out; `playwright-core` is the same driver API without it. Originally deferred entirely per [ADR-0008](adr/0008-phase1-validation-strategy.md) until a real browser-journey consumer existed - Phase 8's `@sw2d/qa` is that consumer. |
 | jsdom / happy-dom | rejected for now | Only needed to run Phaser headlessly under Vitest. Phase 1's unit layer is engine-free by design and needs no DOM. |
 | Any font, art or audio package | rejected | Fonts are system stacks; placeholder art is generated; cues are synthesised. Nothing to license and nothing to fetch. |
 | Analytics / telemetry / error reporting | forbidden | `MASTER_PROJECT.md` §3.5, §42. |

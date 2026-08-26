@@ -68,9 +68,12 @@ smallest reusable piece, add regression coverage, rerun affected proofs.
 | One package's internals | `npm run typecheck && npm test` |
 | Anything the starter renders | add `npm run build` |
 | Input, scene lifecycle, registry, content loader, persistence, shared collision, build | full `npm run validate` **and** the browser journey in [`docs/qa/PHASE1_VALIDATION.md`](qa/PHASE1_VALIDATION.md) |
+| The CLI generator, a controller-family shell template, or a demo's game-specific logic | `npm run qa:smoke` (builds and real-browser-smokes every demo and both starter journeys - see [`docs/demos/DEMO_MATRIX.md`](demos/DEMO_MATRIX.md)) |
 
 Do not run every proof game after a documentation change. Do run every affected proof after a
-cross-cutting change.
+cross-cutting change. `npm run qa:smoke` is separate from `npm run validate` - it builds every
+demo fresh and launches a real browser, so run it when something it actually covers changed, not
+on every typecheck.
 
 ## When validation fails
 

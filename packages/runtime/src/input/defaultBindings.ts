@@ -26,6 +26,16 @@ export const DEFAULT_BINDINGS: ActionBindings = {
   // keypress both resume and quit, which is precisely the double-consumption
   // failure documented in the c_chase extraction.
   CANCEL: { keyboard: ['Backspace'], pointerTargets: ['CANCEL'] },
+  // The numpad, as a second directional cluster for aim - a real keyboard
+  // convention (distinct from WASD/arrows for movement) and, more
+  // importantly, disjoint from every other binding above: KeyJ/KeyK are
+  // already PRIMARY_ACTION/SECONDARY_ACTION, so an IJKL aim cluster would
+  // silently fire on every aim press. Movement and aim must be independent
+  // on a physical keyboard, not just independent in the type system.
+  AIM_LEFT: { keyboard: ['Numpad4'], pointerTargets: ['AIM_LEFT'] },
+  AIM_RIGHT: { keyboard: ['Numpad6'], pointerTargets: ['AIM_RIGHT'] },
+  AIM_UP: { keyboard: ['Numpad8'], pointerTargets: ['AIM_UP'] },
+  AIM_DOWN: { keyboard: ['Numpad2'], pointerTargets: ['AIM_DOWN'] },
 };
 
 /** Merge overrides over the defaults, replacing (not concatenating) per action. */

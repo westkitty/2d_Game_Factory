@@ -1,7 +1,7 @@
 import type { AssetDescriptor, ContentBundle, ContentSource, UiCopy } from '@sw2d/contracts';
 import { validateContentBundleData, validateDocumentOrThrow } from '@sw2d/schemas';
-import rawContent from '../content/content.json';
-import tuningData from '../content/tuning.json';
+import rawContent from '../content/content.json' with { type: 'json' };
+import tuningData from '../content/tuning.json' with { type: 'json' };
 
 /**
  * The validated JSON content source.

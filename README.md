@@ -6,18 +6,26 @@ Not one game, and not a Phaser starter template: one runtime plus composable sys
 controller families, data-driven content, genre preset recipes and theme packs, so a new game is
 a *composition* rather than a fork.
 
-> **Status: Phase 1 of 12.** The architecture, contracts and a runnable vertical slice exist and
-> are validated. The 74 genre presets, the CLI, the system packs and the proof games do not exist
-> yet. [`OPERATIONAL_STATE.md`](OPERATIONAL_STATE.md) is the authority on what actually works.
+> **Status: Phase 8 of 12.** The runtime, ten system-pack cores, 74 genre preset recipes, a real
+> factory CLI, and twelve generated, real-browser-smoke-validated demo games all exist and are
+> validated. [`OPERATIONAL_STATE.md`](OPERATIONAL_STATE.md) is the authority on what actually
+> works.
 
 ## What is here today
 
 ```text
-packages/contracts/   @sw2d/contracts   interfaces. Zero dependencies, no Phaser, no DOM.
-packages/runtime/     @sw2d/runtime     the reusable machine.
-starter/              @sw2d/starter     the vertical slice: boot -> title -> play -> pause -> restart.
-docs/                                   architecture, ADRs, QA evidence, agent workflow.
-tools/scripts/                          repository checks.
+packages/contracts/       @sw2d/contracts        interfaces. Zero dependencies, no Phaser, no DOM.
+packages/runtime/         @sw2d/runtime          the reusable machine.
+packages/packs/           @sw2d/packs            ten reusable system-pack cores.
+packages/presets/         @sw2d/presets          74 genre preset recipes.
+packages/content-pipeline/ @sw2d/content-pipeline Tiled normalization, entity registry, themes.
+packages/schemas/         @sw2d/schemas          Ajv validators for every content document.
+packages/cli/             @sw2d/cli              `npm run sw2d -- <command>`: doctor, new, validate, build, pack, ...
+packages/qa/              @sw2d/qa               real-browser (system Chrome) smoke-test harness.
+starter/                  @sw2d/starter          the vertical slice: boot -> title -> play -> pause -> restart.
+demos/                                            twelve real, smoke-validated demo games (one per genre family).
+docs/                                             architecture, ADRs, QA evidence, agent workflow.
+tools/scripts/                                    repository checks.
 ```
 
 ## Requirements
@@ -39,7 +47,26 @@ touch controls appear automatically.
 npm run build      # production build -> starter/dist
 npm run preview    # serve the production build
 npm run validate   # typecheck + unit tests + build + offline guard
+npm run qa:smoke   # build and real-browser-smoke every demo + starter journey
 ```
+
+## The factory CLI
+
+```bash
+npm run sw2d -- doctor                              # environment diagnostics (never mutates)
+npm run sw2d -- list-presets                        # all 74 genre recipes
+npm run sw2d -- describe <preset-id>                # a preset's packs, content roles, limitations
+npm run sw2d -- new <game-id> --preset <preset-id>   # generate a real, runnable game
+npm run sw2d -- add-level <game-id> <level-id>       # add a self-validated Tiled level
+npm run sw2d -- add-theme <game-id> <theme-id>       # add a self-validated theme manifest
+npm run sw2d -- validate <game-id>                   # schema + typecheck + tests + build + browser smoke
+npm run sw2d -- build <game-id>                      # production build
+npm run sw2d -- pack <game-id>                       # clean, offline-guard-checked pack/ output
+```
+
+See [`docs/cli/CLI_REFERENCE.md`](docs/cli/CLI_REFERENCE.md) for full command docs, and
+[`docs/demos/DEMO_MATRIX.md`](docs/demos/DEMO_MATRIX.md) for what each of the twelve committed
+`demos/` proves.
 
 ## The one rule
 
@@ -98,6 +125,10 @@ browser-level evidence is in [`docs/qa/PHASE1_VALIDATION.md`](docs/qa/PHASE1_VAL
 | [`docs/architecture/adr/`](docs/architecture/adr/) | one record per constraining decision |
 | [`docs/architecture/C_CHASE_EXTRACTION.md`](docs/architecture/C_CHASE_EXTRACTION.md) | what to preserve, generalise and avoid from the reference build |
 | [`docs/qa/PHASE1_VALIDATION.md`](docs/qa/PHASE1_VALIDATION.md) | executed checks and their evidence |
+| [`docs/presets/PRESET_CATALOG.md`](docs/presets/PRESET_CATALOG.md) | all 74 genre presets and their maturity |
+| [`docs/cli/CLI_REFERENCE.md`](docs/cli/CLI_REFERENCE.md) | every `sw2d` command, its args, and its guarantees |
+| [`docs/demos/DEMO_MATRIX.md`](docs/demos/DEMO_MATRIX.md) | the twelve `demos/` games and what each proves |
+| [`docs/architecture/PHASE8_OPUS_GATE_B_HANDOFF.md`](docs/architecture/PHASE8_OPUS_GATE_B_HANDOFF.md) | Phase 8's handoff to Phase 9's architecture review |
 
 ## Resuming work
 

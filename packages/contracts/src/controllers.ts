@@ -58,6 +58,16 @@ export interface TopDownIntent {
    * clamp.
    */
   readonly moveMagnitude: number;
+  /**
+   * -1..1, independent of moveX/moveY - the twin-stick-shooter capability
+   * (AIM_LEFT/RIGHT/UP/DOWN, Phase 8). Digital 8-way aim, the same shape as
+   * movement, not a spatial/analog pointer vector - a real controller
+   * capability, not "last move direction" standing in for aim.
+   */
+  readonly aimX: number;
+  readonly aimY: number;
+  /** Same length-<=1 bound as moveMagnitude, for the same reason. */
+  readonly aimMagnitude: number;
   readonly primaryPressed: boolean;
   readonly secondaryPressed: boolean;
   readonly dashPressed: boolean;

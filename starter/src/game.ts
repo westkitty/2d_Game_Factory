@@ -1,7 +1,7 @@
 import type { GameDefinition } from '@sw2d/contracts';
 import { validateDocumentOrThrow } from '@sw2d/schemas';
 import { PLACEHOLDER_MOVER_PACK } from './game-specific/placeholderMoverPack.ts';
-import gameData from '../content/game.json';
+import gameData from '../content/game.json' with { type: 'json' };
 
 /**
  * The declarative description of this game, loaded from JSON and validated

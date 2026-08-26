@@ -2,8 +2,8 @@
 
 Project: **Stinky Weasel 2D Browser Game Factory** (`sw2d`)
 Repository: `westkitty/2d_Game_Factory`
-State revision: **9**
-Updated: 2026-08-25
+State revision: **10**
+Updated: 2026-08-26
 
 Read this before doing anything. Governing spec: [`MASTER_PROJECT.md`](MASTER_PROJECT.md).
 Workflow: [`docs/AGENT_WORKFLOW.md`](docs/AGENT_WORKFLOW.md).
@@ -12,14 +12,15 @@ Workflow: [`docs/AGENT_WORKFLOW.md`](docs/AGENT_WORKFLOW.md).
 
 ## Current phase
 
-**Phase 7C - Preset Catalog Families G-I - COMPLETE (Sonnet 5). The 74-preset catalog is done.**
+**Phase 8 - Factory CLI, Generated Starters, Browser QA, and 12 Representative Demos - COMPLETE
+(Sonnet 5).**
 
-No new ADR this revision - Phase 7C extended the Phase 7A/7B catalog and package boundary
-(ADR-0015) without changing either, the third phase in a row to prove it generalises cleanly; see
-the Phase 7C entries in "Verified capabilities" and `PROJECT_BIBLE.md` for what was decided.
+New ADR-0016 this revision (aim is a second digital axis, not spatial pointer - see
+[Revision 10](#revision-10---2026-08-26-sonnet-5)). Full architectural handoff:
+[`docs/architecture/PHASE8_OPUS_GATE_B_HANDOFF.md`](docs/architecture/PHASE8_OPUS_GATE_B_HANDOFF.md).
 
-Next owner: **Sonnet 5, Phase 8** (Factory CLI and 12 Representative Demos). See
-[Next bounded action](#next-bounded-action). **Do not execute Phase 8 yet** - this revision only
+Next owner: **Opus 5, Phase 9** (Architecture Integration Gate B). See
+[Next bounded action](#next-bounded-action). **Do not execute Phase 9 yet** - this revision only
 records it as the next bounded action.
 
 ## Current baseline
@@ -27,7 +28,7 @@ records it as the next bounded action.
 | Item | Value |
 |---|---|
 | Branch | `main` |
-| Workspaces | `@sw2d/contracts`, `@sw2d/content-pipeline`, `@sw2d/runtime`, `@sw2d/schemas`, `@sw2d/packs`, `@sw2d/presets`, `@sw2d/starter` |
+| Workspaces | `@sw2d/contracts`, `@sw2d/content-pipeline`, `@sw2d/runtime`, `@sw2d/schemas`, `@sw2d/packs`, `@sw2d/presets`, `@sw2d/cli`, `@sw2d/qa`, `@sw2d/starter`, plus `games/*` (generated, gitignored) and `demos/*` (twelve committed representative demos) |
 | Node (supported) | `>=22.12.0`; target 24.x LTS (`.nvmrc` = 24) |
 | Node (dev host used) | 26.7.0, npm 11.19.0 |
 | Phaser | 4.2.1 (MIT) |
@@ -36,6 +37,8 @@ records it as the next bounded action.
 | Vitest | 4.1.11 (MIT) |
 | Ajv | 8.20.0 (MIT) |
 | ajv-formats | 3.0.1 (MIT) |
+| @types/node | 24.13.3 (MIT, dev-only) |
+| playwright-core | 1.62.1 (Apache-2.0, dev-only, no bundled browser download) |
 | Runtime version constant | `0.1.0` |
 | Debug snapshot version | `1` |
 | Settings schema version | `1` |
@@ -594,74 +597,120 @@ Breaking one of these is an architecture change, not a bug fix. Escalate rather 
 | Layer | State | Command |
 |---|---|---|
 | Static / schema | TypeScript passing; JSON Schema exists for 5 contract types + 1 content document + 6 Phase 6 content-pipeline documents (asset-descriptor, ui-copy, content-assets, theme-manifest, resource-record/-manifest, level-document) + 3 pack config schemas (progression, arcade, starter placeholder-mover); all 74 presets validate against `preset-definition:v1` | `npm run typecheck` |
-| Unit | 892 tests passing (58 Phase 1 + 29 Phase 2 + 35 Phase 3 + 78 Phase 4 + 13 Phase 5 + 66 Phase 6 + 232 Phase 7A + 179 Phase 7B + 279 Phase 7C) | `npm test` |
-| Build | passing (two-page build: `index.html` + `tiled-proof.html`, byte-identical output to Phase 7B/7A/6 - `@sw2d/presets` is not consumed by the starter) | `npm run build` |
+| Unit | 1589 tests passing (58 Phase 1 + 29 Phase 2 + 35 Phase 3 + 78 Phase 4 + 13 Phase 5 + 66 Phase 6 + 232 Phase 7A + 179 Phase 7B + 279 Phase 7C + 620 Phase 8) | `npm test` |
+| Build | passing (two-page build: `index.html` + `tiled-proof.html`) | `npm run build` |
 | Offline (static guard) | passing | `npm run check:offline` |
-| Runtime integration | proven manually in-browser, **not automated** | see ADR-0008 |
-| Browser journeys | not automated; **not re-run this revision** - Phase 7C is metadata/catalog work outside their impact radius (three new catalog files plus edits confined to `packages/presets/**` and `docs/presets/**`, zero `package.json` changes), and `npm run build`'s byte-identical output is the evidence for that claim. Phase 6's evidence (both starter pages) stands unchanged. | Phase 2+ (QA package still unbuilt) |
-| Proof regression | none - no proof games exist | Phase 10 |
-| Pack composition | real `SystemHostImpl` + `resolveInstallOrder` + `CapabilityRegistryImpl` installing all nine Phase 4 packs together, plus config-validation, declared-`provides` and throwing-teardown failure paths, automated | `packages/runtime/test/packsComposition.test.ts` |
+| Runtime integration | proven manually in-browser **and** automated via real Chrome (Phase 8) | see ADR-0008, `@sw2d/qa` |
+| Browser journeys | **automated for the first time this revision**: both starter pages (boot/title/play, movement, pause/resume, restart, and - for `tiled-proof.html` - a full Tiled-sourced checkpoint/collectible/hazard/exit walk) run through real system Chrome via `packages/qa/specs/starterFoundation.ts`/`starterTiledProof.ts`, replacing the manual checklist `docs/qa/PHASE1_VALIDATION.md` originally described | `npm run qa:smoke` |
+| Demo smoke (12 representative demos) | **all 12 pass real-browser smoke** - one demo per genre family, each proving its preset's defining mechanic via a committed Playwright spec against a real production build | `npm run qa:smoke`, `packages/qa/specs/*.ts`, see `docs/demos/DEMO_MATRIX.md` |
+| Factory CLI | 9 commands (`doctor`, `list-presets`, `describe`, `new`, `add-level`, `add-theme`, `validate`, `build`, `pack`), all manually and automatically exercised; `new`'s determinism and per-preset content validity proven for all 74 presets, real build evidence for a 13-instance representative matrix (12 demos + the one uncovered controller-family class) | `packages/cli/test/**`, `tools/scripts/build-matrix.ts`, `docs/cli/CLI_REFERENCE.md` |
+| Proof regression | none - no deep end-to-end proof games exist yet (Phase 10's bar, distinct from Phase 8's smoke bar) | Phase 10 |
+| Pack composition | real `SystemHostImpl` + `resolveInstallOrder` + `CapabilityRegistryImpl` installing all ten packs together, plus config-validation, declared-`provides` and throwing-teardown failure paths, automated | `packages/runtime/test/packsComposition.test.ts` |
 | Capability-id governance | pattern, uniqueness and pack-id/capability-id split, automated for all ten packs including Phase 6's `entityRegistryPack` | `packages/packs/test/capabilityIds.test.ts` |
 | Tiled/theme/resource content pipeline | normalization, object-class catalog, entity-registry dispatch, theme resolution and resource governance, all automated; the real `docs/resources/VISUAL_ASSET_MANIFEST.json` and the real `starter/content/levels/intro.json` are both exercised directly, not only synthetic fixtures | `packages/content-pipeline/test/**`, `packages/schemas/test/contentPipeline.test.ts`, `packages/schemas/test/resourceGovernance.test.ts`, `packages/packs/test/entityRegistry.test.ts`, `starter/test/tiledProofContent.test.ts`, `starter/test/resourceGovernance.test.ts` |
-| Preset catalog integrity | **complete**: exact shape (74/74, exact ids, 10/10/7/5/10/7/8/7/10 family counts, deterministic order, Phase 7A+7B's 49 preserved as the first 49 entries), schema/composition validation, real pack-id and controller-family checks, real `resolveInstallOrder` dependency resolution, maturity/gamepad/limitation honesty, deterministic materialization, docs-sync, full pack-consumer coverage, all automated | `packages/presets/test/**` |
+| Preset catalog integrity | **complete**: exact shape (74/74, exact ids, family counts, deterministic order), schema/composition validation, real pack-id and controller-family checks, real `resolveInstallOrder` dependency resolution, maturity/gamepad/limitation honesty, deterministic materialization, docs-sync, full pack-consumer coverage, **exactly 12 presets `smoke-validated` (the Phase 8 demo ids), 62 `recipe`, 0 `proof-validated`**, all automated | `packages/presets/test/**` |
 
-`npm run validate` runs typecheck + test + build + offline guard. All four passed this revision.
+`npm run validate` runs typecheck + test + build + offline guard. `npm run qa:smoke` runs the
+14-target real-browser suite (12 demos + 2 starter journeys) separately - it is not part of
+`npm run validate` because it builds every demo fresh and launches a real browser, which is
+proportionate to run on demand, not on every typecheck. All passed this revision.
 
 ## Pending work
 
-Phases 8-12 are unstarted. See `MASTER_PROJECT.md` §38 for the routed plan and owners.
+Phases 9-12 are unstarted. See `MASTER_PROJECT.md` §38 for the routed plan and owners.
 
 ## Next bounded action
 
-**Phase 8 - Sonnet 5 - Factory CLI and 12 Representative Demos.**
+**Phase 9 - Opus 5 - Architecture Integration Gate B.**
 
-Not executed this revision - Phase 7C explicitly stops before it. The Phase 7 catalog (all 74
-recipes) is now the finished input Phase 8 consumes. What Sonnet may assume, and what is
-protected, going into Phase 8:
+Not executed this revision - Phase 8 explicitly stops before it. Full handoff:
+[`docs/architecture/PHASE8_OPUS_GATE_B_HANDOFF.md`](docs/architecture/PHASE8_OPUS_GATE_B_HANDOFF.md).
+Summary of what Phase 9 inherits and should weigh:
 
-- `@sw2d/presets` is complete and frozen in shape: `PRESETS` (74, deterministic order),
-  `getPreset`/`listPresets`/`getPresetsByFamily`, and `materializeStarterPlan` -> `StarterPlan`
-  (identity, controller families, required/optional pack selections, content roles, starter scene,
-  validation profile) in `packages/presets/src/`. Phase 8's CLI (`npm run sw2d -- new <game-id>
-  --preset <preset-id>`, per MASTER_PROJECT.md section 25) is the *first real consumer* of
-  `StarterPlan` - nothing has ever turned one into a file yet; that is exactly Phase 8's job.
-- No further preset families exist to add. Do not create a 75th preset or an 8th validation-profile
-  family; `packages/presets/test/catalog.test.ts` fails immediately on a count, id, order or
-  duplicate drift, and `ALL_VALIDATION_PROFILES` is asserted to have exactly nine.
-- `@sw2d/presets`' production dependency shape is closed and proven
-  (`packageBoundary.test.ts`): `@sw2d/contracts` + `@sw2d/packs`'s `./ids` subpath only - three
-  phases in a row needed zero changes to it. Phase 8's CLI is the first package with a genuinely
-  new reason to touch pack/runtime surfaces (it must actually generate files, install dependencies,
-  and likely construct a real `GameDefinition`/`ContentBundle`) - investigate the Phase 5 trigger
-  again before choosing its dependency shape, the same way Phase 7A did, rather than assuming
-  ADR-0015's exact subpaths are automatically sufficient for a different kind of consumer.
-- **All ten packs now have at least one preset consumer** (`docs/presets/PRESET_CAPABILITY_MATRIX.md`'s
-  "Full pack-consumer coverage" table has the exact counts) - Phase 8's 12 representative demos and
-  Phase 10's five deep proofs are the first phases that actually *install* any of them in a running
-  game; a pack being "selected by a preset" and a pack being "exercised by a playing game" remain
-  two different, both-still-true-separately claims.
-- `requiredContentRoles` across the 74 recipes name both schema-backed roles (`tuning`, `levels`)
-  and conceptual ones with no schema yet (`dialogue`, `exhibits`, `puzzles`, `microgames`,
-  `characters`, `recipes`, `items`) - every conceptual role has a `knownLimitations` entry stating
-  it is not yet content-authorable. Phase 8 must not silently assume a schema exists for any of
-  these; inventing one to make a specific demo easier is exactly the kind of scope creep
-  MASTER_PROJECT.md section 10 (Phase 7C) and section 8/9 (earlier phases) both warn against
-  unless the demo genuinely requires it and the addition is bounded and justified on its own.
-- Maturity promotion (`recipe` -> `smoke-validated`) belongs to Phase 8's 12 representative demos
-  specifically, per MASTER_PROJECT.md section 5's "smoke-validated" definition - do not promote a
-  preset's maturity merely because the CLI can generate its starter shell; promotion requires the
-  demo to actually run.
-- Do not build the Playwright/QA package; that remains its own phase (Phase 2+'s standing debt,
-  unaffected by Phase 7).
-- Do not implement any of the ~40 missing mechanics named across all 74 recipes'
-  `knownLimitations` (vehicle physics, ball/paddle bounce, board-puzzle engines, tower/RTS/tactics
-  systems, customer/colonist/creature AI, dialogue renderers, drag/drop, drawing, fishing, cooking,
-  photography, etc.) merely to make one of the 12 representative demos feel complete - a smoke demo
-  proves the *composition* is real, not that the genre is finished (MASTER_PROJECT.md section 23:
-  "may use deliberately simple placeholder art... must demonstrate that its core composition is
-  real, not merely registered").
+- The generated-game architecture (six controller-family shell templates, deterministic
+  generation, the CLI's dependency boundaries) is built and evidenced for all 74 presets at two
+  tiers - exhaustive static/schema checks for all 74, real `npm install`+`tsc`+`vite build`
+  evidence for a 13-instance representative matrix. See handoff §1-3.
+- Twelve presets are `smoke-validated`; the rest remain `recipe`. See handoff §4-5 and
+  `docs/demos/DEMO_MATRIX.md`.
+- `TopDownIntent` gained `aimX`/`aimY`/`aimMagnitude` (ADR-0016) - a same-shape extension to the
+  existing digital-axis controller pattern, not a spatial pointer service. Spatial pointer/hover/
+  click targeting remains fully deferred. See handoff §6.
+- `ProjectilePool` (a small, bounded projectile-lifecycle helper) is used by three demos
+  (`twin-stick-shooter`, `bullet-hell`, `tower-defense`) but was **not** promoted to
+  `@sw2d/packs` this phase - copied, not shared. Opus should decide whether the three real
+  consumers are now enough to design a real capability against. See handoff §7.
+- `sw2d.puzzle`'s config requires TypeScript functions, not JSON data - a real, previously-
+  undiscovered incompatibility with the generator's JSON-only `content/game.json` composition
+  root. `sokoban` works around it by implementing equivalent state directly rather than selecting
+  the pack. Any future preset requiring `sw2d.puzzle` hits the same wall. See handoff §8.
+- Do not implement any of the ~40 missing mechanics still named across the 62 `recipe` presets'
+  `knownLimitations` merely because a demo phase exists now - Phase 8's demos prove composition
+  for twelve specific presets, not genre completeness for the other 62 (MASTER_PROJECT.md section
+  23 still applies unchanged).
+- `games/` (CLI-generated) and `demos/*/dist|pack|node_modules` (demo build artifacts) are
+  gitignored and were never committed; only demo source/content/scaffolding is.
 
 ## Revision history
+
+### Revision 10 - 2026-08-26 (Sonnet 5)
+Phase 8 complete: Factory CLI, Generated Starters, Browser QA, and 12 Representative Demos. Full
+detail in [`docs/architecture/PHASE8_OPUS_GATE_B_HANDOFF.md`](docs/architecture/PHASE8_OPUS_GATE_B_HANDOFF.md);
+summarized here.
+
+Built `@sw2d/cli` (nine commands: `doctor`, `list-presets`, `describe`, `new`, `add-level`,
+`add-theme`, `validate`, `build`, `pack`) - the first real consumer of `materializeStarterPlan()`.
+`new` generates an actual runnable game from any of the 74 presets via six fixed controller-family
+shell templates, deterministic and byte-identical across repeated calls (proven for all 74 in
+`packages/cli/test/generate.test.ts`). Built `@sw2d/qa`, a real-browser smoke harness on
+`playwright-core` driving system-installed Chrome - no bundled-browser download, satisfying the
+phase's explicit dependency policy. Generated and hand-extended twelve representative demo games
+(`demos/<preset-id>/`, one per genre family), each with a committed Playwright spec proving its
+preset's defining mechanic against a real production build; `npm run qa:smoke` builds and smokes
+all twelve plus two newly-automated starter journeys (replacing the Phase 1 manual checklist) in
+one reproducible run - **14/14 pass**.
+
+ADR-0016 records the one durable architecture decision: `TopDownIntent` gained
+`aimX`/`aimY`/`aimMagnitude`, a same-shape second digital-axis pair (`AIM_LEFT/RIGHT/UP/DOWN`),
+resolving `twin-stick-shooter`'s independent-movement-and-aim requirement without building a
+spatial pointer service - spatial pointer/hover/click targeting remains fully deferred.
+`tower-defense`'s tower placement uses the existing keyboard-driven `gridController` cursor
+instead, per the phase's own explicit allowance.
+
+Two real architectural findings surfaced and are recorded in the handoff doc for Phase 9 to weigh,
+not silently worked around: (1) `sw2d.puzzle`'s config requires TypeScript functions, incompatible
+with the JSON-only `content/game.json` composition root every other pack uses - `sokoban` works
+around it by implementing equivalent grid/push/undo/solved state directly rather than selecting
+the pack; (2) a real regression class was caught and closed by strengthening `validate`'s browser
+smoke to actually start a run and check every declared pack installed, not just that the title
+screen renders - the original shallow oracle would have let a broken pack selection ship silently
+(the same "metadata that declares a contract nothing evaluates" failure shape Phase 5's own gate
+found once already).
+
+`ProjectilePool`, a small bounded projectile-lifecycle helper, is used by three demos
+(`twin-stick-shooter`, `bullet-hell`, `tower-defense` - the exact three-consumer trigger named in
+the phase's own directive) but was deliberately **not** promoted to `@sw2d/packs` - copied, not
+shared, with the promotion question left open for Phase 9.
+
+Exactly the twelve demo preset ids are now `maturity: "smoke-validated"`
+(`packages/presets/test/honesty.test.ts` enforces the exact 12/62/0 split); the other 62 remain
+`recipe`; zero are `proof-validated`. 74/74-preset generation evidence is two-tier: exhaustive
+static/schema/token/pack checks for all 74 (part of 1589 total repo tests, up from 892), plus real
+`npm install`+`tsc`+`vite build` evidence for a 13-instance representative matrix (the twelve demo
+presets plus the one controller-family class - `pointer` - not otherwise covered), built via
+`tools/scripts/build-matrix.ts` inside `games/` (matching real `sw2d new` usage) and fully cleaned
+up afterward - **13/13 real builds passed**. Neither `games/matrix-*` nor any demo's
+`dist/`/`pack/`/`node_modules/` is committed.
+
+Documentation: `docs/cli/CLI_REFERENCE.md`, `docs/demos/DEMO_MATRIX.md`,
+`docs/architecture/PHASE8_OPUS_GATE_B_HANDOFF.md`, and `docs/architecture/adr/0016-*.md` are new;
+`README.md`, `docs/presets/PRESET_CATALOG.md`, `docs/presets/PRESET_CAPABILITY_MATRIX.md`, and
+`docs/architecture/DEPENDENCY_BASELINE.md` (recording `@types/node@24.13.3` and
+`playwright-core@1.62.1`, both dev-only with no postinstall network activity) were updated in
+place.
+
+Next bounded action set to **Phase 9 - Opus 5 - Architecture Integration Gate B**; not executed
+this revision.
 
 ### Revision 9 - 2026-08-25 (Sonnet 5)
 Phase 7C complete: Preset Catalog Families G-I - **the 74-preset catalog is finished**. Extended

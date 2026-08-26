@@ -19,6 +19,16 @@ export const ACTION_IDS = [
   'PAUSE',
   'CONFIRM',
   'CANCEL',
+  // Phase 8: independent aim for the top-down controller family
+  // (twin-stick-shooter's defining mechanic). Four discrete directional
+  // actions, the same shape MOVE_* already uses - not a spatial pointer
+  // extension (ADR-0014/ARCHITECTURE_OVERVIEW's deferred spatial pointer
+  // service is unrelated and stays deferred; this is a same-shape addition
+  // to the existing digital-axis vocabulary, not a new architecture).
+  'AIM_LEFT',
+  'AIM_RIGHT',
+  'AIM_UP',
+  'AIM_DOWN',
 ] as const;
 
 export type ActionId = (typeof ACTION_IDS)[number];

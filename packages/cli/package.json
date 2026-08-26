@@ -1,0 +1,32 @@
+{
+  "name": "@sw2d/cli",
+  "version": "0.1.0",
+  "private": true,
+  "description": "The sw2d factory CLI: doctor, list-presets, describe, new, add-level, add-theme, validate, build, pack. Generates real runnable games from the @sw2d/presets catalogue.",
+  "type": "module",
+  "license": "UNLICENSED",
+  "bin": {
+    "sw2d": "./src/bin.ts"
+  },
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "types": "./src/index.ts",
+  "main": "./src/index.ts",
+  "sideEffects": false,
+  "dependencies": {
+    "@sw2d/contracts": "0.1.0",
+    "@sw2d/content-pipeline": "0.1.0",
+    "@sw2d/presets": "0.1.0",
+    "@sw2d/qa": "0.1.0",
+    "@sw2d/schemas": "0.1.0"
+  },
+  "devDependencies": {
+    "@sw2d/packs": "0.1.0",
+    "@sw2d/runtime": "0.1.0",
+    "phaser": "4.2.1"
+  }
+}

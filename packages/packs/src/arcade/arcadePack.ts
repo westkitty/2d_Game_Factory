@@ -1,7 +1,7 @@
 import type { EventBus, GameContext, InstalledSystemPack, SystemPackDefinition } from '@sw2d/contracts';
 import { registerSchema } from '@sw2d/schemas';
 import { CAPABILITY_IDS, PACK_IDS } from '../ids.ts';
-import arcadeConfigSchema from '../../schemas/arcade-config.schema.json';
+import arcadeConfigSchema from '../../schemas/arcade-config.schema.json' with { type: 'json' };
 
 /**
  * Arcade pack: score, combo, round counters and elapsed timing. No

@@ -1,0 +1,138 @@
+import Phaser from 'phaser';
+import type { InstalledSystemPack, NormalizedLevel, NormalizedLevelObject } from '@sw2d/contracts';
+import { platformController, type SceneContext, type ScenePackDefinition } from '@sw2d/runtime';
+import { CAPABILITY_IDS, type EntityRegistry, type WorldService } from '@sw2d/packs';
+
+/**
+ * Chase Platformer demo (Phase 8 representative demo 2/12).
+ *
+ * Smoke contract: platform movement, real chase-pressure state advancing
+ * during play, pressure paused during pause/noninteractive state, reachable
+ * finish/fail. `chasePressure` increments once per `update()` tick - it
+ * needs no explicit pause handling of its own, because Phaser does not call
+ * a paused scene's `update()` at all (SceneRouter's `setPaused` pauses the
+ * play scene; see docs/architecture/ARCHITECTURE_OVERVIEW.md's scene
+ * lifecycle section), which is exactly the "pressure paused during
+ * noninteractive state" the smoke contract asks for - proven by the
+ * absence of code, not by a second flag.
+ */
+
+const LEVEL_DOCUMENT = 'levels/main';
+const CAUGHT_THRESHOLD = 900; // ~15s at 60fps - enough runway to prove "advances" without making the smoke wait long.
+
+export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
+  id: 'game.platform-shell',
+  version: '0.1.0',
+  provides: [],
+  dependencies: [CAPABILITY_IDS.world, CAPABILITY_IDS.entities],
+
+  install(context: SceneContext): InstalledSystemPack {
+    const scene = context.scene;
+    const level = context.content.data[LEVEL_DOCUMENT]?.value as NormalizedLevel;
+    const world = context.capabilities.require<WorldService>(CAPABILITY_IDS.world);
+    const registry = context.capabilities.require<EntityRegistry<SceneContext>>(CAPABILITY_IDS.entities);
+
+    const platformKey = context.assets.resolve('platform');
+    const playerKey = context.assets.resolve('player');
+
+    const ground = scene.physics.add.staticGroup();
+    for (const solid of level.solids) {
+      const body = ground.create(solid.x + solid.width / 2, solid.y + solid.height / 2, platformKey) as Phaser.Physics.Arcade.Sprite;
+      body.setDisplaySize(solid.width, solid.height);
+      body.refreshBody();
+    }
+
+    registry.register('PlayerSpawn', (object: NormalizedLevelObject) => ({ x: object.x, y: object.y }));
+    const spawnObject = level.objects.find((object) => object.class === 'PlayerSpawn')!;
+    const spawn = registry.dispatch(spawnObject, context) as { x: number; y: number };
+
+    const player = scene.physics.add.sprite(spawn.x, spawn.y, playerKey);
+    player.setCollideWorldBounds(true);
+    player.body.setAllowGravity(true);
+    player.setGravityY(1100);
+    scene.physics.add.collider(player, ground);
+
+    let chasePressure = 0;
+    let outcome: 'playing' | 'escaped' | 'caught' = 'playing';
+    const markerSprites: Phaser.GameObjects.Sprite[] = [];
+
+    function markerSprite(x: number, y: number, width: number, height: number, key: string): Phaser.GameObjects.Sprite {
+      const sprite = scene.add.sprite(x + width / 2, y + height / 2, key);
+      if (width > 0 && height > 0) sprite.setDisplaySize(width, height);
+      scene.physics.add.existing(sprite, true);
+      markerSprites.push(sprite);
+      return sprite;
+    }
+
+    registry.register('Exit', (object: NormalizedLevelObject) => {
+      const exitId = String(object.properties.exitId);
+      const sprite = markerSprite(object.x, object.y, object.width, object.height, context.assets.resolve('exit'));
+      scene.physics.add.overlap(player, sprite, () => {
+        if (outcome !== 'playing') return;
+        outcome = 'escaped';
+        world.setFlag(`level.cleared.${exitId}`, true);
+      });
+    });
+
+    for (const object of level.objects) {
+      if (object.class === 'PlayerSpawn') continue;
+      registry.dispatch(object, context);
+    }
+
+    const debugHandle = context.debug.contribute('game.platform-shell', () => ({
+      x: Math.round(player.x),
+      y: Math.round(player.y),
+      vx: Math.round(player.body.velocity.x),
+      vy: Math.round(player.body.velocity.y),
+      onGround: player.body.blocked.down,
+      chasePressure,
+      outcome,
+    }));
+
+    let disposed = false;
+
+    return {
+      id: GAME_SPECIFIC_PACK.id,
+
+      update(): void {
+        if (disposed) return;
+        const intent = platformController.read(context.input);
+        player.setVelocityX(intent.moveAxis * 220);
+        if (intent.moveAxis !== 0) player.setFlipX(intent.moveAxis < 0);
+        if (intent.jumpPressed && player.body.blocked.down) {
+          player.setVelocityY(-430);
+          context.audio.playCue('ui.confirm');
+        }
+
+        if (outcome === 'playing') {
+          chasePressure += 1;
+          if (chasePressure >= CAUGHT_THRESHOLD) outcome = 'caught';
+        }
+      },
+
+      dispose(): void {
+        if (disposed) return;
+        disposed = true;
+        debugHandle.dispose();
+        try {
+          player.destroy();
+        } catch {
+          /* scene already tearing down */
+        }
+        for (const sprite of markerSprites) {
+          try {
+            sprite.destroy();
+          } catch {
+            /* scene already tearing down */
+          }
+        }
+        try {
+          ground.clear(true, true);
+          ground.destroy(true);
+        } catch {
+          /* scene already tearing down */
+        }
+      },
+    };
+  },
+};

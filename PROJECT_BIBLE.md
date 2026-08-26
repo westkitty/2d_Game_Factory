@@ -8,6 +8,88 @@ Detail for each architectural decision lives in `docs/architecture/adr/`. This f
 
 ---
 
+## Phase 8 - Factory CLI, Generated Starters, Browser QA, and 12 Representative Demos (2026-08-26, Sonnet 5)
+
+One new ADR ([0016](docs/architecture/adr/0016-aim-as-a-digital-axis-not-spatial-pointer.md)).
+Full architectural handoff in
+[`docs/architecture/PHASE8_OPUS_GATE_B_HANDOFF.md`](docs/architecture/PHASE8_OPUS_GATE_B_HANDOFF.md) -
+this entry records the *why*, that file records the *what*.
+
+### Decisions
+
+**Generation is pure and deterministic, writing is not.** `buildGameFiles()` returns an in-memory
+`Map<string, string>`; `writeGameFiles()` is the only function that touches disk. This split (not
+an obvious one to skip - it would have been simpler to write files directly) is what made the
+"byte-identical trees across all 74 presets" determinism proof possible to write at all: a pure
+function is trivially comparable across repeated calls, a function with file-system side effects
+is not.
+
+**`ProjectilePool` stays copied, not shared, even with three real consumers.** The Phase 8
+directive's own three-consumer trigger fired exactly (`twin-stick-shooter`, `bullet-hell`,
+`tower-defense`), and promoting it to `@sw2d/packs` was seriously considered. Decided against
+*this phase* specifically because the three consumers' actual usage (construction arguments only -
+`textureKey`/`displaySize`/`lifetimeMs`) hasn't yet revealed whether a real capability needs a
+richer interface (pooling strategy, first-class damage-on-hit, collision integration) or the
+current shape is already sufficient - promoting ahead of that answer risks the exact "metadata
+that declares a contract nothing evaluates" failure Phase 5's gate found and fixed once already.
+Left as an explicit open question for Opus in the handoff doc rather than decided unilaterally,
+since it is a pack-architecture call, not a generated-game-architecture one.
+
+**Aim became a second digital axis, not a spatial pointer service.** See ADR-0016. The deciding
+factor: `twin-stick-shooter`'s smoke contract needed genuinely independent aim, and
+`topDownController`'s existing `moveX`/`moveY` pattern (two digital axes, clamped magnitude) was
+structurally sufficient - a spatial pointer service would have been new input-ownership surface
+built for a need that didn't require it.
+
+**`sokoban` does not select `sw2d.puzzle`.** Discovered, not designed around in advance:
+`PuzzleConfig` requires functions (`createInitialState`, `isSolved`), and the generator can only
+ever populate `content/game.json`'s `config` with JSON data. Rather than force a workaround into
+the generator (e.g. a special-cased non-JSON config path for exactly one pack) or silently claim a
+capability the demo doesn't actually use, the demo implements the identical state shape directly
+and the incompatibility is recorded as a real, generalizable finding - the next preset needing
+`sw2d.puzzle` will hit the identical wall, and Phase 9 should decide whether that's a pack-level
+fix or a permanent documented limitation.
+
+**The all-74 evidence bar is two-tier, not "build all 74 for real."** Building all 74 on every
+change would be real but disproportionate - most of the variation between presets is JSON content
+data, already exhaustively schema-checked statically. The real-build tier only needs one
+representative per *shell-template equivalence class* (six classes; the twelve demos already cover
+five, so only `gallery-shooter` needed adding for the `pointer` class) to be honest evidence for
+the untested 61 - because what varies between them (JSON data) is exactly what the static tier
+already checks for all 74, and what doesn't vary (scaffolding, template selection logic) is exactly
+what the real build proves works.
+
+**`validate`'s browser smoke was strengthened mid-phase after it missed a real bug.** The original
+oracle only checked the title screen loaded - it never started a run, so `SystemHostImpl.install()`
+never executed during the check, and a `main.ts.template` that only wired the shell pack (not every
+required pack) would have shipped "validated" while actually broken for any preset needing a second
+pack. Caught by hand while building `metroidvania` (which needs `sw2d.progression`), not by the
+ladder itself - the ladder was then fixed so the *next* instance of this bug class would be caught
+automatically.
+
+### Rejected during this phase
+
+- **A spatial pointer/world-coordinate aim service.** See "Decisions" above and ADR-0016. Deferred
+  again, not built smaller-than-planned - genuinely not needed for anything Phase 8 required.
+- **Promoting `ProjectilePool` to `@sw2d/packs`.** See "Decisions" above. Left open for Phase 9,
+  not decided by default-to-promote or default-to-defer.
+- **A generic fix or workaround inside the CLI generator for `sw2d.puzzle`'s config shape.**
+  Would have been a pack-architecture fix disguised as a generator change, and risked being
+  designed around one demo's specific needs rather than the real underlying gap. Recorded as a
+  finding for Phase 9 instead.
+- **Downloading a bundled Playwright browser.** The full `playwright` package's install script
+  does this by default; `playwright-core` (same driver API, no such script) satisfies the phase's
+  explicit dependency policy without it. See `docs/architecture/DEPENDENCY_BASELINE.md`.
+- **Building all 74 presets for real on every validation run.** See "Decisions" above - the
+  two-tier evidence strategy was chosen deliberately over this, not settled for as a shortcut.
+- **A shared "grid cursor" abstraction** across `sokoban`/`tower-defense`/`turn-based-tactics`.
+  Considered; rejected because CONFIRM means something different in each (push vs. place vs.
+  select-then-act) - a shared abstraction would either encode all three behaviors, defeating the
+  purpose, or stay too thin to be worth extracting yet. Left for Opus to revisit if a fourth
+  grid-family demo needs the identical shape.
+
+---
+
 ## Phase 7C - Preset Catalog Families G-I (2026-08-25, Sonnet 5) - catalog complete
 
 No new ADR - the third phase in a row where extending ADR-0015's package boundary and Phase 7A's

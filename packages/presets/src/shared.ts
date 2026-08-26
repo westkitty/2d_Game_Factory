@@ -1,4 +1,4 @@
-import { SCENE_KEYS, type ControllerFamily, type InputMode, type PresetDefinition, type SystemPackSelection } from '@sw2d/contracts';
+import { SCENE_KEYS, type ControllerFamily, type InputMode, type PresetDefinition, type PresetMaturity, type SystemPackSelection } from '@sw2d/contracts';
 
 /**
  * Shared preset-authoring helpers.
@@ -106,6 +106,8 @@ export interface PresetSpec {
   readonly supportedInputModes?: readonly InputMode[];
   readonly validationProfile: ValidationProfileId;
   readonly knownLimitations?: readonly string[];
+  /** Defaults to 'recipe'. Only set to 'smoke-validated' once a real, committed browser smoke test passes (Phase 8's twelve demos) - never hand-waved. */
+  readonly maturity?: PresetMaturity;
 }
 
 /** A bare pack reference with no config - honest when no preset-level tuning is consumed yet (MASTER_PROJECT.md section 11). */
@@ -118,7 +120,7 @@ export function definePreset(spec: PresetSpec): PresetDefinition {
     id: spec.id,
     displayName: spec.displayName,
     family: spec.family,
-    maturity: 'recipe',
+    maturity: spec.maturity ?? 'recipe',
     controllerFamilies: spec.controllerFamilies,
     requiredSystemPacks: spec.requiredSystemPacks,
     optionalSystemPacks: spec.optionalSystemPacks ?? [],

@@ -21,6 +21,7 @@ import { LIMITATIONS, VALIDATION_PROFILES, definePreset, pack } from '../shared.
 export const PLATFORMING_PRESETS: readonly PresetDefinition[] = [
   definePreset({
     id: 'traditional-platformer',
+    maturity: 'smoke-validated',
     displayName: 'Traditional Platformer',
     family: 'platforming',
     controllerFamilies: ['platform'],
@@ -32,6 +33,7 @@ export const PLATFORMING_PRESETS: readonly PresetDefinition[] = [
 
   definePreset({
     id: 'chase-platformer',
+    maturity: 'smoke-validated',
     displayName: 'Chase Platformer',
     family: 'platforming',
     controllerFamilies: ['platform'],
@@ -67,6 +69,7 @@ export const PLATFORMING_PRESETS: readonly PresetDefinition[] = [
 
   definePreset({
     id: 'metroidvania',
+    maturity: 'smoke-validated',
     displayName: 'Metroidvania',
     family: 'platforming',
     controllerFamilies: ['platform'],

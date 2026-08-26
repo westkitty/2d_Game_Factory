@@ -1,7 +1,7 @@
 import type { GameDefinition } from '@sw2d/contracts';
 import { validateDocumentOrThrow } from '@sw2d/schemas';
 import { TILED_LEVEL_PACK } from './game-specific/tiledLevelPack.ts';
-import gameData from '../content/tiled-proof-game.json';
+import gameData from '../content/tiled-proof-game.json' with { type: 'json' };
 
 /**
  * The Tiled-proof page's declarative game description, validated the same

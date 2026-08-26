@@ -1,7 +1,7 @@
 import type { EventBus, GameContext, InstalledSystemPack, SystemPackDefinition } from '@sw2d/contracts';
 import { registerSchema } from '@sw2d/schemas';
 import { CAPABILITY_IDS, PACK_IDS } from '../ids.ts';
-import progressionConfigSchema from '../../schemas/progression-config.schema.json';
+import progressionConfigSchema from '../../schemas/progression-config.schema.json' with { type: 'json' };
 
 /**
  * Progression pack: player/meta progression state - currency, XP, unlock

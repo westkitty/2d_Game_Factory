@@ -1,9 +1,9 @@
 import type { ContentBundle, ContentSource, ThemeManifest } from '@sw2d/contracts';
 import { normalizeTiledMap } from '@sw2d/content-pipeline';
 import { validateContentBundleData, validateDocumentOrThrow } from '@sw2d/schemas';
-import rawLevel from '../content/levels/intro.json';
-import defaultTheme from '../content/themes/default/theme.json';
-import neonTheme from '../content/themes/neon/theme.json';
+import rawLevel from '../content/levels/intro.json' with { type: 'json' };
+import defaultTheme from '../content/themes/default/theme.json' with { type: 'json' };
+import neonTheme from '../content/themes/neon/theme.json' with { type: 'json' };
 
 /**
  * The Tiled-proof page's content source.

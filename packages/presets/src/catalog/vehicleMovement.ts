@@ -17,6 +17,7 @@ import { LIMITATIONS, VALIDATION_PROFILES, definePreset, pack } from '../shared.
 export const VEHICLE_MOVEMENT_PRESETS: readonly PresetDefinition[] = [
   definePreset({
     id: 'top-down-racer',
+    maturity: 'smoke-validated',
     displayName: 'Top-Down Racer',
     family: 'vehicle-movement',
     controllerFamilies: ['vehicle'],

@@ -68,4 +68,51 @@ describe('topDownController', () => {
     expect(intent.secondaryPressed).toBe(false);
     expect(intent.interactPressed).toBe(false);
   });
+
+  describe('aim (Phase 8: independent of movement, twin-stick-shooter\'s defining capability)', () => {
+    it('is neutral with no aim input, even while moving', () => {
+      const host = hostWithDefaults();
+      host.setActionValue('MOVE_RIGHT', 1, 'keyboard');
+      host.update();
+
+      const intent = topDownController.read(host);
+      expect(intent.aimX).toBe(0);
+      expect(intent.aimY).toBe(0);
+      expect(intent.aimMagnitude).toBe(0);
+    });
+
+    it('reports aim independently of, and in a different direction than, movement', () => {
+      const host = hostWithDefaults();
+      host.setActionValue('MOVE_RIGHT', 1, 'keyboard');
+      host.setActionValue('AIM_UP', 1, 'keyboard');
+      host.update();
+
+      const intent = topDownController.read(host);
+      expect(intent.moveX).toBe(1);
+      expect(intent.moveY).toBe(0);
+      expect(intent.aimX).toBe(0);
+      expect(intent.aimY).toBe(-1);
+    });
+
+    it('bounds diagonal aim magnitude to 1, the same rule as movement', () => {
+      const host = hostWithDefaults();
+      host.setActionValue('AIM_LEFT', 1, 'keyboard');
+      host.setActionValue('AIM_DOWN', 1, 'keyboard');
+      host.update();
+
+      const intent = topDownController.read(host);
+      expect(Math.hypot(intent.aimX, intent.aimY)).toBeCloseTo(1, 10);
+      expect(intent.aimMagnitude).toBeCloseTo(1, 10);
+    });
+
+    it('a press claimed by no consumePress call is not consumed - aim is a plain, non-claiming read', () => {
+      const host = hostWithDefaults();
+      host.setActionValue('AIM_RIGHT', 1, 'keyboard');
+      host.update();
+
+      const first = topDownController.read(host);
+      const second = topDownController.read(host);
+      expect(second.aimX).toBe(first.aimX);
+    });
+  });
 });
