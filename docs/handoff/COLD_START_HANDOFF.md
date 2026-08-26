@@ -46,7 +46,7 @@ same fact, but none of them supersede live evidence (a real command's output bea
 - **npm** ships with Node. `npm ci` needs the npm registry/cache reachable at least once (a
   development bootstrap dependency, not a runtime one).
 - **System Chrome or Chromium** - required for every real-browser QA command
-  (`qa:smoke`/`qa:proof`/`qa:responsive`/`release:verify`). `playwright-core` never downloads a
+  (`qa:smoke`/`qa:proof`/`qa:responsive`/`qa:matrix`/`release:verify`). `playwright-core` never downloads a
   bundled browser. `npm run sw2d -- doctor` tells you if one was found.
 - **Tiled** - optional. Not required to run generated games or any committed command.
 - No credentials or secrets are required anywhere in this repository.
@@ -107,6 +107,7 @@ npm run validate       # typecheck + unit tests + build + offline guard (fast, n
 npm run qa:smoke       # 14 targets (12 demos + 2 starter pages), real Chrome, 14/14
 npm run qa:proof       # 5 deep proof games, real Chrome, 5/5
 npm run qa:responsive  # 19 surfaces x 2 viewports, real Chromium touch/coarse-pointer emulation, 19/19
+npm run qa:matrix      # 40 generate+build+play targets covering all 74 presets by runtime signature, 40/40
 npm run release:verify # 6/6 controller-shell families: generate->validate->pack->verify, real Chrome
 ```
 
@@ -164,8 +165,30 @@ Release has been performed - that is explicitly out of scope for every phase so 
 
 ## 13. Next owner and exact next phase
 
-**Phase 12 - Opus 5 - Final Cross-System Acceptance and Cold-Start Gate.**
+**None. Phase 12 is complete and the initial MASTER_PROJECT is accepted.**
 
-Evidence packet: `docs/architecture/PHASE11_FINAL_OPUS_HANDOFF.md`. `OPERATIONAL_STATE.md`'s "Next
-bounded action" section is the live, authoritative statement of what comes next - if this document
-and that one ever disagree, `OPERATIONAL_STATE.md` wins.
+```text
+Phase 12 complete.
+Initial MASTER_PROJECT accepted.
+Pending work under MASTER_PROJECT: None.
+Next bounded action: None - initial master contract complete.
+No Phase 13 exists.
+Future work requires a separately scoped task/project.
+```
+
+Final acceptance record (A01-A20 ledger, F01-F13 audit, Phase 11 claim reconciliation, cold-start
+challenge, stopping decision): `docs/architecture/PHASE12_FINAL_ACCEPTANCE.md`. The Phase 11
+evidence packet it was judged against: `docs/architecture/PHASE11_FINAL_OPUS_HANDOFF.md`.
+
+"Complete" means MASTER_PROJECT.md section 54's twenty criteria are satisfied and evidenced and
+none of section 46's thirteen failure conditions is present. It does **not** mean every possible
+mechanic exists, every preset is proof-validated, real-device performance is benchmarked, or public
+licensing is granted - see §10 and §11 above, which are still current and still open.
+
+If you have arrived here intending to "continue the project": there is nothing left to continue
+under this plan. Scope the new work explicitly, with its own acceptance contract, and do not treat
+the 62 `recipe` presets' `knownLimitations` as a backlog that the master project left unfinished -
+they are recorded scope boundaries, not debt.
+
+`OPERATIONAL_STATE.md`'s "Next bounded action" section remains the live, authoritative statement of
+what comes next - if this document and that one ever disagree, `OPERATIONAL_STATE.md` wins.

@@ -8,6 +8,86 @@ Detail for each architectural decision lives in `docs/architecture/adr/`. This f
 
 ---
 
+## Phase 12 - Final Cross-System Acceptance and Cold-Start Gate (2026-08-26, Opus 5) - initial MASTER_PROJECT complete
+
+**Status: COMPLETE. Verdict: Complete.** Full record:
+[`docs/architecture/PHASE12_FINAL_ACCEPTANCE.md`](docs/architecture/PHASE12_FINAL_ACCEPTANCE.md).
+
+An evidence gate. No capability of the factory changed. What changed is that every claim about
+those capabilities was re-established independently, and three defects that only an
+outside-in audit could surface were found and repaired.
+
+### The lesson: a claim verified by its author is not the same claim verified by a stranger
+
+Phase 11 closed with an honest, careful handoff and a `RECOVERABLE` cold-start audit. Both were
+substantially right. But three things slipped through, and all three share one shape: **they were
+invisible from the inside, because the person checking already knew the answer.**
+
+1. `docs/resources/CODE_RESOURCE_MANIFEST.json` did not record `playwright-core` or `@types/node`.
+   Nobody reading it noticed, because anyone who had worked in this repository already knew
+   `playwright-core` was there and why - it is discussed at length in
+   `docs/architecture/DEPENDENCY_BASELINE.md`. The manifest looked complete to a reader carrying
+   that knowledge. Only mechanically diffing *every workspace `package.json`* against *the file
+   `resource-policy.json` designates as the record* showed the two disagreeing. This is precisely
+   the defect Phase 11 itself fixed for `ajv`/`ajv-formats` - and it recurred one step further out,
+   in the same phase that fixed it, because the fix was applied to the instance rather than to the
+   class. The repair this time is mechanical: `packages/cli/test/codeResourceManifest.test.ts`
+   derives the required set from disk, so the manifest cannot be incomplete without a red test.
+   **Generalisable rule: when a hand-maintained record duplicates a fact the machine already knows,
+   the record will drift. Derive it or guard it; do not proofread it.**
+
+2. This repository's own current-state document pointed at `packages/cli/src/release/checksums.ts`
+   - a path that had not existed since the commit that introduced it, because Phase 11 renamed
+   `release/` to `releasePackaging/` to escape a `.gitignore` pattern (see the Phase 11 entry
+   below). The prose describing the fix outlived the fix's own effect on itself. Notably, **every
+   markdown *link* in the repository resolved** - a sweep of all `](path)` targets across every
+   tracked `.md` found zero broken links. The stale references survived precisely because they were
+   inline code spans, not links: the tooling nobody wrote was the only thing that would have caught
+   them.
+
+3. The generated-runtime matrix - the single piece of evidence that all 74 presets really generate,
+   install their packs and enter play - **had no documented way to run it.** Every document named
+   the file; none named a command. To anyone who had run it before, this was invisible; to a
+   cold-start agent it was a wall. Worse, the obvious guess (`npx tsx tools/scripts/...`) fails
+   here, because `tsx` is in no `package.json` and no lockfile entry, so npx silently reaches for
+   the registry. It is now `npm run qa:matrix`, invoked with plain `node` like every other
+   TypeScript tool in this repository. **Generalisable rule: a piece of evidence nobody can rerun
+   is not evidence; it is a claim. Every acceptance command needs a name, not a file path.**
+
+### What the gate actually did, beyond re-reading
+
+The point of a final gate is to distrust the handoff, so the reconciliation was deliberately
+mechanical rather than textual:
+
+- The matrix's "40 covers 74" claim was **re-derived from the catalog** instead of accepted:
+  recomputing `(primary controller shell, sorted required-pack-id set)` for all 74 presets yields
+  37 distinct signatures and 40 targets, with 0 presets left in an untargeted signature and all
+  six `sw2d.puzzle` presets individually targeted. The equivalence argument holds independently of
+  the script that implements it.
+- Checksum integrity was checked with the **standard system `shasum -a 256 -c`**, not this
+  repository's verifier, and tamper detection was proven by appending one byte to a copy of a
+  packed `index.html` and watching it fail.
+- The responsive repair was checked for **propagation**, not existence: `#app { height: 100% }` in
+  all 19 committed `styles.css` files *and* in the CLI template, so future generated games inherit
+  it rather than needing the same fix again.
+- The cold-start challenge ran in a `git checkout-index` snapshot verified to contain no
+  `node_modules`, `dist`, `pack`, `games/` or `.git` - install through packed-artifact play in real
+  Chrome, using only what `README.md` and `docs/handoff/COLD_START_HANDOFF.md` say.
+
+### What was deliberately not done
+
+No mechanic was added, no preset promoted, no performance measured, no device lab built, no gamepad
+adapter attempted, no license chosen, no release published. `UNLICENSED` stayed `UNLICENSED`
+because it is the project owner's decision and nobody else's. The maturity split stayed 5/7/62/0
+because the evidence behind it did not change. Revision 13's history text kept its stale path,
+because rewriting a past revision to look tidier in hindsight is exactly the habit this ledger
+exists to prevent.
+
+The initial MASTER_PROJECT is complete. There is no Phase 13; further work needs its own scope and
+its own acceptance contract.
+
+---
+
 ## Phase 11 - Release, Hardening, Documentation, and Cold-Start Preparation (2026-08-26, Sonnet 5)
 
 **Status: COMPLETE.** Full report:

@@ -6,12 +6,19 @@ Not one game, and not a Phaser starter template: one runtime plus composable sys
 controller families, data-driven content, genre preset recipes and theme packs, so a new game is
 a *composition* rather than a fork.
 
-> **Status: Phase 11 of 12 complete.** The runtime, ten system-pack cores, 74 genre preset recipes
-> (5 proof-validated / 7 smoke-validated / 62 recipe / 0 experimental), a real factory CLI with a
-> release packer, twelve generated real-browser-smoke-validated demo games, five deeper end-to-end
-> proof games, a 6/6 real-browser release-verification matrix, and a 19-surface real-browser
-> responsive/mobile suite all exist and are validated. **Technically release-ready; the project's
-> public software license is still an unresolved user decision (`UNLICENSED`)** - see
+> **Status: all 12 phases complete. The initial master project is accepted and finished.**
+> The runtime, ten system-pack cores, 74 genre preset recipes (5 proof-validated /
+> 7 smoke-validated / 62 recipe / 0 experimental), a real factory CLI with a release packer, twelve
+> generated real-browser-smoke-validated demo games, five deeper end-to-end proof games, a 6/6
+> real-browser release-verification matrix, a 19-surface real-browser responsive/mobile suite, and a
+> 40-target generated-runtime matrix covering all 74 presets all exist and are validated. The final
+> acceptance gate is recorded in
+> [`docs/architecture/PHASE12_FINAL_ACCEPTANCE.md`](docs/architecture/PHASE12_FINAL_ACCEPTANCE.md)
+> (A01-A20 all PASS, F01-F13 all NO). **Pending work under the master project: none. No Phase 13 -
+> future work needs a separately scoped project.**
+>
+> **Technically release-ready; the project's public software license is still an unresolved user
+> decision (`UNLICENSED`)** - see
 > [`docs/release/RELEASE_READINESS.md`](docs/release/RELEASE_READINESS.md).
 > [`OPERATIONAL_STATE.md`](OPERATIONAL_STATE.md) is the authority on what actually works; new to
 > this repository with no prior context? Start at
@@ -57,6 +64,7 @@ npm run validate      # typecheck + unit tests + build + offline guard
 npm run qa:smoke      # build and real-browser-smoke every demo + starter journey
 npm run qa:proof      # build and real-browser-prove every deep proof game
 npm run qa:responsive # real-browser responsive/mobile check: 19 surfaces x 2 viewports
+npm run qa:matrix     # generate+build+play one game per distinct runtime signature: 40 targets covering all 74 presets
 npm run release:verify # generate+validate+pack+verify one game per controller-shell family
 ```
 
@@ -162,6 +170,7 @@ browser-level evidence is in [`docs/qa/PHASE1_VALIDATION.md`](docs/qa/PHASE1_VAL
 | [`docs/handoff/COLD_START_AUDIT.md`](docs/handoff/COLD_START_AUDIT.md) | evidence-only audit of whether this repository is actually recoverable |
 | [`docs/release/CLEAN_BUILD_REPRODUCIBILITY.md`](docs/release/CLEAN_BUILD_REPRODUCIBILITY.md) | proof that an isolated, index-derived checkout installs/builds/validates/packs |
 | [`docs/architecture/PHASE11_FINAL_OPUS_HANDOFF.md`](docs/architecture/PHASE11_FINAL_OPUS_HANDOFF.md) | Phase 11's handoff to Phase 12 |
+| [`docs/architecture/PHASE12_FINAL_ACCEPTANCE.md`](docs/architecture/PHASE12_FINAL_ACCEPTANCE.md) | the final acceptance gate: A01-A20 ledger, F01-F13 audit, cold-start challenge, stopping decision |
 
 ## Resuming work
 
@@ -170,6 +179,12 @@ action. Full protocol in [`docs/AGENT_WORKFLOW.md`](docs/AGENT_WORKFLOW.md). No 
 sessions and need to rebuild full context from the repository alone? Start at
 [`docs/handoff/COLD_START_HANDOFF.md`](docs/handoff/COLD_START_HANDOFF.md) instead - it is written
 for exactly that case.
+
+As of Phase 12 that recorded next bounded action is **none**: the initial master project is
+complete. Anything further - a device lab, gamepad support, real performance measurement, spatial
+pointer, deeper mechanics for any of the 62 `recipe` presets, or a licensing and distribution
+decision - is new work needing its own scope and its own acceptance contract, not a continuation of
+this plan.
 
 ## Reference material
 

@@ -1,6 +1,6 @@
 {
-  "$comment": "Direct code dependencies. Governed by resource-policy.json and MASTER_PROJECT.md section 20.2. Phase 11 correction: ajv/ajv-formats moved here from verifiedButNotInstalled - they were installed and shipped as of Phase 2 (packages/schemas), this manifest just never caught up. See docs/resources/THIRD_PARTY_NOTICES.md's Phase 11 correction note.",
-  "manifestVersion": 2,
+  "$comment": "Direct code dependencies. Governed by resource-policy.json and MASTER_PROJECT.md section 20.2. Phase 11 correction: ajv/ajv-formats moved here from verifiedButNotInstalled - they were installed and shipped as of Phase 2 (packages/schemas), this manifest just never caught up. See docs/resources/THIRD_PARTY_NOTICES.md's Phase 11 correction note. Phase 12 correction: playwright-core (packages/qa) and @types/node (root) were real, declared, direct dependencies that this manifest had never recorded - playwright-core's provenance was documented in docs/architecture/DEPENDENCY_BASELINE.md since Phase 8, but resource-policy.json names this file as the machine-readable record and it was incomplete. Both added; packages/cli/test/codeResourceManifest.test.ts now derives the required set mechanically from every workspace package.json, so this class of omission cannot recur silently.",
+  "manifestVersion": 3,
   "updated": "2026-08-26",
   "dependencies": [
     {
@@ -75,6 +75,31 @@
       "hasInstallScripts": false,
       "introducesNetworkOrTelemetry": false,
       "removalPath": "Test-only. Replaceable by any TypeScript-aware runner."
+    },
+    {
+      "name": "playwright-core",
+      "exactVersion": "1.62.1",
+      "canonicalSource": "https://www.npmjs.com/package/playwright-core",
+      "repository": "https://github.com/microsoft/playwright",
+      "license": "Apache-2.0",
+      "purpose": "Drives a system-installed Chrome/Chromium for every real-browser QA command (@sw2d/qa's harness: qa:smoke, qa:proof, qa:responsive, release:verify, qa:matrix). Dev-only; no generated game depends on it.",
+      "shippedInBuild": false,
+      "hasInstallScripts": false,
+      "introducesNetworkOrTelemetry": false,
+      "notes": "playwright-core is used deliberately instead of the full playwright package: it has no post-install browser download, so installing this repository never fetches a browser binary. It connects to a system Chrome found by packages/qa/src/browserPath.ts (overridable via PLAYWRIGHT_CHROME_PATH).",
+      "removalPath": "Test-only. Replaceable by any Chrome DevTools Protocol driver; only packages/qa/src/harness.ts and browserPath.ts depend on it."
+    },
+    {
+      "name": "@types/node",
+      "exactVersion": "24.13.3",
+      "canonicalSource": "https://www.npmjs.com/package/@types/node",
+      "repository": "https://github.com/DefinitelyTyped/DefinitelyTyped",
+      "license": "MIT",
+      "purpose": "Node standard-library type declarations for the CLI, QA harness and tools/scripts. Types only - erased at build time.",
+      "shippedInBuild": false,
+      "hasInstallScripts": false,
+      "introducesNetworkOrTelemetry": false,
+      "removalPath": "Declarations only; removable the moment no Node API is referenced from TypeScript, which is not the case today."
     }
   ],
   "verifiedButNotInstalled": []

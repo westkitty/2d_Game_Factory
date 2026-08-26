@@ -28,6 +28,7 @@
     "qa:proof": "node packages/qa/src/runProofs.ts",
     "qa:responsive": "node tools/scripts/qa-responsive.ts",
     "release:verify": "node tools/scripts/release-verify.ts",
+    "qa:matrix": "node tools/scripts/generated-runtime-matrix.ts",
     "validate": "npm run typecheck && npm run test && npm run build && npm run check:offline"
   },
   "devDependencies": {

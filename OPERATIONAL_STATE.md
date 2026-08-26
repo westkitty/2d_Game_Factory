@@ -2,7 +2,7 @@
 
 Project: **Stinky Weasel 2D Browser Game Factory** (`sw2d`)
 Repository: `westkitty/2d_Game_Factory`
-State revision: **13**
+State revision: **14**
 Updated: 2026-08-26
 
 Read this before doing anything. Governing spec: [`MASTER_PROJECT.md`](MASTER_PROJECT.md).
@@ -11,6 +11,59 @@ Workflow: [`docs/AGENT_WORKFLOW.md`](docs/AGENT_WORKFLOW.md).
 ---
 
 ## Current phase
+
+**Phase 12 - Final Cross-System Acceptance and Cold-Start Gate - COMPLETE (Opus 5).**
+
+**Phase 12 complete. Initial MASTER_PROJECT accepted.**
+
+Final verdict: **Complete.** Full acceptance record, including the A01-A20 ledger, the F01-F13
+failure-condition audit, the independent reconciliation of Phase 11's highest-risk claims, and the
+repository-only cold-start challenge:
+[`docs/architecture/PHASE12_FINAL_ACCEPTANCE.md`](docs/architecture/PHASE12_FINAL_ACCEPTANCE.md).
+
+- **Pending work under MASTER_PROJECT: None.**
+- **Next bounded action: None - the initial master contract is complete.**
+- **No Phase 13 exists.** Future work requires a separately scoped task/project with its own
+  acceptance contract.
+
+Phase 12 was an evidence gate, not a feature phase. It ran the full validation ladder on the final
+tree (`validate` PASS, `npm test` 1787/1787, `qa:smoke` 14/14, `qa:proof` 5/5, `qa:responsive`
+19/19, `release:verify` 6/6, `qa:matrix` 40/40), independently re-derived the matrix's coverage of
+all 74 presets (74 -> 37 runtime signatures -> 40 targets, 0 uncovered, all 6 `sw2d.puzzle` presets
+individually targeted), and re-proved rather than re-read Phase 11's release, responsive,
+reproducibility and cold-start claims - including verifying a packed artifact's checksums with the
+standard system `shasum` tool and confirming tamper detection independently.
+
+It used its one permitted targeted repair pass on three findings, all documentation/provenance-level
+(no gameplay, no mechanics, no polish):
+
+1. `docs/resources/CODE_RESOURCE_MANIFEST.json` - the record `resource-policy.json` designates as
+   *the* machine-readable code-dependency inventory - omitted two real declared direct dependencies,
+   `playwright-core@1.62.1` (Apache-2.0, `@sw2d/qa`) and `@types/node@24.13.3` (MIT, root), which
+   MASTER_PROJECT section 20.2 requires a record for. Provenance was never *unknown*
+   (`playwright-core` has been documented in `docs/architecture/DEPENDENCY_BASELINE.md` since Phase
+   8) and no release artifact was ever wrong (shipped notices are mechanically derived and neither
+   package ships) - the designated manifest simply disagreed by omission. Both recorded, the
+   dev-tooling notices table extended, and `packages/cli/test/codeResourceManifest.test.ts` (6 new
+   tests) now derives the required set mechanically from every workspace `package.json`, so the
+   omission cannot recur. The guard was verified load-bearing by temporarily removing a record and
+   watching it fail.
+2. This document's "Current phase" section named `packages/cli/src/release/{checksums,notices}.ts`,
+   a path Phase 11 renamed to `releasePackaging/` in the same commit. Corrected. The same path
+   inside Revision 13's history entry was deliberately left unchanged as protected historical text.
+3. The generated-runtime matrix had **no documented invocation anywhere** - no `npm run` alias, only
+   a file path - so a cold-start agent could not discover how to run a mandatory acceptance command
+   (and `npx tsx` fails here: `tsx` is not a dependency of this repository). Now
+   `npm run qa:matrix`, documented in `README.md`, `docs/qa/QA_MATRIX.md` and
+   `docs/handoff/COLD_START_HANDOFF.md`.
+
+Unchanged by Phase 12, deliberately: the 5 `proof-validated` / 7 `smoke-validated` / 62 `recipe` /
+0 `experimental` maturity split; the technical release state; `UNLICENSED`; unmeasured performance;
+the physical-device-touch and gamepad unknowns; and every deferred optional capability with its
+recorded trigger. No deployment, GitHub Release, package publication, or licensing decision was
+performed.
+
+---
 
 **Phase 11 - Release, Hardening, Documentation, and Cold-Start Preparation - COMPLETE (Sonnet 5).**
 
@@ -27,8 +80,8 @@ mobile-hardened, and recoverable by a new agent with no chat memory:
   generated game's placeholder assets as honestly project-owned/generated, and `pack` validates it
   against `resource-policy.json` *before* building - a missing, invalid, or non-`approved` record
   blocks release packaging outright. A successful pack now also writes a deterministic
-  `RELEASE_MANIFEST.json`, a SHA-256 `SHA256SUMS` (`packages/cli/src/release/checksums.ts`), and a
-  mechanically-derived `THIRD_PARTY_NOTICES.txt` (`packages/cli/src/release/notices.ts`, walks the
+  `RELEASE_MANIFEST.json`, a SHA-256 `SHA256SUMS` (`packages/cli/src/releasePackaging/checksums.ts`),
+  and a mechanically-derived `THIRD_PARTY_NOTICES.txt` (`packages/cli/src/releasePackaging/notices.ts`, walks the
   real `@sw2d/*` → npm dependency graph rather than hand-listing packages). Proven via
   `npm run release:verify`: 6/6 controller-shell families (fresh-generate → validate → pack →
   verify manifest/checksums/resources → serve the packed dir through real Chrome → enter play →
@@ -62,9 +115,8 @@ mobile-hardened, and recoverable by a new agent with no chat memory:
 - Cold-start documentation, a clean-build reproducibility proof, release-readiness documentation,
   and the Phase 12 handoff packet were all produced this phase; see the linked documents above.
 
-Next owner: **Opus 5, Phase 12** (Final Cross-System Acceptance and Cold-Start Gate).
-See [Next bounded action](#next-bounded-action). **Phase 12 was not executed this revision** - it
-is recorded here as the next bounded action only.
+Next owner at the time Phase 11 closed: **Opus 5, Phase 12** (Final Cross-System Acceptance and
+Cold-Start Gate) - since executed and complete; see the Phase 12 block above.
 
 ## Current baseline
 
@@ -648,7 +700,7 @@ Breaking one of these is an architecture change, not a bug fix. Escalate rather 
 | Layer | State | Command |
 |---|---|---|
 | Static / schema | TypeScript passing; JSON Schema exists for 5 contract types + 1 content document + 6 Phase 6 content-pipeline documents (asset-descriptor, ui-copy, content-assets, theme-manifest, resource-record/-manifest, level-document) + 3 pack config schemas (progression, arcade, starter placeholder-mover); all 74 presets validate against `preset-definition:v1` | `npm run typecheck` |
-| Unit | 1781 tests passing (58 Phase 1 + 29 Phase 2 + 35 Phase 3 + 78 Phase 4 + 13 Phase 5 + 66 Phase 6 + 232 Phase 7A + 179 Phase 7B + 279 Phase 7C + 620 Phase 8 + Phase 9/10 additions + 17 Phase 11 - checksums, per-game resource manifest, mechanically-derived shipped-dependency resolution) | `npm test` |
+| Unit | 1787 tests passing (58 Phase 1 + 29 Phase 2 + 35 Phase 3 + 78 Phase 4 + 13 Phase 5 + 66 Phase 6 + 232 Phase 7A + 179 Phase 7B + 279 Phase 7C + 620 Phase 8 + Phase 9/10 additions + 17 Phase 11 - checksums, per-game resource manifest, mechanically-derived shipped-dependency resolution + 6 Phase 12 - code-dependency provenance completeness, derived mechanically from every workspace `package.json`) | `npm test` |
 | Build | passing (two-page build: `index.html` + `tiled-proof.html`) | `npm run build` |
 | Offline (static guard) | passing | `npm run check:offline` |
 | Release packaging | `sw2d pack` produces a self-contained static pack with a deterministic `RELEASE_MANIFEST.json`, SHA-256 `SHA256SUMS`, and mechanically-derived `THIRD_PARTY_NOTICES.txt`; blocks packaging on missing/invalid/non-approved per-game resource manifests; one candidate proven byte-identical across two packs from identical source (Phase 11) | `npm run sw2d -- pack <game-id>` |
@@ -659,6 +711,7 @@ Breaking one of these is an architecture change, not a bug fix. Escalate rather 
 | Demo smoke (12 representative demos) | **all 12 pass real-browser smoke** - one demo per genre family, each proving its preset's defining mechanic via a committed Playwright spec against a real production build | `npm run qa:smoke`, `packages/qa/specs/*.ts`, see `docs/demos/DEMO_MATRIX.md` |
 | Factory CLI | 9 commands (`doctor`, `list-presets`, `describe`, `new`, `add-level`, `add-theme`, `validate`, `build`, `pack`), all manually and automatically exercised; `new`'s determinism and per-preset content validity proven for all 74 presets, real build evidence for a 13-instance representative matrix (12 demos + the one uncovered controller-family class) | `packages/cli/test/**`, `tools/scripts/build-matrix.ts`, `docs/cli/CLI_REFERENCE.md` |
 | Proof regression | **5/5 deep end-to-end proof games pass** (Phase 10's bar, distinct from Phase 8's smoke bar) | `npm run qa:proof`, `docs/proofs/PROOF_MATRIX.md` |
+| Generated-runtime matrix | **40/40 generated games really entered play** - each really generated, `tsc`-checked, `vite build`-ed, then served and driven in real Chrome (CONFIRM -> `sw2d.play`, every required pack plus the shell pack installed, zero console errors). Mechanically covers all 74 presets: 74 -> 37 distinct `(controller shell, required-pack set)` signatures -> 40 targets (37 representatives + every `sw2d.puzzle` preset individually), 0 presets uncovered - independently re-derived at the Phase 12 gate | `npm run qa:matrix` |
 | Pack composition | real `SystemHostImpl` + `resolveInstallOrder` + `CapabilityRegistryImpl` installing all ten packs together, plus config-validation, declared-`provides` and throwing-teardown failure paths, automated | `packages/runtime/test/packsComposition.test.ts` |
 | Capability-id governance | pattern, uniqueness and pack-id/capability-id split, automated for all ten packs including Phase 6's `entityRegistryPack` | `packages/packs/test/capabilityIds.test.ts` |
 | Tiled/theme/resource content pipeline | normalization, object-class catalog, entity-registry dispatch, theme resolution and resource governance, all automated; the real `docs/resources/VISUAL_ASSET_MANIFEST.json` and the real `starter/content/levels/intro.json` are both exercised directly, not only synthetic fixtures | `packages/content-pipeline/test/**`, `packages/schemas/test/contentPipeline.test.ts`, `packages/schemas/test/resourceGovernance.test.ts`, `packages/packs/test/entityRegistry.test.ts`, `starter/test/tiledProofContent.test.ts`, `starter/test/resourceGovernance.test.ts` |
@@ -671,36 +724,116 @@ proportionate to run on demand, not on every typecheck. All passed this revision
 
 ## Pending work
 
-Phase 12 is unstarted. See `MASTER_PROJECT.md` §38 for the routed plan and owners.
+**None.** Phase 12 is complete and the initial MASTER_PROJECT contract is accepted - see
+[`docs/architecture/PHASE12_FINAL_ACCEPTANCE.md`](docs/architecture/PHASE12_FINAL_ACCEPTANCE.md)
+for the full A01-A20 / F01-F13 evidence ledger. All twelve routed phases in `MASTER_PROJECT.md` §38
+have been executed.
 
 ## Next bounded action
 
-**Phase 12 - Opus 5 - Final Cross-System Acceptance and Cold-Start Gate.**
+**None - the initial MASTER_PROJECT contract is complete.**
 
-Not executed this revision - Phase 11 stops before it by its own instructions. See
-[`docs/architecture/PHASE11_FINAL_OPUS_HANDOFF.md`](docs/architecture/PHASE11_FINAL_OPUS_HANDOFF.md)
-for the full evidence packet (release-packer behaviour, checksum mechanism, release verification
-matrix, responsive/mobile matrix, clean-build reproducibility verdict, cold-start audit verdict,
-current maturity split, full QA command matrix) Phase 12 inherits:
+Phase 12 accepted it at the final gate; the full evidence ledger is
+[`docs/architecture/PHASE12_FINAL_ACCEPTANCE.md`](docs/architecture/PHASE12_FINAL_ACCEPTANCE.md).
+**No Phase 13 exists.** Future work requires a separately scoped task/project with its own
+acceptance contract - it is not a continuation of this plan.
 
-- Spatial pointer, a universal puzzle DSL, a shared grid-cursor abstraction, and content-role
-  schemas beyond `tuning`/`levels` all remain deferred with the same triggers Phase 9 recorded -
-  Phase 11 hardened release/QA/docs only and fired none of them.
-- Performance/FPS under real wall-clock timing remains unmeasured; deterministic frame stepping is
-  determinism evidence only, never a performance claim - Phase 11 did not add a performance claim.
-- Real-device touch remains unverified: Phase 11's `qa:responsive` emulates touch/coarse-pointer
-  via Chromium, which is not a physical phone or tablet.
+What "complete" does and does not mean, so nobody has to infer it:
+
+- It **does** mean every one of MASTER_PROJECT.md section 54's twenty criteria is satisfied and
+  evidenced, and none of section 46's thirteen failure conditions is present.
+- It **does not** mean every possible mechanic exists, every preset is proof-validated, real-device
+  performance is benchmarked, or public licensing is granted.
+
+Carried forward unchanged, and all explicitly non-blocking against the master contract (each
+adjudicated individually in the Phase 12 acceptance document):
+
+- Spatial pointer, a universal puzzle DSL, a shared grid-cursor abstraction, tile-image rendering,
+  the image-backed asset branch, and content-role schemas beyond `tuning`/`levels` all remain
+  deferred with the same triggers Phase 9 recorded. Phase 12 fired none of them; it was an
+  evidence gate, not a feature phase.
+- Performance/FPS under real wall-clock timing remains **unmeasured**; deterministic frame stepping
+  is determinism evidence only, never a performance claim. No FPS number appears anywhere in this
+  repository, and Phase 12 added none.
+- Real-device touch remains **unverified**: `qa:responsive` emulates touch/coarse-pointer via
+  Chromium, which is not a physical phone or tablet. Closing it needs hardware, not code.
+- Gamepad feasibility against the current `InputDeviceAdapter` shape remains **untried**. No preset
+  claims gamepad support, and the catalog honesty test enforces that.
+- Exact Node 24.x execution remains an explicit unverified compatibility detail. Phase 12 ran on
+  Node v26.7.0 (the only line on the host), inside the documented `>=22.12.0` supported range; no
+  runtime was downloaded solely to tick a box.
 - Do not implement any of the missing mechanics named across the 62 `recipe` presets'
-  `knownLimitations` merely because a proof/release phase exists (MASTER_PROJECT.md section 23
-  unchanged).
-- The project software license remains the explicit, unresolved user decision it was before Phase
-  11: `UNLICENSED`. Phase 11 proved technical release readiness (see
-  [`docs/release/RELEASE_READINESS.md`](docs/release/RELEASE_READINESS.md)) without choosing a
-  license or claiming public-distribution readiness.
+  `knownLimitations` merely because the project is accepted (MASTER_PROJECT.md section 23
+  unchanged, section 47's anti-overengineering rules unchanged).
+- The project software license remains the explicit, unresolved **user** decision it has always
+  been: `UNLICENSED`. The factory is technically release-ready (see
+  [`docs/release/RELEASE_READINESS.md`](docs/release/RELEASE_READINESS.md)); it is **not** cleared
+  for public distribution, and no phase chose a license or claimed redistribution authorization.
 - `games/`, `demos/*/dist|pack|node_modules` and `proofs/*/dist|pack|node_modules` all stay
-  gitignored; Phase 11 added no exception.
+  gitignored; Phase 12 added no exception.
 
 ## Revision history
+
+### Revision 14 - 2026-08-26 (Opus 5)
+
+**Phase 12 - Final Cross-System Acceptance and Cold-Start Gate - COMPLETE. Verdict: Complete.**
+Full record: [`docs/architecture/PHASE12_FINAL_ACCEPTANCE.md`](docs/architecture/PHASE12_FINAL_ACCEPTANCE.md).
+
+An evidence gate, not a feature phase. Nothing about the factory's capabilities changed; what
+changed is that every claim about them was independently re-established, and three
+documentation/provenance defects were found and repaired.
+
+- **A01-A20 all PASS; F01-F13 all NO.** Each state is backed by a command run or a file read during
+  this phase, never by quoting a prior phase's handoff. Notable independent checks rather than
+  re-reads: the generated-runtime matrix's coverage of all 74 presets was **re-derived from the
+  catalog** (74 -> 37 distinct `(controller shell, required-pack set)` signatures -> 40 targets,
+  0 uncovered, all 6 `sw2d.puzzle` presets individually targeted); a packed artifact's checksums
+  were verified with the **standard system `shasum -a 256 -c` tool** and tamper detection confirmed
+  by corrupting a copy; the `#app { height: 100% }` responsive repair was confirmed present in all
+  19 committed `styles.css` files **and** the CLI template; and every `](path)` markdown link in
+  every tracked `.md` file was checked to resolve (zero broken).
+- **Final validation on the final tree:** `npm run validate` PASS, `npm test` **1787/1787**,
+  `npm run qa:smoke` **14/14**, `npm run qa:proof` **5/5**, `npm run qa:responsive` **19/19**,
+  `npm run release:verify` **6/6**, `npm run qa:matrix` **40/40**.
+- **Cold-start challenge passed independently** in a `git checkout-index` snapshot (3.2 MB, no
+  `node_modules`/`dist`/`pack`/`games`/`.git`), following only `README.md` ->
+  `docs/handoff/COLD_START_HANDOFF.md` and the links they name: `npm ci` -> `doctor` ->
+  `list-presets` (74) -> `sw2d new` -> `sw2d validate` -> `sw2d pack` -> system-tool checksum
+  verification -> tamper check -> real-Chrome play on the **packed** directory
+  (`sw2d.title` -> CONFIRM -> `sw2d.play`, declared packs installed, zero console errors, zero
+  external requests). Snapshot removed; nothing leaked into the primary worktree.
+- **One targeted repair pass, three findings, all docs/provenance-level:**
+  1. `docs/resources/CODE_RESOURCE_MANIFEST.json` omitted `playwright-core@1.62.1` (Apache-2.0,
+     `@sw2d/qa`) and `@types/node@24.13.3` (MIT, root) - real declared direct dependencies that
+     MASTER_PROJECT section 20.2 requires a record for. Provenance was never *unknown*
+     (`playwright-core` is documented in `docs/architecture/DEPENDENCY_BASELINE.md` from Phase 8)
+     and no release artifact was ever wrong (shipped notices are mechanically derived, and neither
+     package ships) - but `resource-policy.json` designates this file as *the* machine-readable
+     record, and it disagreed by omission. Both recorded; the dev-tooling table in
+     `docs/resources/THIRD_PARTY_NOTICES.md` extended; and
+     **`packages/cli/test/codeResourceManifest.test.ts` added (6 tests)**, deriving the required
+     set from every workspace `package.json` on disk rather than a hand-list, and asserting
+     completeness, non-staleness, version accuracy, section-20.2 field completeness,
+     license-acceptability against `resource-policy.json`, and absence of install-script/network/
+     telemetry dependencies. Verified load-bearing by temporarily deleting a record and watching it
+     fail.
+  2. This document's "Current phase" section named `packages/cli/src/release/{checksums,notices}.ts`
+     - a path Phase 11 renamed to `releasePackaging/` in the same commit. Corrected. The identical
+     stale path inside Revision 13's entry below was **deliberately left unchanged**: it is
+     historical revision text, the rename is narrated in `PROJECT_BIBLE.md`, and rewriting past
+     revisions to look tidier in hindsight is what this repository's additive-history rule forbids.
+  3. The generated-runtime matrix had **no documented invocation anywhere** - no `npm run` alias,
+     only a file path - so a cold-start agent could not discover how to run a mandatory acceptance
+     command. (`npx tsx` is not a working substitute here: `tsx` appears in no `package.json` and no
+     lockfile entry, so it triggers an undeclared registry download; every other TypeScript tool in
+     this repository runs under plain `node`.) Added `npm run qa:matrix` and documented it in
+     `README.md`, `docs/qa/QA_MATRIX.md` and `docs/handoff/COLD_START_HANDOFF.md`.
+- **Preserved deliberately:** the 5 `proof-validated` / 7 `smoke-validated` / 62 `recipe` /
+  0 `experimental` maturity split; the technical release state; `UNLICENSED`; unmeasured
+  performance; the physical-device-touch, gamepad and exact-Node-24.x unknowns; and every deferred
+  optional capability with its recorded trigger. No deployment, GitHub Release, package
+  publication, tag, or licensing decision was performed, and no feature phase was started.
+- **Pending work: none. Next bounded action: none. No Phase 13.**
 
 ### Revision 13 - 2026-08-26 (Sonnet 5)
 

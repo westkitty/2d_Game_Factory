@@ -111,8 +111,28 @@ else is project code.
 | TypeScript | 7.0.2 | Apache-2.0 |
 | Vite | 8.2.2 | MIT |
 | Vitest | 4.1.11 | MIT |
+| playwright-core | 1.62.1 | Apache-2.0 |
+| @types/node | 24.13.3 | MIT |
 
 Their transitive dependencies are recorded in `package-lock.json` and are build-time only.
+
+**Phase 12 correction:** `playwright-core` (a `devDependencies` entry of `@sw2d/qa`, driving every
+real-browser QA command) and `@types/node` (root `devDependencies`) are real, declared, direct
+dependencies that neither this table nor
+[`CODE_RESOURCE_MANIFEST.json`](CODE_RESOURCE_MANIFEST.json) had ever recorded - the same class of
+omission Phase 11 corrected for `ajv`/`ajv-formats`, one step further out. To be precise about the
+size of the gap: `playwright-core`'s provenance was never *unknown* - it has been fully recorded in
+[`../architecture/DEPENDENCY_BASELINE.md`](../architecture/DEPENDENCY_BASELINE.md) since Phase 8,
+including why the core package is preferred over the full one. What was wrong is that
+`resource-policy.json` names `CODE_RESOURCE_MANIFEST.json` as *the* machine-readable code-dependency
+record, and that record was incomplete, so the two documents disagreed by omission. Neither is shipped in a
+production build, so no release artifact's mechanically-derived `THIRD_PARTY_NOTICES.txt` was ever
+wrong; the gap was in this repository-level record, which `MASTER_PROJECT.md` section 20.2 requires
+for *every* nontrivial direct dependency, shipped or not. Both are now recorded, and
+`packages/cli/test/codeResourceManifest.test.ts` derives the required set mechanically from every
+workspace `package.json`, so a future dependency cannot be added without this manifest failing
+loudly. `playwright-core` is deliberately preferred over the full `playwright` package because it
+has no post-install browser download - installing this repository never fetches a browser binary.
 
 ## Assets
 
