@@ -2,7 +2,7 @@
 
 Project: **Stinky Weasel 2D Browser Game Factory** (`sw2d`)
 Repository: `westkitty/2d_Game_Factory`
-State revision: **11**
+State revision: **12**
 Updated: 2026-08-26
 
 Read this before doing anything. Governing spec: [`MASTER_PROJECT.md`](MASTER_PROJECT.md).
@@ -12,27 +12,30 @@ Workflow: [`docs/AGENT_WORKFLOW.md`](docs/AGENT_WORKFLOW.md).
 
 ## Current phase
 
-**Phase 9 - Architecture Integration Gate B - COMPLETE (Opus 5). Verdict: PASS WITH TARGETED
-REPAIRS.**
+**Phase 10 - Five Deep Proof Games - COMPLETE (Sonnet 5).**
 
-Full gate report:
-[`docs/architecture/PHASE9_ARCHITECTURE_GATE_B.md`](docs/architecture/PHASE9_ARCHITECTURE_GATE_B.md).
-New ADR-0017 this revision (a pack declares whether its config is JSON or code).
+Full report: [`docs/architecture/PHASE10_PROOF_HANDOFF.md`](docs/architecture/PHASE10_PROOF_HANDOFF.md);
+per-proof detail: [`docs/proofs/PROOF_MATRIX.md`](docs/proofs/PROOF_MATRIX.md).
 
-Two Phase 8 claims were false when tested rather than read, and both are repaired at the cause:
+Five committed proof games (`proofs/chase-platformer/`, `proofs/twin-stick-shooter/`,
+`proofs/tower-defense/`, `proofs/sokoban/`, `proofs/idle-incremental/`), each generated from the
+real factory path, each with a frozen `PROOF_CONTRACT.md` and a dedicated real-browser proof spec
+(`npm run qa:proof`, 5/5). All five presets promoted to `proof-validated`; the other seven Phase 8
+demo ids stay `smoke-validated`. Exact maturity split: 5 proof-validated, 7 smoke-validated, 62
+recipe, 0 experimental - matches the full 74-preset catalog.
 
-- **"All 74 presets generate a runnable starter" was untrue for six of them.** Building is not
-  installing. The six presets requiring `sw2d.puzzle` generated games that built cleanly and then
-  threw `createInitialState is not a function` on CONFIRM, taking the shell pack down through
-  install rollback. Now 40/40 distinct generated runtime compositions really enter play.
-- **"Deterministic frame stepping" was untrue.** The QA harness never stopped Phaser's own
-  `requestAnimationFrame` driver, so manual stepping was additive to a free-running real-time
-  loop (~60 fps of drift). `top-down-racer`'s smoke was already failing intermittently at the
-  Phase 8 baseline. Now measurably deterministic; `qa:smoke` is 14/14.
+One shared-architecture repair surfaced and was fixed at the cause, not worked around: the QA
+harness's `stepFrames` reseeded its virtual clock from real `performance.now()` on every call, so a
+proof spec polling one frame at a time for tight coyote-time/jump-buffer timing saw near-zero
+effective deltas across consecutive calls instead of a true fixed-step timeline. The clock now
+persists on `window` across calls, seeded once. Regression evidence: `qa:smoke` stayed 14/14 and
+the generated-runtime matrix stayed 40/40 after the fix - every existing smoke spec (which always
+called `stepFrames` with one large count per call, never several small ones in a row) was
+unaffected by construction.
 
-Next owner: **Sonnet 5, Phase 10** (Five Deep Proof Games). See
-[Next bounded action](#next-bounded-action). **Do not execute Phase 10 from this revision** - it
-is recorded here as the next bounded action only.
+Next owner: **Sonnet 5, Phase 11** (Release, Hardening, Documentation, and Cold-Start Preparation).
+See [Next bounded action](#next-bounded-action). **Do not execute Phase 11 from this revision** -
+it is recorded here as the next bounded action only.
 
 ## Current baseline
 
@@ -608,18 +611,18 @@ Breaking one of these is an architecture change, not a bug fix. Escalate rather 
 | Layer | State | Command |
 |---|---|---|
 | Static / schema | TypeScript passing; JSON Schema exists for 5 contract types + 1 content document + 6 Phase 6 content-pipeline documents (asset-descriptor, ui-copy, content-assets, theme-manifest, resource-record/-manifest, level-document) + 3 pack config schemas (progression, arcade, starter placeholder-mover); all 74 presets validate against `preset-definition:v1` | `npm run typecheck` |
-| Unit | 1589 tests passing (58 Phase 1 + 29 Phase 2 + 35 Phase 3 + 78 Phase 4 + 13 Phase 5 + 66 Phase 6 + 232 Phase 7A + 179 Phase 7B + 279 Phase 7C + 620 Phase 8) | `npm test` |
+| Unit | 1764 tests passing (58 Phase 1 + 29 Phase 2 + 35 Phase 3 + 78 Phase 4 + 13 Phase 5 + 66 Phase 6 + 232 Phase 7A + 179 Phase 7B + 279 Phase 7C + 620 Phase 8 + Phase 9/10 additions) | `npm test` |
 | Build | passing (two-page build: `index.html` + `tiled-proof.html`) | `npm run build` |
 | Offline (static guard) | passing | `npm run check:offline` |
 | Runtime integration | proven manually in-browser **and** automated via real Chrome (Phase 8) | see ADR-0008, `@sw2d/qa` |
 | Browser journeys | **automated for the first time this revision**: both starter pages (boot/title/play, movement, pause/resume, restart, and - for `tiled-proof.html` - a full Tiled-sourced checkpoint/collectible/hazard/exit walk) run through real system Chrome via `packages/qa/specs/starterFoundation.ts`/`starterTiledProof.ts`, replacing the manual checklist `docs/qa/PHASE1_VALIDATION.md` originally described | `npm run qa:smoke` |
 | Demo smoke (12 representative demos) | **all 12 pass real-browser smoke** - one demo per genre family, each proving its preset's defining mechanic via a committed Playwright spec against a real production build | `npm run qa:smoke`, `packages/qa/specs/*.ts`, see `docs/demos/DEMO_MATRIX.md` |
 | Factory CLI | 9 commands (`doctor`, `list-presets`, `describe`, `new`, `add-level`, `add-theme`, `validate`, `build`, `pack`), all manually and automatically exercised; `new`'s determinism and per-preset content validity proven for all 74 presets, real build evidence for a 13-instance representative matrix (12 demos + the one uncovered controller-family class) | `packages/cli/test/**`, `tools/scripts/build-matrix.ts`, `docs/cli/CLI_REFERENCE.md` |
-| Proof regression | none - no deep end-to-end proof games exist yet (Phase 10's bar, distinct from Phase 8's smoke bar) | Phase 10 |
+| Proof regression | **5/5 deep end-to-end proof games pass** (Phase 10's bar, distinct from Phase 8's smoke bar) | `npm run qa:proof`, `docs/proofs/PROOF_MATRIX.md` |
 | Pack composition | real `SystemHostImpl` + `resolveInstallOrder` + `CapabilityRegistryImpl` installing all ten packs together, plus config-validation, declared-`provides` and throwing-teardown failure paths, automated | `packages/runtime/test/packsComposition.test.ts` |
 | Capability-id governance | pattern, uniqueness and pack-id/capability-id split, automated for all ten packs including Phase 6's `entityRegistryPack` | `packages/packs/test/capabilityIds.test.ts` |
 | Tiled/theme/resource content pipeline | normalization, object-class catalog, entity-registry dispatch, theme resolution and resource governance, all automated; the real `docs/resources/VISUAL_ASSET_MANIFEST.json` and the real `starter/content/levels/intro.json` are both exercised directly, not only synthetic fixtures | `packages/content-pipeline/test/**`, `packages/schemas/test/contentPipeline.test.ts`, `packages/schemas/test/resourceGovernance.test.ts`, `packages/packs/test/entityRegistry.test.ts`, `starter/test/tiledProofContent.test.ts`, `starter/test/resourceGovernance.test.ts` |
-| Preset catalog integrity | **complete**: exact shape (74/74, exact ids, family counts, deterministic order), schema/composition validation, real pack-id and controller-family checks, real `resolveInstallOrder` dependency resolution, maturity/gamepad/limitation honesty, deterministic materialization, docs-sync, full pack-consumer coverage, **exactly 12 presets `smoke-validated` (the Phase 8 demo ids), 62 `recipe`, 0 `proof-validated`**, all automated | `packages/presets/test/**` |
+| Preset catalog integrity | **complete**: exact shape (74/74, exact ids, family counts, deterministic order), schema/composition validation, real pack-id and controller-family checks, real `resolveInstallOrder` dependency resolution, maturity/gamepad/limitation honesty, deterministic materialization, docs-sync, full pack-consumer coverage, **exactly 5 presets `proof-validated` (Phase 10's five deep proofs), 7 `smoke-validated` (the remaining Phase 8 demo ids), 62 `recipe`, 0 `experimental`**, all automated | `packages/presets/test/**` |
 
 `npm run validate` runs typecheck + test + build + offline guard. `npm run qa:smoke` runs the
 14-target real-browser suite (12 demos + 2 starter journeys) separately - it is not part of
@@ -628,50 +631,91 @@ proportionate to run on demand, not on every typecheck. All passed this revision
 
 ## Pending work
 
-Phases 9-12 are unstarted. See `MASTER_PROJECT.md` §38 for the routed plan and owners.
+Phases 11-12 are unstarted. See `MASTER_PROJECT.md` §38 for the routed plan and owners.
 
 ## Next bounded action
 
-**Phase 10 - Sonnet 5 - Five Deep Proof Games.**
+**Phase 11 - Sonnet 5 - Release, Hardening, Documentation, and Cold-Start Preparation.**
 
-Not executed this revision - Phase 9 is a gate and explicitly stops before it. Full readiness
-matrix and every deferred decision with its trigger:
-[`docs/architecture/PHASE9_ARCHITECTURE_GATE_B.md`](docs/architecture/PHASE9_ARCHITECTURE_GATE_B.md).
+Not executed this revision - Phase 10 stops before it by its own instructions. See
+[`docs/architecture/PHASE10_PROOF_HANDOFF.md`](docs/architecture/PHASE10_PROOF_HANDOFF.md) for
+exact proof results, the one shared-architecture repair, remaining proof-specific shortcuts, and
+deferred triggers Phase 11 inherits unchanged:
 
-The five proofs and their readiness (none is blocked; proof D was blocked before this phase):
-
-| Proof | Reusable foundation | Expected game-specific work | Blocker |
-|---|---|---|---|
-| A. Cloud Chaser-style chase mini-level | `platform` shell, world/entities, Tiled pipeline, live `content/tuning.json`, `chase-platformer` demo | chase-pressure model, fail/finish, level authoring | none (chase pressure stays game-specific, correctly disclosed) |
-| B. Twin-stick arena | `top-down` shell, digital aim (ADR-0016), `sw2d.combat`, `ProjectilePool` (now in `@sw2d/runtime`) | waves/spawning, enemy behaviour, scoring, arena | none |
-| C. Tower-defense micro-map | `grid` shell + keyboard cursor, combat/progression/world | route data, tower/wave definitions, economy | none (spatial pointer explicitly not required) |
-| D. Sokoban puzzle | `grid` shell, `sw2d.puzzle` **now really installs from a generated starter**, `src/game-specific/packConfig.ts` seam | the puzzle's own state shape and rules, grid layout | none (was the hardest blocker before this phase) |
-| E. Tiny management toy | `ui-simulation` shell, simulation/progression, `SaveStore` proven under real reload | production/economy model, job queue, upgrades, DOM presentation | none, **unless** the production chain is meant to be content-authored - see the `requiredContentRoles` trigger below |
-
-Constraints Phase 10 inherits:
-
-- **Do not invent a private content format inside a proof.** `requiredContentRoles` claims nine
-  roles across the catalog, but only `tuning` and `levels` have a schema or pipeline; `dialogue`,
-  `characters`, `items`, `puzzles`, `recipes`, `microgames` and `exhibits` have none. A proof
-  needing authored content beyond `tuning`/`levels` must either add that role's schema and
-  pipeline properly, or drop the claim from the preset.
-- **Do not invent a universal puzzle DSL.** ADR-0017 deliberately did not. Proof D replaces the
-  generated placeholder in `src/game-specific/packConfig.ts`; it does not push a rule format into
-  the pack.
-- **Do not build spatial pointer.** Still deferred, and no proof requires it. Its trigger is a
-  preset promoted past `recipe` that cannot be built without world-space hit-testing
-  (`point-and-click`, `drawing-game`, `physics-puzzle`), and it needs its own ADR on input
-  ownership first.
-- **Do not extract a shared grid cursor yet.** There are two cursor consumers, not three
-  (`sokoban` has no cursor). Trigger and reasoning: gate report section 7.7.
-- **Do not treat deterministic frame stepping as performance evidence.** It is not, and nothing in
-  the repository may claim otherwise. Real performance measurement remains unmeasured.
-- Do not implement any of the ~40 missing mechanics named across the 62 `recipe` presets'
+- Spatial pointer, a universal puzzle DSL, a shared grid-cursor abstraction, and content-role
+  schemas beyond `tuning`/`levels` all remain deferred with the same triggers Phase 9 recorded -
+  none of the five proofs needed any of them, so none fired.
+- Performance remains unmeasured; deterministic frame stepping is determinism evidence only, never
+  a performance claim.
+- Do not implement any of the missing mechanics named across the 62 `recipe` presets'
   `knownLimitations` merely because a proof phase exists (MASTER_PROJECT.md section 23 unchanged).
-- No preset may reach `proof-validated` before its proof game actually exists and passes.
-- `games/` (CLI-generated) and `demos/*/dist|pack|node_modules` stay gitignored.
+- `games/`, `demos/*/dist|pack|node_modules` and `proofs/*/dist|pack|node_modules` all stay
+  gitignored.
 
 ## Revision history
+
+### Revision 12 - 2026-08-26 (Sonnet 5)
+
+**Phase 10 - Five Deep Proof Games. Status: COMPLETE.**
+Full report: [`docs/architecture/PHASE10_PROOF_HANDOFF.md`](docs/architecture/PHASE10_PROOF_HANDOFF.md);
+per-proof detail: [`docs/proofs/PROOF_MATRIX.md`](docs/proofs/PROOF_MATRIX.md).
+
+Five proof games built end-to-end from the real factory generation path, each frozen behind its
+own `PROOF_CONTRACT.md` before implementation began, in the bounded order the phase spec required
+(A chase-platformer -> B twin-stick-shooter -> C tower-defense -> D sokoban -> E idle-incremental):
+
+- **A - chase-platformer**: coyote time, jump buffer, double jump (all bounded game-specific
+  movement policy, deliberately not promoted into `platformController` - no second consumer
+  exists to trigger that), a content-derived collectible quota, real chase pressure (frozen during
+  pause and during a post-respawn spawn-grace window, through two independent mechanisms),
+  checkpoint respawn via `sw2d.world`, hazard death via `sw2d.combat`. Automated journey reaches
+  `outcome: 'escaped'`.
+- **B - twin-stick-shooter**: independent digital aim (ADR-0016) proven by holding movement and
+  aim in different directions simultaneously, two content-authored enemy waves (via the `Enemy`
+  Tiled class already in the closed 19-class catalog - no catalog change), the shared
+  `ProjectilePool`, contact damage, score, pause/restart (restart goes through the real
+  `SceneRouter.restartRun()` scene reinstall, proven by a fresh `ProjectilePool`'s counters
+  returning to zero, not a game-specific reset flag).
+- **C - tower-defense**: the smoke-validated demo's route/placement/currency/targeting design
+  plus one new mechanic the deep-proof bar requires beyond it - a real tower upgrade
+  (`SECONDARY_ACTION` on the tower's own grid cell) that doubles projectile damage, load-bearing
+  for the win (the second enemy dies in one hit instead of two).
+- **D - sokoban**: the one proof the architecture doc flagged by name. The Phase 8 demo
+  smoke-validated the *mechanic* by reimplementing push/undo/reset in parallel to `sw2d.puzzle`,
+  never installing the real pack. This proof does not repeat that gap - `PuzzleService` (via
+  `packConfig.ts`'s `configSource: 'code'` seam) is the single source of truth; `shellPack.ts`
+  holds no parallel state or undo stack.
+- **E - idle-incremental**: deterministic production, one job/queue, one upgrade, and a real
+  browser-reload persistence round-trip (`harness.gotoAndWaitForRuntime` against the same URL -
+  genuine navigation, not an in-memory reset), closely following the reference demo's
+  already-approved design rather than redesigning working mechanics to appear different.
+
+**One shared-architecture repair**, made under the phase's own "identify earliest failing check,
+make one bounded repair" rule: Proof A's journey needed to poll the QA harness one frame at a time
+for tight coyote-time/jump-buffer timing (a legitimate technique - see
+`packages/qa/proof-specs/chasePlatformer.ts`'s `stepUntil`), which exposed that `harness.stepFrames`
+reseeded its virtual clock from real `performance.now()` on every call. Two calls close together in
+real wall-clock time computed a delta close to that small real gap instead of the intended fixed
+16.67ms per frame, so repeated small `stepFrames` calls barely advanced the game. Fixed by moving
+the virtual clock onto `window`, seeded once, advanced only by frame count thereafter - real
+elapsed time between calls now plays no part in the computed delta, which strengthens rather than
+weakens the Phase 9 "no additive real-time + manual stepping" lock. Regression evidence: `qa:smoke`
+stayed 14/14 (every existing smoke spec always called `stepFrames` once per interaction with one
+large count, never several small calls in a row, so none were exercising the broken path) and the
+generated-runtime matrix stayed 40/40.
+
+All five presets promoted to `maturity: 'proof-validated'`
+(`packages/presets/src/catalog/{platforming,topDownAction,strategyDefense,puzzleArcade,simulationManagement}.ts`);
+`packages/presets/test/honesty.test.ts` updated to assert the new exact split (5 proof-validated, 7
+smoke-validated, 62 recipe, 0 experimental) rather than the old "no proof-validated preset yet" bar.
+
+`npm run validate` passes; `npm run qa:smoke` 14/14; `npm run qa:proof` (new, 5/5) via a new
+`packages/qa/src/runProofs.ts` runner mirroring `runAll.ts`; generated-runtime matrix 40/40
+unaffected. 1764 unit tests passing (up from 1589 - the honesty-test rewrite plus Phase 9's own
+additions).
+
+Next bounded action set to **Phase 11 - Sonnet 5 - Release, Hardening, Documentation, and
+Cold-Start Preparation**; not executed this revision.
 
 ### Revision 11 - 2026-08-26 (Opus 5)
 

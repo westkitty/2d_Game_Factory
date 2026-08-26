@@ -1,0 +1,108 @@
+{
+  "type": "map",
+  "orientation": "orthogonal",
+  "infinite": false,
+  "width": 30,
+  "height": 17,
+  "tilewidth": 32,
+  "tileheight": 32,
+  "layers": [
+    {
+      "type": "tilelayer",
+      "name": "Background",
+      "width": 30,
+      "height": 17
+    },
+    {
+      "type": "objectgroup",
+      "name": "Entities",
+      "objects": [
+        {
+          "id": 1,
+          "class": "PlayerSpawn",
+          "name": "Start",
+          "x": 100,
+          "y": 270,
+          "width": 0,
+          "height": 0,
+          "properties": []
+        },
+        {
+          "id": 2,
+          "class": "Enemy",
+          "name": "Wave 1 - A",
+          "x": 400,
+          "y": 270,
+          "width": 26,
+          "height": 26,
+          "properties": [
+            { "name": "enemyType", "type": "string", "value": "turret" },
+            { "name": "wave", "type": "int", "value": 1 },
+            { "name": "enemyId", "type": "string", "value": "enemy-1a" },
+            { "name": "health", "type": "int", "value": 20 }
+          ]
+        },
+        {
+          "id": 3,
+          "class": "Enemy",
+          "name": "Wave 1 - B",
+          "x": 550,
+          "y": 270,
+          "width": 26,
+          "height": 26,
+          "properties": [
+            { "name": "enemyType", "type": "string", "value": "turret" },
+            { "name": "wave", "type": "int", "value": 1 },
+            { "name": "enemyId", "type": "string", "value": "enemy-1b" },
+            { "name": "health", "type": "int", "value": 20 }
+          ]
+        },
+        {
+          "id": 4,
+          "class": "Enemy",
+          "name": "Wave 2 - A",
+          "x": 700,
+          "y": 270,
+          "width": 26,
+          "height": 26,
+          "properties": [
+            { "name": "enemyType", "type": "string", "value": "turret" },
+            { "name": "wave", "type": "int", "value": 2 },
+            { "name": "enemyId", "type": "string", "value": "enemy-2a" },
+            { "name": "health", "type": "int", "value": 20 }
+          ]
+        },
+        {
+          "id": 5,
+          "class": "Enemy",
+          "name": "Wave 2 - B",
+          "x": 820,
+          "y": 270,
+          "width": 26,
+          "height": 26,
+          "properties": [
+            { "name": "enemyType", "type": "string", "value": "turret" },
+            { "name": "wave", "type": "int", "value": 2 },
+            { "name": "enemyId", "type": "string", "value": "enemy-2b" },
+            { "name": "health", "type": "int", "value": 20 }
+          ]
+        },
+        {
+          "id": 6,
+          "class": "Enemy",
+          "name": "Wave 2 - C",
+          "x": 900,
+          "y": 270,
+          "width": 26,
+          "height": 26,
+          "properties": [
+            { "name": "enemyType", "type": "string", "value": "turret" },
+            { "name": "wave", "type": "int", "value": 2 },
+            { "name": "enemyId", "type": "string", "value": "enemy-2c" },
+            { "name": "health", "type": "int", "value": 20 }
+          ]
+        }
+      ]
+    }
+  ]
+}

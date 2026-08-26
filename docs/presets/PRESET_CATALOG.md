@@ -6,14 +6,19 @@ strategy/defense, 22 more), and Phase 7C (simulation/management, narrative/explo
 party/toy/weird, the final 25). This completes the catalog MASTER_PROJECT.md section 21
 names - no further families remain. A recipe is a composition of real controller
 families and real `@sw2d/packs` system packs - never an engine fork (MASTER_PROJECT.md
-section 3.1). Twelve presets - one representative per genre family - are now
-`maturity: "smoke-validated"`: each has a real, generated demo game
+section 3.1). Twelve presets - one representative per genre family - earned
+`maturity: "smoke-validated"` in Phase 8: each has a real, generated demo game
 (`demos/<preset-id>/`) with a committed real-browser smoke test that passed against
-system Chrome (Phase 8 - see [`DEMO_MATRIX.md`](../demos/DEMO_MATRIX.md) and
-[`PHASE8_OPUS_GATE_B_HANDOFF.md`](../architecture/PHASE8_OPUS_GATE_B_HANDOFF.md)). The
-other 62 remain `maturity: "recipe"`: no functional demo yet. Zero presets are
-`"proof-validated"` - that is Phase 10's deeper end-to-end bar, not yet claimed by any
-recipe here.
+system Chrome (see [`DEMO_MATRIX.md`](../demos/DEMO_MATRIX.md) and
+[`PHASE8_OPUS_GATE_B_HANDOFF.md`](../architecture/PHASE8_OPUS_GATE_B_HANDOFF.md)). Five of
+those twelve - `chase-platformer`, `twin-stick-shooter`, `tower-defense`, `sokoban`,
+`idle-incremental` - cleared Phase 10's deeper end-to-end bar and are now
+`maturity: "proof-validated"`: each has a committed proof game under `proofs/<preset-id>/`
+with a frozen `PROOF_CONTRACT.md` and a dedicated real-browser proof test
+(see [`PROOF_MATRIX.md`](../proofs/PROOF_MATRIX.md) and
+[`PHASE10_PROOF_HANDOFF.md`](../architecture/PHASE10_PROOF_HANDOFF.md)). The remaining seven
+stay `maturity: "smoke-validated"`. The other 62 remain `maturity: "recipe"`: no functional
+demo yet.
 
 Source of truth: `packages/presets/src/catalog/*.ts`. This file is mechanically checked
 against the catalog by `packages/presets/test/catalog.test.ts` (exact id/count/family
@@ -28,7 +33,7 @@ controller/input-mode breakdown and full pack-consumer coverage.
 | id | display name | controller(s) | content roles | maturity |
 |---|---|---|---|---|
 | `traditional-platformer` | Traditional Platformer | platform | tuning, levels | smoke-validated |
-| `chase-platformer` | Chase Platformer | platform | tuning, levels | smoke-validated |
+| `chase-platformer` | Chase Platformer | platform | tuning, levels | proof-validated |
 | `endless-runner` | Endless Runner | platform | tuning, levels | recipe |
 | `precision-platformer` | Precision Platformer | platform | tuning, levels | recipe |
 | `metroidvania` | Metroidvania | platform | tuning, levels | smoke-validated |
@@ -44,7 +49,7 @@ controller/input-mode breakdown and full pack-consumer coverage.
 |---|---|---|---|---|
 | `top-down-adventure` | Top-Down Adventure | top-down | tuning, levels | recipe |
 | `action-adventure` | Action Adventure | top-down | tuning, levels | recipe |
-| `twin-stick-shooter` | Twin-Stick Shooter | top-down | tuning, levels | smoke-validated |
+| `twin-stick-shooter` | Twin-Stick Shooter | top-down | tuning, levels | proof-validated |
 | `survivor-like` | Survivor-Like | top-down | tuning | recipe |
 | `dungeon-crawler` | Dungeon Crawler | top-down | tuning, levels | recipe |
 | `action-roguelite` | Action Roguelite | top-down | tuning, levels | recipe |
@@ -79,7 +84,7 @@ controller/input-mode breakdown and full pack-consumer coverage.
 
 | id | display name | controller(s) | content roles | maturity |
 |---|---|---|---|---|
-| `sokoban` | Sokoban | grid | tuning | smoke-validated |
+| `sokoban` | Sokoban | grid | tuning | proof-validated |
 | `match-puzzle` | Match Puzzle | grid | tuning | recipe |
 | `falling-block-puzzle` | Falling Block Puzzle | grid, ui-simulation | tuning | recipe |
 | `breakout` | Breakout | top-down | tuning | recipe |
@@ -94,7 +99,7 @@ controller/input-mode breakdown and full pack-consumer coverage.
 
 | id | display name | controller(s) | content roles | maturity |
 |---|---|---|---|---|
-| `tower-defense` | Tower Defense | grid, pointer | tuning, levels | smoke-validated |
+| `tower-defense` | Tower Defense | grid, pointer | tuning, levels | proof-validated |
 | `lane-defense` | Lane Defense | grid, pointer | tuning, levels | recipe |
 | `auto-battler` | Auto Battler | ui-simulation | tuning | recipe |
 | `simple-rts` | Simple RTS | top-down | tuning, levels | recipe |
@@ -106,7 +111,7 @@ controller/input-mode breakdown and full pack-consumer coverage.
 
 | id | display name | controller(s) | content roles | maturity |
 |---|---|---|---|---|
-| `idle-incremental` | Idle Incremental | ui-simulation | tuning | smoke-validated |
+| `idle-incremental` | Idle Incremental | ui-simulation | tuning | proof-validated |
 | `shopkeeper` | Shopkeeper | ui-simulation | tuning | recipe |
 | `tycoon-lite` | Tycoon Lite | ui-simulation | tuning | recipe |
 | `farming-lite` | Farming Lite | ui-simulation | tuning | recipe |

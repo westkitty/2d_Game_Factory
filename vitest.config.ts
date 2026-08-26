@@ -16,6 +16,7 @@ export default defineConfig({
       'starter/test/**/*.test.ts',
       'demos/*/tests/**/*.test.ts',
       'games/*/tests/**/*.test.ts',
+      'proofs/*/tests/**/*.test.ts',
     ],
   },
 });

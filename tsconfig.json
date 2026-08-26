@@ -9,7 +9,10 @@
     "tools/**/*.ts",
     "demos/*/src/**/*.ts",
     "demos/*/tests/**/*.ts",
-    "demos/*/vite.config.ts"
+    "demos/*/vite.config.ts",
+    "proofs/*/src/**/*.ts",
+    "proofs/*/tests/**/*.ts",
+    "proofs/*/vite.config.ts"
   ],
   "exclude": [
     "**/node_modules",

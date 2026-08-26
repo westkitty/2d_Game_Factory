@@ -22,7 +22,7 @@ import { POINTER_INPUT_MODES, VALIDATION_PROFILES, definePreset, pack } from '..
 export const STRATEGY_DEFENSE_PRESETS: readonly PresetDefinition[] = [
   definePreset({
     id: 'tower-defense',
-    maturity: 'smoke-validated',
+    maturity: 'proof-validated',
     displayName: 'Tower Defense',
     family: 'strategy-defense',
     controllerFamilies: ['grid', 'pointer'],

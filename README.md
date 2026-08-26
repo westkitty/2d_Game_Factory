@@ -6,10 +6,10 @@ Not one game, and not a Phaser starter template: one runtime plus composable sys
 controller families, data-driven content, genre preset recipes and theme packs, so a new game is
 a *composition* rather than a fork.
 
-> **Status: Phase 8 of 12.** The runtime, ten system-pack cores, 74 genre preset recipes, a real
-> factory CLI, and twelve generated, real-browser-smoke-validated demo games all exist and are
-> validated. [`OPERATIONAL_STATE.md`](OPERATIONAL_STATE.md) is the authority on what actually
-> works.
+> **Status: Phase 10 of 12.** The runtime, ten system-pack cores, 74 genre preset recipes, a real
+> factory CLI, twelve generated real-browser-smoke-validated demo games, and five deeper
+> end-to-end proof games all exist and are validated.
+> [`OPERATIONAL_STATE.md`](OPERATIONAL_STATE.md) is the authority on what actually works.
 
 ## What is here today
 
@@ -24,6 +24,7 @@ packages/cli/             @sw2d/cli              `npm run sw2d -- <command>`: do
 packages/qa/              @sw2d/qa               real-browser (system Chrome) smoke-test harness.
 starter/                  @sw2d/starter          the vertical slice: boot -> title -> play -> pause -> restart.
 demos/                                            twelve real, smoke-validated demo games (one per genre family).
+proofs/                                            five deep, end-to-end proof-validated games.
 docs/                                             architecture, ADRs, QA evidence, agent workflow.
 tools/scripts/                                    repository checks.
 ```
@@ -48,6 +49,7 @@ npm run build      # production build -> starter/dist
 npm run preview    # serve the production build
 npm run validate   # typecheck + unit tests + build + offline guard
 npm run qa:smoke   # build and real-browser-smoke every demo + starter journey
+npm run qa:proof   # build and real-browser-prove every deep proof game
 ```
 
 ## The factory CLI
@@ -64,9 +66,10 @@ npm run sw2d -- build <game-id>                      # production build
 npm run sw2d -- pack <game-id>                       # clean, offline-guard-checked pack/ output
 ```
 
-See [`docs/cli/CLI_REFERENCE.md`](docs/cli/CLI_REFERENCE.md) for full command docs, and
+See [`docs/cli/CLI_REFERENCE.md`](docs/cli/CLI_REFERENCE.md) for full command docs,
 [`docs/demos/DEMO_MATRIX.md`](docs/demos/DEMO_MATRIX.md) for what each of the twelve committed
-`demos/` proves.
+`demos/` proves, and [`docs/proofs/PROOF_MATRIX.md`](docs/proofs/PROOF_MATRIX.md) for what each
+of the five committed `proofs/` proves.
 
 ## The one rule
 
@@ -129,6 +132,9 @@ browser-level evidence is in [`docs/qa/PHASE1_VALIDATION.md`](docs/qa/PHASE1_VAL
 | [`docs/cli/CLI_REFERENCE.md`](docs/cli/CLI_REFERENCE.md) | every `sw2d` command, its args, and its guarantees |
 | [`docs/demos/DEMO_MATRIX.md`](docs/demos/DEMO_MATRIX.md) | the twelve `demos/` games and what each proves |
 | [`docs/architecture/PHASE8_OPUS_GATE_B_HANDOFF.md`](docs/architecture/PHASE8_OPUS_GATE_B_HANDOFF.md) | Phase 8's handoff to Phase 9's architecture review |
+| [`docs/architecture/PHASE9_ARCHITECTURE_GATE_B.md`](docs/architecture/PHASE9_ARCHITECTURE_GATE_B.md) | Phase 9's architecture integration gate review |
+| [`docs/proofs/PROOF_MATRIX.md`](docs/proofs/PROOF_MATRIX.md) | the five `proofs/` games and what each proves |
+| [`docs/architecture/PHASE10_PROOF_HANDOFF.md`](docs/architecture/PHASE10_PROOF_HANDOFF.md) | Phase 10's handoff to Phase 11 |
 
 ## Resuming work
 

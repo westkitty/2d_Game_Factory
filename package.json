@@ -12,7 +12,8 @@
     "packages/*",
     "starter",
     "games/*",
-    "demos/*"
+    "demos/*",
+    "proofs/*"
   ],
   "scripts": {
     "typecheck": "tsc -p tsconfig.json --noEmit",
@@ -24,6 +25,7 @@
     "check:offline": "node tools/scripts/check-offline-build.mjs",
     "sw2d": "node packages/cli/src/bin.ts",
     "qa:smoke": "node packages/qa/src/runAll.ts",
+    "qa:proof": "node packages/qa/src/runProofs.ts",
     "validate": "npm run typecheck && npm run test && npm run build && npm run check:offline"
   },
   "devDependencies": {

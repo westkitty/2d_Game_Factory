@@ -10,38 +10,53 @@ import { PRESETS } from '../src/index.ts';
  */
 
 /**
- * Phase 8's twelve representative demos (demos/<preset-id>/), each with a
+ * Phase 10's five deep proof games (proofs/<preset-id>/, docs/proofs/PROOF_MATRIX.md),
+ * each with a committed PROOF_CONTRACT.md, a real generated composition, and a
+ * dedicated real-browser proof spec (packages/qa/proof-specs/*.ts, `npm run qa:proof`)
+ * satisfying MASTER_PROJECT.md section 24's stricter per-proof acceptance bar - see
+ * docs/architecture/PHASE10_PROOF_HANDOFF.md. Only these five may claim
+ * 'proof-validated'.
+ */
+const PROOF_VALIDATED_IDS = ['chase-platformer', 'twin-stick-shooter', 'tower-defense', 'sokoban', 'idle-incremental'].sort();
+
+/**
+ * Phase 8's remaining representative demos (demos/<preset-id>/), each with a
  * real, committed browser smoke test (packages/qa/specs/*.ts) that passed
  * against system Chrome - see docs/architecture/PHASE8_OPUS_GATE_B_HANDOFF.md.
- * Only these twelve may claim 'smoke-validated'; every other preset stays
+ * Five of the original twelve graduated to 'proof-validated' in Phase 10
+ * (above); the other seven stay 'smoke-validated'. Every other preset stays
  * 'recipe' until it earns the same real evidence.
  */
 const SMOKE_VALIDATED_IDS = [
   'traditional-platformer',
-  'chase-platformer',
   'metroidvania',
-  'twin-stick-shooter',
   'stealth-game',
   'bullet-hell',
   'top-down-racer',
-  'sokoban',
-  'tower-defense',
   'turn-based-tactics',
-  'idle-incremental',
   'visual-novel',
 ].sort();
 
 describe('maturity honesty', () => {
-  it('exactly the twelve Phase 8 demo presets are "smoke-validated", nothing else', () => {
+  it('exactly Phase 10\'s five deep-proof presets are "proof-validated", nothing else', () => {
+    const actual = PRESETS.filter((p) => p.maturity === 'proof-validated')
+      .map((p) => p.id)
+      .sort();
+    expect(actual).toEqual(PROOF_VALIDATED_IDS);
+  });
+
+  it('exactly the remaining seven Phase 8 demo presets are "smoke-validated", nothing else', () => {
     const actual = PRESETS.filter((p) => p.maturity === 'smoke-validated')
       .map((p) => p.id)
       .sort();
     expect(actual).toEqual(SMOKE_VALIDATED_IDS);
   });
 
-  it('every other preset stays "recipe" - no proof-validated or experimental claims yet', () => {
+  it('every other preset stays "recipe" - no experimental claims yet', () => {
     for (const preset of PRESETS) {
-      if (SMOKE_VALIDATED_IDS.includes(preset.id)) {
+      if (PROOF_VALIDATED_IDS.includes(preset.id)) {
+        expect(preset.maturity, preset.id).toBe('proof-validated');
+      } else if (SMOKE_VALIDATED_IDS.includes(preset.id)) {
         expect(preset.maturity, preset.id).toBe('smoke-validated');
       } else {
         expect(preset.maturity, preset.id).toBe('recipe');
@@ -49,16 +64,16 @@ describe('maturity honesty', () => {
     }
   });
 
-  it('no preset claims "proof-validated" or "experimental" - Phase 10\'s own bar, not this phase\'s', () => {
+  it('no preset claims "experimental" - not a maturity tier any phase has reached yet', () => {
     for (const preset of PRESETS) {
-      expect(preset.maturity, preset.id).not.toBe('proof-validated');
       expect(preset.maturity, preset.id).not.toBe('experimental');
     }
   });
 
-  it('exactly 12 smoke-validated and 62 recipe presets out of the full 74-preset catalog', () => {
+  it('exactly 5 proof-validated, 7 smoke-validated and 62 recipe presets out of the full 74-preset catalog', () => {
     expect(PRESETS.length).toBe(74);
-    expect(PRESETS.filter((p) => p.maturity === 'smoke-validated').length).toBe(12);
+    expect(PRESETS.filter((p) => p.maturity === 'proof-validated').length).toBe(5);
+    expect(PRESETS.filter((p) => p.maturity === 'smoke-validated').length).toBe(7);
     expect(PRESETS.filter((p) => p.maturity === 'recipe').length).toBe(62);
   });
 });

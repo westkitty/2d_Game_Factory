@@ -33,7 +33,7 @@ export const PLATFORMING_PRESETS: readonly PresetDefinition[] = [
 
   definePreset({
     id: 'chase-platformer',
-    maturity: 'smoke-validated',
+    maturity: 'proof-validated',
     displayName: 'Chase Platformer',
     family: 'platforming',
     controllerFamilies: ['platform'],

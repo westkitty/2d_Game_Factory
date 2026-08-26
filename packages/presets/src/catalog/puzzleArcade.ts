@@ -21,7 +21,7 @@ import { LIMITATIONS, POINTER_INPUT_MODES, VALIDATION_PROFILES, definePreset, pa
 export const PUZZLE_ARCADE_PRESETS: readonly PresetDefinition[] = [
   definePreset({
     id: 'sokoban',
-    maturity: 'smoke-validated',
+    maturity: 'proof-validated',
     displayName: 'Sokoban',
     family: 'puzzle-arcade',
     controllerFamilies: ['grid'],

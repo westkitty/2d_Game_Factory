@@ -95,13 +95,35 @@ export async function launchHarness(): Promise<Harness> {
     return page.evaluate(fn);
   }
 
+  /**
+   * The virtual clock lives on `window`, not in this Node-side closure, and
+   * is seeded once from `performance.now()` on first use, then only ever
+   * advanced by a fixed 16.67ms per stepped frame.
+   *
+   * A spec that calls `stepFrames` several times in a row (e.g. polling
+   * one frame at a time for tight coyote-time/jump-buffer timing) must see
+   * exactly the same fixed-step timeline as one that calls it once with the
+   * summed count - otherwise "deterministic frame stepping" is only true
+   * within a single call, not across a spec's whole run. Reseeding `t` from
+   * `performance.now()` on every call (the Phase 9 fix's original shape)
+   * broke that: two calls close together in real wall-clock time computed a
+   * delta close to that small real gap instead of the intended 16.67ms per
+   * frame, so repeated small `stepFrames` calls barely advanced the game at
+   * all. Advancing a clock that persists across calls removes real-clock
+   * coupling entirely rather than reintroducing it - this is not the
+   * "additive real-time + manual stepping" Phase 9 locked against, since
+   * real elapsed time between calls plays no part in the computed delta.
+   */
   async function stepFrames(count: number): Promise<void> {
     await page.evaluate((frames) => {
-      const runtime = (window as unknown as { __SW2D__: { phaser: { loop: { step(t: number): void } } } }).__SW2D__;
-      let t = performance.now();
+      const w = window as unknown as {
+        __SW2D__: { phaser: { loop: { step(t: number): void } } };
+        __SW2D_QA_CLOCK__?: number;
+      };
+      if (typeof w.__SW2D_QA_CLOCK__ !== 'number') w.__SW2D_QA_CLOCK__ = performance.now();
       for (let i = 0; i < frames; i++) {
-        t += 16.67;
-        runtime.phaser.loop.step(t);
+        w.__SW2D_QA_CLOCK__ += 16.67;
+        w.__SW2D__.phaser.loop.step(w.__SW2D_QA_CLOCK__);
       }
     }, count);
   }

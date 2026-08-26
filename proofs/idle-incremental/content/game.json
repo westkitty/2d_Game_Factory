@@ -1,0 +1,28 @@
+{
+  "id": "proof-idle-incremental",
+  "displayName": "Proof Idle Incremental",
+  "version": "0.1.0",
+  "schemaVersion": 1,
+  "viewport": {
+    "width": 960,
+    "height": 540
+  },
+  "bindings": {},
+  "systemPacks": [
+    {
+      "packId": "sw2d.simulation",
+      "config": {}
+    },
+    {
+      "packId": "sw2d.progression",
+      "config": {}
+    },
+    {
+      "packId": "game.ui-simulation-shell",
+      "config": {}
+    }
+  ],
+  "defaultSettings": {
+    "masterVolume": 0.7
+  }
+}

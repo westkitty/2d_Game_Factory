@@ -9,10 +9,11 @@ Mechanically checked against the catalog by
 every selection set resolves through the real `resolveInstallOrder`) and
 `packages/presets/test/docsSync.test.ts`.
 
-Maturity (`recipe` vs. `smoke-validated`) is not shown here - see
-[`PRESET_CATALOG.md`](PRESET_CATALOG.md) for that, and
+Maturity (`recipe` vs. `smoke-validated` vs. `proof-validated`) is not shown here - see
+[`PRESET_CATALOG.md`](PRESET_CATALOG.md) for that,
 [`DEMO_MATRIX.md`](../demos/DEMO_MATRIX.md) for the twelve Phase 8 demos this matrix's
-pack/controller selections were actually exercised through.
+pack/controller selections were actually exercised through, and
+[`PROOF_MATRIX.md`](../proofs/PROOF_MATRIX.md) for the five Phase 10 deep proofs among them.
 
 ## Platforming (Phase 7A)
 

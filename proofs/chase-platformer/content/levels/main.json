@@ -1,0 +1,153 @@
+{
+  "type": "map",
+  "orientation": "orthogonal",
+  "infinite": false,
+  "width": 30,
+  "height": 17,
+  "tilewidth": 32,
+  "tileheight": 32,
+  "layers": [
+    {
+      "type": "tilelayer",
+      "name": "Background",
+      "width": 30,
+      "height": 17
+    },
+    {
+      "type": "objectgroup",
+      "name": "Solids",
+      "objects": [
+        {
+          "id": 1,
+          "class": "Solid",
+          "name": "Ground",
+          "x": 0,
+          "y": 500,
+          "width": 960,
+          "height": 40
+        },
+        {
+          "id": 7,
+          "class": "Solid",
+          "name": "Ledge",
+          "x": 220,
+          "y": 430,
+          "width": 100,
+          "height": 10
+        }
+      ]
+    },
+    {
+      "type": "objectgroup",
+      "name": "Entities",
+      "objects": [
+        {
+          "id": 2,
+          "class": "PlayerSpawn",
+          "name": "Start",
+          "x": 60,
+          "y": 440,
+          "width": 0,
+          "height": 0,
+          "properties": [
+            {
+              "name": "facing",
+              "type": "string",
+              "value": "right"
+            }
+          ]
+        },
+        {
+          "id": 3,
+          "class": "Checkpoint",
+          "name": "Checkpoint A",
+          "x": 100,
+          "y": 470,
+          "width": 24,
+          "height": 24,
+          "properties": [
+            {
+              "name": "checkpointId",
+              "type": "string",
+              "value": "checkpoint-1"
+            }
+          ]
+        },
+        {
+          "id": 4,
+          "class": "Collectible",
+          "name": "Coin",
+          "x": 140,
+          "y": 474,
+          "width": 16,
+          "height": 16,
+          "properties": [
+            {
+              "name": "itemId",
+              "type": "string",
+              "value": "coin-1"
+            },
+            {
+              "name": "value",
+              "type": "int",
+              "value": 5
+            }
+          ]
+        },
+        {
+          "id": 8,
+          "class": "Collectible",
+          "name": "Coin Ledge",
+          "x": 260,
+          "y": 410,
+          "width": 16,
+          "height": 16,
+          "properties": [
+            {
+              "name": "itemId",
+              "type": "string",
+              "value": "coin-2"
+            },
+            {
+              "name": "value",
+              "type": "int",
+              "value": 5
+            }
+          ]
+        },
+        {
+          "id": 5,
+          "class": "Hazard",
+          "name": "Spikes",
+          "x": 450,
+          "y": 482,
+          "width": 60,
+          "height": 18,
+          "properties": [
+            {
+              "name": "damage",
+              "type": "int",
+              "value": 10
+            }
+          ]
+        },
+        {
+          "id": 6,
+          "class": "Exit",
+          "name": "Level Exit",
+          "x": 900,
+          "y": 440,
+          "width": 24,
+          "height": 48,
+          "properties": [
+            {
+              "name": "exitId",
+              "type": "string",
+              "value": "exit-1"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

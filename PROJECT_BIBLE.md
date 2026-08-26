@@ -8,6 +8,83 @@ Detail for each architectural decision lives in `docs/architecture/adr/`. This f
 
 ---
 
+## Phase 10 - Five Deep Proof Games (2026-08-26, Sonnet 5)
+
+**Status: COMPLETE.** Full report:
+[`docs/architecture/PHASE10_PROOF_HANDOFF.md`](docs/architecture/PHASE10_PROOF_HANDOFF.md);
+per-proof detail: [`docs/proofs/PROOF_MATRIX.md`](docs/proofs/PROOF_MATRIX.md).
+
+### The lesson that cost the most to learn: a fixed-step clock that reseeds from real time is not fixed-step
+
+Phase 9 fixed the QA harness's headline bug - Phaser's own `requestAnimationFrame` driver kept
+running underneath manual `stepFrames()` calls - by calling `phaser.loop.stop()` once on attach.
+That was necessary but, it turned out, not sufficient. `stepFrames(count)` itself still computed
+`let t = performance.now()` fresh **inside every call**, then advanced `t` by `16.67ms * count`
+before handing it to `loop.step(t)`. For the common case - one `stepFrames(30)`-style call per
+interaction, exactly what every Phase 8 smoke spec does - this is invisible: the absolute epoch
+`t` starts from never matters, only the increments within that one call, and those were correct.
+
+Proof A's automated journey needed a different technique: polling the harness one frame at a time
+(`stepFrames(1)` in a loop, checking state after each) to catch the exact frame a coyote-time
+window opened or a jump-buffer press needed to land. That technique is legitimate - it is how a
+careful QA engineer handles tight timing without hand-computing physics trajectories offline - and
+it is what exposed the bug. Two `stepFrames(1)` calls close together in real wall-clock time (a
+Playwright round-trip is a few milliseconds, not sixteen) each reseeded `t` from a `performance.now()`
+that had barely moved, so the delta `loop.step()` actually computed was close to that small real
+gap, not the intended fixed 16.67ms. Twenty consecutive `stepFrames(1)` calls advanced the game by
+barely one real frame's worth of simulated time instead of twenty.
+
+**Lesson: "deterministic frame stepping" is a property of a whole spec's timeline, not of one call
+in isolation.** A fix that makes a single call correct can still leave the *composition* of calls
+wrong, and the gap only shows up once someone calls the primitive in a shape its first fix was
+never tested against. The repair - move the virtual clock onto `window`, seed it once from real
+time on first use, then only ever advance it by frame count thereafter - removes real-clock
+coupling entirely rather than reintroducing it, which is what makes it a strengthening of Phase 9's
+"no additive real-time" lock rather than a second patch on top of it. Every existing smoke spec was
+provably unaffected (each calls `stepFrames` once per interaction with one large count, never
+several small calls in a row), confirmed by rerunning `qa:smoke` (14/14) and the generated-runtime
+matrix (40/40) after the fix.
+
+### The second lesson: jumping onto a platform from directly underneath it cannot work
+
+Proof A's ledge-landing sequence failed twice before it worked, for a reason that had nothing to do
+with the code and everything to do with basic platformer geometry: a jump launched from directly
+below a platform's footprint rises into that platform's *underside* before it can ever reach its
+*top* surface, regardless of how low the platform is or how much jump velocity is available. The
+fix was not a code change but a choreography change - launch the jump from outside the platform's
+horizontal span, moving toward it, so the rising arc clears the platform's edge before the
+descending arc lands on top of it - verified empirically against the real harness rather than
+trusted from projectile-motion arithmetic alone, because an earlier arithmetic-only pass had
+already gotten the vertical clearance wrong once (the platform's underside overlapped the player's
+own standing head-height, so simply walking underneath it collided before any jump was involved).
+
+### Decisions
+
+**Sokoban's proof uses the real `sw2d.puzzle` pack; it does not repeat the Phase 8 demo's gap.**
+`docs/demos/DEMO_MATRIX.md` already recorded that `demos/sokoban/` smoke-validated the *mechanic*
+by reimplementing push/undo/reset in `shellPack.ts`, parallel to the pack, never installing it for
+real - a gap `tools/scripts/generated-runtime-matrix.ts` covered instead, from the generated-composition
+side. This proof closes that gap directly: `PuzzleService` (installed via `packConfig.ts`'s
+`configSource: 'code'` seam, ADR-0017) is the proof's only board state.
+
+**Twin-stick-shooter's enemies are content, not a hard-coded array.** They're `Enemy`-classed
+Tiled objects (the existing closed 19-class catalog already has this class, requiring only
+`enemyType: string`) with `wave`/`enemyId`/`health` as ordinary passthrough custom properties the
+catalog already permits alongside a class's declared ones - no catalog change, no schema change,
+and retuning wave composition is now a content edit.
+
+**Tower-defense's upgrade reuses the grid cursor rather than adding new input surface.**
+`SECONDARY_ACTION` while parked on the tower's own cell triggers the upgrade - the same "read an
+action directly off `context.input` outside the controller's own intent shape" pattern the pause
+menu (`PauseScene`) already established, not a new mechanism.
+
+**None of Phase 9's deferred triggers fired.** Spatial pointer, a universal puzzle DSL, a shared
+grid-cursor abstraction (still two consumers, not three - sokoban has none), and content-role
+schemas beyond `tuning`/`levels` all stayed exactly as deferred as Phase 9 left them. No proof
+needed any of them enough to justify building them.
+
+---
+
 ## Phase 9 - Architecture Integration Gate B (2026-08-26, Opus 5)
 
 **Verdict: PASS WITH TARGETED REPAIRS.** Full report:
