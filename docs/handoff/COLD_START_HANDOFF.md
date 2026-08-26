@@ -1,5 +1,18 @@
 # Cold-Start Handoff
 
+> **Read this first if you are new here.** The product is the **workbench**:
+> `npm run dev` opens a visual, local-first 2D game factory that turns art you
+> already have into a playable SW2D game. The 12-phase machine described below
+> is what it runs on. For the product itself start at
+> [`../workbench/GETTING_STARTED.md`](../workbench/GETTING_STARTED.md), its
+> architecture at
+> [`../architecture/ASSET_DRIVEN_FACTORY_WORKBENCH.md`](../architecture/ASSET_DRIVEN_FACTORY_WORKBENCH.md),
+> and its current verified state at
+> [`../../WORKBENCH_OPERATIONAL_STATE.md`](../../WORKBENCH_OPERATIONAL_STATE.md).
+> `npm run starter:dev` still serves the Phase 1 foundation slice as engine
+> evidence.
+
+
 Read this if you have the repository, no chat history, and no memory of any prior session. It is
 operational, not a narrative of how the project got here - for that, see `PROJECT_BIBLE.md`'s
 revision-by-revision history and `OPERATIONAL_STATE.md`'s revision log.
