@@ -35,11 +35,15 @@ function projectCard(summary: AppState['projects'][number]): HTMLElement {
   const thumb = el('div', { class: 'card__thumb' }, el('span', { class: 'faint', text: 'no art yet' }));
   if (summary.thumbnailAssetId) {
     const image = el('img', { attrs: { alt: '', loading: 'lazy' } });
-    // The asset endpoint is same-origin and hash-versioned; a broken one falls
-    // back to the placeholder rather than a broken-image icon.
-    image.src = api.assetUrl(summary.gameId, summary.thumbnailAssetId, summary.gameId);
-    image.onerror = () => replace(thumb, el('span', { class: 'faint', text: 'no art yet' }));
-    replace(thumb, image);
+    // Asset bytes sit behind the session token, so they are fetched and handed
+    // over as an object URL rather than assigned as a plain src.
+    void api
+      .assetBlobUrl(summary.gameId, summary.thumbnailAssetId, summary.gameId)
+      .then((url) => {
+        image.src = url;
+        replace(thumb, image);
+      })
+      .catch(() => undefined);
   }
 
   return el(

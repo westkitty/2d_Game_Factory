@@ -71,9 +71,55 @@ export async function postBytes<T>(path: string, bytes: BlobPart, headers: Reado
   return payload as T;
 }
 
-/** The URL that serves one asset's real bytes. Same-origin, and cache-busted by content hash. */
-export function assetUrl(gameId: string, assetId: string, sha256: string): string {
-  return `/api/assets/bytes?gameId=${encodeURIComponent(gameId)}&assetId=${encodeURIComponent(assetId)}&v=${sha256.slice(0, 12)}`;
+/**
+ * Asset bytes, fetched with the session token.
+ *
+ * An `<img src>` cannot carry a custom header, and putting the token in the
+ * URL would leak it into history, logs and any copied link - so asset bytes
+ * are fetched here and handed to the DOM as an object URL instead. The
+ * alternative (exempting this one endpoint from the token) would open the
+ * whole asset store to any local page.
+ *
+ * Object URLs are cached by asset id + content hash, so a repaint is free and
+ * a rebuilt derivative (new hash) correctly misses the cache.
+ */
+const OBJECT_URLS = new Map<string, Promise<string>>();
+const OBJECT_URL_LIMIT = 400;
+
+export function assetBlobUrl(gameId: string, assetId: string, sha256: string): Promise<string> {
+  const key = `${gameId}:${assetId}:${sha256}`;
+  const cached = OBJECT_URLS.get(key);
+  if (cached) return cached;
+
+  const pending = (async () => {
+    const response = await fetch(
+      `/api/assets/bytes?gameId=${encodeURIComponent(gameId)}&assetId=${encodeURIComponent(assetId)}`,
+      { headers: { 'x-sw2d-session': SESSION_TOKEN } },
+    );
+    if (!response.ok) throw new ApiError(response.status, `Could not load asset bytes (${response.status}).`);
+    return URL.createObjectURL(await response.blob());
+  })();
+
+  OBJECT_URLS.set(key, pending);
+  pending.catch(() => OBJECT_URLS.delete(key));
+  if (OBJECT_URLS.size > OBJECT_URL_LIMIT) {
+    const oldest = OBJECT_URLS.keys().next();
+    if (!oldest.done) {
+      const stale = OBJECT_URLS.get(oldest.value);
+      OBJECT_URLS.delete(oldest.value);
+      void stale?.then((url) => URL.revokeObjectURL(url)).catch(() => undefined);
+    }
+  }
+  return pending;
+}
+
+export async function assetBlob(gameId: string, assetId: string): Promise<Blob> {
+  const response = await fetch(
+    `/api/assets/bytes?gameId=${encodeURIComponent(gameId)}&assetId=${encodeURIComponent(assetId)}`,
+    { headers: { 'x-sw2d-session': SESSION_TOKEN } },
+  );
+  if (!response.ok) throw new ApiError(response.status, `Could not load asset bytes (${response.status}).`);
+  return response.blob();
 }
 
 export function hasSession(): boolean {

@@ -13,7 +13,7 @@ import { el, button, replace, toast } from '../dom.ts';
 import * as api from '../api.ts';
 import { getState, selectedAsset, subscribe, update } from '../state.ts';
 import { errorText, refreshCurrent } from '../actions.ts';
-import { blobToRaster, drawRasterInto, rasterToPngBlob, urlToRaster } from '../image/clientImage.ts';
+import { blobToRaster, drawRasterInto, rasterToPngBlob } from '../image/clientImage.ts';
 import { applyRecipe, describeStep, pushStep, truncateRecipe } from '../../shared/image/recipe.ts';
 import { findComponents, suggestGrids, alphaBounds } from '../../shared/image/transforms.ts';
 import type { Raster } from '../../shared/image/raster.ts';
@@ -100,7 +100,7 @@ export function renderAssetLab(host: HTMLElement): () => void {
     loadingFor = assetId;
     replace(toolbar, el('span', { class: 'muted', text: `Loading ${asset.displayName}…` }));
     try {
-      const raster = await urlToRaster(api.assetUrl(current.project.gameId, asset.id, asset.sha256));
+      const raster = await blobToRaster(await api.assetBlob(current.project.gameId, asset.id));
       if (loadingFor !== assetId) return; // a newer selection won the race
       lab.assetId = assetId;
       lab.source = raster;
@@ -574,7 +574,7 @@ async function rebuildDerivedInClient(derivedId: string): Promise<void> {
   const derived = current.assets.find((asset) => asset.id === derivedId);
   const source = derived?.sourceAssetId ? current.assets.find((asset) => asset.id === derived.sourceAssetId) : null;
   if (!derived || !source || !derived.transformRecipe) return;
-  const sourceRaster = await urlToRaster(api.assetUrl(current.project.gameId, source.id, source.sha256));
+  const sourceRaster = await blobToRaster(await api.assetBlob(current.project.gameId, source.id));
   const rebuilt = applyRecipe(sourceRaster, derived.transformRecipe);
   const blob = await rasterToPngBlob(rebuilt);
   await api.postBytes('/assets/derive', blob, {

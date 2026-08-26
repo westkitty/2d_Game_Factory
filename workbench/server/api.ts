@@ -333,8 +333,13 @@ const ROUTES: ReadonlyMap<string, Handler> = new Map<string, Handler>([
       });
       const result = commitImport({ gameId, batchId, selections, provenance: provenanceOf(body['provenance']) });
       for (const assignment of result.roleAssignments) assignRole(gameId, assignment.role, assignment.assetId);
-      refreshBlueprint(gameId);
-      return ok({ ...result, state: projectState(gameId) });
+      const blueprint = refreshBlueprint(gameId);
+      // Importing straight into a role has to reach the game, exactly like
+      // changing a role later does. Without this the asset would be recorded,
+      // the badge would appear, and the running game would still draw the
+      // placeholder - which is failure condition F03 in miniature.
+      const synthesis = writeTheme({ gameId, assets: loadAssets(gameId), blueprint });
+      return ok({ ...result, synthesis: summariseSynthesis(synthesis), state: projectState(gameId) });
     },
   ],
 

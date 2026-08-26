@@ -61,10 +61,14 @@ export async function blobToRaster(blob: Blob): Promise<Raster> {
   }
 }
 
-export async function urlToRaster(url: string): Promise<Raster> {
-  const response = await fetch(url);
-  if (!response.ok) throw new ImageDecodeError(`Could not load image (${response.status}).`);
-  return blobToRaster(await response.blob());
+/**
+ * Decodes an image the caller has already fetched.
+ *
+ * Deliberately takes a `Blob` rather than a URL: asset bytes are behind the
+ * session token, so fetching them is the API client's job, not this module's.
+ */
+export function sourceToRaster(blob: Blob): Promise<Raster> {
+  return blobToRaster(blob);
 }
 
 export function rasterToCanvas(raster: Raster): HTMLCanvasElement {
@@ -158,10 +162,10 @@ export async function mapWithLimit<T, R>(items: readonly T[], limit: number, wor
 const THUMB_CACHE = new Map<string, string>();
 const THUMB_CACHE_LIMIT = 400;
 
-export async function thumbnailFor(key: string, url: string, size = 96): Promise<string> {
+export async function thumbnailFor(key: string, load: () => Promise<Blob>, size = 96): Promise<string> {
   const cached = THUMB_CACHE.get(key);
   if (cached) return cached;
-  const raster = await urlToRaster(url);
+  const raster = await blobToRaster(await load());
   const small = fitWithin(raster, size, size, raster.width <= 128 ? 'nearest' : 'smooth');
   const dataUrl = rasterToDataUrl(small);
   if (THUMB_CACHE.size >= THUMB_CACHE_LIMIT) {

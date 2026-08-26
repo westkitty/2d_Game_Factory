@@ -33,7 +33,6 @@ export function renderWorkspace(host: HTMLElement): () => void {
 
   const libraryPane = el('div', { class: 'pane pane--library' });
   const inspectorPane = el('div', { class: 'pane pane--inspector' });
-  const centerPane = el('div', { class: 'pane pane--center' });
   const tabs = el('div', { class: 'tabs' });
   const centerBody = el('div', { style: { flex: '1 1 auto', display: 'flex', 'flex-direction': 'column', 'min-height': '0' } });
   const topbar = el('div', { class: 'topbar' });
@@ -50,8 +49,6 @@ export function renderWorkspace(host: HTMLElement): () => void {
     el('div', { class: 'pane pane--center', style: { display: 'flex', 'flex-direction': 'column', 'min-height': '0' } }, tabs, centerBody),
     el('div', { style: { display: 'flex', 'min-height': '0' } }, rightResizer, inspectorPane),
   );
-
-  replace(centerPane, tabs, centerBody);
 
   function mountCenter(): void {
     disposeCenter?.();

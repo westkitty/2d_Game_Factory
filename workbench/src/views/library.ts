@@ -38,8 +38,7 @@ export function renderLibrary(host: HTMLElement): () => void {
   const head = el('div', { class: 'pane__head' }, el('span', { class: 'pane__title', text: 'Assets' }));
 
   function thumbFor(asset: AssetRecord, into: HTMLImageElement, gameId: string): void {
-    const url = api.assetUrl(gameId, asset.id, asset.sha256);
-    void thumbnailFor(`${asset.id}:${asset.sha256}`, url, 96)
+    void thumbnailFor(`${asset.id}:${asset.sha256}`, () => api.assetBlob(gameId, asset.id), 96)
       .then((dataUrl) => { into.src = dataUrl; })
       // A missing file is a real state (a deleted derivative), not a crash.
       .catch(() => { into.alt = 'missing'; into.replaceWith(el('span', { class: 'faint', style: { 'font-size': '9px' }, text: 'missing' })); });

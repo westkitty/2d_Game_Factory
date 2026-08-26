@@ -36,7 +36,7 @@ export function renderInspector(host: HTMLElement): () => void {
     const swatch = el('div', { class: 'role-row__swatch' });
     if (asset) {
       const image = el('img', { attrs: { alt: '' } });
-      void thumbnailFor(`${asset.id}:${asset.sha256}`, api.assetUrl(current.project.gameId, asset.id, asset.sha256), 48)
+      void thumbnailFor(`${asset.id}:${asset.sha256}`, () => api.assetBlob(current.project.gameId, asset.id), 48)
         .then((url) => { image.src = url; })
         .catch(() => undefined);
       replace(swatch, image);
