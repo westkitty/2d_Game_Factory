@@ -5,12 +5,13 @@
  * They do not register kits, change preset maturity, or touch the shared
  * runtime. Sonnet can use them to avoid copy/paste drift while each genre's
  * actual mechanic policy stays in that kit's game-specific shell.
+ *
+ * Pack policy deliberately mirrors the canonical generator: content/game.json
+ * receives required pack ids with `config: {}`, while any code-configured pack
+ * remains owned by the canonical generated `src/game-specific/packConfig.ts`.
  */
 
-import type { SystemPackSelection } from '@sw2d/contracts';
 import { PRESENTATION_MODULE } from './presentation.ts';
-
-export type StarterSystemPackSelection = SystemPackSelection;
 
 export interface StarterLevelSpec {
   readonly entities?: readonly Readonly<Record<string, unknown>>[];
@@ -33,7 +34,7 @@ export interface StarterOverlaySpec {
   readonly displayName: string;
   readonly shellPackId: string;
   readonly shellSource: string;
-  readonly systemPacks: readonly StarterSystemPackSelection[];
+  readonly requiredPackIds: readonly string[];
   readonly level?: StarterLevelSpec;
   readonly tuning?: StarterTuningSpec;
   readonly extraFiles?: ReadonlyMap<string, string>;
@@ -44,13 +45,10 @@ export function starterManifest(
   gameId: string,
   displayName: string,
   shellPackId: string,
-  systemPacks: readonly StarterSystemPackSelection[],
+  requiredPackIds: readonly string[],
 ): string {
   const selections = [
-    ...systemPacks.map((selection) => ({
-      packId: selection.packId,
-      config: selection.config === undefined ? {} : selection.config,
-    })),
+    ...requiredPackIds.map((packId) => ({ packId, config: {} })),
     { packId: shellPackId, config: {} },
   ];
   return `${JSON.stringify({
@@ -102,7 +100,7 @@ export function starterTuning(spec: StarterTuningSpec = {}): string {
 export function buildStarterKitOverlay(spec: StarterOverlaySpec): ReadonlyMap<string, string> {
   const files = new Map<string, string>([
     ['src/game-specific/shellPack.ts', spec.shellSource],
-    ['content/game.json', starterManifest(spec.gameId, spec.displayName, spec.shellPackId, spec.systemPacks)],
+    ['content/game.json', starterManifest(spec.gameId, spec.displayName, spec.shellPackId, spec.requiredPackIds)],
     ['content/levels/main.json', starterLevel(spec.level)],
     ['content/tuning.json', starterTuning(spec.tuning)],
   ]);
