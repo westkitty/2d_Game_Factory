@@ -225,11 +225,18 @@ export function platformStarterKit(variant: PlatformStarterVariant) {
           { id: 11, class: 'Checkpoint', name: 'Midpoint', x: 300, y: 450, width: 24, height: 32, properties: [prop('checkpointId', 'string', 'mid')] },
           { id: 12, class: 'Collectible', name: 'Coin A', x: 215, y: 450, width: 18, height: 18, properties: [prop('itemId', 'string', 'coin-a'), prop('value', 'int', 5)] },
           { id: 13, class: 'Collectible', name: 'Coin B', x: 690, y: 450, width: 18, height: 18, properties: [prop('itemId', 'string', 'coin-b'), prop('value', 'int', 5)] },
-          { id: 14, class: 'Hazard', name: 'Spikes', x: 400, y: 482, width: 70, height: 18, properties: [prop('damage', 'int', 1)] },
+          // This is the first authored hazard in the beginner/reference kit.
+          // It should teach "jump over a hazard", not require edge-perfect
+          // timing. Keep it wide enough to be visually obvious, but short
+          // enough that the default player body clears it with a normal jump.
+          { id: 14, class: 'Hazard', name: 'Spikes', x: 405, y: 482, width: 48, height: 18, properties: [prop('damage', 'int', 1)] },
           { id: 15, class: 'Exit', name: 'Finish', x: 900, y: 438, width: 26, height: 56, properties: [prop('exitId', 'string', 'finish')] },
         ],
       },
-      tuning: { moveSpeed: 225, jumpVelocity: 430, gravity: 1120 },
+      // A slightly longer, readable first-platformer arc gives the player
+      // room to understand checkpoint -> hazard -> recovery without changing
+      // the shared platform controller or introducing game-specific physics.
+      tuning: { moveSpeed: 225, jumpVelocity: 470, gravity: 1050 },
     });
   }
 
