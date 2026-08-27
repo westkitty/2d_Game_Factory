@@ -1,5 +1,6 @@
 import type Phaser from 'phaser';
 import type { DisposableBag, GameContext, SystemPackDefinition } from '@sw2d/contracts';
+import { bindRoleAnimations } from '../content/roleAnimations.ts';
 
 /**
  * GameContext plus the engine services a rendering pack needs.
@@ -22,6 +23,10 @@ export type ScenePackDefinition<TConfig = never> = SystemPackDefinition<TConfig,
  *
  * Prototype-based so the base context's live getters (accessibility in
  * particular) keep reflecting current state rather than being snapshotted.
+ * The semantic-role animation binder is scene-lifetime infrastructure: it is
+ * installed here before rendering packs add their actors and disposed with the
+ * same scene bag, so every current and future starter kit gets identical
+ * animation behaviour without kit-specific hooks.
  */
 export function createSceneContext(
   base: GameContext,
@@ -33,5 +38,6 @@ export function createSceneContext(
     scene: { value: scene, enumerable: true },
     sceneDisposables: { value: sceneDisposables, enumerable: true },
   });
+  sceneDisposables.add(bindRoleAnimations(scene, base.assets, base.content.animations));
   return context;
 }

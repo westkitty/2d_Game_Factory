@@ -1,38 +1,28 @@
 /**
- * Turning workbench state into a real SW2D theme.
+ * Turns workbench asset/role state into a real SW2D theme.
  *
- * This is the load-bearing join between the product and the machine. The
- * runtime already resolves gameplay art through semantic roles and already
- * knows how to load `{ kind: 'image' }` descriptors (`BootScene` ->
- * `queueImageAssets`). So the workbench's whole contribution to a running
- * game is *data the runtime already consumes*: a `ThemeManifest` where
- * assigned roles point at game-local files and unassigned roles fall back to
- * generated art derived from the imported palette.
- *
- * Nothing here writes a workbench-private format, and nothing in the runtime
- * was changed to make it work (principle P08, acceptance W12/W16).
+ * Static semantic-role assets remain the load-bearing contract. When the asset
+ * assigned to a role belongs to a detected frame group, synthesis may also
+ * emit an optional presentation-only local-image animation for that same role.
+ * The runtime stays generic and provenance/release governance remains shared.
  */
 
-import { copyFileSync, existsSync, readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
-import type { AssetDescriptor, ThemeManifest } from '@sw2d/contracts';
+import { copyFileSync, existsSync, readFileSync } from 'node:fs';
+import type { AssetDescriptor, RoleAnimationDescriptor, ThemeManifest } from '@sw2d/contracts';
 import { validateDocumentOrThrow } from '@sw2d/schemas';
 import type { AssetRecord, AssetsDocument, BlueprintDocument, WorkbenchAssetRole } from '../shared/types.ts';
 import { provenanceAllowsShipping, provenanceBlocksRelease } from '../shared/types.ts';
+import { parseHexColor, toHexColor } from '../shared/image/raster.ts';
 import { writeJsonAtomic } from './atomicJson.ts';
 import { derivedAssetUrl, derivedAssetsDir, ensureDir, gameRoot, resolveContained } from './paths.ts';
-import { parseHexColor, toHexColor } from '../shared/image/raster.ts';
 
 function sha256Of(filePath: string): string {
   return createHash('sha256').update(readFileSync(filePath)).digest('hex');
 }
 
-/** The roles a generated game's default theme has always supplied. Synthesis never emits fewer, so a swapped theme can never leave gameplay without a texture. */
 const CORE_ROLES: readonly WorkbenchAssetRole[] = ['player', 'enemy', 'platform', 'pickup', 'hazard', 'checkpoint', 'exit'];
-
-/** Roles a starter kit may additionally resolve. Emitted only when the project has something to put there. */
 const OPTIONAL_ROLES: readonly WorkbenchAssetRole[] = ['background', 'tile', 'particle', 'ui.panel', 'ui.button', 'ui.cursor'];
-
 export const SYNTHESIZABLE_ROLES: readonly WorkbenchAssetRole[] = [...CORE_ROLES, ...OPTIONAL_ROLES];
 
 interface GeneratedShape {
@@ -43,7 +33,6 @@ interface GeneratedShape {
   readonly cornerRadius?: number;
 }
 
-/** The generated-art shape for each role, matching what `generateTheme` in the CLI already produces so a synthesized theme is visually continuous with a plain generated one. */
 const SHAPES: Readonly<Record<WorkbenchAssetRole, GeneratedShape>> = {
   player: { width: 28, height: 44, stroke: '#0b0d13', strokeWidth: 2, cornerRadius: 6 },
   enemy: { width: 26, height: 26, stroke: '#3a0010', strokeWidth: 2 },
@@ -61,8 +50,8 @@ const SHAPES: Readonly<Record<WorkbenchAssetRole, GeneratedShape>> = {
 };
 
 const FALLBACK_PALETTE: readonly string[] = ['#65d0a8', '#e05fa0', '#39415a', '#f0c274', '#e0574f', '#4f9ee0', '#b98af0'];
+const DEFAULT_FRAME_RATE = 8;
 
-/** Shifts a colour's lightness by `amount` in [-1, 1]. Keeps a one-colour palette from producing seven identical shapes. */
 function shade(hex: string, amount: number): string {
   const { r, g, b } = parseHexColor(hex);
   const target = amount >= 0 ? 255 : 0;
@@ -70,15 +59,6 @@ function shade(hex: string, amount: number): string {
   return toHexColor(r + (target - r) * mix, g + (target - g) * mix, b + (target - b) * mix);
 }
 
-/**
- * Assigns a distinct colour to each role from whatever palette the project
- * actually has.
- *
- * A palette shorter than the role list is extended by shading rather than by
- * repeating, so a game built from one near-monochrome image still has
- * distinguishable platforms, pickups and hazards - which matters because the
- * player has to read them at a glance.
- */
 export function paletteColorsForRoles(palette: readonly string[], roles: readonly WorkbenchAssetRole[]): Record<string, string> {
   const source = palette.length > 0 ? palette : FALLBACK_PALETTE;
   const out: Record<string, string> = {};
@@ -91,7 +71,6 @@ export function paletteColorsForRoles(palette: readonly string[], roles: readonl
   return out;
 }
 
-/** Theme tokens derived from the palette. Contrast is forced so UI text stays readable whatever the source image looked like. */
 export function tokensFromPalette(palette: readonly string[]): ThemeManifest['tokens'] {
   const source = palette.length > 0 ? palette : FALLBACK_PALETTE;
   const accent = source[0]!;
@@ -121,11 +100,64 @@ export interface SynthesisResult {
   readonly skippedReferenceOnly: readonly string[];
 }
 
-/**
- * Builds the theme document. Pure apart from reading nothing and writing
- * nothing - `writeTheme` does the disk work, so this half is unit-testable
- * without a project on disk.
- */
+function animationGroupSlug(group: string): string {
+  const slug = group.toLowerCase().replace(/[^a-z0-9.-]+/g, '-').replace(/^-+|-+$/g, '');
+  return slug || 'frames';
+}
+
+function orderedAnimationFrames(
+  input: SynthesisInput,
+  role: WorkbenchAssetRole,
+  anchor: AssetRecord,
+  themeId: string,
+  skippedReferenceOnly: string[],
+): RoleAnimationDescriptor | null {
+  if (!anchor.group) return null;
+
+  const frames = input.assets.assets
+    .filter((asset) => asset.group === anchor.group && asset.kind === anchor.kind)
+    .filter((asset) => {
+      if (provenanceAllowsShipping(asset.provenance)) return true;
+      skippedReferenceOnly.push(asset.displayName);
+      return false;
+    })
+    .sort((a, b) => {
+      const ai = a.frameIndex ?? Number.MAX_SAFE_INTEGER;
+      const bi = b.frameIndex ?? Number.MAX_SAFE_INTEGER;
+      if (ai !== bi) return ai - bi;
+      const byName = a.displayName.localeCompare(b.displayName);
+      return byName !== 0 ? byName : a.id.localeCompare(b.id);
+    });
+
+  if (frames.length < 2) return null;
+
+  return {
+    role,
+    key: `wb/${themeId}/${role}/animation/${animationGroupSlug(anchor.group)}`,
+    frames: frames.map((asset) => {
+      const fileName = asset.relativePath.split('/').pop()!;
+      return {
+        key: `wb/${themeId}/${role}/frame/${asset.sha256.slice(0, 12)}`,
+        url: derivedAssetUrl(fileName),
+      };
+    }),
+    frameRate: DEFAULT_FRAME_RATE,
+    repeat: -1,
+  };
+}
+
+function themeImageFileNames(theme: ThemeManifest): Set<string> {
+  const files = new Set<string>();
+  for (const descriptor of theme.assets) {
+    if (descriptor.spec.kind === 'image') files.add(descriptor.spec.url.split('/').pop()!);
+  }
+  for (const animation of theme.animations ?? []) {
+    for (const frame of animation.frames) files.add(frame.url.split('/').pop()!);
+  }
+  return files;
+}
+
+/** Build the theme document without writing to disk. */
 export function buildTheme(input: SynthesisInput): SynthesisResult {
   const themeId = input.themeId ?? 'default';
   const byRole = new Map<WorkbenchAssetRole, AssetRecord>();
@@ -136,8 +168,6 @@ export function buildTheme(input: SynthesisInput): SynthesisResult {
     const asset = input.assets.assets.find((candidate) => candidate.id === assignment.assetId);
     if (!asset) continue;
     if (!provenanceAllowsShipping(asset.provenance)) {
-      // Reference-only pixels stay in `.sw2d/`. The role falls back to
-      // generated art instead of silently shipping the source (section 29).
       skippedReferenceOnly.push(asset.displayName);
       continue;
     }
@@ -151,21 +181,19 @@ export function buildTheme(input: SynthesisInput): SynthesisResult {
   const colors = paletteColorsForRoles(palette, roles);
   const imageRoles: WorkbenchAssetRole[] = [];
   const generatedRoles: WorkbenchAssetRole[] = [];
-  const copiedFiles: string[] = [];
 
   const assets: AssetDescriptor[] = roles.map((role) => {
     const asset = byRole.get(role);
     if (asset) {
       imageRoles.push(role);
       const fileName = asset.relativePath.split('/').pop()!;
-      copiedFiles.push(fileName);
-      // The key embeds the content hash, so swapping the asset for a role
-      // produces a *different* texture key. Phaser's texture cache is keyed
-      // by string and `queueImageAssets` skips keys that already exist, so a
-      // stable-per-role key would make a live swap silently keep the old
-      // pixels on a warm cache.
-      return { role, key: `wb/${themeId}/${role}/${asset.sha256.slice(0, 12)}`, spec: { kind: 'image', url: derivedAssetUrl(fileName) } };
+      return {
+        role,
+        key: `wb/${themeId}/${role}/${asset.sha256.slice(0, 12)}`,
+        spec: { kind: 'image', url: derivedAssetUrl(fileName) },
+      };
     }
+
     generatedRoles.push(role);
     const shape = SHAPES[role];
     return {
@@ -183,12 +211,20 @@ export function buildTheme(input: SynthesisInput): SynthesisResult {
     };
   });
 
+  const animations = roles
+    .map((role) => {
+      const anchor = byRole.get(role);
+      return anchor ? orderedAnimationFrames(input, role, anchor, themeId, skippedReferenceOnly) : null;
+    })
+    .filter((animation): animation is RoleAnimationDescriptor => animation !== null);
+
   const tokens = tokensFromPalette(palette);
   const theme: ThemeManifest = {
     schemaVersion: 1,
     id: themeId,
     displayName: input.displayName ?? 'Default',
     assets,
+    ...(animations.length > 0 ? { animations } : {}),
     tokens,
     fonts: { ui: 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace' },
     highContrastTokens: {
@@ -201,38 +237,32 @@ export function buildTheme(input: SynthesisInput): SynthesisResult {
     },
   };
 
-  return { theme, imageRoles, generatedRoles, copiedFiles, skippedReferenceOnly };
+  return {
+    theme,
+    imageRoles,
+    generatedRoles,
+    copiedFiles: [...themeImageFileNames(theme)].sort(),
+    skippedReferenceOnly: [...new Set(skippedReferenceOnly)].sort(),
+  };
 }
 
-/**
- * Validates and writes the theme, and makes sure every image it references is
- * actually present in `public/assets/workbench/`.
- *
- * Validation happens before the write, not after: an invalid theme must never
- * reach disk, because the generated game imports it at module load and would
- * fail to boot rather than fail to validate.
- */
+/** Validate/write the theme and copy every referenced local image into public/. */
 export function writeTheme(input: SynthesisInput): SynthesisResult {
   const result = buildTheme(input);
   const themeId = input.themeId ?? 'default';
 
-  validateDocumentOrThrow<ThemeManifest>('theme-manifest', `games/${input.gameId}/content/themes/${themeId}/theme.json`, result.theme);
+  validateDocumentOrThrow<ThemeManifest>(
+    'theme-manifest',
+    `games/${input.gameId}/content/themes/${themeId}/theme.json`,
+    result.theme,
+  );
 
   const publicDir = derivedAssetsDir(input.gameId);
   ensureDir(publicDir);
-  for (const descriptor of result.theme.assets) {
-    if (descriptor.spec.kind !== 'image') continue;
-    const fileName = descriptor.spec.url.split('/').pop()!;
+  for (const fileName of themeImageFileNames(result.theme)) {
     const destination = resolveContained(publicDir, fileName);
-    // A source asset assigned straight to a role lives under `.sw2d/`, which
-    // is never served, so it is copied into the game's own public/ to make the
-    // descriptor URL real and same-origin.
     const asset = input.assets.assets.find((candidate) => candidate.relativePath.endsWith(`/${fileName}`));
     if (!asset) continue;
-    // Compare content, not existence. A reimport keeps the asset id and
-    // therefore the file name, so an existence check would leave the *old*
-    // pixels shipped under a name the new theme now points at - the game
-    // would keep drawing the previous image with no sign anything was wrong.
     if (existsSync(destination) && sha256Of(destination) === asset.sha256) continue;
     copyFileSync(resolveContained(gameRoot(input.gameId), asset.relativePath), destination);
   }
@@ -254,15 +284,7 @@ interface ResourceRecordShape {
   readonly status: 'approved' | 'pending' | 'rejected';
 }
 
-/**
- * Rewrites the game's resource manifest from real provenance.
- *
- * `pack` already refuses to package a game with a non-approved record, and
- * that gate is left exactly as authoritative as it was: an asset the user
- * marked "source/licence unknown" is written as `pending`, which blocks the
- * release. The workbench's job is to record the truth here, not to soften the
- * gate (acceptance W24, failure condition F14).
- */
+/** Rewrite the release resource manifest from the files the theme really ships. */
 export function writeResourceManifest(gameId: string, assets: AssetsDocument, synthesis: SynthesisResult): void {
   const records: ResourceRecordShape[] = [];
 
@@ -279,11 +301,7 @@ export function writeResourceManifest(gameId: string, assets: AssetsDocument, sy
     });
   }
 
-  const shipped = new Set(
-    synthesis.theme.assets
-      .filter((descriptor) => descriptor.spec.kind === 'image')
-      .map((descriptor) => (descriptor.spec.kind === 'image' ? descriptor.spec.url.split('/').pop()! : '')),
-  );
+  const shipped = themeImageFileNames(synthesis.theme);
 
   for (const asset of assets.assets) {
     const fileName = asset.relativePath.split('/').pop()!;
@@ -295,7 +313,7 @@ export function writeResourceManifest(gameId: string, assets: AssetsDocument, sy
       category: 'visual',
       sourceKind: thirdParty ? 'third-party' : 'project-owned',
       ...(thirdParty && provenance.originalSource ? { originalSource: provenance.originalSource } : {}),
-      license: thirdParty ? (provenance.license ?? 'unknown') : provenance.kind === 'generated' ? 'project-owned' : 'project-owned',
+      license: thirdParty ? (provenance.license ?? 'unknown') : 'project-owned',
       attributionRequired: provenance.attributionRequired ?? false,
       modificationStatus: provenance.modificationStatus,
       localPath: `public/${derivedAssetUrl(fileName)}`,

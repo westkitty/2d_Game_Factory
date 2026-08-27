@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - qa/full-workbench-revalidation
+      - 'feature/**'
   workflow_dispatch:
 
 concurrency:
@@ -44,6 +45,9 @@ jobs:
 
       - name: Workbench real-browser acceptance
         run: npm run qa:workbench
+
+      - name: Frame-group animation proof
+        run: node --experimental-strip-types tools/scripts/qa-frame-group-animation.ts
 
       - name: Prove workbench Validate Build Pack did not mutate lockfile
         shell: bash

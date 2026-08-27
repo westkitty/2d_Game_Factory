@@ -1,14 +1,15 @@
-import type { AccessibilityState, AssetDescriptor, ThemeManifest, ThemeTokens, UiCopy } from '@sw2d/contracts';
+import type { AccessibilityState, AssetDescriptor, RoleAnimationDescriptor, ThemeManifest, ThemeTokens, UiCopy } from '@sw2d/contracts';
 
 /**
  * Theme resolution: fold a validated ThemeManifest plus the current
  * accessibility projection into what the game actually presents. Gameplay
- * data never enters or leaves this function - only assets, UI tokens and UI
- * copy - which is the mechanical guarantee behind "theme changes do not
- * change gameplay" (MASTER_PROJECT.md section 9/12).
+ * data never enters or leaves this function - only assets, presentation
+ * animations, UI tokens and UI copy - which is the mechanical guarantee
+ * behind "theme changes do not change gameplay" (MASTER_PROJECT.md section 9/12).
  */
 export interface ResolvedTheme {
   readonly assets: readonly AssetDescriptor[];
+  readonly animations?: readonly RoleAnimationDescriptor[];
   readonly ui?: Partial<UiCopy>;
   readonly tokens: ThemeTokens;
 }
@@ -28,6 +29,7 @@ export function resolveTheme(theme: ThemeManifest, accessibility: Pick<Accessibi
 
   return {
     assets: theme.assets,
+    ...(theme.animations !== undefined ? { animations: theme.animations } : {}),
     ...(theme.ui !== undefined ? { ui: theme.ui } : {}),
     tokens,
   };

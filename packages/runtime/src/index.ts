@@ -52,6 +52,7 @@ export { WebAudioBus } from './audio/WebAudioBus.ts';
 
 export { AssetCatalogImpl, UnknownAssetRoleError } from './content/AssetCatalogImpl.ts';
 export { createGeneratedTextures, queueImageAssets } from './content/placeholderTextures.ts';
+export { bindRoleAnimations, queueRoleAnimationFrames, registerRoleAnimations } from './content/roleAnimations.ts';
 
 export { DebugStateImpl, DEBUG_SNAPSHOT_VERSION } from './debug/DebugStateImpl.ts';
 
