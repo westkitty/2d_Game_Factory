@@ -34,6 +34,9 @@ const VERIFIED_RICH_STARTERS = [
   'precision-platformer',
   'run-and-gun',
   'vertical-shmup',
+  'asteroids-shooter',
+  'gallery-shooter',
+  'rail-shooter',
 ] as const;
 
 describe('overlay containment', () => {
