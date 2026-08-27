@@ -38,7 +38,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     const { width, height } = context.definition.viewport;
     const background = addBackground(scene, context.assets.has('background') ? context.assets.resolve('background') : null, width, height);
     const decorations: Phaser.GameObjects.GameObject[] = [];
-    const resolveOptional = (role: string, fallback: string): string => context.assets.has(role) ? context.assets.resolve(role) : context.assets.resolve(fallback);
+    const resolveOptional = (role: Parameters<typeof context.assets.has>[0], fallback: Parameters<typeof context.assets.resolve>[0]): string => context.assets.has(role) ? context.assets.resolve(role) : context.assets.resolve(fallback);
 
     const toPixel = (cell: Cell): [number, number] => [ORIGIN_X + cell.col * CELL, ORIGIN_Y + cell.row * CELL];
     const zoneForCol = (col: number): number => col < 4 ? 0 : col < 8 ? 1 : 2;
