@@ -1,2 +1,3 @@
-import { puzzleArcadeStarterKit } from './builders/puzzleArcade.ts';
-export const starterKit = puzzleArcadeStarterKit('breakout');
+import { breakoutStarterKit } from './builders/breakout.ts';
+
+export const starterKit = breakoutStarterKit();
