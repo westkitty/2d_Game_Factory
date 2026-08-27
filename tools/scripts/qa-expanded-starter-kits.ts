@@ -58,22 +58,28 @@ async function traditionalRun(harness: Harness): Promise<SmokeOutcome> {
   await hold(harness, 'ArrowRight', 40);
   const afterHazard = await shell<S>(harness);
 
-  // Respawn returns close to the spike bed. Back up to create a real run-up,
-  // then keep moving right across the jump instead of asking a nearly
-  // stationary body to clear a 70px hazard from its edge.
+  // The first collision deliberately proves checkpoint respawn. For the clean
+  // traversal, drive from observed game state rather than assuming a fixed
+  // frame count maps to a launch point across runner/Chrome timing variance.
   await harness.stepFrames(12);
   const settled = await shell<S>(harness);
-  await hold(harness, 'ArrowLeft', 24);
-  const runup = await shell<S>(harness);
   await harness.keyDown('ArrowRight');
-  await harness.stepFrames(15);
+  let launch = settled;
+  for (let i = 0; i < 16 && launch.x < 338 && launch.hazardHits === settled.hazardHits; i++) {
+    await harness.stepFrames(2);
+    launch = await shell<S>(harness);
+  }
   await harness.keyTap('Space');
-  await harness.stepFrames(10);
+  await harness.stepFrames(7);
   const airborne = await shell<S>(harness);
-  await harness.stepFrames(55);
+
+  let cleared = airborne;
+  for (let i = 0; i < 30 && cleared.x < 500 && cleared.hazardHits === settled.hazardHits; i++) {
+    await harness.stepFrames(2);
+    cleared = await shell<S>(harness);
+  }
   await harness.keyUp('ArrowRight');
   await harness.stepFrames(4);
-  const cleared = await shell<S>(harness);
 
   await hold(harness, 'ArrowRight', 130);
   const finished = await shell<S>(harness);
@@ -84,13 +90,14 @@ async function traditionalRun(harness: Harness): Promise<SmokeOutcome> {
     checkpoint.checkpoint === 'mid' &&
     afterHazard.hazardHits >= 1 &&
     settled.hazardHits === afterHazard.hazardHits &&
-    runup.x < settled.x &&
+    launch.x >= 338 &&
+    launch.x < 390 &&
     airborne.y < settled.y &&
-    cleared.x > 480 &&
+    cleared.x >= 500 &&
     cleared.hazardHits === settled.hazardHits &&
     finished.collected >= 2 &&
     finished.outcome === 'complete';
-  return { passed, details: { initial, checkpoint, afterHazard, settled, runup, airborne, cleared, finished } };
+  return { passed, details: { initial, checkpoint, afterHazard, settled, launch, airborne, cleared, finished } };
 }
 
 async function metroidvaniaRun(harness: Harness): Promise<SmokeOutcome> {
