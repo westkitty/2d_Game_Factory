@@ -65,6 +65,31 @@ export interface AssetDescriptor {
   readonly spec: AssetSpec;
 }
 
+/** One same-origin image in an ordered presentation animation. */
+export interface AnimationFrameDescriptor {
+  readonly key: string;
+  /** Path relative to the game's own public/ directory. Must be same-origin. */
+  readonly url: string;
+}
+
+/**
+ * Optional presentation-only animation for one semantic asset role.
+ *
+ * The role still owns exactly one AssetDescriptor as its static/fallback
+ * texture. Animations add ordered local frames without turning AssetCatalog
+ * into a multi-winner role registry or leaking animation state into gameplay.
+ */
+export interface RoleAnimationDescriptor {
+  readonly role: AssetRole;
+  readonly key: string;
+  readonly frames: readonly AnimationFrameDescriptor[];
+  /** Frames per second. Defaults to 8 when omitted. */
+  readonly frameRate?: number;
+  /** Phaser repeat count. -1 means forever; defaults to -1. */
+  readonly repeat?: number;
+  readonly yoyo?: boolean;
+}
+
 /** Resolves a semantic role to a texture key. Missing roles fail loudly, never silently. */
 export interface AssetCatalog {
   has(role: AssetRole): boolean;
@@ -92,6 +117,8 @@ export interface ContentBundle {
   readonly id: string;
   readonly schemaVersion: number;
   readonly assets: readonly AssetDescriptor[];
+  /** Optional presentation animations keyed back to semantic roles. */
+  readonly animations?: readonly RoleAnimationDescriptor[];
   /** Overrides for the runtime's neutral UI strings. Presentation lives with the game. */
   readonly ui?: Partial<UiCopy>;
   /**

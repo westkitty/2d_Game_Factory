@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "urn:sw2d:schema:theme-manifest:v1",
   "title": "ThemeManifest",
-  "description": "Mirrors @sw2d/contracts ThemeManifest (theme.ts). A theme supplies presentation for the runtime's semantic asset roles and UI state; it must never carry gameplay/tuning/system-pack data.",
+  "description": "Mirrors @sw2d/contracts ThemeManifest (theme.ts). A theme supplies presentation for the runtime's semantic asset roles, optional local-frame animations and UI state; it must never carry gameplay/tuning/system-pack data.",
   "type": "object",
   "additionalProperties": false,
   "required": ["schemaVersion", "id", "displayName", "assets", "tokens", "fonts"],
@@ -13,6 +13,51 @@
     "assets": {
       "type": "array",
       "items": { "$ref": "urn:sw2d:schema:asset-descriptor:v1" }
+    },
+    "animations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["role", "key", "frames"],
+        "properties": {
+          "role": {
+            "type": "string",
+            "enum": [
+              "player",
+              "enemy",
+              "pickup",
+              "tile",
+              "platform",
+              "background",
+              "particle",
+              "hazard",
+              "checkpoint",
+              "exit",
+              "ui.panel",
+              "ui.button",
+              "ui.cursor"
+            ]
+          },
+          "key": { "type": "string", "minLength": 1 },
+          "frames": {
+            "type": "array",
+            "minItems": 2,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["key", "url"],
+              "properties": {
+                "key": { "type": "string", "minLength": 1 },
+                "url": { "type": "string", "minLength": 1 }
+              }
+            }
+          },
+          "frameRate": { "type": "number", "exclusiveMinimum": 0 },
+          "repeat": { "type": "integer", "minimum": -1 },
+          "yoyo": { "type": "boolean" }
+        }
+      }
     },
     "tokens": {
       "type": "object",

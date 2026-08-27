@@ -1,4 +1,4 @@
-import type { AssetDescriptor } from './content.ts';
+import type { AssetDescriptor, RoleAnimationDescriptor } from './content.ts';
 import type { UiCopy } from './ui.ts';
 
 /**
@@ -7,8 +7,9 @@ import type { UiCopy } from './ui.ts';
  * The runtime and every system pack understand semantic asset roles
  * (AssetRole) and semantic UI state; a theme supplies the presentation for
  * those roles. Swapping a theme must never change gameplay data - a theme
- * document carries only assets, UI tokens/copy and font declarations, never
- * tuning, level or system-pack configuration.
+ * document carries only assets, optional presentation animations, UI
+ * tokens/copy and font declarations, never tuning, level or system-pack
+ * configuration.
  */
 
 /** Small palette of CSS custom-property values a theme may set for DOM UI (touch controls, panels). */
@@ -32,6 +33,8 @@ export interface ThemeManifest {
   readonly displayName: string;
   /** Semantic role -> local asset descriptor. Same shape ContentBundle.assets already carries. */
   readonly assets: readonly AssetDescriptor[];
+  /** Optional local image sequences attached to semantic roles. */
+  readonly animations?: readonly RoleAnimationDescriptor[];
   readonly tokens: ThemeTokens;
   readonly fonts: ThemeFonts;
   readonly ui?: Partial<UiCopy>;
