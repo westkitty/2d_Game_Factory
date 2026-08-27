@@ -58,17 +58,19 @@ async function traditionalRun(harness: Harness): Promise<SmokeOutcome> {
   await hold(harness, 'ArrowRight', 40);
   const afterHazard = await shell<S>(harness);
 
-  // Respawn returns to the activated checkpoint. Let Arcade settle the body on
-  // the ground, then create vertical clearance before applying horizontal
-  // motion; holding Right first can legitimately re-enter the spike overlap
-  // before the jump edge is consumed.
+  // Respawn returns close to the spike bed. Back up to create a real run-up,
+  // then keep moving right across the jump instead of asking a nearly
+  // stationary body to clear a 70px hazard from its edge.
   await harness.stepFrames(12);
   const settled = await shell<S>(harness);
-  await harness.keyTap('Space');
-  await harness.stepFrames(8);
-  const airborne = await shell<S>(harness);
+  await hold(harness, 'ArrowLeft', 24);
+  const runup = await shell<S>(harness);
   await harness.keyDown('ArrowRight');
-  await harness.stepFrames(46);
+  await harness.stepFrames(15);
+  await harness.keyTap('Space');
+  await harness.stepFrames(10);
+  const airborne = await shell<S>(harness);
+  await harness.stepFrames(55);
   await harness.keyUp('ArrowRight');
   await harness.stepFrames(4);
   const cleared = await shell<S>(harness);
@@ -82,12 +84,13 @@ async function traditionalRun(harness: Harness): Promise<SmokeOutcome> {
     checkpoint.checkpoint === 'mid' &&
     afterHazard.hazardHits >= 1 &&
     settled.hazardHits === afterHazard.hazardHits &&
+    runup.x < settled.x &&
     airborne.y < settled.y &&
     cleared.x > 480 &&
     cleared.hazardHits === settled.hazardHits &&
     finished.collected >= 2 &&
     finished.outcome === 'complete';
-  return { passed, details: { initial, checkpoint, afterHazard, settled, airborne, cleared, finished } };
+  return { passed, details: { initial, checkpoint, afterHazard, settled, runup, airborne, cleared, finished } };
 }
 
 async function metroidvaniaRun(harness: Harness): Promise<SmokeOutcome> {
@@ -229,6 +232,7 @@ async function visualNovelRun(harness: Harness): Promise<SmokeOutcome> {
   const midnight = await shell<S>(harness);
 
   await restartPlay(harness);
+  await harness.keyTap('Space');
   await harness.keyTap('Space');
   await harness.keyTap('ArrowLeft');
   await harness.keyTap('Space');
