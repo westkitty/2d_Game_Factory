@@ -19,6 +19,13 @@ const VERIFIED_RICH_STARTERS = [
   'auto-runner',
   'puzzle-platformer',
   'top-down-adventure',
+  'action-adventure',
+  'arena-combat',
+  'base-defense',
+  'breakout',
+  'collectathon-platformer',
+  'dungeon-crawler',
+  'endless-runner',
 ] as const;
 
 describe('overlay containment', () => {

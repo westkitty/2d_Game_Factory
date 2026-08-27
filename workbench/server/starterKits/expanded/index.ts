@@ -1,6 +1,13 @@
 import type { StarterKit } from '../contracts.ts';
+import { starterKit as actionAdventure } from './action-adventure.ts';
+import { starterKit as arenaCombat } from './arena-combat.ts';
 import { starterKit as autoRunner } from './auto-runner.ts';
+import { starterKit as baseDefense } from './base-defense.ts';
+import { starterKit as breakout } from './breakout.ts';
 import { starterKit as bulletHell } from './bullet-hell.ts';
+import { starterKit as collectathonPlatformer } from './collectathon-platformer.ts';
+import { starterKit as dungeonCrawler } from './dungeon-crawler.ts';
+import { starterKit as endlessRunner } from './endless-runner.ts';
 import { starterKit as metroidvania } from './metroidvania.ts';
 import { starterKit as puzzlePlatformer } from './puzzle-platformer.ts';
 import { starterKit as reactionTiming } from './reaction-timing.ts';
@@ -21,8 +28,15 @@ import { starterKit as visualNovel } from './visual-novel.ts';
  * starter depth only.
  */
 export const EXPANDED_STARTER_KITS: readonly StarterKit[] = Object.freeze([
+  actionAdventure,
+  arenaCombat,
   autoRunner,
+  baseDefense,
+  breakout,
   bulletHell,
+  collectathonPlatformer,
+  dungeonCrawler,
+  endlessRunner,
   metroidvania,
   puzzlePlatformer,
   reactionTiming,
