@@ -222,9 +222,9 @@ export function platformStarterKit(variant: PlatformStarterVariant) {
         solids: ground,
         entities: [
           { id: 10, class: 'PlayerSpawn', name: 'Start', x: 70, y: 440, width: 0, height: 0, properties: [] },
-          { id: 11, class: 'Checkpoint', name: 'Midpoint', x: 515, y: 300, width: 24, height: 32, properties: [prop('checkpointId', 'string', 'mid')] },
-          { id: 12, class: 'Collectible', name: 'Coin A', x: 280, y: 375, width: 18, height: 18, properties: [prop('itemId', 'string', 'coin-a'), prop('value', 'int', 5)] },
-          { id: 13, class: 'Collectible', name: 'Coin B', x: 755, y: 225, width: 18, height: 18, properties: [prop('itemId', 'string', 'coin-b'), prop('value', 'int', 5)] },
+          { id: 11, class: 'Checkpoint', name: 'Midpoint', x: 300, y: 450, width: 24, height: 32, properties: [prop('checkpointId', 'string', 'mid')] },
+          { id: 12, class: 'Collectible', name: 'Coin A', x: 215, y: 450, width: 18, height: 18, properties: [prop('itemId', 'string', 'coin-a'), prop('value', 'int', 5)] },
+          { id: 13, class: 'Collectible', name: 'Coin B', x: 690, y: 450, width: 18, height: 18, properties: [prop('itemId', 'string', 'coin-b'), prop('value', 'int', 5)] },
           { id: 14, class: 'Hazard', name: 'Spikes', x: 400, y: 482, width: 70, height: 18, properties: [prop('damage', 'int', 1)] },
           { id: 15, class: 'Exit', name: 'Finish', x: 900, y: 438, width: 26, height: 56, properties: [prop('exitId', 'string', 'finish')] },
         ],
@@ -243,8 +243,8 @@ export function platformStarterKit(variant: PlatformStarterVariant) {
       entities: [
         { id: 20, class: 'PlayerSpawn', name: 'Start', x: 300, y: 440, width: 0, height: 0, properties: [] },
         { id: 21, class: 'Checkpoint', name: 'Ability Camp', x: 610, y: 450, width: 24, height: 32, properties: [prop('checkpointId', 'string', 'ability-camp')] },
-        { id: 22, class: 'Collectible', name: 'Traversal Ability', x: 735, y: 225, width: 22, height: 22, properties: [prop('itemId', 'string', 'ability-boost'), prop('value', 'int', 20)] },
-        { id: 23, class: 'Hazard', name: 'Rift', x: 470, y: 482, width: 70, height: 18, properties: [prop('damage', 'int', 1)] },
+        { id: 22, class: 'Collectible', name: 'Traversal Ability', x: 735, y: 450, width: 22, height: 22, properties: [prop('itemId', 'string', 'ability-boost'), prop('value', 'int', 20)] },
+        { id: 23, class: 'Hazard', name: 'Rift', x: 470, y: 180, width: 70, height: 18, properties: [prop('damage', 'int', 1)] },
         { id: 24, class: 'Exit', name: 'Backtracked Exit', x: 45, y: 438, width: 26, height: 56, properties: [prop('exitId', 'string', 'old-route')] },
       ],
     },
