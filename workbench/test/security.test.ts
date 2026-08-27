@@ -29,10 +29,11 @@ describe('session token', () => {
 
   it('matches only the exact token', () => {
     const token = mintSessionToken();
+    const differentLastHex = token.endsWith('0') ? '1' : '0';
     expect(tokensMatch(token, token)).toBe(true);
     expect(tokensMatch(token, undefined)).toBe(false);
     expect(tokensMatch(token, '')).toBe(false);
-    expect(tokensMatch(token, token.slice(0, -1) + '0')).toBe(false);
+    expect(tokensMatch(token, token.slice(0, -1) + differentLastHex)).toBe(false);
     expect(tokensMatch(token, token + 'a')).toBe(false);
   });
 });
