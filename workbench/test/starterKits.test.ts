@@ -26,6 +26,14 @@ const VERIFIED_RICH_STARTERS = [
   'collectathon-platformer',
   'dungeon-crawler',
   'endless-runner',
+  'exploration-game',
+  'horizontal-shmup',
+  'lane-defense',
+  'maze-game',
+  'museum-exhibit',
+  'precision-platformer',
+  'run-and-gun',
+  'vertical-shmup',
 ] as const;
 
 describe('overlay containment', () => {
