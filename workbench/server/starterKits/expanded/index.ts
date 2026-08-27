@@ -1,10 +1,24 @@
-/**
- * Promotion gate for post-proof rich starter kits.
- *
- * Sonnet adds a kit here only after its focused tests and real generated-game
- * browser proof pass. Keeping this array empty initially means scaffolding can
- * land without changing current user-visible starter-kit behavior.
- */
 import type { StarterKit } from '../contracts.ts';
+import { starterKit as bulletHell } from './bullet-hell.ts';
+import { starterKit as metroidvania } from './metroidvania.ts';
+import { starterKit as stealthGame } from './stealth-game.ts';
+import { starterKit as topDownRacer } from './top-down-racer.ts';
+import { starterKit as traditionalPlatformer } from './traditional-platformer.ts';
+import { starterKit as turnBasedTactics } from './turn-based-tactics.ts';
+import { starterKit as visualNovel } from './visual-novel.ts';
 
-export const EXPANDED_STARTER_KITS: readonly StarterKit[] = Object.freeze([]);
+/**
+ * Post-proof rich starter kits that have passed canonical generation,
+ * production build, real-browser boot, mechanic-specific browser proof, and
+ * package-lock hygiene. Preset maturity remains unchanged; these entries alter
+ * starter depth only.
+ */
+export const EXPANDED_STARTER_KITS: readonly StarterKit[] = Object.freeze([
+  bulletHell,
+  metroidvania,
+  stealthGame,
+  topDownRacer,
+  traditionalPlatformer,
+  turnBasedTactics,
+  visualNovel,
+]);
