@@ -114,20 +114,28 @@ function orderedAnimationFrames(
 ): RoleAnimationDescriptor | null {
   if (!anchor.group) return null;
 
-  const frames = input.assets.assets
+  const shippable = input.assets.assets
     .filter((asset) => asset.group === anchor.group && asset.kind === anchor.kind)
     .filter((asset) => {
       if (provenanceAllowsShipping(asset.provenance)) return true;
       skippedReferenceOnly.push(asset.displayName);
       return false;
-    })
-    .sort((a, b) => {
-      const ai = a.frameIndex ?? Number.MAX_SAFE_INTEGER;
-      const bi = b.frameIndex ?? Number.MAX_SAFE_INTEGER;
-      if (ai !== bi) return ai - bi;
-      const byName = a.displayName.localeCompare(b.displayName);
-      return byName !== 0 ? byName : a.id.localeCompare(b.id);
     });
+
+  // Name grouping is intentionally tolerant and does not imply identical
+  // geometry. For the first animation tranche, preserve a stable Sprite/body
+  // footprint: if any shippable sibling disagrees with the assigned anchor's
+  // dimensions, keep the role static rather than silently animating mismatched
+  // textures whose rendered size can diverge from the existing physics body.
+  if (shippable.some((asset) => asset.width !== anchor.width || asset.height !== anchor.height)) return null;
+
+  const frames = shippable.sort((a, b) => {
+    const ai = a.frameIndex ?? Number.MAX_SAFE_INTEGER;
+    const bi = b.frameIndex ?? Number.MAX_SAFE_INTEGER;
+    if (ai !== bi) return ai - bi;
+    const byName = a.displayName.localeCompare(b.displayName);
+    return byName !== 0 ? byName : a.id.localeCompare(b.id);
+  });
 
   if (frames.length < 2) return null;
 
