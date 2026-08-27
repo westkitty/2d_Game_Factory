@@ -186,20 +186,19 @@ async function laneDefenseRun(harness: Harness): Promise<SmokeOutcome> {
   const firstDown = await waitUntil<S>(harness, (state) => state.enemiesRemaining <= 1, 30, 4);
 
   await harness.keyTap('ArrowDown');
-  await harness.keyTap('ArrowDown');
   await harness.keyTap('Space');
   await harness.stepFrames(4);
-  const laneTwo = await shell<S>(harness);
+  const laneOne = await shell<S>(harness);
   const victory = await waitUntil<S>(harness, (state) => state.outcome !== 'playing', 50, 5);
 
   const passed =
     initial.enemiesRemaining === 2 && initial.baseHealth === 6 &&
     laneZero.defenderLane === 0 &&
     firstDown.enemiesRemaining <= 1 &&
-    laneTwo.cursor.row === 5 && laneTwo.defenderLane === 2 &&
+    laneOne.cursor.row === 4 && laneOne.defenderLane === 1 &&
     victory.enemiesRemaining === 0 && victory.baseHealth > 0 &&
     victory.outcome === 'victory';
-  return { passed, details: { initial, laneZero, firstDown, laneTwo, victory } };
+  return { passed, details: { initial, laneZero, firstDown, laneOne, victory } };
 }
 
 async function mazeRun(harness: Harness): Promise<SmokeOutcome> {
@@ -228,48 +227,89 @@ async function mazeRun(harness: Harness): Promise<SmokeOutcome> {
 
 async function precisionRun(harness: Harness): Promise<SmokeOutcome> {
   type S = { x: number; y: number; hazardHits: number; respawns: number; maxHeightReached: number; lastAction: string; outcome: string };
+  type JumpProof = { approach: S; airborne: S; crossing: S; landing: S };
+
+  async function jumpRightTo(
+    launchX: number,
+    releaseX: number,
+    landingYMin: number,
+    landingYMax: number,
+  ): Promise<JumpProof> {
+    const approach = await holdUntil<S>(
+      harness,
+      'ArrowRight',
+      (state) => state.x >= launchX || state.hazardHits > 0,
+      45,
+      2,
+    );
+    if (approach.hazardHits > 0) return { approach, airborne: approach, crossing: approach, landing: approach };
+
+    await harness.keyDown('ArrowRight');
+    let airborne: S;
+    let crossing: S;
+    try {
+      await harness.keyTap('Space');
+      airborne = await waitUntil<S>(
+        harness,
+        (state) => state.hazardHits > 0 || (state.lastAction === 'jump' && state.y <= approach.y - 8),
+        24,
+        1,
+      );
+      crossing = await waitUntil<S>(
+        harness,
+        (state) => state.hazardHits > 0 || state.x >= releaseX,
+        60,
+        1,
+      );
+    } finally {
+      await harness.keyUp('ArrowRight');
+    }
+
+    const landing = await waitUntil<S>(
+      harness,
+      (state) => state.hazardHits > 0 || (
+        state.x >= releaseX - 14 &&
+        state.y >= landingYMin && state.y <= landingYMax &&
+        state.y >= state.maxHeightReached + 8
+      ),
+      70,
+      2,
+    );
+    await harness.stepFrames(4);
+    return { approach, airborne, crossing, landing: await shell<S>(harness) };
+  }
+
   await start(harness);
   await harness.stepFrames(20);
   const initial = await shell<S>(harness);
 
-  await harness.keyDown('ArrowRight');
-  let state = initial;
-  for (let step = 0; step < 60 && state.x < 175 && state.hazardHits === 0; step++) {
-    await harness.stepFrames(2);
-    state = await shell<S>(harness);
-  }
-  await harness.keyTap('Space');
-  const first = await waitUntil<S>(harness, (next) => next.x >= 320 || next.hazardHits > 0, 60, 2);
-  await harness.stepFrames(12);
-  const firstSettled = await shell<S>(harness);
-
-  await harness.keyTap('Space');
-  const second = await waitUntil<S>(harness, (next) => next.x >= 490 || next.hazardHits > 0, 70, 2);
-  await harness.stepFrames(12);
-  const secondSettled = await shell<S>(harness);
-
-  await harness.keyTap('Space');
-  const third = await waitUntil<S>(harness, (next) => next.x >= 650 || next.hazardHits > 0, 70, 2);
-  await harness.stepFrames(10);
+  const first = await jumpRightTo(195, 310, 404, 420);
+  const second = await jumpRightTo(345, 460, 329, 345);
+  const third = await jumpRightTo(500, 625, 264, 282);
   const checkpoint = await shell<S>(harness);
-
-  await harness.keyTap('Space');
-  const finishFloor = await waitUntil<S>(harness, (next) => next.x >= 810 || next.hazardHits > 0, 80, 2);
-  const complete = await waitUntil<S>(harness, (next) => next.outcome === 'complete' || next.hazardHits > 0, 50, 2);
-  await harness.keyUp('ArrowRight');
+  const fourth = await jumpRightTo(675, 820, 470, 490);
+  const complete = await holdUntil<S>(
+    harness,
+    'ArrowRight',
+    (state) => state.outcome === 'complete' || state.hazardHits > 0,
+    50,
+    2,
+  );
 
   const passed =
-    initial.hazardHits === 0 &&
-    first.x >= 320 && first.hazardHits === 0 &&
-    firstSettled.y < initial.y &&
-    second.x >= 490 && second.hazardHits === 0 &&
-    secondSettled.y < firstSettled.y &&
-    third.x >= 650 && third.hazardHits === 0 &&
+    initial.hazardHits === 0 && initial.respawns === 0 &&
+    first.airborne.lastAction === 'jump' && first.landing.hazardHits === 0 && first.landing.respawns === 0 &&
+    first.landing.x >= 296 && first.landing.x <= 374 && first.landing.y < initial.y &&
+    second.airborne.lastAction === 'jump' && second.landing.hazardHits === 0 && second.landing.respawns === 0 &&
+    second.landing.x >= 451 && second.landing.x <= 533 && second.landing.y < first.landing.y &&
+    third.airborne.lastAction === 'jump' && third.landing.hazardHits === 0 && third.landing.respawns === 0 &&
+    third.landing.x >= 616 && third.landing.x <= 702 && third.landing.y < second.landing.y &&
     checkpoint.lastAction === 'checkpoint' &&
-    finishFloor.x >= 810 && finishFloor.hazardHits === 0 &&
+    fourth.airborne.lastAction === 'jump' && fourth.landing.hazardHits === 0 && fourth.landing.respawns === 0 &&
+    fourth.landing.x >= 776 &&
     complete.hazardHits === 0 && complete.respawns === 0 &&
     complete.outcome === 'complete';
-  return { passed, details: { initial, first, firstSettled, second, secondSettled, third, checkpoint, finishFloor, complete } };
+  return { passed, details: { initial, first, second, third, checkpoint, fourth, complete } };
 }
 
 async function runAndGunRun(harness: Harness): Promise<SmokeOutcome> {
