@@ -41,7 +41,8 @@
     "qa:starter-kits:core": "node --experimental-strip-types tools/scripts/qa-expanded-starter-kits.ts",
     "qa:starter-kits:p2b": "node --experimental-strip-types tools/scripts/qa-expanded-starter-kits-p2b.ts",
     "qa:starter-kits:p2c": "node --experimental-strip-types tools/scripts/qa-expanded-starter-kits-p2c.ts",
-    "qa:starter-kits": "npm run qa:starter-kits:core && npm run qa:starter-kits:p2b && npm run qa:starter-kits:p2c",
+    "qa:starter-kits:p3a": "node --experimental-strip-types tools/scripts/qa-expanded-starter-kits-p3a.ts",
+    "qa:starter-kits": "npm run qa:starter-kits:core && npm run qa:starter-kits:p2b && npm run qa:starter-kits:p2c && npm run qa:starter-kits:p3a",
     "validate": "npm run typecheck && npm run test && npm run build && npm run check:offline"
   },
   "devDependencies": {

@@ -4,9 +4,7 @@ on:
   push:
     branches:
       - starter-kits/implement-all
-  pull_request:
-    branches:
-      - main
+  workflow_dispatch:
 
 concurrency:
   group: starter-kit-expansion-${{ github.ref }}
@@ -16,9 +14,37 @@ permissions:
   contents: read
 
 jobs:
-  starter-kit-qa:
-    runs-on: ubuntu-latest
-    timeout-minutes: 60
+  baseline:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Use Node 22.12
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.12.0
+          cache: npm
+
+      - name: Install locked workspace
+        run: npm ci --no-audit --no-fund
+
+      - name: Validate repository baseline
+        run: npm run validate
+
+  starter-kit-browser:
+    needs: baseline
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        batch:
+          - core
+          - p2b
+          - p2c
+          - p3a
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -39,8 +65,5 @@ jobs:
           echo "PLAYWRIGHT_CHROME_PATH=$CHROME" >> "$GITHUB_ENV"
           "$CHROME" --version
 
-      - name: Validate repository baseline
-        run: npm run validate
-
-      - name: Validate expanded starter candidates
-        run: npm run qa:starter-kits
+      - name: Validate starter batch
+        run: npm run qa:starter-kits:${{ matrix.batch }}

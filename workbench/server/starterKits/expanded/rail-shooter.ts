@@ -1,2 +1,2 @@
-import { shooterStarterKit } from './builders/shooter.ts';
-export const starterKit = shooterStarterKit('rail-shooter');
+import { railShooterStarterKit } from './builders/railShooter.ts';
+export const starterKit = railShooterStarterKit();
