@@ -117,7 +117,6 @@ export const EXPANDED_STARTER_KITS: readonly StarterKit[] = Object.freeze([
   visualNovel,
   // P3-G: Party Toy / Weird kits promoted after the candidate matrix passed.
   cookingGame,
-  climbingGame,
   drawingGame,
   dressUpCharacterToy,
   fishingGame,
@@ -128,5 +127,7 @@ export const EXPANDED_STARTER_KITS: readonly StarterKit[] = Object.freeze([
   sandboxPlayground,
   virtualPet,
   photographyGame,
+  // P3-I: Platforming kits promoted after the candidate matrix passed.
+  climbingGame,
   grapplingPlatformer,
 ]);
