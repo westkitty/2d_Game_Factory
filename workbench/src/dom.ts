@@ -28,6 +28,8 @@ export function el<K extends keyof HTMLElementTagNameMap>(
   const node = document.createElement(tag);
   if (options.class) node.className = options.class;
   if (options.text !== undefined) node.textContent = options.text;
+  // Only ever used with strings this module itself builds - never with
+  // anything that came from a file name, an asset or the network.
   if (options.html !== undefined) node.innerHTML = options.html;
   if (options.title) node.title = options.title;
   if (options.disabled !== undefined && 'disabled' in node) (node as HTMLButtonElement).disabled = options.disabled;
@@ -70,6 +72,7 @@ export function field(labelText: string, control: HTMLElement, hint?: string): H
   return el('label', { class: 'field' }, el('span', { text: labelText }), control, hint ? el('div', { class: 'faint', text: hint, style: { 'font-size': '11px', 'margin-top': '3px' } }) : null);
 }
 
+/** A `<select>` whose option values are ids and whose labels are human text. */
 export function select(
   options: readonly { readonly value: string; readonly label: string }[],
   value: string,
@@ -94,6 +97,7 @@ export function toast(message: string, kind: 'ok' | 'warn' | 'err' = 'ok', durat
   window.clearTimeout(toastTimer);
 }
 
+/** Formats a byte count the way a person reads it. */
 export function formatBytes(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
@@ -106,7 +110,7 @@ export function maturityBadgeClass(maturity: string): string {
   return 'badge badge--recipe';
 }
 
-/** Starter depth and preset evidence maturity are separate claims. */
+/** Plain-English starter-kit depth. Starter depth and preset evidence maturity are separate claims (F15). */
 export function depthLabel(depth: string): string {
   if (depth === 'rich-proof-kit' || depth === 'rich-starter-kit') return 'Rich starter kit';
   if (depth === 'smoke-kit') return 'Smoke-validated demo';
