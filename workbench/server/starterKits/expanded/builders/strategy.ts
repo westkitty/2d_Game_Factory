@@ -57,8 +57,13 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       enemies.push(unit);
       return unit;
     }
-    spawnEnemy(8, 2, VARIANT === 'base-defense' ? 3 : 2);
-    spawnEnemy(9, 4, 2);
+    if (VARIANT === 'turn-based-tactics') {
+      spawnEnemy(4, 3, 2);
+      spawnEnemy(5, 3, 2);
+    } else {
+      spawnEnemy(8, 2, VARIANT === 'base-defense' ? 3 : 2);
+      spawnEnemy(9, 4, 2);
+    }
 
     let turn: 'player' | 'enemy' = 'player';
     let turnsCompleted = 0;
