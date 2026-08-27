@@ -3,6 +3,7 @@
  * a shipped rich starter kit. This is development control-plane data only;
  * unfinished scaffolds never enter the runtime kit registry.
  */
+import type { SystemPackSelection } from '@sw2d/contracts';
 import { getPreset, listPresets } from '@sw2d/presets';
 import type { ExplicitStarterKitPlan, OriginalRichKitId, ScaffoldPriority } from './scaffolds/types.ts';
 import { ORIGINAL_RICH_KIT_IDS } from './scaffolds/types.ts';
@@ -26,6 +27,9 @@ export interface StarterKitScaffold extends ExplicitStarterKitPlan {
   readonly currentMaturity: string;
   readonly targetDepth: 'rich-starter-kit';
   readonly controllerFamilies: readonly string[];
+  /** Exact selections are authoritative; ids are a convenience for status/docs. */
+  readonly requiredSystemPacks: readonly SystemPackSelection[];
+  readonly optionalSystemPacks: readonly SystemPackSelection[];
   readonly requiredPackIds: readonly string[];
   readonly optionalPackIds: readonly string[];
   readonly requiredContentRoles: readonly string[];
@@ -73,6 +77,8 @@ export function allStarterKitScaffolds(): readonly StarterKitScaffold[] {
       currentMaturity: preset.maturity,
       targetDepth: 'rich-starter-kit' as const,
       controllerFamilies: preset.controllerFamilies,
+      requiredSystemPacks: preset.requiredSystemPacks,
+      optionalSystemPacks: preset.optionalSystemPacks,
       requiredPackIds: preset.requiredSystemPacks.map((entry) => entry.packId),
       optionalPackIds: preset.optionalSystemPacks.map((entry) => entry.packId),
       requiredContentRoles: preset.requiredContentRoles,
