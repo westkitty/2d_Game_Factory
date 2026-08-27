@@ -54,8 +54,13 @@ async function autoBattlerRun(harness: Harness): Promise<SmokeOutcome> {
   type S = {
     cursor: { col: number; row: number };
     autoBattleStarted: boolean;
+    setupPower: number;
     enemiesRemaining: number;
     playerHp: number;
+    cursorTextureKey: string;
+    panelTextureKey: string | null;
+    buttonTextureKey: string | null;
+    setupMarkerTextureKey: string | null;
     lastAction: string;
     outcome: string;
   };
@@ -71,8 +76,10 @@ async function autoBattlerRun(harness: Harness): Promise<SmokeOutcome> {
   const victory = await waitUntil<S>(harness, (state) => state.outcome !== 'playing', 70, 5);
 
   const passed =
-    initial.autoBattleStarted === false && initial.enemiesRemaining === 2 &&
-    configured.cursor.col === initial.cursor.col + 1 && configured.autoBattleStarted === false &&
+    initial.autoBattleStarted === false && initial.enemiesRemaining === 2 && initial.setupPower === 1 &&
+    configured.cursor.col === initial.cursor.col + 1 && configured.autoBattleStarted === false && configured.setupPower === 2 &&
+    configured.cursorTextureKey.length > 0 && configured.panelTextureKey !== null &&
+    configured.buttonTextureKey !== null && configured.setupMarkerTextureKey !== null &&
     started.autoBattleStarted === true && started.lastAction === 'start-battle' &&
     victory.enemiesRemaining === 0 && victory.playerHp > 0 && victory.outcome === 'victory';
   return { passed, details: { initial, configured, started, victory } };
@@ -87,6 +94,8 @@ async function simpleRtsRun(harness: Harness): Promise<SmokeOutcome> {
     rtsTarget: { col: number; row: number } | null;
     enemiesRemaining: number;
     enemyStates: EnemyState[];
+    cursorTextureKey: string;
+    objectiveTextureKey: string | null;
     lastAction: string;
     outcome: string;
   };
@@ -128,6 +137,7 @@ async function simpleRtsRun(harness: Harness): Promise<SmokeOutcome> {
 
   const passed =
     initial.selected === false && initial.enemiesRemaining === 2 &&
+    initial.cursorTextureKey.length > 0 && initial.objectiveTextureKey !== null &&
     selected.selected === true && selected.lastAction === 'select' &&
     commandedFirst.rtsTarget?.col === 7 && commandedFirst.rtsTarget?.row === 2 && commandedFirst.lastAction === 'command' &&
     arrivedFirst.playerCell.col === 7 && arrivedFirst.playerCell.row === 2 &&
@@ -143,6 +153,9 @@ async function territoryControlRun(harness: Harness): Promise<SmokeOutcome> {
     cursor: { col: number; row: number };
     zones: number[];
     captureProgress: number[];
+    contestedZones: boolean[];
+    panelTextureKey: string | null;
+    cursorTextureKey: string;
     holdScore: number;
     lastAction: string;
     outcome: string;
@@ -157,24 +170,32 @@ async function territoryControlRun(harness: Harness): Promise<SmokeOutcome> {
   await tapMany(harness, 'ArrowRight', 4, 1);
   const zoneOneCursor = await shell<S>(harness);
   await tapMany(harness, 'Space', 3, 2);
+  const zoneOneContested = await shell<S>(harness);
+  await tapMany(harness, 'Space', 2, 2);
   const zoneOne = await shell<S>(harness);
 
   await tapMany(harness, 'ArrowRight', 4, 1);
   const zoneTwoCursor = await shell<S>(harness);
   await tapMany(harness, 'Space', 3, 2);
+  const zoneTwoContested = await shell<S>(harness);
+  await tapMany(harness, 'Space', 2, 2);
   const zoneTwo = await shell<S>(harness);
-  const victory = await waitUntil<S>(harness, (state) => state.outcome !== 'playing', 70, 4);
+  const victory = await waitUntil<S>(harness, (state) => state.outcome !== 'playing', 80, 4);
 
   const passed =
     initial.zones.every((zone) => zone === 0) &&
+    initial.contestedZones[0] === false && initial.contestedZones[1] === true && initial.contestedZones[2] === true &&
+    initial.panelTextureKey !== null && initial.cursorTextureKey.length > 0 &&
     zoneZero.zones[0] === 1 && zoneZero.lastAction === 'capture' &&
-    zoneOneCursor.cursor.col >= 4 && zoneOneCursor.cursor.col < 8 &&
-    zoneOne.zones[1] === 1 && zoneOne.lastAction === 'capture' &&
-    zoneTwoCursor.cursor.col >= 8 &&
-    zoneTwo.zones[2] === 1 && zoneTwo.lastAction === 'capture' &&
+    zoneOneCursor.cursor.col >= 4 && zoneOneCursor.cursor.col < 8 && zoneOneCursor.contestedZones[1] === true &&
+    zoneOneContested.zones[1] === 0 && zoneOneContested.captureProgress[1]! < 100 && zoneOneContested.lastAction === 'capture-contested' &&
+    zoneOne.zones[1] === 1 && zoneOne.lastAction === 'capture-contested' &&
+    zoneTwoCursor.cursor.col >= 8 && zoneTwoCursor.contestedZones[2] === true &&
+    zoneTwoContested.zones[2] === 0 && zoneTwoContested.captureProgress[2]! < 100 && zoneTwoContested.lastAction === 'capture-contested' &&
+    zoneTwo.zones[2] === 1 && zoneTwo.lastAction === 'capture-contested' &&
     victory.zones.every((zone) => zone === 1) && victory.holdScore >= 8 &&
     victory.outcome === 'victory';
-  return { passed, details: { initial, zoneZero, zoneOneCursor, zoneOne, zoneTwoCursor, zoneTwo, victory } };
+  return { passed, details: { initial, zoneZero, zoneOneCursor, zoneOneContested, zoneOne, zoneTwoCursor, zoneTwoContested, zoneTwo, victory } };
 }
 
 const CANDIDATES: readonly Candidate[] = [

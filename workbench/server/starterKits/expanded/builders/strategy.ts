@@ -38,8 +38,10 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     const { width, height } = context.definition.viewport;
     const background = addBackground(scene, context.assets.has('background') ? context.assets.resolve('background') : null, width, height);
     const decorations: Phaser.GameObjects.GameObject[] = [];
+    const resolveOptional = (role: string, fallback: string): string => context.assets.has(role) ? context.assets.resolve(role) : context.assets.resolve(fallback);
 
     const toPixel = (cell: Cell): [number, number] => [ORIGIN_X + cell.col * CELL, ORIGIN_Y + cell.row * CELL];
+    const zoneForCol = (col: number): number => col < 4 ? 0 : col < 8 ? 1 : 2;
     for (let row = 0; row < ROWS; row++) {
       for (let col = 0; col < COLS; col++) {
         const tile = scene.add.sprite(...toPixel({ col, row }), context.assets.resolve('platform')).setDisplaySize(CELL - 8, CELL - 8).setAlpha(0.12);
@@ -48,9 +50,18 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     }
 
     let cursor: Cell = { col: 2, row: 3 };
-    const cursorSprite = scene.add.sprite(...toPixel(cursor), context.assets.resolve('checkpoint')).setDisplaySize(CELL - 14, CELL - 14).setAlpha(0.7);
+    const cursorTexture =
+      VARIANT === 'simple-rts' ? resolveOptional('ui.cursor', 'checkpoint') :
+      VARIANT === 'auto-battler' ? resolveOptional('ui.button', 'pickup') :
+      context.assets.resolve('checkpoint');
+    const cursorSprite = scene.add.sprite(...toPixel(cursor), cursorTexture).setDisplaySize(CELL - 14, CELL - 14).setAlpha(0.7);
     const playerUnit: Unit = { sprite: scene.add.sprite(...toPixel({ col: 2, row: 3 }), context.assets.resolve('player')).setDisplaySize(42, 42), cell: { col: 2, row: 3 }, hp: 4, alive: true };
     const enemies: Unit[] = [];
+    let rtsObjectiveMarker: Phaser.GameObjects.Sprite | null = null;
+    let autoPanel: Phaser.GameObjects.Sprite | null = null;
+    let autoButton: Phaser.GameObjects.Sprite | null = null;
+    let autoSetupMarker: Phaser.GameObjects.Sprite | null = null;
+    const territoryPanels: Phaser.GameObjects.Sprite[] = [];
 
     function spawnEnemy(col: number, row: number, hp = 2): Unit {
       const unit: Unit = { sprite: scene.add.sprite(...toPixel({ col, row }), context.assets.resolve('enemy')).setDisplaySize(38, 38), cell: { col, row }, hp, alive: true };
@@ -60,9 +71,34 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     if (VARIANT === 'turn-based-tactics') {
       spawnEnemy(4, 3, 2);
       spawnEnemy(5, 3, 2);
+    } else if (VARIANT === 'territory-control') {
+      spawnEnemy(5, 2, 2);
+      spawnEnemy(9, 4, 2);
     } else {
       spawnEnemy(8, 2, VARIANT === 'base-defense' ? 3 : 2);
       spawnEnemy(9, 4, 2);
+    }
+
+    if (VARIANT === 'simple-rts') {
+      const finalEnemy = enemies[1];
+      if (finalEnemy) {
+        rtsObjectiveMarker = scene.add.sprite(...toPixel(finalEnemy.cell), context.assets.resolve('checkpoint')).setDisplaySize(52, 52).setAlpha(0.4);
+        decorations.push(rtsObjectiveMarker);
+      }
+    }
+    if (VARIANT === 'auto-battler') {
+      autoPanel = scene.add.sprite(width - 160, 82, resolveOptional('ui.panel', 'platform')).setDisplaySize(260, 82).setAlpha(0.32);
+      autoButton = scene.add.sprite(width - 74, 82, resolveOptional('ui.button', 'checkpoint')).setDisplaySize(72, 34).setAlpha(0.85);
+      autoSetupMarker = scene.add.sprite(...toPixel(cursor), context.assets.resolve('pickup')).setDisplaySize(20, 20).setAlpha(0.9);
+      decorations.push(autoPanel, autoButton, autoSetupMarker);
+    }
+    if (VARIANT === 'territory-control') {
+      const panelTexture = resolveOptional('ui.panel', 'platform');
+      for (let zone = 0; zone < 3; zone++) {
+        const panel = scene.add.sprite(...toPixel({ col: zone * 4 + 2, row: 6 }), panelTexture).setDisplaySize(CELL * 3.2, 42).setAlpha(0.28);
+        territoryPanels.push(panel);
+        decorations.push(panel);
+      }
     }
 
     let turn: 'player' | 'enemy' = 'player';
@@ -85,6 +121,9 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     const status = scene.add.text(18, 16, '', { fontFamily: 'ui-monospace, monospace', fontSize: '15px', color: '#ffffff', backgroundColor: '#111827aa', padding: { x: 8, y: 5 } }).setDepth(50);
 
     function liveEnemies(): Unit[] { return enemies.filter((enemy) => enemy.alive); }
+    function contestedZones(): boolean[] {
+      return [0, 1, 2].map((zone) => liveEnemies().some((enemy) => zoneForCol(enemy.cell.col) === zone));
+    }
     function sync(unit: Unit): void { unit.sprite.setPosition(...toPixel(unit.cell)); unit.sprite.setVisible(unit.alive); }
     function moveCursor(step: 'up' | 'down' | 'left' | 'right'): void {
       if (step === 'up') cursor = { col: cursor.col, row: Math.max(0, cursor.row - 1) };
@@ -92,8 +131,16 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       if (step === 'left') cursor = { col: Math.max(0, cursor.col - 1), row: cursor.row };
       if (step === 'right') cursor = { col: Math.min(COLS - 1, cursor.col + 1), row: cursor.row };
       cursorSprite.setPosition(...toPixel(cursor));
+      autoSetupMarker?.setPosition(...toPixel(cursor));
     }
-    function damage(unit: Unit, amount = 1): void { unit.hp -= amount; if (unit.hp <= 0) { unit.alive = false; unit.sprite.setVisible(false); } }
+    function damage(unit: Unit, amount = 1): void {
+      unit.hp -= amount;
+      if (unit.hp <= 0) {
+        unit.alive = false;
+        unit.sprite.setVisible(false);
+        if (VARIANT === 'simple-rts' && unit === enemies[1]) rtsObjectiveMarker?.setVisible(false);
+      }
+    }
 
     function enemyTurn(): void {
       const enemy = liveEnemies()[0];
@@ -157,7 +204,12 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     }
 
     function autoBattler(confirmPressed: boolean, deltaMs: number): void {
-      if (!autoBattleStarted && confirmPressed) { autoBattleStarted = true; lastAction = 'start-battle'; }
+      if (!autoBattleStarted && confirmPressed) {
+        autoBattleStarted = true;
+        lastAction = 'start-battle';
+        autoButton?.setTint(0x65d0a8);
+        autoPanel?.setAlpha(0.48);
+      }
       if (!autoBattleStarted) return;
       autoTickMs += deltaMs;
       if (autoTickMs < 700) return;
@@ -198,11 +250,18 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     }
 
     function territory(confirmPressed: boolean, deltaMs: number): void {
-      const zoneIndex = cursor.col < 4 ? 0 : cursor.col < 8 ? 1 : 2;
-      if (confirmPressed) { captureProgress[zoneIndex] = captureProgress[zoneIndex]! + 35; lastAction = 'capture'; }
+      const zoneIndex = zoneForCol(cursor.col);
+      const contested = contestedZones();
+      if (confirmPressed) {
+        captureProgress[zoneIndex] = captureProgress[zoneIndex]! + (contested[zoneIndex] ? 22 : 35);
+        lastAction = contested[zoneIndex] ? 'capture-contested' : 'capture';
+      }
       for (let i = 0; i < captureProgress.length; i++) {
-        captureProgress[i] = Phaser.Math.Clamp(captureProgress[i]! + (i === zoneIndex ? deltaMs * 0.006 : -deltaMs * 0.002), 0, 100);
+        const activeGain = contested[i] ? deltaMs * 0.001 : deltaMs * 0.006;
+        captureProgress[i] = Phaser.Math.Clamp(captureProgress[i]! + (i === zoneIndex ? activeGain : -deltaMs * 0.002), 0, 100);
         if (captureProgress[i]! >= 100) zones[i] = 1;
+        const panel = territoryPanels[i];
+        if (panel) panel.setAlpha(zones[i] === 1 ? 0.68 : contested[i] ? 0.46 : 0.28);
       }
       holdScore += zones.filter((zone) => zone === 1).length * deltaMs / 1000;
       if (holdScore >= 8) outcome = 'victory';
@@ -217,6 +276,11 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       family: 'strategy-defense',
       playerTextureKey: playerUnit.sprite.texture.key,
       backgroundTextureKey: background ? background.texture.key : null,
+      cursorTextureKey: cursorSprite.texture.key,
+      panelTextureKey: autoPanel?.texture.key ?? territoryPanels[0]?.texture.key ?? null,
+      buttonTextureKey: autoButton?.texture.key ?? null,
+      setupMarkerTextureKey: autoSetupMarker?.texture.key ?? null,
+      objectiveTextureKey: rtsObjectiveMarker?.texture.key ?? null,
       cursor,
       playerCell: playerUnit.cell,
       playerHp: playerUnit.hp,
@@ -229,10 +293,12 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       baseHealth,
       defenderLane,
       autoBattleStarted,
+      setupPower: 1 + (cursor.col % 2),
       selected,
       rtsTarget,
       zones,
       captureProgress,
+      contestedZones: contestedZones(),
       holdScore,
     }));
 
