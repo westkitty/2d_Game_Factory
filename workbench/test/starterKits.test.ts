@@ -4,7 +4,7 @@ import { getPreset, listPresets } from '../../packages/presets/src/index.ts';
 import { allStarterKits, everyOverlayPath, starterKitDepthFor, starterKitFor } from '../server/starterKits/index.ts';
 
 const PROOF_PRESETS = ['chase-platformer', 'twin-stick-shooter', 'tower-defense', 'sokoban', 'idle-incremental'] as const;
-const P1_RICH_STARTERS = [
+const VERIFIED_RICH_STARTERS = [
   'traditional-platformer',
   'metroidvania',
   'bullet-hell',
@@ -12,6 +12,13 @@ const P1_RICH_STARTERS = [
   'top-down-racer',
   'turn-based-tactics',
   'visual-novel',
+  'time-trial-racer',
+  'reaction-timing',
+  'shopkeeper',
+  'tycoon-lite',
+  'auto-runner',
+  'puzzle-platformer',
+  'top-down-adventure',
 ] as const;
 
 describe('overlay containment', () => {
@@ -63,8 +70,8 @@ describe('starter kit registry', () => {
     }
   });
 
-  it('ships every P1 candidate that earned rich starter evidence', () => {
-    for (const presetId of P1_RICH_STARTERS) {
+  it('ships every candidate that earned rich starter evidence', () => {
+    for (const presetId of VERIFIED_RICH_STARTERS) {
       expect(starterKitFor(presetId)?.depth, presetId).toBe('rich-starter-kit');
     }
   });
