@@ -88,7 +88,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     for (const object of level.objects) {
       if (object.class === 'Checkpoint') {
         const sprite = staticMarker(object, 'checkpoint');
-        scene.physics.add.overlap(player, sprite, () => { checkpoint = { x: object.x, y: object.y }; lastAction = 'checkpoint'; });
+        scene.physics.add.overlap(player, sprite, () => { if (outcome !== 'playing') return; checkpoint = { x: object.x, y: object.y }; lastAction = 'checkpoint'; });
       } else if (object.class === 'Collectible') {
         const itemId = String(object.properties.itemId ?? 'item-' + object.id);
         const sprite = staticMarker(object, 'pickup');
@@ -96,24 +96,29 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         if (itemId === 'switch') switchSprite = sprite;
         else {
           scene.physics.add.overlap(player, sprite, () => {
-            if (!sprite.active) return;
+            if (outcome !== 'playing' || !sprite.active) return;
             collected += 1; score += Number(object.properties.value ?? 5); lastAction = 'collect'; bobbing.remove(sprite); sprite.destroy();
           });
         }
       } else if (object.class === 'Hazard') {
         const sprite = staticMarker(object, 'hazard');
         scene.physics.add.overlap(player, sprite, () => {
+          if (outcome !== 'playing') return;
           hazardHits += 1; lastAction = 'hazard';
-          if (VARIANT === 'endless-runner' || VARIANT === 'auto-runner') outcome = 'failed'; else respawn();
+          if (VARIANT === 'endless-runner' || VARIANT === 'auto-runner') {
+            outcome = 'failed';
+            player.setVelocity(0, 0);
+          } else respawn();
         });
       } else if (object.class === 'Exit') {
         exitSprite = staticMarker(object, 'exit');
         scene.physics.add.overlap(player, exitSprite, () => {
+          if (outcome !== 'playing') return;
           const allowed =
             VARIANT === 'puzzle-platformer' ? puzzleSolved :
             VARIANT === 'collectathon-platformer' ? collected >= COLLECTATHON_QUOTA :
             VARIANT === 'grappling-platformer' ? grappleUsed : true;
-          if (allowed) { outcome = 'complete'; lastAction = 'finish'; }
+          if (allowed) { outcome = 'complete'; lastAction = 'finish'; player.setVelocity(0, 0); }
           else finishBlockedCount += 1;
         });
       } else if (object.class === 'Objective' && VARIANT === 'grappling-platformer') {
@@ -173,7 +178,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         distanceScore = Math.max(distanceScore, player.x - (spawn?.x ?? 70));
         maxHeightReached = Math.min(maxHeightReached, player.y);
         updatePuzzle(); updateGrapple();
-        if (VARIANT === 'endless-runner' && elapsedMs >= 9000 && outcome === 'playing') { outcome = 'complete'; lastAction = 'survived'; }
+        if (VARIANT === 'endless-runner' && elapsedMs >= 9000 && outcome === 'playing') { outcome = 'complete'; lastAction = 'survived'; player.setVelocity(0, 0); }
         presentation.update(deltaMs, grounded); bobbing.update(deltaMs); render();
       },
       dispose(): void {
@@ -192,7 +197,7 @@ const baseSpawn = { id: 2, class: 'PlayerSpawn', name: 'Start', x: 70, y: 440, w
 export function additionalPlatformStarterKit(variant: AdditionalPlatformStarterVariant) {
   const common = { shellPackId: 'game.expanded-platform-special', shellSource: shellSource(variant) } as const;
   if (variant === 'endless-runner') return defineExpandedKit({ ...common, presetId: variant, level: { solids: ground, entities: [baseSpawn, { id: 3, class: 'Collectible', name: 'Score', x: 260, y: 450, width: 18, height: 18, properties: [prop('itemId', 'string', 'score'), prop('value', 'int', 10)] }, { id: 4, class: 'Hazard', name: 'Jump Me', x: 520, y: 482, width: 45, height: 18, properties: [prop('damage', 'int', 1)] }] }, tuning: { moveSpeed: 170, jumpVelocity: 420, gravity: 1120 } });
-  if (variant === 'auto-runner') return defineExpandedKit({ ...common, presetId: variant, level: { solids: ground, entities: [baseSpawn, { id: 3, class: 'Hazard', name: 'Jump Me', x: 420, y: 482, width: 42, height: 18, properties: [prop('damage', 'int', 1)] }, { id: 4, class: 'Exit', name: 'Finish', x: 890, y: 438, width: 28, height: 56, properties: [prop('exitId', 'string', 'finish')] }] }, tuning: { moveSpeed: 185, jumpVelocity: 430, gravity: 1120 } });
+  if (variant === 'auto-runner') return defineExpandedKit({ ...common, presetId: variant, level: { solids: ground, entities: [baseSpawn, { id: 3, class: 'Hazard', name: 'Jump Me', x: 420, y: 482, width: 42, height: 18, properties: [prop('damage', 'int', 1)] }, { id: 4, class: 'Exit', name: 'Finish', x: 890, y: 438, width: 28, height: 56, properties: [prop('exitId', 'string', 'finish')] }] }, tuning: { moveSpeed: 185, jumpVelocity: 470, gravity: 1000 } });
   if (variant === 'precision-platformer') return defineExpandedKit({ ...common, presetId: variant, level: { solids: [{ id: 1, class: 'Solid', name: 'Start', x: 0, y: 500, width: 220, height: 40 }, { id: 2, class: 'Solid', name: 'Tiny A', x: 300, y: 430, width: 74, height: 14 }, { id: 3, class: 'Solid', name: 'Tiny B', x: 465, y: 355, width: 68, height: 14 }, { id: 4, class: 'Solid', name: 'Tiny C', x: 630, y: 290, width: 72, height: 14 }, { id: 5, class: 'Solid', name: 'Finish Floor', x: 790, y: 500, width: 170, height: 40 }], entities: [baseSpawn, { id: 10, class: 'Checkpoint', name: 'Precision CP', x: 640, y: 245, width: 22, height: 32, properties: [prop('checkpointId', 'string', 'precision-cp')] }, { id: 11, class: 'Hazard', name: 'Void', x: 220, y: 510, width: 570, height: 25, properties: [prop('damage', 'int', 1)] }, { id: 12, class: 'Exit', name: 'Finish', x: 900, y: 438, width: 28, height: 56, properties: [prop('exitId', 'string', 'finish')] }] }, tuning: { moveSpeed: 185, jumpVelocity: 390, gravity: 1420 } });
   if (variant === 'puzzle-platformer') return defineExpandedKit({ ...common, presetId: variant, level: { solids: ground, entities: [baseSpawn, { id: 3, class: 'Collectible', name: 'Switch', x: 520, y: 450, width: 26, height: 26, properties: [prop('itemId', 'string', 'switch')] }, { id: 4, class: 'Exit', name: 'Locked Exit', x: 890, y: 438, width: 28, height: 56, properties: [prop('exitId', 'string', 'locked-exit')] }] }, tuning: { moveSpeed: 220, jumpVelocity: 430, gravity: 1100 } });
   if (variant === 'climbing-game') return defineExpandedKit({ ...common, presetId: variant, level: { solids: [{ id: 1, class: 'Solid', name: 'Ground', x: 0, y: 500, width: 260, height: 40 }, { id: 2, class: 'Solid', name: 'L1', x: 250, y: 420, width: 160, height: 16 }, { id: 3, class: 'Solid', name: 'L2', x: 470, y: 335, width: 150, height: 16 }, { id: 4, class: 'Solid', name: 'L3', x: 650, y: 245, width: 150, height: 16 }, { id: 5, class: 'Solid', name: 'Summit', x: 800, y: 155, width: 150, height: 16 }], entities: [baseSpawn, { id: 10, class: 'Checkpoint', name: 'High CP', x: 680, y: 205, width: 22, height: 32, properties: [prop('checkpointId', 'string', 'high-cp')] }, { id: 11, class: 'Hazard', name: 'Fall', x: 240, y: 525, width: 560, height: 20, properties: [prop('damage', 'int', 1)] }, { id: 12, class: 'Exit', name: 'Summit', x: 875, y: 100, width: 28, height: 50, properties: [prop('exitId', 'string', 'summit')] }] }, tuning: { moveSpeed: 205, jumpVelocity: 430, gravity: 1060 } });
