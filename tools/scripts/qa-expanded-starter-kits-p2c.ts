@@ -265,7 +265,7 @@ async function precisionRun(harness: Harness): Promise<SmokeOutcome> {
       await harness.keyUp('ArrowRight');
     }
 
-    const landing = await waitUntil<S>(
+    await waitUntil<S>(
       harness,
       (state) => state.hazardHits > 0 || (
         state.x >= releaseX - 14 &&
