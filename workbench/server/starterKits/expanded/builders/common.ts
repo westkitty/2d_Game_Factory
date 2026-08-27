@@ -47,10 +47,10 @@ export function defineExpandedKit(spec: ExpandedKitSpec): StarterKit {
         shellPackId: spec.shellPackId,
         shellSource: spec.shellSource,
         requiredPackIds: requiredPackIds(spec.presetId, spec.extraPackIds ?? []),
-        level: spec.level,
-        tuning: spec.tuning,
-        extraFiles: spec.extraFiles,
-        includePresentation: spec.includePresentation,
+        ...(spec.level !== undefined ? { level: spec.level } : {}),
+        ...(spec.tuning !== undefined ? { tuning: spec.tuning } : {}),
+        ...(spec.extraFiles !== undefined ? { extraFiles: spec.extraFiles } : {}),
+        ...(spec.includePresentation !== undefined ? { includePresentation: spec.includePresentation } : {}),
       });
     },
   };
