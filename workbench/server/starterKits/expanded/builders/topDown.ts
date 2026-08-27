@@ -49,9 +49,13 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
 
     const enemies: Enemy[] = [];
     const decorative: Phaser.GameObjects.GameObject[] = [];
+    const particleTexture = context.assets.has('particle') ? context.assets.resolve('particle') : context.assets.resolve('pickup');
     let objectiveSprite: Phaser.GameObjects.Sprite | null = null;
     let exitSprite: Phaser.GameObjects.Sprite | null = null;
     let upgradeSprite: Phaser.GameObjects.Sprite | null = null;
+    let guardZoneSprite: Phaser.GameObjects.Sprite | null = null;
+    let bossTelegraphSprite: Phaser.GameObjects.Sprite | null = null;
+    let bossPhaseMarker: Phaser.GameObjects.Sprite | null = null;
     let objectiveCollected = false;
     let upgradeCollected = false;
     let alarm = false;
@@ -66,6 +70,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     let spawnedTotal = 0;
     let bossPhase = 0;
     let runResets = 0;
+    let particleEffects = 0;
     let lastAction = 'spawn';
 
     const status = scene.add.text(18, 16, '', {
@@ -103,9 +108,23 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       return best;
     }
 
+    function emitHitEffect(x: number, y: number): void {
+      const effect = scene.add.sprite(x, y, particleTexture).setDisplaySize(20, 20).setAlpha(0.9).setDepth(12);
+      particleEffects += 1;
+      scene.tweens.add({
+        targets: effect,
+        alpha: 0,
+        scaleX: 1.7,
+        scaleY: 1.7,
+        duration: 140,
+        onComplete: () => { if (effect.active) effect.destroy(); },
+      });
+    }
+
     function damageEnemy(enemy: Enemy, amount: number): void {
       if (!enemy.alive) return;
       enemy.health -= amount;
+      emitHitEffect(enemy.sprite.x, enemy.sprite.y);
       enemy.sprite.setTint(0xffffff);
       scene.time.delayedCall(80, () => enemy.sprite.active && enemy.sprite.clearTint());
       if (enemy.health <= 0) {
@@ -133,14 +152,18 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       decorative.push(exitSprite);
     }
 
-    function collectNearby(): void {
+    function collectNearby(allowSurvivorUpgrade: boolean): void {
       if (objectiveSprite && objectiveSprite.visible && Phaser.Math.Distance.Between(player.x, player.y, objectiveSprite.x, objectiveSprite.y) < 42) {
         objectiveCollected = true;
         objectiveSprite.setVisible(false);
         lastAction = 'objective';
         if (VARIANT === 'heist-game') alarm = true;
       }
-      if (upgradeSprite && upgradeSprite.visible && Phaser.Math.Distance.Between(player.x, player.y, upgradeSprite.x, upgradeSprite.y) < 42) {
+      if (
+        upgradeSprite && upgradeSprite.visible &&
+        Phaser.Math.Distance.Between(player.x, player.y, upgradeSprite.x, upgradeSprite.y) < 42 &&
+        (VARIANT !== 'survivor-like' || allowSurvivorUpgrade)
+      ) {
         upgradeCollected = true;
         attackDamage = 2;
         upgradeSprite.setVisible(false);
@@ -177,6 +200,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       survivorSpawnMs = 0;
       spawnedTotal = 0;
       bossPhase = 0;
+      particleEffects = 0;
       player.setPosition(spawn?.x ?? 120, spawn?.y ?? 270);
       configureVariant();
       runResets += 1;
@@ -203,12 +227,29 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         spawnEnemy(420, 190, 2);
         spawnEnemy(540, 350, 2);
       } else if (VARIANT === 'stealth-game' || VARIANT === 'heist-game') {
-        spawnEnemy(520, 270, 99);
+        const guard = spawnEnemy(520, 270, 99);
+        guard.sprite.setDepth(3);
+        guardZoneSprite = scene.add.sprite(guard.sprite.x, guard.sprite.y, context.assets.resolve('hazard'))
+          .setDisplaySize(350, 116)
+          .setAlpha(0.14)
+          .setDepth(1);
+        player.setDepth(4);
+        decorative.push(guardZoneSprite);
         placeObjective(790, 140);
         placeExit(110, 90);
       } else if (VARIANT === 'boss-rush') {
         bossPhase = 1;
-        spawnEnemy(700, 270, 6);
+        const boss = spawnEnemy(700, 270, 6);
+        boss.sprite.setDisplaySize(62, 62).setDepth(3);
+        bossTelegraphSprite = scene.add.sprite(boss.sprite.x, boss.sprite.y, context.assets.resolve('hazard'))
+          .setDisplaySize(104, 104)
+          .setAlpha(0.18)
+          .setDepth(1);
+        bossPhaseMarker = scene.add.sprite(boss.sprite.x, boss.sprite.y - 48, context.assets.resolve('pickup'))
+          .setDisplaySize(20, 20)
+          .setAlpha(0.9)
+          .setDepth(4);
+        decorative.push(bossTelegraphSprite, bossPhaseMarker);
       }
     }
     configureVariant();
@@ -219,10 +260,26 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       if (!guard) return;
       guardSeesPlayer = Math.abs(player.y - guard.sprite.y) < 58 && Math.abs(player.x - guard.sprite.x) < 175;
       guard.sprite.setAlpha(guardSeesPlayer ? 1 : 0.72);
+      guardZoneSprite?.setPosition(guard.sprite.x, guard.sprite.y).setAlpha(guardSeesPlayer ? 0.3 : 0.14);
       if (guardSeesPlayer) {
         alarm = true;
         if (VARIANT === 'stealth-game') outcome = 'failed';
       }
+    }
+
+    function currentBossSpeed(): number {
+      return bossPhase >= 2 ? 44 : 22;
+    }
+
+    function syncBossPresentation(): void {
+      if (VARIANT !== 'boss-rush') return;
+      const boss = livingEnemies()[0];
+      const visible = Boolean(boss);
+      bossTelegraphSprite?.setVisible(visible);
+      bossPhaseMarker?.setVisible(visible);
+      if (!boss) return;
+      bossTelegraphSprite?.setPosition(boss.sprite.x, boss.sprite.y).setAlpha(bossPhase >= 2 ? 0.32 : 0.18);
+      bossPhaseMarker?.setPosition(boss.sprite.x, boss.sprite.y - 48).setScale(bossPhase >= 2 ? 1.25 : 1);
     }
 
     function updateEnemyPressure(deltaMs: number): void {
@@ -240,9 +297,10 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         const dx = player.x - enemy.sprite.x;
         const dy = player.y - enemy.sprite.y;
         const distance = Math.hypot(dx, dy) || 1;
-        const speed = VARIANT === 'boss-rush' ? 22 : 48;
+        const speed = VARIANT === 'boss-rush' ? currentBossSpeed() : 48;
         enemy.sprite.setPosition(enemy.sprite.x + (dx / distance) * speed * deltaMs / 1000, enemy.sprite.y + (dy / distance) * speed * deltaMs / 1000);
       }
+      syncBossPresentation();
     }
 
     function contactDamage(): void {
@@ -267,7 +325,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
           upgradeSprite = scene.add.sprite(width / 2, height / 2, context.assets.resolve('pickup')).setDisplaySize(26, 26);
           decorative.push(upgradeSprite);
         }
-        if (elapsedMs >= 15000 && playerHealth > 0) outcome = 'victory';
+        if (elapsedMs >= 15000 && playerHealth > 0 && upgradeCollected) outcome = 'victory';
       }
 
       if (VARIANT === 'action-roguelite' && livingEnemies().length === 0 && !upgradeSprite) {
@@ -282,9 +340,11 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         if (!boss && bossPhase === 1) {
           bossPhase = 2;
           const next = spawnEnemy(720, 220, 8);
-          next.sprite.setTint(0xff8877);
+          next.sprite.setDisplaySize(70, 70).setTint(0xff8877).setDepth(3);
+          syncBossPresentation();
         } else if (!boss && bossPhase === 2) {
           bossPhase = 3;
+          syncBossPresentation();
           outcome = 'victory';
         }
       }
@@ -309,15 +369,22 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       backgroundTextureKey: background ? background.texture.key : null,
       objectiveCollected,
       upgradeCollected,
+      upgradeAvailable: Boolean(upgradeSprite?.visible),
       attackDamage,
       alarm,
       guardSeesPlayer,
+      guardZoneVisible: Boolean(guardZoneSprite?.visible),
+      hazardTextureKey: guardZoneSprite?.texture.key ?? bossTelegraphSprite?.texture.key ?? null,
+      bossMarkerTextureKey: bossPhaseMarker?.texture.key ?? null,
+      particleTextureKey: particleTexture,
+      particleEffects,
       outcome,
       playerHealth,
       enemiesRemaining: livingEnemies().length,
       spawnedTotal,
       bossPhase,
       bossHealth: livingEnemies()[0]?.health ?? 0,
+      bossSpeed: VARIANT === 'boss-rush' ? currentBossSpeed() : 0,
       runResets,
       lastAction,
       elapsedMs: Math.round(elapsedMs),
@@ -333,8 +400,8 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         if (outcome === 'playing') {
           player.setVelocity(intent.moveX * MOVE_SPEED, intent.moveY * MOVE_SPEED);
           if (intent.primaryPressed && VARIANT !== 'stealth-game' && VARIANT !== 'heist-game') attack();
-          if (intent.interactPressed || intent.primaryPressed) collectNearby();
-          collectNearby();
+          if (intent.interactPressed || intent.primaryPressed) collectNearby(VARIANT !== 'survivor-like' || intent.interactPressed);
+          collectNearby(VARIANT !== 'survivor-like');
           updateGuard();
           updateEnemyPressure(deltaMs);
           contactDamage();

@@ -76,7 +76,7 @@ async function actionRogueliteRun(harness: Harness): Promise<SmokeOutcome> {
   type S = {
     x: number; y: number; enemiesRemaining: number; upgradeCollected: boolean;
     attackDamage: number; runResets: number; lastAction: string; outcome: string;
-    particleEffects?: number;
+    particleTextureKey: string; particleEffects: number;
   };
   await start(harness);
   const initial = await shell<S>(harness);
@@ -101,19 +101,21 @@ async function actionRogueliteRun(harness: Harness): Promise<SmokeOutcome> {
 
   const passed =
     initial.enemiesRemaining === 2 && initial.attackDamage === 1 && initial.runResets === 0 &&
-    first.enemiesRemaining === 1 &&
-    cleared.enemiesRemaining === 0 &&
+    initial.particleTextureKey.length > 0 && initial.particleEffects === 0 &&
+    first.enemiesRemaining === 1 && first.particleEffects >= 2 &&
+    cleared.enemiesRemaining === 0 && cleared.particleEffects >= 4 &&
     upgraded.upgradeCollected === true && upgraded.attackDamage === 2 &&
     victory.outcome === 'victory' &&
     reset.runResets === 1 && reset.outcome === 'playing' && reset.enemiesRemaining === 2 &&
-    reset.upgradeCollected === false && reset.attackDamage === 1;
+    reset.upgradeCollected === false && reset.attackDamage === 1 && reset.particleEffects === 0;
   return { passed, details: { initial, first, cleared, upgraded, victory, reset } };
 }
 
 async function bossRushRun(harness: Harness): Promise<SmokeOutcome> {
   type S = {
-    x: number; y: number; bossPhase: number; bossHealth: number; bossSpeed?: number;
-    enemiesRemaining: number; playerHealth: number; outcome: string; particleEffects?: number;
+    x: number; y: number; bossPhase: number; bossHealth: number; bossSpeed: number;
+    enemiesRemaining: number; playerHealth: number; outcome: string; particleEffects: number;
+    hazardTextureKey: string | null; bossMarkerTextureKey: string | null;
   };
   await start(harness);
   const initial = await shell<S>(harness);
@@ -123,14 +125,12 @@ async function bossRushRun(harness: Harness): Promise<SmokeOutcome> {
   await attack(harness, 8);
   const victory = await waitUntil<S>(harness, (state) => state.outcome !== 'playing', 30, 2);
 
-  const phaseDiffers =
-    phaseTwo.bossPhase === 2 &&
-    (phaseTwo.bossHealth !== initial.bossHealth ||
-      (phaseTwo.bossSpeed !== undefined && initial.bossSpeed !== undefined && phaseTwo.bossSpeed !== initial.bossSpeed));
   const passed =
     initial.bossPhase === 1 && initial.bossHealth === 6 && initial.enemiesRemaining === 1 &&
-    phaseDiffers && phaseTwo.bossHealth === 8 &&
-    victory.bossPhase === 3 && victory.enemiesRemaining === 0 &&
+    initial.bossSpeed === 22 && initial.hazardTextureKey !== null && initial.bossMarkerTextureKey !== null &&
+    phaseTwo.bossPhase === 2 && phaseTwo.bossHealth === 8 && phaseTwo.bossSpeed === 44 &&
+    phaseTwo.bossSpeed > initial.bossSpeed && phaseTwo.particleEffects >= 6 &&
+    victory.bossPhase === 3 && victory.enemiesRemaining === 0 && victory.particleEffects >= 14 &&
     victory.playerHealth > 0 && victory.outcome === 'victory';
   return { passed, details: { initial, phaseTwo, victory } };
 }
@@ -138,7 +138,7 @@ async function bossRushRun(harness: Harness): Promise<SmokeOutcome> {
 async function heistRun(harness: Harness): Promise<SmokeOutcome> {
   type S = {
     x: number; y: number; objectiveCollected: boolean; alarm: boolean; guardSeesPlayer: boolean;
-    hazardTextureKey?: string | null; outcome: string; lastAction: string;
+    guardZoneVisible: boolean; hazardTextureKey: string | null; outcome: string; lastAction: string;
   };
   await start(harness);
   const initial = await shell<S>(harness);
@@ -155,36 +155,45 @@ async function heistRun(harness: Harness): Promise<SmokeOutcome> {
 
   const passed =
     initial.objectiveCollected === false && initial.alarm === false &&
+    initial.guardZoneVisible === true && initial.hazardTextureKey !== null &&
     nearExit.y <= 100 && blockedExit.outcome === 'playing' && blockedExit.objectiveCollected === false &&
     stolen.objectiveCollected === true && stolen.alarm === true && stolen.lastAction === 'objective' &&
     victory.objectiveCollected === true && victory.alarm === true && victory.outcome === 'victory' &&
-    (victory.hazardTextureKey === undefined || victory.hazardTextureKey !== null);
+    victory.guardZoneVisible === true && victory.hazardTextureKey !== null;
   return { passed, details: { initial, nearExit, blockedExit, stolen, victory } };
 }
 
 async function survivorRun(harness: Harness): Promise<SmokeOutcome> {
   type S = {
     x: number; y: number; spawnedTotal: number; enemiesRemaining: number; upgradeCollected: boolean;
-    upgradeAvailable?: boolean; attackDamage: number; playerHealth: number; elapsedMs: number;
-    outcome: string; particleEffects?: number;
+    upgradeAvailable: boolean; attackDamage: number; playerHealth: number; elapsedMs: number;
+    outcome: string; particleEffects: number;
   };
   await start(harness);
   const initial = await shell<S>(harness);
 
-  await holdUntil<S>(harness, 'ArrowRight', (state) => state.x >= 455, 75, 4);
+  await holdUntil<S>(harness, 'ArrowUp', (state) => state.y <= 105, 55, 4);
   const pressure = await waitUntil<S>(harness, (state) => state.spawnedTotal >= 3, 120, 4);
-  const upgradeReady = await waitUntil<S>(harness, (state) => state.elapsedMs >= 7000, 100, 4);
-  const upgraded = await waitUntil<S>(harness, (state) => state.upgradeCollected, 35, 3);
-  const victory = await waitUntil<S>(harness, (state) => state.outcome !== 'playing', 180, 4);
+  const upgradeReady = await waitUntil<S>(harness, (state) => state.elapsedMs >= 7200, 100, 4);
+  const preUpgradeGate = await waitUntil<S>(harness, (state) => state.elapsedMs >= 15100 || state.outcome !== 'playing', 180, 4);
+
+  await holdUntil<S>(harness, 'ArrowRight', (state) => state.x >= 455, 100, 4);
+  await holdUntil<S>(harness, 'ArrowDown', (state) => state.y >= 250, 60, 4);
+  await harness.keyTap('KeyE');
+  await harness.stepFrames(3);
+  const upgraded = await shell<S>(harness);
+  const victory = await waitUntil<S>(harness, (state) => state.outcome !== 'playing', 30, 2);
 
   const passed =
-    initial.spawnedTotal === 0 && initial.attackDamage === 1 &&
-    pressure.spawnedTotal >= 3 && pressure.outcome === 'playing' &&
-    upgradeReady.elapsedMs >= 7000 &&
-    upgraded.upgradeCollected === true && upgraded.attackDamage === 2 &&
-    victory.upgradeCollected === true && victory.spawnedTotal >= 6 &&
+    initial.spawnedTotal === 0 && initial.attackDamage === 1 && initial.particleEffects === 0 &&
+    pressure.spawnedTotal >= 3 && pressure.outcome === 'playing' && pressure.particleEffects > 0 &&
+    upgradeReady.elapsedMs >= 7000 && upgradeReady.upgradeAvailable === true && upgradeReady.upgradeCollected === false &&
+    preUpgradeGate.elapsedMs >= 15000 && preUpgradeGate.upgradeCollected === false &&
+    preUpgradeGate.playerHealth > 0 && preUpgradeGate.outcome === 'playing' &&
+    upgraded.upgradeCollected === true && upgraded.upgradeAvailable === false && upgraded.attackDamage === 2 &&
+    victory.upgradeCollected === true && victory.spawnedTotal >= 6 && victory.particleEffects > 0 &&
     victory.playerHealth > 0 && victory.outcome === 'victory';
-  return { passed, details: { initial, pressure, upgradeReady, upgraded, victory } };
+  return { passed, details: { initial, pressure, upgradeReady, preUpgradeGate, upgraded, victory } };
 }
 
 const CANDIDATES: readonly Candidate[] = [
