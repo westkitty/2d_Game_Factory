@@ -109,6 +109,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     let defenderLane: number | null = null;
     let defenderSprite: Phaser.GameObjects.Sprite | null = null;
     let laneWaveProgress = 0;
+    let defenderAttackMs = 0;
     let autoBattleStarted = false;
     let autoTickMs = 0;
     let rtsTarget: Cell | null = null;
@@ -192,12 +193,19 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         lastAction = 'place-defender';
       }
       laneWaveProgress += deltaMs * 0.035;
+      defenderAttackMs = Math.max(0, defenderAttackMs - deltaMs);
       for (const enemy of liveEnemies()) {
         enemy.cell.col = Math.max(0, 9 - Math.floor(laneWaveProgress / 100) % 10);
         enemy.cell.row = 2 + (enemies.indexOf(enemy) % 3);
         sync(enemy);
-        if (defenderLane !== null && enemy.cell.row - 2 === defenderLane && Math.floor(laneWaveProgress) % 45 === 0) damage(enemy, 1);
         if (enemy.cell.col === 0 && enemy.alive) { enemy.alive = false; baseHealth -= 2; }
+      }
+      if (defenderLane !== null && defenderAttackMs <= 0) {
+        const target = liveEnemies().find((enemy) => enemy.cell.row - 2 === defenderLane);
+        if (target) {
+          damage(target, 1);
+          defenderAttackMs = 650;
+        }
       }
       if (baseHealth <= 0) outcome = 'defeat';
       else if (liveEnemies().length === 0) outcome = 'victory';
