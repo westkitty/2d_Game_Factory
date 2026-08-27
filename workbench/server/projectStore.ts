@@ -265,7 +265,7 @@ export interface PresetSummary {
   readonly requiredPackIds: readonly string[];
   readonly requiredContentRoles: readonly string[];
   readonly knownLimitations: readonly string[];
-  readonly starterKitDepth: 'rich-proof-kit' | 'smoke-kit' | 'generated-shell';
+  readonly starterKitDepth: 'rich-proof-kit' | 'rich-starter-kit' | 'smoke-kit' | 'generated-shell';
 }
 
 /**

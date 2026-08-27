@@ -118,17 +118,16 @@ function rolePlanFor(preset: PresetDefinition, assets: AssetsDocument): readonly
 /**
  * Builds up to `limit` seeds.
  *
- * Only presets with a real starter kit or a smoke-validated demo behind them
- * are offered as *seeds*: a seed is a recommendation to press one button and
- * get something playable, and offering a bare generated shell under that
- * framing would overpromise. Every other preset stays one click away in the
- * full 74-preset browser, labelled for what it is.
+ * A seed is a recommendation to press one button and get something meaningfully
+ * playable. A registered starter kit qualifies regardless of preset evidence
+ * maturity; without a kit, only a smoke-validated preset qualifies. The card
+ * still reports the preset's original maturity verbatim.
  */
 export function buildSeeds(input: SeedInput): readonly GameSeed[] {
   const limit = input.limit ?? 3;
   const palette = derivePalette(input.assets);
   const ranked = rankPresets(input.assets, input.mode).filter(
-    (entry) => entry.preset.maturity === 'proof-validated' || entry.preset.maturity === 'smoke-validated',
+    (entry) => starterKitFor(entry.preset.id) !== undefined || entry.preset.maturity === 'smoke-validated',
   );
 
   const seeds: GameSeed[] = [];

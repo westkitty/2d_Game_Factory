@@ -4,8 +4,8 @@
  * Progressive disclosure is the whole design problem here. Seventy-four
  * identical cards is not a browser, it is a wall, so: search and filters up
  * front, grouped by family, proof-validated first, and the maturity and
- * starter-kit depth on every card - never softened, because a `recipe` preset
- * dressed up as a proven one is failure condition F15.
+ * starter-kit depth on every card. Those are separate claims: maturity is
+ * evidence; depth is how much playable genre-specific starting material ships.
  */
 
 import { el, button, replace, depthExplanation, depthLabel, maturityBadgeClass } from '../dom.ts';
@@ -141,7 +141,7 @@ export function renderPresetBrowser(host: HTMLElement): () => void {
         el('h1', { class: 'home__title', text: 'Preset catalogue' }),
         el('p', {
           class: 'home__sub',
-          text: 'Every genre recipe in the factory, with its real maturity. Proof-validated presets have a deep end-to-end proof game behind them and a rich starter kit here. Recipe presets are working compositions - they boot and take input, but the genre mechanics are yours to write. Nothing on this page is dressed up.',
+          text: 'Every genre recipe in the factory, with two separate facts: evidence maturity and starter-kit depth. Proof-validated means a deep proof exists. A recipe preset may still gain a rich playable starter without being relabelled proof-validated. Nothing on this page upgrades evidence by implication.',
         }),
         filterRow,
         counts,

@@ -298,7 +298,7 @@ export interface GameSeed {
   readonly presetId: string;
   readonly presetDisplayName: string;
   readonly maturity: string;
-  readonly starterKitDepth: 'rich-proof-kit' | 'smoke-kit' | 'generated-shell';
+  readonly starterKitDepth: 'rich-proof-kit' | 'rich-starter-kit' | 'smoke-kit' | 'generated-shell';
   readonly loop: string;
   readonly rolePlan: readonly RoleAssignment[];
   readonly usesAssetIds: readonly string[];

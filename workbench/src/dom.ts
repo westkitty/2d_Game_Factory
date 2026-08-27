@@ -110,15 +110,16 @@ export function maturityBadgeClass(maturity: string): string {
   return 'badge badge--recipe';
 }
 
-/** Plain-English starter-kit depth. Never dresses a recipe preset up as a proven one (F15). */
+/** Plain-English starter-kit depth. Starter depth and preset evidence maturity are separate claims (F15). */
 export function depthLabel(depth: string): string {
-  if (depth === 'rich-proof-kit') return 'Rich starter kit';
+  if (depth === 'rich-proof-kit' || depth === 'rich-starter-kit') return 'Rich starter kit';
   if (depth === 'smoke-kit') return 'Smoke-validated demo';
   return 'Generated shell';
 }
 
 export function depthExplanation(depth: string): string {
   if (depth === 'rich-proof-kit') return 'A playable starting point derived from a committed, proof-validated game: a designed level, real mechanics, and your art wired in.';
+  if (depth === 'rich-starter-kit') return 'A designed playable starter with real genre mechanics and semantic-role art. It is richer than a generated shell, but it does not change the preset’s evidence maturity.';
   if (depth === 'smoke-kit') return 'A working composition with a committed browser-smoke-tested demo behind it, but no deep proof game. Expect a starting point, not a finished genre.';
   return 'A working generated shell: it boots, installs its packs and takes input. The genre mechanics are yours to write.';
 }
