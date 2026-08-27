@@ -54,6 +54,7 @@ jobs:
           - p3h
           - p3i
           - p3j
+          - p3k
     steps:
       - name: Check out repository
         uses: actions/checkout@v4

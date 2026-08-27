@@ -1,4 +1,5 @@
 import { defineExpandedKit } from './common.ts';
+import { withDefaultThemeRoles } from './themeRoles.ts';
 
 export type NarrativeStarterVariant =
   | 'exploration-game'
@@ -27,8 +28,12 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
   install(context: SceneContext): InstalledSystemPack {
     const scene = context.scene;
     const { width, height } = context.definition.viewport;
-    const background = addBackground(scene, context.assets.has('background') ? context.assets.resolve('background') : null, width, height);
     const worldMode = WORLD_VARIANTS.has(VARIANT);
+    const background = addBackground(scene, context.assets.has('background') ? context.assets.resolve('background') : null, width, height);
+    const panel = scene.add.image(width * 0.5, worldMode ? 52 : 350, context.assets.resolve('ui.panel')).setDisplaySize(860, worldMode ? 72 : 150).setAlpha(0.92).setDepth(1);
+    const buttonRoleSource = VARIANT === 'visual-novel' || VARIANT === 'interactive-fiction-hybrid' ? 'ui.button' : null;
+    const button = buttonRoleSource ? scene.add.image(width - 94, worldMode ? 52 : 480, context.assets.resolve('ui.button')).setDisplaySize(132, 48).setDepth(2) : null;
+    const buttonLabel = button ? scene.add.text(button.x, button.y, 'CHOOSE', { fontFamily: 'ui-monospace, monospace', fontSize: '11px', color: '#14251f' }).setOrigin(0.5).setDepth(3) : null;
     const startMarker = worldMode && context.assets.has('checkpoint')
       ? scene.add.sprite(120, 270, context.assets.resolve('checkpoint')).setDisplaySize(54, 54).setAlpha(0.32)
       : null;
@@ -62,7 +67,10 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     let outcome: 'playing' | 'complete' = 'playing';
     let lastAction = 'spawn';
 
-    const cursor = !worldMode ? scene.add.sprite(points[0]!.x, points[0]!.y, context.assets.resolve('checkpoint')).setDisplaySize(48, 48).setAlpha(0.65) : null;
+    const cursorRoleSource = VARIANT === 'point-and-click' || VARIANT === 'escape-room' || VARIANT === 'investigation-game' ? 'ui.cursor' : null;
+    const cursorSprite = cursorRoleSource
+      ? scene.add.sprite(worldMode ? width - 52 : points[0]!.x, worldMode ? 52 : points[0]!.y, context.assets.resolve(cursorRoleSource)).setDisplaySize(48, 48).setAlpha(0.72).setDepth(4)
+      : null;
 
     function near(point: { x: number; y: number }, radius = 48): boolean { return Phaser.Math.Distance.Between(player.x, player.y, point.x, point.y) <= radius; }
 
@@ -153,6 +161,12 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       x: Math.round(player.x), y: Math.round(player.y),
       playerTextureKey: player.texture.key,
       backgroundTextureKey: background ? background.texture.key : null,
+      panelRoleSource: 'ui.panel',
+      panelTextureKey: panel.texture.key,
+      buttonRoleSource,
+      buttonTextureKey: button?.texture.key ?? null,
+      cursorRoleSource,
+      cursorTextureKey: cursorSprite?.texture.key ?? null,
       dialogueStep,
       selectedChoice,
       branch,
@@ -188,7 +202,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
           const intent = gridController.read(context.input);
           if (intent.step === 'left' || intent.step === 'up') cursorIndex = Phaser.Math.Wrap(cursorIndex - 1, 0, 3);
           if (intent.step === 'right' || intent.step === 'down') cursorIndex = Phaser.Math.Wrap(cursorIndex + 1, 0, 3);
-          cursor?.setPosition(points[cursorIndex]!.x, points[cursorIndex]!.y);
+          cursorSprite?.setPosition(points[cursorIndex]!.x, points[cursorIndex]!.y);
           cursorPuzzle(intent.confirmPressed || context.input.justPressed('PRIMARY_ACTION'));
         }
         render();
@@ -198,7 +212,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         disposed = true;
         debugHandle.dispose();
         try {
-          background?.destroy(); startMarker?.destroy(); player.destroy(); title.destroy(); hint.destroy(); exit.destroy(); cursor?.destroy();
+          background?.destroy(); panel.destroy(); button?.destroy(); buttonLabel?.destroy(); startMarker?.destroy(); player.destroy(); title.destroy(); hint.destroy(); exit.destroy(); cursorSprite?.destroy();
           for (const marker of markers) marker.destroy();
         } catch {
           /* scene already tearing down */
@@ -211,11 +225,17 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
 }
 
 export function narrativeStarterKit(variant: NarrativeStarterVariant) {
-  return defineExpandedKit({
+  const base = defineExpandedKit({
     presetId: variant,
     shellPackId: 'game.expanded-narrative-starter',
     shellSource: shellSource(variant),
     level: { entities: [{ id: 1, class: 'PlayerSpawn', name: 'Start', x: 120, y: 270, width: 0, height: 0, properties: [] }] },
     tuning: { moveSpeed: 220, jumpVelocity: 430, gravity: 1100 },
   });
+  const roles = variant === 'visual-novel' || variant === 'interactive-fiction-hybrid'
+    ? ['background', 'ui.panel', 'ui.button'] as const
+    : variant === 'point-and-click' || variant === 'escape-room' || variant === 'investigation-game'
+      ? ['background', 'ui.panel', 'ui.cursor'] as const
+      : ['background', 'ui.panel'] as const;
+  return withDefaultThemeRoles(base, roles);
 }
