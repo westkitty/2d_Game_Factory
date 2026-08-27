@@ -12,9 +12,9 @@ baseline. This file governs the visual workbench and the starter-kit expansion b
 | Post-acceptance repair merged to `main` | `bf8e4de4e6e0f2ee5adf6e8aebc5912f544530b2` |
 | Starter-kit scaffold system merged to `main` | `d919cf1f71b2023c9839b517198dfd3626341f27` |
 | Active expansion branch | `starter-kits/implement-all` |
-| Current shipped rich kits on active branch | **5 proof-derived + 45 promoted expansion kits = 50 rich kits total** |
-| Expansion scaffolds | **69 / 69 present; 45 / 69 promoted; 24 remain unpromoted** |
-| Current milestone | **P3-E Puzzle Arcade closed on promoted replay; next expansion batch not yet activated** |
+| Current shipped rich kits on active branch | **5 proof-derived + 69 promoted expansion kits = 74 rich kits total** |
+| Expansion scaffolds | **69 / 69 present; 69 / 69 promoted; 0 remain unpromoted** |
+| Current milestone | **P3-K Narrative Exploration closed on promoted replay; all starter-kit expansion batches complete** |
 
 ---
 
@@ -36,8 +36,8 @@ implementation, canonical generated-game validation, real-browser mechanic proof
 inherited starter-batch replay, and a second full replay after registration.
 
 That expansion implementation is active on branch `starter-kits/implement-all`. As of promoted commit
-`49822f8db04fd74b46aa71895cf3ec953394623f`, **45 / 69 expansion starters are registered**. The original
-five proof-derived kits remain unchanged, so the branch exposes 50 rich kits total.
+`7bd3eff759da91ab4053773aee11de9cd38fe26c`, **69 / 69 expansion starters are registered**. The original
+five proof-derived kits remain unchanged, so the branch exposes 74 rich kits total.
 
 ### Latest verified expansion boundary — P3-E Puzzle Arcade
 
@@ -78,6 +78,27 @@ P3-E proof covers:
   condition, scaffold-declared `ui.panel`, and removal of unrelated avatar/cursor decoration;
 - no console errors, no external network requests, and `package-lock.json` unchanged during candidate
   generation/validation.
+
+### Final verified expansion boundary — P3-K Narrative Exploration
+
+The remaining expansion batches are complete on `starter-kits/implement-all`. Every candidate and
+promoted replay below passed the expansion workflow's repository baseline plus generated-game browser
+lanes; the focused batch lanes also checked semantic role participation, console/external-request
+hygiene, and unchanged `package-lock.json`.
+
+| Batch | Candidate implementation | Candidate Actions | Promoted registry commit | Promoted Actions |
+|---|---|---:|---|---:|
+| P3-F Puzzle Arcade | `3bfe362` | `33060607003` | `8c75e35` | `33060860448` |
+| P3-G Party Toy / Weird | `8fd8356` | `33067198196` | `66c74ae` | `33067506045` |
+| P3-H remaining Party Toy / Weird | `880d965` | `33068678906` | included in P3-I replay | `33070483826` |
+| P3-I Platforming | `0ca0cc7` | `33070226740` | `9a940d7` | `33070483826` |
+| P3-J Simulation Management | `31bf473` plus registry correction `1ad2e0b` | `33071854018` | `389f7cf` | `33072135263` |
+| P3-K Narrative Exploration | `aa8ac68` | `33072687610` | `7bd3eff` | `33073030298` |
+
+P3-K proof covers linked escape-room locks, stateful interactive-fiction choices, clue collection and
+deduction-gated investigation completion, and visible point-and-click cursor hotspots. The final promoted
+state is **69 / 69 implemented and registered**, with no starter-kit bug sweep performed in this expansion
+workflow.
 
 ### Previous verified expansion boundary — P3-D vehicle movement
 
@@ -173,8 +194,8 @@ confirm `git diff -- package-lock.json` is empty.
 - Every other preset has an explicit expansion scaffold: **69 / 69**.
 - At scaffold merge time `workbench/server/starterKits/expanded/index.ts` intentionally registered **none**
   of those 69. An unfinished scaffold could not change user-visible behavior.
-- On active branch `starter-kits/implement-all`, **45 / 69 expansion starters have passed their promotion
-  gates and are registered; 24 remain unpromoted**.
+- On active branch `starter-kits/implement-all`, **69 / 69 expansion starters have passed their promotion
+  gates and are registered; none remain unpromoted**.
 - A completed non-proof starter uses depth **`rich-starter-kit`**. Its preset maturity remains whatever
   the catalogue says (`recipe`, `smoke-validated`, etc.). `rich-proof-kit` remains reserved for the
   proof-derived starters. Starter depth and evidence maturity are separate claims.
@@ -283,7 +304,7 @@ mutation.
 | M7 | `qa:workbench`, responsive, security QA, full regression, docs, final acceptance | ACCEPTED AT `1ebc9a56`; SOME EVIDENCE STALE AFTER LATER AUDIT |
 | M7R1 | host boundary + lockfile/offline linking + undo evidence repair | MERGED AT `bf8e4de4`; FULL WORKBENCH REVALIDATION REQUIRED |
 | SK0 | 69-preset starter-kit expansion control plane, promotion seam, bootstrap/status tooling and Sonnet handoff | MERGED AT `d919cf1f`; CONTROL PLANE ACTIVE |
-| SK1+ | implement and prove the 69 expanded starter kits | **ACTIVE: 45 / 69 PROMOTED; P3-E CLOSED; 24 REMAIN** |
+| SK1+ | implement and prove the 69 expanded starter kits | **COMPLETE: 69 / 69 PROMOTED; P3-K CLOSED** |
 
 ---
 
@@ -347,9 +368,9 @@ for W08, W23, W25, W26, W27 and W28 until the dedicated full-workbench ladder oc
 | F15 | recipe-only presets presented as equally proven | **STATICALLY GUARDED; runtime UI revalidation required** |
 | F16 | required workflow needs cloud / key / account / credits | **WORKBENCH REVALIDATION REQUIRED; EXPANSION GENERATED-GAME QA MAKES NO CLOUD REQUESTS** |
 | F17 | large import has unbounded concurrency or all-in-memory behaviour | **NO (historical accepted evidence)** |
-| F18 | inherited regression suites removed, weakened or failing | **STARTER EXPANSION MATRIX GREEN THROUGH P3-E; FULL INHERITED LADDER STILL REVALIDATION REQUIRED** |
+| F18 | inherited regression suites removed, weakened or failing | **STARTER EXPANSION MATRIX GREEN THROUGH P3-K; FULL INHERITED LADDER STILL REVALIDATION REQUIRED** |
 | F19 | normal Validate / Build / Pack still requires the terminal | **NO (historical accepted evidence)** |
-| F20 | completion claimed without a real browser proof | **NO FOR PROMOTED EXPANSION BATCHES THROUGH P3-E; REMAINING KITS MAY NOT BE PROMOTED WITHOUT PROOF** |
+| F20 | completion claimed without a real browser proof | **NO FOR ALL 69 PROMOTED EXPANSION STARTERS; EACH BATCH HAS REAL-BROWSER PROOF** |
 
 ---
 
@@ -382,6 +403,9 @@ historical evidence and protected behavior; they are not fresh proof of later fu
   roles instead of allowing fallback textures to count as semantic proof.
 - P3-E semantic-role repair candidate #64 and promoted replay #65 passed full expansion matrices. The repair
   remained game-side and starter-specific; the shared generator/runtime and preset maturity were unchanged.
+- P3-F through P3-K completed the remaining Puzzle Arcade, Party Toy / Weird, Platforming, Simulation
+  Management, and Narrative Exploration batches. Candidate and promoted replay runs were green through
+  Actions `33073030298`; the final promoted registry head is `7bd3eff759da91ab4053773aee11de9cd38fe26c`.
 
 ## Implemented but not fully workbench-verified after the accepted commit
 
@@ -389,18 +413,17 @@ historical evidence and protected behavior; they are not fresh proof of later fu
   regression ladder still pending even though repository `npm run validate` is repeatedly green in CI.
 - **Starter-kit expansion infrastructure merged at `d919cf1f`.** Its control plane and generated-game paths
   are now runtime exercised by the active expansion CI, but this does not equal a full workbench UI pass.
-- **`rich-starter-kit` depth.** Implemented and populated by 45 expansion registrations on the active branch;
+- **`rich-starter-kit` depth.** Implemented and populated by 69 expansion registrations on the active branch;
   preset-browser/Game-Seed presentation still needs the dedicated workbench UI revalidation.
-- **69 per-preset scaffold records.** Complete as control-plane data; 45 have promoted playable kits and 24
-  remain unpromoted.
+- **69 per-preset scaffold records.** Complete as control-plane data; all 69 have promoted playable kits.
 - **Real-device touch.** Still unverified; responsive historical evidence is Chromium viewport emulation.
 - **Wall-clock performance.** No benchmark claim.
 - **Optional `AssetGenerationProvider`.** Interface only; no provider ships.
 
 ## Deliberately not implemented / not yet complete
 
-- **The remaining 24 unpromoted expansion starters.** Scaffolding exists, but each stays out of the registry
-  until its loop, semantic roles, generated-game proof, inherited replay and promoted replay all pass.
+- **Unpromoted expansion starters.** None remain. All 69 expansion starters passed their bounded candidate
+  and promoted replay gates and are registered.
 - **Sprite-sheet animation playback.** Frame groups are detected/recorded; one representative frame is used.
 - **Host-side JPEG/WebP decoding.** Browser handles derivation for those formats.
 - **A universal weapon, bullet-hell, procedural-generation, grappling, pathfinding, RTS, vehicle-physics,
@@ -452,19 +475,7 @@ heads, but it is intentionally not represented as fresh proof of every command i
 
 ## Next bounded action
 
-P3-E is closed. No next candidate batch has been activated yet.
-
-The clean next Puzzle Arcade remainder to evaluate is the deferred physics/timing-sensitive trio:
-
-- `physics-puzzle`
-- `rhythm-action`
-- `pinball-lite`
-
-Treat that as a prospective P3-F batch only after a fresh read-only scaffold/implementation check. In
-particular, `physics-puzzle` previously looked too shallow to claim its scaffold's collision requirement,
-so it must not be promoted by analogy with P3-E. Any next batch must begin unregistered, measure the
-existing implementation first, use mechanic-specific browser proof, preserve semantic-role obligations,
-and repeat the complete matrix after registration.
-
-The separate full-workbench revalidation debt remains unchanged and must not be folded into starter-batch
-success.
+The starter-kit expansion is complete at promoted P3-K commit `7bd3eff759da91ab4053773aee11de9cd38fe26c`.
+The next explicit workflow boundary is the smart-model bug sweep; it was not performed as part of this
+expansion. The separate full-workbench revalidation debt remains unchanged and must not be folded into
+starter-batch success.
