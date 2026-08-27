@@ -2,6 +2,7 @@ import type { StarterKit } from '../contracts.ts';
 import { starterKit as actionAdventure } from './action-adventure.ts';
 import { starterKit as arenaCombat } from './arena-combat.ts';
 import { starterKit as asteroidsShooter } from './asteroids-shooter.ts';
+import { starterKit as autoBattler } from './auto-battler.ts';
 import { starterKit as autoRunner } from './auto-runner.ts';
 import { starterKit as baseDefense } from './base-defense.ts';
 import { starterKit as breakout } from './breakout.ts';
@@ -22,7 +23,9 @@ import { starterKit as railShooter } from './rail-shooter.ts';
 import { starterKit as reactionTiming } from './reaction-timing.ts';
 import { starterKit as runAndGun } from './run-and-gun.ts';
 import { starterKit as shopkeeper } from './shopkeeper.ts';
+import { starterKit as simpleRts } from './simple-rts.ts';
 import { starterKit as stealthGame } from './stealth-game.ts';
+import { starterKit as territoryControl } from './territory-control.ts';
 import { starterKit as timeTrialRacer } from './time-trial-racer.ts';
 import { starterKit as topDownAdventure } from './top-down-adventure.ts';
 import { starterKit as topDownRacer } from './top-down-racer.ts';
@@ -42,6 +45,7 @@ export const EXPANDED_STARTER_KITS: readonly StarterKit[] = Object.freeze([
   actionAdventure,
   arenaCombat,
   asteroidsShooter,
+  autoBattler,
   autoRunner,
   baseDefense,
   breakout,
@@ -62,7 +66,9 @@ export const EXPANDED_STARTER_KITS: readonly StarterKit[] = Object.freeze([
   reactionTiming,
   runAndGun,
   shopkeeper,
+  simpleRts,
   stealthGame,
+  territoryControl,
   timeTrialRacer,
   topDownAdventure,
   topDownRacer,
