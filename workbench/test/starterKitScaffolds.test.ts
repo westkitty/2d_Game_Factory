@@ -50,12 +50,16 @@ describe('starter-kit expansion scaffolds', () => {
     }
   });
 
-  it('allows promotion only as rich-starter-kit while preserving the scaffold record', () => {
+  it('requires every completed expansion scaffold to be promoted into the shipped registry', () => {
+    const promotedIds: string[] = [];
     for (const scaffold of allStarterKitScaffolds()) {
       const kit = starterKitFor(scaffold.presetId);
-      if (kit) expect(kit.depth, scaffold.presetId).toBe('rich-starter-kit');
+      expect(kit, `completed expansion ${scaffold.presetId} is missing from the shipped starter-kit registry`).toBeDefined();
+      expect(kit!.depth, scaffold.presetId).toBe('rich-starter-kit');
+      promotedIds.push(scaffold.presetId);
       expect(starterKitScaffoldFor(scaffold.presetId)?.presetId).toBe(scaffold.presetId);
     }
+    expect(promotedIds).toHaveLength(69);
   });
 
   it('does not create scaffold records for the original proof kits', () => {
