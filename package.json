@@ -49,7 +49,8 @@
     "qa:starter-kits:p3f": "node --experimental-strip-types tools/scripts/qa-expanded-starter-kits-p3f.ts",
     "qa:starter-kits:p3g": "node --experimental-strip-types tools/scripts/qa-expanded-starter-kits-p3g.ts",
     "qa:starter-kits:p3h": "node --experimental-strip-types tools/scripts/qa-expanded-starter-kits-p3h.ts",
-    "qa:starter-kits": "npm run qa:starter-kits:core && npm run qa:starter-kits:p2b && npm run qa:starter-kits:p2c && npm run qa:starter-kits:p3a && npm run qa:starter-kits:p3b && npm run qa:starter-kits:p3c && npm run qa:starter-kits:p3d && npm run qa:starter-kits:p3e && npm run qa:starter-kits:p3f && npm run qa:starter-kits:p3g && npm run qa:starter-kits:p3h",
+    "qa:starter-kits:p3i": "node --experimental-strip-types tools/scripts/qa-expanded-starter-kits-p3i.ts",
+    "qa:starter-kits": "npm run qa:starter-kits:core && npm run qa:starter-kits:p2b && npm run qa:starter-kits:p2c && npm run qa:starter-kits:p3a && npm run qa:starter-kits:p3b && npm run qa:starter-kits:p3c && npm run qa:starter-kits:p3d && npm run qa:starter-kits:p3e && npm run qa:starter-kits:p3f && npm run qa:starter-kits:p3g && npm run qa:starter-kits:p3h && npm run qa:starter-kits:p3i",
     "validate": "npm run typecheck && npm run test && npm run build && npm run check:offline"
   },
   "devDependencies": {

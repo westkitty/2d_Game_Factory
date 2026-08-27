@@ -12,6 +12,7 @@ import { starterKit as breakout } from './breakout.ts';
 import { starterKit as bulletHell } from './bullet-hell.ts';
 import { starterKit as collectathonPlatformer } from './collectathon-platformer.ts';
 import { starterKit as cookingGame } from './cooking-game.ts';
+import { starterKit as climbingGame } from './climbing-game.ts';
 import { starterKit as drawingGame } from './drawing-game.ts';
 import { starterKit as dressUpCharacterToy } from './dress-up-character-toy.ts';
 import { starterKit as dungeonCrawler } from './dungeon-crawler.ts';
@@ -21,6 +22,7 @@ import { starterKit as explorationGame } from './exploration-game.ts';
 import { starterKit as fallingBlockPuzzle } from './falling-block-puzzle.ts';
 import { starterKit as fishingGame } from './fishing-game.ts';
 import { starterKit as galleryShooter } from './gallery-shooter.ts';
+import { starterKit as grapplingPlatformer } from './grappling-platformer.ts';
 import { starterKit as heistGame } from './heist-game.ts';
 import { starterKit as horizontalShmup } from './horizontal-shmup.ts';
 import { starterKit as kartRacer } from './kart-racer.ts';
@@ -115,6 +117,7 @@ export const EXPANDED_STARTER_KITS: readonly StarterKit[] = Object.freeze([
   visualNovel,
   // P3-G: Party Toy / Weird kits promoted after the candidate matrix passed.
   cookingGame,
+  climbingGame,
   drawingGame,
   dressUpCharacterToy,
   fishingGame,
@@ -125,4 +128,5 @@ export const EXPANDED_STARTER_KITS: readonly StarterKit[] = Object.freeze([
   sandboxPlayground,
   virtualPet,
   photographyGame,
+  grapplingPlatformer,
 ]);

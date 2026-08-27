@@ -1,4 +1,5 @@
 import { defineExpandedKit } from './common.ts';
+import { withDefaultThemeRoles } from './themeRoles.ts';
 
 export type AdditionalPlatformStarterVariant =
   | 'endless-runner'
@@ -57,6 +58,8 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     const presentation = new ActorPresentation(player, { idleBob: false, lean: true, squash: true, shadow: true });
     const bobbing = new BobbingMarkers();
     const decorations: Phaser.GameObjects.Sprite[] = [];
+    const particleTextureKey = context.assets.has('particle') ? context.assets.resolve('particle') : null;
+    let particleEffects = 0;
 
     let elapsedMs = 0;
     let distanceScore = 0;
@@ -69,6 +72,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     let switchActivations = 0;
     let grappleUsed = false;
     let grappleTargetValid = false;
+    let grappleMomentumMs = 0;
     let maxHeightReached = player.y;
     let outcome: 'playing' | 'complete' | 'failed' = 'playing';
     let finishBlockedCount = 0;
@@ -85,6 +89,11 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     }
     function respawn(): void {
       player.setVelocity(0, 0); player.setPosition(checkpoint.x, checkpoint.y); respawns += 1; groundGraceMs = GROUND_GRACE_MS; presentation.flash();
+    }
+    function emitParticle(x: number, y: number): void {
+      if (!particleTextureKey) return;
+      const particle = scene.add.sprite(x, y, particleTextureKey).setDisplaySize(18, 18).setDepth(60);
+      decorations.push(particle); particleEffects += 1;
     }
 
     for (const object of level.objects) {
@@ -142,18 +151,19 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     function updateGrapple(): void {
       if (VARIANT !== 'grappling-platformer' || !anchor) return;
       const dx = anchor.x - player.x; const dy = anchor.y - player.y; const distance = Math.hypot(dx, dy);
-      grappleTargetValid = distance <= 300;
+      grappleTargetValid = distance <= 420;
       if (grappleTargetValid && context.input.justPressed('SECONDARY_ACTION')) {
         const magnitude = distance || 1;
-        player.setVelocity(dx / magnitude * 430, dy / magnitude * 430);
-        grappleUsed = true; lastAction = 'grapple'; presentation.squash(-0.12);
+        player.setVelocity(dx / magnitude * 620, dy / magnitude * 620);
+        grappleMomentumMs = 700;
+        grappleUsed = true; lastAction = 'grapple'; presentation.squash(-0.12); emitParticle(player.x, player.y);
       }
     }
 
     function render(): void {
       status.setText(
         VARIANT + ' | score ' + score + ' | items ' + collected + ' | hazards ' + hazardHits +
-        (puzzleSolved ? ' | switch ✓' : '') + (grappleUsed ? ' | grapple ✓' : '') +
+        (puzzleSolved ? ' | switch ✓' : '') + (grappleUsed ? ' | grapple ✓' : '') + (particleEffects ? ' | effects ' + particleEffects : '') +
         (outcome !== 'playing' ? ' | ' + outcome.toUpperCase() : ''),
       );
     }
@@ -161,6 +171,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     const debugHandle = context.debug.contribute('game.expanded-starter', () => ({
       presetId: VARIANT, family: 'platforming', x: Math.round(player.x), y: Math.round(player.y),
       playerTextureKey: player.texture.key, backgroundTextureKey: background ? background.texture.key : null,
+      particleTextureKey, particleEffects,
       elapsedMs: Math.round(elapsedMs), distanceScore: Math.floor(distanceScore), score, collected, hazardHits, respawns,
       puzzleSolved, switchActivations, grappleUsed, grappleTargetValid, maxHeightReached: Math.round(maxHeightReached),
       finishBlockedCount, outcome, lastAction,
@@ -174,7 +185,8 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         elapsedMs += deltaMs;
         const intent = platformController.read(context.input);
         const automatic = VARIANT === 'endless-runner' || VARIANT === 'auto-runner';
-        player.setVelocityX((automatic ? 1 : intent.moveAxis) * tuning.moveSpeed);
+        if (grappleMomentumMs > 0) grappleMomentumMs = Math.max(0, grappleMomentumMs - deltaMs);
+        else player.setVelocityX((automatic ? 1 : intent.moveAxis) * tuning.moveSpeed);
         const physicallyGrounded = player.body.blocked.down || player.body.touching.down;
         if (physicallyGrounded) groundGraceMs = GROUND_GRACE_MS;
         else groundGraceMs = Math.max(0, groundGraceMs - deltaMs);
@@ -210,7 +222,7 @@ export function additionalPlatformStarterKit(variant: AdditionalPlatformStarterV
   if (variant === 'auto-runner') return defineExpandedKit({ ...common, presetId: variant, level: { solids: ground, entities: [baseSpawn, { id: 3, class: 'Hazard', name: 'Jump Me', x: 425, y: 488, width: 28, height: 12, properties: [prop('damage', 'int', 1)] }, { id: 4, class: 'Exit', name: 'Finish', x: 890, y: 438, width: 28, height: 56, properties: [prop('exitId', 'string', 'finish')] }] }, tuning: { moveSpeed: 185, jumpVelocity: 470, gravity: 1000 } });
   if (variant === 'precision-platformer') return defineExpandedKit({ ...common, presetId: variant, level: { solids: [{ id: 1, class: 'Solid', name: 'Start', x: 0, y: 500, width: 220, height: 40 }, { id: 2, class: 'Solid', name: 'Tiny A', x: 300, y: 430, width: 74, height: 14 }, { id: 3, class: 'Solid', name: 'Tiny B', x: 465, y: 355, width: 68, height: 14 }, { id: 4, class: 'Solid', name: 'Tiny C', x: 630, y: 290, width: 72, height: 14 }, { id: 5, class: 'Solid', name: 'Finish Floor', x: 790, y: 500, width: 170, height: 40 }], entities: [baseSpawn, { id: 10, class: 'Checkpoint', name: 'Precision CP', x: 640, y: 245, width: 22, height: 32, properties: [prop('checkpointId', 'string', 'precision-cp')] }, { id: 11, class: 'Hazard', name: 'Void', x: 220, y: 510, width: 570, height: 25, properties: [prop('damage', 'int', 1)] }, { id: 12, class: 'Exit', name: 'Finish', x: 900, y: 438, width: 28, height: 56, properties: [prop('exitId', 'string', 'finish')] }] }, tuning: { moveSpeed: 185, jumpVelocity: 390, gravity: 1420 } });
   if (variant === 'puzzle-platformer') return defineExpandedKit({ ...common, presetId: variant, level: { solids: ground, entities: [baseSpawn, { id: 3, class: 'Collectible', name: 'Switch', x: 520, y: 450, width: 26, height: 26, properties: [prop('itemId', 'string', 'switch')] }, { id: 4, class: 'Exit', name: 'Locked Exit', x: 890, y: 438, width: 28, height: 56, properties: [prop('exitId', 'string', 'locked-exit')] }] }, tuning: { moveSpeed: 220, jumpVelocity: 430, gravity: 1100 } });
-  if (variant === 'climbing-game') return defineExpandedKit({ ...common, presetId: variant, level: { solids: [{ id: 1, class: 'Solid', name: 'Ground', x: 0, y: 500, width: 260, height: 40 }, { id: 2, class: 'Solid', name: 'L1', x: 250, y: 420, width: 160, height: 16 }, { id: 3, class: 'Solid', name: 'L2', x: 470, y: 335, width: 150, height: 16 }, { id: 4, class: 'Solid', name: 'L3', x: 650, y: 245, width: 150, height: 16 }, { id: 5, class: 'Solid', name: 'Summit', x: 800, y: 155, width: 150, height: 16 }], entities: [baseSpawn, { id: 10, class: 'Checkpoint', name: 'High CP', x: 680, y: 205, width: 22, height: 32, properties: [prop('checkpointId', 'string', 'high-cp')] }, { id: 11, class: 'Hazard', name: 'Fall', x: 240, y: 525, width: 560, height: 20, properties: [prop('damage', 'int', 1)] }, { id: 12, class: 'Exit', name: 'Summit', x: 875, y: 100, width: 28, height: 50, properties: [prop('exitId', 'string', 'summit')] }] }, tuning: { moveSpeed: 205, jumpVelocity: 430, gravity: 1060 } });
-  if (variant === 'grappling-platformer') return defineExpandedKit({ ...common, presetId: variant, level: { solids: [{ id: 1, class: 'Solid', name: 'Left', x: 0, y: 500, width: 330, height: 40 }, { id: 2, class: 'Solid', name: 'Right', x: 690, y: 500, width: 270, height: 40 }], entities: [baseSpawn, { id: 10, class: 'Objective', name: 'Anchor', x: 510, y: 235, width: 0, height: 0, properties: [prop('objectiveId', 'string', 'grapple-anchor')] }, { id: 11, class: 'Hazard', name: 'Gap', x: 330, y: 510, width: 360, height: 25, properties: [prop('damage', 'int', 1)] }, { id: 12, class: 'Exit', name: 'Finish', x: 890, y: 438, width: 28, height: 56, properties: [prop('exitId', 'string', 'finish')] }] }, tuning: { moveSpeed: 205, jumpVelocity: 420, gravity: 850 } });
+  if (variant === 'climbing-game') return defineExpandedKit({ ...common, presetId: variant, level: { solids: [{ id: 1, class: 'Solid', name: 'Ground', x: 0, y: 500, width: 360, height: 40 }, { id: 2, class: 'Solid', name: 'L1', x: 250, y: 420, width: 200, height: 16 }, { id: 3, class: 'Solid', name: 'L2', x: 470, y: 350, width: 190, height: 16 }, { id: 4, class: 'Solid', name: 'L3', x: 650, y: 280, width: 190, height: 16 }, { id: 5, class: 'Solid', name: 'Summit', x: 800, y: 260, width: 160, height: 16 }], entities: [baseSpawn, { id: 10, class: 'Checkpoint', name: 'High CP', x: 680, y: 245, width: 22, height: 32, properties: [prop('checkpointId', 'string', 'high-cp')] }, { id: 11, class: 'Hazard', name: 'Fall', x: 360, y: 525, width: 440, height: 20, properties: [prop('damage', 'int', 1)] }, { id: 12, class: 'Exit', name: 'Summit', x: 875, y: 205, width: 28, height: 50, properties: [prop('exitId', 'string', 'summit')] }] }, tuning: { moveSpeed: 205, jumpVelocity: 430, gravity: 1060 } });
+  if (variant === 'grappling-platformer') return withDefaultThemeRoles(defineExpandedKit({ ...common, presetId: variant, level: { solids: [{ id: 1, class: 'Solid', name: 'Left', x: 0, y: 500, width: 330, height: 40 }, { id: 2, class: 'Solid', name: 'Right', x: 580, y: 500, width: 380, height: 40 }], entities: [baseSpawn, { id: 10, class: 'Objective', name: 'Anchor', x: 510, y: 235, width: 0, height: 0, properties: [prop('objectiveId', 'string', 'grapple-anchor')] }, { id: 11, class: 'Hazard', name: 'Gap', x: 330, y: 510, width: 250, height: 25, properties: [prop('damage', 'int', 1)] }, { id: 12, class: 'Exit', name: 'Finish', x: 890, y: 438, width: 28, height: 56, properties: [prop('exitId', 'string', 'finish')] }] }, tuning: { moveSpeed: 205, jumpVelocity: 420, gravity: 850 } }), ['particle']);
   return defineExpandedKit({ ...common, presetId: variant, level: { solids: ground, entities: [baseSpawn, { id: 3, class: 'Collectible', name: 'A', x: 220, y: 450, width: 18, height: 18, properties: [prop('itemId', 'string', 'a')] }, { id: 4, class: 'Collectible', name: 'B', x: 430, y: 450, width: 18, height: 18, properties: [prop('itemId', 'string', 'b')] }, { id: 5, class: 'Collectible', name: 'C', x: 650, y: 450, width: 18, height: 18, properties: [prop('itemId', 'string', 'c')] }, { id: 6, class: 'Exit', name: 'Quota Exit', x: 890, y: 438, width: 28, height: 56, properties: [prop('exitId', 'string', 'quota-exit')] }] }, tuning: { moveSpeed: 220, jumpVelocity: 430, gravity: 1100 } });
 }
