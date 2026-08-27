@@ -1,0 +1,79 @@
+name: Starter Kit Expansion QA
+
+on:
+  push:
+    branches:
+      - starter-kits/implement-all
+  workflow_dispatch:
+
+concurrency:
+  group: starter-kit-expansion-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  baseline:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Use Node 22.12
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.12.0
+          cache: npm
+
+      - name: Install locked workspace
+        run: npm ci --no-audit --no-fund
+
+      - name: Validate repository baseline
+        run: npm run validate
+
+  starter-kit-browser:
+    needs: baseline
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        batch:
+          - core
+          - p2b
+          - p2c
+          - p3a
+          - p3b
+          - p3c
+          - p3d
+          - p3e
+          - p3f
+          - p3g
+          - p3h
+          - p3i
+          - p3j
+          - p3k
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Use Node 22.12
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.12.0
+          cache: npm
+
+      - name: Install locked workspace
+        run: npm ci --no-audit --no-fund
+
+      - name: Locate system Chrome
+        shell: bash
+        run: |
+          CHROME="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || command -v chromium-browser)"
+          echo "PLAYWRIGHT_CHROME_PATH=$CHROME" >> "$GITHUB_ENV"
+          "$CHROME" --version
+
+      - name: Validate starter batch
+        run: npm run qa:starter-kits:${{ matrix.batch }}

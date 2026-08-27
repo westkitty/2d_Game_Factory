@@ -5,7 +5,7 @@
  */
 import type { SystemPackSelection } from '@sw2d/contracts';
 import { getPreset, listPresets } from '@sw2d/presets';
-import type { ExplicitStarterKitPlan, OriginalRichKitId, ScaffoldPriority } from './scaffolds/types.ts';
+import type { ExplicitStarterKitPlan } from './scaffolds/types.ts';
 import { ORIGINAL_RICH_KIT_IDS } from './scaffolds/types.ts';
 import { PLATFORMING_SCAFFOLD_PLANS } from './scaffolds/platforming.ts';
 import { TOPDOWNACTION_SCAFFOLD_PLANS } from './scaffolds/topDownAction.ts';

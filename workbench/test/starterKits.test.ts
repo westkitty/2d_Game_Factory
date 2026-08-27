@@ -4,6 +4,40 @@ import { getPreset, listPresets } from '../../packages/presets/src/index.ts';
 import { allStarterKits, everyOverlayPath, starterKitDepthFor, starterKitFor } from '../server/starterKits/index.ts';
 
 const PROOF_PRESETS = ['chase-platformer', 'twin-stick-shooter', 'tower-defense', 'sokoban', 'idle-incremental'] as const;
+const VERIFIED_RICH_STARTERS = [
+  'traditional-platformer',
+  'metroidvania',
+  'bullet-hell',
+  'stealth-game',
+  'top-down-racer',
+  'turn-based-tactics',
+  'visual-novel',
+  'time-trial-racer',
+  'reaction-timing',
+  'shopkeeper',
+  'tycoon-lite',
+  'auto-runner',
+  'puzzle-platformer',
+  'top-down-adventure',
+  'action-adventure',
+  'arena-combat',
+  'base-defense',
+  'breakout',
+  'collectathon-platformer',
+  'dungeon-crawler',
+  'endless-runner',
+  'exploration-game',
+  'horizontal-shmup',
+  'lane-defense',
+  'maze-game',
+  'museum-exhibit',
+  'precision-platformer',
+  'run-and-gun',
+  'vertical-shmup',
+  'asteroids-shooter',
+  'gallery-shooter',
+  'rail-shooter',
+] as const;
 
 describe('overlay containment', () => {
   it('accepts every path the shipped starter kits actually write', () => {
@@ -54,6 +88,12 @@ describe('starter kit registry', () => {
     }
   });
 
+  it('ships every candidate that earned rich starter evidence', () => {
+    for (const presetId of VERIFIED_RICH_STARTERS) {
+      expect(starterKitFor(presetId)?.depth, presetId).toBe('rich-starter-kit');
+    }
+  });
+
   it('keeps registry ids unique and keeps kit depth honest about preset maturity', () => {
     const ids = allStarterKits().map((kit) => kit.presetId);
     expect(new Set(ids).size).toBe(ids.length);
@@ -63,9 +103,10 @@ describe('starter kit registry', () => {
     }
   });
 
-  it('reports depth honestly for presets with no kit (F15)', () => {
+  it('reports depth honestly for registered and unregistered presets (F15)', () => {
     expect(starterKitDepthFor('idle-clicker', 'recipe')).toBe('generated-shell');
-    expect(starterKitDepthFor('traditional-platformer', 'smoke-validated')).toBe('smoke-kit');
+    expect(starterKitDepthFor('unregistered-smoke-example', 'smoke-validated')).toBe('smoke-kit');
+    expect(starterKitDepthFor('traditional-platformer', 'smoke-validated')).toBe('rich-starter-kit');
     expect(starterKitDepthFor('chase-platformer', 'proof-validated')).toBe('rich-proof-kit');
   });
 

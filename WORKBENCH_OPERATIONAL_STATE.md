@@ -11,9 +11,10 @@ baseline. This file governs the visual workbench and the starter-kit expansion b
 | Original accepted workbench commit | `1ebc9a56fbe37527d48b65238fecbd54b0f63951` |
 | Post-acceptance repair merged to `main` | `bf8e4de4e6e0f2ee5adf6e8aebc5912f544530b2` |
 | Starter-kit scaffold system merged to `main` | `d919cf1f71b2023c9839b517198dfd3626341f27` |
-| Current shipped rich kits | **5 proof-derived kits** |
-| Expansion scaffolds | **69 / 69 present; 0 / 69 promoted at scaffold merge** |
-| Current milestone | **starter-kit expansion is implementation-ready for Sonnet; runtime revalidation debt remains explicit** |
+| Active expansion branch | `starter-kits/implement-all` |
+| Current shipped rich kits on active branch | **5 proof-derived + 69 promoted expansion kits = 74 rich kits total** |
+| Expansion scaffolds | **69 / 69 present; 69 / 69 promoted; 0 remain unpromoted** |
+| Current milestone | **P3-K Narrative Exploration closed on promoted replay; all starter-kit expansion batches complete** |
 
 ---
 
@@ -24,22 +25,125 @@ opens the visual Asset-Driven Game Factory Workbench rather than the old Phase 1
 The original workbench was accepted at `1ebc9a56` after an agent-reported full validation run.
 
 A later independent audit found three acceptance-evidence/product gaps. Those repairs were implemented
-and, at the user's explicit direction, merged to `main` as `bf8e4de4` without a fresh runtime run from
-this ChatGPT environment because its execution container cannot resolve `github.com` and the repository
-has no CI gate that can substitute for the project Mac + system Chrome.
+and, at the user's explicit direction, merged to `main` as `bf8e4de4`. At that merge point this ChatGPT
+execution container could not resolve `github.com`, and there was no repository CI gate that could replace
+the project-Mac + system-Chrome revalidation required for the full workbench acceptance surface.
 
 The same explicit user direction authorized the starter-kit expansion scaffolding to be committed,
 pushed and merged to `main`. That scaffolding was statically inspected and merged as `d919cf1f`.
-It is **scaffolding, not 69 finished starter kits**. The five original rich proof kits remain the only
-shipped rich kits at the scaffold merge point. Future expanded kits enter the shipped registry one at
-a time only after their implementation and proof gate passes.
+It was **scaffolding, not 69 finished starter kits**. Expanded kits enter the shipped registry only after
+implementation, canonical generated-game validation, real-browser mechanic proof, package-lock hygiene,
+inherited starter-batch replay, and a second full replay after registration.
 
-Do not convert the two merged-but-unrerun work units into fresh runtime PASS claims until the project
-validation ladder is executed in an environment with the repository dependencies and system Chrome.
+That expansion implementation is active on branch `starter-kits/implement-all`. As of promoted commit
+`7bd3eff759da91ab4053773aee11de9cd38fe26c`, **69 / 69 expansion starters are registered**. The original
+five proof-derived kits remain unchanged, so the branch exposes 74 rich kits total.
+
+### Latest verified expansion boundary — P3-E Puzzle Arcade
+
+P3-E promoted:
+
+- `match-puzzle`
+- `falling-block-puzzle`
+- `pong`
+
+The P3-E sequence deliberately preserved failed evidence rather than smoothing it away:
+
+1. Activation head `9c65d902dd7add3019028a60aaa21d5c41d3ea07` measured the existing implementations. GitHub Actions
+   run #62 (`33045615045`) was **SUCCESS** across repository baseline plus Core/P2-B/P2-C/P3-A/P3-B/P3-C/
+   P3-D/P3-E browser lanes. P3-E itself passed 3/3 mechanic journeys with `package-lock.json` unchanged.
+2. Presentation/role head `d5533c0ff95f7cd51c135079c6a1c82e3b7de218` tightened P3-E to require the scaffold-declared semantic
+   `ui.cursor` / `ui.panel` roles and to hide irrelevant generic arcade objects. Run #63 (`33046035424`)
+   **FAILED P3-E as intended**: generated default themes did not actually contain those UI roles, so the
+   game-side builder fell back to `checkpoint` / `platform`. The underlying Match/Falling/Pong mechanics,
+   board-role rendering and visibility cleanup still worked in the failure trace.
+3. Semantic-role repair head `6992a4c4d878b43976c826dd4e35e603effbed93` added only bounded starter-overlay theme roles. It uses the
+   canonical generated default theme and appends the supported `ui.panel` and, for Match, `ui.cursor`
+   placeholders only for these three P3-E starters. It did **not** widen the shared runtime, canonical
+   generator, preset maturity, registry, or already-promoted Puzzle Arcade variants. Run #64
+   (`33055897177`) was **SUCCESS** across baseline and every browser lane; P3-E passed 3/3 with strict
+   semantic-role proof and lockfile hygiene.
+4. Promotion commit `49822f8db04fd74b46aa71895cf3ec953394623f` changed only
+   `workbench/server/starterKits/expanded/index.ts`, registering the three P3-E starters. Promoted-state
+   replay run #65 (`33056172278`) was **SUCCESS** across baseline, Core, P2-B, P2-C, P3-A, P3-B, P3-C,
+   P3-D and P3-E.
+
+P3-E proof covers:
+
+- Match Puzzle visible cursor/select state, adjacent swap, real row match, board revision/clear count,
+  pickup-role board sprites, scaffold-declared `ui.cursor` + `ui.panel` participation and explicit completion;
+- Falling Block deterministic falling ticks, player movement/rotation affecting placement, platform-role
+  occupied cells, scaffold-declared `ui.panel`, real line clear, score change and completion;
+- Pong player paddle movement, a real player return/bounce, real score boundaries, opponent score-3 terminal
+  condition, scaffold-declared `ui.panel`, and removal of unrelated avatar/cursor decoration;
+- no console errors, no external network requests, and `package-lock.json` unchanged during candidate
+  generation/validation.
+
+### Final verified expansion boundary — P3-K Narrative Exploration
+
+The remaining expansion batches are complete on `starter-kits/implement-all`. Every candidate and
+promoted replay below passed the expansion workflow's repository baseline plus generated-game browser
+lanes; the focused batch lanes also checked semantic role participation, console/external-request
+hygiene, and unchanged `package-lock.json`.
+
+| Batch | Candidate implementation | Candidate Actions | Promoted registry commit | Promoted Actions |
+|---|---|---:|---|---:|
+| P3-F Puzzle Arcade | `3bfe362` | `33060607003` | `8c75e35` | `33060860448` |
+| P3-G Party Toy / Weird | `8fd8356` | `33067198196` | `66c74ae` | `33067506045` |
+| P3-H remaining Party Toy / Weird | `880d965` | `33068678906` | included in P3-I replay | `33070483826` |
+| P3-I Platforming | `0ca0cc7` | `33070226740` | `9a940d7` | `33070483826` |
+| P3-J Simulation Management | `31bf473` plus registry correction `1ad2e0b` | `33071854018` | `389f7cf` | `33072135263` |
+| P3-K Narrative Exploration | `aa8ac68` | `33072687610` | `7bd3eff` | `33073030298` |
+
+P3-K proof covers linked escape-room locks, stateful interactive-fiction choices, clue collection and
+deduction-gated investigation completion, and visible point-and-click cursor hotspots. The final promoted
+state is **69 / 69 implemented and registered**, with no starter-kit bug sweep performed in this expansion
+workflow.
+
+### Previous verified expansion boundary — P3-D vehicle movement
+
+P3-D promoted:
+
+- `kart-racer`
+- `endless-driving`
+- `boat-flight-racer`
+
+Final candidate head `570da353a469df2d711dc7cc69baee9687b13b1a` passed GitHub Actions run #60
+(`33045032117`) **SUCCESS**. The promoted registry head `4e11af942b1d558d6dd7e3da43ae89ba9c04e0ca`
+then passed GitHub Actions run #61 (`33045270123`) **SUCCESS**.
+
+Both gates included repository baseline `npm run validate` plus generated-game browser lanes for Core,
+P2-B, P2-C, P3-A, P3-B, P3-C and P3-D. Promotion itself changed only
+`workbench/server/starterKits/expanded/index.ts`; preset maturity did not change.
+
+P3-D proof covers:
+
+- Kart ordered checkpoint progression, real pickup/temporary boost, finish gating, and visible role-first
+  `particle` boost feedback;
+- Endless Driving continuous distance growth, real hazard collision penalty, and continued run state;
+- Boat ordered gates, low-altitude hazard collision, `SECONDARY_ACTION` (`KeyK`/`KeyC`) altitude change,
+  high-altitude hazard clearance, finish gating, and visible role-first particle/wake feedback;
+- no console errors, no external network requests, and `package-lock.json` unchanged during candidate
+  generation/validation.
+
+A scope-tightening pass before promotion also preserved the pre-existing sprite layering for already-
+promoted `top-down-racer` and `time-trial-racer`: depth 2 is applied only to vehicle variants that actually
+own the new particle marker.
+
+### Previous verified expansion boundary — P3-C top-down action
+
+P3-C candidate head `e65379e6ef975939a9ff4f2288a2da05d2ef90a0` passed run #56
+(`33040074568`) and promoted head `ab6911e5dac85ffec3f39736654db7b0bb23adb1` passed run #57
+(`33043970847`). P3-C added `action-roguelite`, `boss-rush`, `heist-game`, and `survivor-like` only after
+candidate and promoted replay gates were green.
+
+The starter-kit CI evidence does **not** retroactively close the separate full-workbench revalidation debt
+for W08, W23, W25, W26, W27 or W28. The expansion workflow runs `npm run validate` and its generated-game
+browser suites; it does not substitute for the complete workbench UI/security/responsive/release ladder.
 
 ---
 
-## Post-acceptance repair — merged, runtime revalidation pending
+## Post-acceptance repair — merged, full workbench revalidation still pending
 
 The post-acceptance audit found three concrete gaps:
 
@@ -55,11 +159,12 @@ The post-acceptance audit found three concrete gaps:
 
 **Merged repair commit:** `bf8e4de4e6e0f2ee5adf6e8aebc5912f544530b2`.
 
-**Evidence state:** implementation and static inspection are complete. Fresh runtime/browser validation
-has not been executed by this ChatGPT runtime. W08, W23, W25, W26, W27 and W28 therefore remain
-`REVALIDATION REQUIRED` rather than being silently upgraded to fresh PASS.
+**Evidence state:** implementation and static inspection are complete, and later starter-expansion CI has
+repeatedly exercised repository `npm run validate`. However the dedicated full workbench/browser ladder
+listed below has still not been rerun as one acceptance gate. W08, W23, W25, W26, W27 and W28 therefore
+remain `REVALIDATION REQUIRED` rather than being silently upgraded to fresh PASS.
 
-Required repair revalidation:
+Required full workbench repair revalidation:
 
 ```text
 npm run validate
@@ -76,10 +181,7 @@ confirm `git diff -- package-lock.json` is empty.
 
 ---
 
-## Starter-kit expansion control plane — merged to `main`
-
-The repository is now deliberately scaffolded so Sonnet can implement the remaining genre starters
-without first reverse-engineering the catalogue, changing the engine, or lying about maturity.
+## Starter-kit expansion control plane
 
 ### Shipped vs scaffolded
 
@@ -90,8 +192,10 @@ without first reverse-engineering the catalogue, changing the engine, or lying a
   - `sokoban`
   - `idle-incremental`
 - Every other preset has an explicit expansion scaffold: **69 / 69**.
-- At merge time `workbench/server/starterKits/expanded/index.ts` intentionally registers **none** of
-  those 69. An unfinished scaffold cannot change user-visible behavior.
+- At scaffold merge time `workbench/server/starterKits/expanded/index.ts` intentionally registered **none**
+  of those 69. An unfinished scaffold could not change user-visible behavior.
+- On active branch `starter-kits/implement-all`, **69 / 69 expansion starters have passed their promotion
+  gates and are registered; none remain unpromoted**.
 - A completed non-proof starter uses depth **`rich-starter-kit`**. Its preset maturity remains whatever
   the catalogue says (`recipe`, `smoke-validated`, etc.). `rich-proof-kit` remains reserved for the
   proof-derived starters. Starter depth and evidence maturity are separate claims.
@@ -133,9 +237,14 @@ for `content/game.json`: required pack ids receive JSON `config: {}`, while any 
 continues to be owned by the canonical generated `src/game-specific/packConfig.ts`. The scaffold also
 records the exact live preset pack selections for inspection; it does not create a second pack policy.
 
+P3-E adds one bounded extension to that game-side pattern: a starter may overlay its generated default
+theme with scaffold-declared semantic UI placeholders when the canonical default theme does not contain
+those supported roles. This remains a starter/game-side overlay, uses the canonical theme generator as
+its base, and is not authority to widen shared runtime or generator behavior for one genre.
+
 Known missing reusable capabilities in a preset are **not** permission to add a new shared subsystem
 for one starter. A bounded game-specific implementation is preferred; if a useful starter truly cannot
-be built without a cross-cutting architecture decision, Sonnet must stop that kit and report the
+be built without a cross-cutting architecture decision, implementation must stop that kit and report the
 blocking decision rather than silently widening scope.
 
 ### Promotion seam
@@ -151,9 +260,11 @@ must not be exported there until it is complete and proven. Once registered:
 - existing registry tests continue to require semantic-role art, deterministic overlay output and
   normal game-side containment.
 
-### Sonnet entry points
+The active branch adds a second operational requirement: **candidate green is not enough**. After a batch
+is registered, the complete expansion CI matrix must pass again on the promoted registry state before the
+batch is considered closed.
 
-Read these before implementation:
+### Expansion implementation entry points
 
 1. `docs/handoff/SONNET_STARTER_KIT_EXPANSION.md`
 2. `docs/workbench/STARTER_KIT_EXPANSION.md`
@@ -172,14 +283,10 @@ npm run starter-kits:status
 npm run starter-kits:bootstrap -- <preset-id>
 ```
 
-`starter-kits:status` is the implementation queue. `starter-kits:bootstrap` creates the exact target
-source file prefilled with the scaffold's loop, roles, required pack ids, reference kit, maturity lock,
-mechanic proofs and architecture notes; it refuses to overwrite an existing implementation. The file
-is deliberately not auto-registered.
-
-Default Sonnet batch size: **3-5 kits**, starting with P1 items and staying within one family when
-practical. Each kit needs focused unit coverage and real generated-game browser proof before promotion.
-At batch/family boundaries run the broader workbench validation required by the handoff.
+Default batch size remains **3-5 kits**, staying within one family when practical. Each kit needs focused
+coverage and real generated-game browser proof before promotion. The active CI matrix runs prior promoted
+batches alongside the candidate batch so timing or shared-builder regressions are caught before registry
+mutation.
 
 ---
 
@@ -195,9 +302,9 @@ At batch/family boundaries run the broader workbench validation required by the 
 | M5 | Scene Composer + preview lifecycle | COMPLETE |
 | M6 | reopen / adopt / remix / Validate / Build / Pack / provenance UX / reveal | COMPLETE |
 | M7 | `qa:workbench`, responsive, security QA, full regression, docs, final acceptance | ACCEPTED AT `1ebc9a56`; SOME EVIDENCE STALE AFTER LATER AUDIT |
-| M7R1 | host boundary + lockfile/offline linking + undo evidence repair | MERGED AT `bf8e4de4`; RUNTIME REVALIDATION REQUIRED |
-| SK0 | 69-preset starter-kit expansion control plane, promotion seam, bootstrap/status tooling and Sonnet handoff | MERGED AT `d919cf1f`; STATICALLY VERIFIED, RUNTIME-UNVERIFIED |
-| SK1+ | implement and prove the 69 expanded starter kits | NOT STARTED AT SCAFFOLD MERGE; SONNET QUEUE READY |
+| M7R1 | host boundary + lockfile/offline linking + undo evidence repair | MERGED AT `bf8e4de4`; FULL WORKBENCH REVALIDATION REQUIRED |
+| SK0 | 69-preset starter-kit expansion control plane, promotion seam, bootstrap/status tooling and Sonnet handoff | MERGED AT `d919cf1f`; CONTROL PLANE ACTIVE |
+| SK1+ | implement and prove the 69 expanded starter kits | **COMPLETE: 69 / 69 PROMOTED; P3-K CLOSED** |
 
 ---
 
@@ -205,7 +312,7 @@ At batch/family boundaries run the broader workbench validation required by the 
 
 Full original evidence lives in [`docs/architecture/WORKBENCH_FINAL_ACCEPTANCE.md`](docs/architecture/WORKBENCH_FINAL_ACCEPTANCE.md).
 These rows preserve the accepted state at `1ebc9a56`; the later repair supersedes the evidence state
-for W08, W23, W25, W26, W27 and W28 until a fresh project-environment run occurs.
+for W08, W23, W25, W26, W27 and W28 until the dedicated full-workbench ladder occurs.
 
 | Id | Item | State |
 |---|---|---|
@@ -221,8 +328,8 @@ for W08, W23, W25, W26, W27 and W28 until a fresh project-environment run occurs
 | W10 | reimport regenerates derivatives without losing roles | **PASS (historical accepted evidence)** |
 | W11 | role changes alter the actual game mapping | **PASS (historical accepted evidence)** |
 | W12 | theme synthesis from imported palette/assets | **PASS (historical accepted evidence)** |
-| W13 | all 74 presets browsable with honest maturity | **PASS (historical); starter depth/maturity separation added later, runtime-unverified** |
-| W14 | Game Seeds from one image, no false claims | **PASS (historical); rich-starter eligibility added later, runtime-unverified** |
+| W13 | all 74 presets browsable with honest maturity | **PASS (historical); starter depth/maturity separation added later, runtime UI revalidation required** |
+| W14 | Game Seeds from one image, no false claims | **PASS (historical); rich-starter eligibility added later, runtime UI revalidation required** |
 | W15 | creation goes through the canonical generator | **PASS (historical accepted evidence)** |
 | W16 | real browser proof: imported pixels drive the rendered game | **PASS (historical accepted evidence)** |
 | W17 | five rich proof starter kits | **PASS; original five unchanged** |
@@ -235,15 +342,12 @@ for W08, W23, W25, W26, W27 and W28 until a fresh project-environment run occurs
 | W24 | provenance gate remains authoritative | **PASS (historical accepted evidence)** |
 | W25 | loopback-only host, narrow API | **REVALIDATION REQUIRED AFTER MERGED REPAIR** |
 | W26 | offline normal workflow | **REVALIDATION REQUIRED AFTER MERGED REPAIR** |
-| W27 | inherited SW2D regression ladder green | **REVALIDATION REQUIRED AFTER MERGED REPAIR/SCAFFOLD CHANGES** |
+| W27 | inherited SW2D regression ladder green | **REVALIDATION REQUIRED FOR THE FULL LADDER; `npm run validate` IS FRESH GREEN IN EXPANSION CI** |
 | W28 | `npm run qa:workbench` passes | **REVALIDATION REQUIRED AFTER MERGED REPAIR/SCAFFOLD CHANGES** |
 
 ---
 
 ## Failure-condition ledger F01-F20
-
-The original acceptance recorded all as NO. Later changes do not receive a fresh NO merely from source
-presence. Items materially touched by the repair/scaffold work remain evidence-stale until rerun.
 
 | Id | Failure condition | State |
 |---|---|---|
@@ -254,26 +358,26 @@ presence. Items materially touched by the repair/scaffold work remain evidence-s
 | F05 | source image destructively overwritten | **NO (historical accepted evidence)** |
 | F06 | filenames / paths are fragile identity | **NO (historical accepted evidence)** |
 | F07 | reimport breaks roles or derivative lineage | **NO (historical accepted evidence)** |
-| F08 | creation bypasses the canonical generator | **NO; scaffold authoring explicitly reuses canonical generation + overlay** |
+| F08 | creation bypasses the canonical generator | **NO; expansion QA creates candidates through canonical `createGame` and validates them** |
 | F09 | preview is an editor mock | **NO (historical accepted evidence)** |
 | F10 | user must edit JSON for normal level refinement | **NO (historical accepted evidence)** |
 | F11 | a foreground object makes covered objects unselectable | **NO (historical accepted evidence)** |
-| F12 | browser can execute arbitrary shell commands | **NO (historical; host repair requires revalidation)** |
+| F12 | browser can execute arbitrary shell commands | **NO (historical; dedicated host repair still requires full workbench revalidation)** |
 | F13 | workbench can read/write arbitrary machine paths | **NO (historical accepted evidence)** |
 | F14 | provenance / release gate bypassable | **NO (historical accepted evidence)** |
 | F15 | recipe-only presets presented as equally proven | **STATICALLY GUARDED; runtime UI revalidation required** |
-| F16 | required workflow needs cloud / key / account / credits | **REVALIDATION REQUIRED** |
+| F16 | required workflow needs cloud / key / account / credits | **WORKBENCH REVALIDATION REQUIRED; EXPANSION GENERATED-GAME QA MAKES NO CLOUD REQUESTS** |
 | F17 | large import has unbounded concurrency or all-in-memory behaviour | **NO (historical accepted evidence)** |
-| F18 | inherited regression suites removed, weakened or failing | **REVALIDATION REQUIRED** |
+| F18 | inherited regression suites removed, weakened or failing | **STARTER EXPANSION MATRIX GREEN THROUGH P3-K; FULL INHERITED LADDER STILL REVALIDATION REQUIRED** |
 | F19 | normal Validate / Build / Pack still requires the terminal | **NO (historical accepted evidence)** |
-| F20 | completion claimed without a real browser proof | **NO FOR ORIGINAL ACCEPTANCE; EXPANDED KITS ARE NOT COMPLETE AND MAY NOT BE PROMOTED WITHOUT PROOF** |
+| F20 | completion claimed without a real browser proof | **NO FOR ALL 69 PROMOTED EXPANSION STARTERS; EACH BATCH HAS REAL-BROWSER PROOF** |
 
 ---
 
 ## Verified workbench behaviour at original accepted commit `1ebc9a56`
 
 The following were reported as executed for the original accepted workbench commit. They remain
-historical evidence and protected behavior; they are not fresh proof of later repairs/scaffolding.
+historical evidence and protected behavior; they are not fresh proof of later full-workbench repairs.
 
 - `npm run dev` launches the workbench; `npm run starter:dev` serves the Phase 1 slice.
 - One image → imported → mapped to `player` → chase-platformer generated through the canonical factory
@@ -285,36 +389,57 @@ historical evidence and protected behavior; they are not fresh proof of later re
 - Validate / Build / Pack were exercised from UI buttons with the provenance gate intact.
 - Loopback security, bounded batch concurrency and three responsive viewport classes were exercised.
 
-## Implemented but runtime-unverified after the accepted commit
+## Verified starter-expansion behaviour on `starter-kits/implement-all`
 
-- **M7R1 repair merged at `bf8e4de4`.** Source/static inspection complete; fresh browser/regression run pending.
-- **Starter-kit expansion infrastructure merged at `d919cf1f`.** Static catalogue inventory and diff review
-  complete; package/type/unit/browser execution has not been run from this ChatGPT runtime.
-- **`rich-starter-kit` depth.** Implemented so a recipe/smoke preset can have a useful rich starter without
-  lying about evidence maturity. UI/seed runtime behavior still needs project-environment revalidation.
-- **69 per-preset scaffold records.** Complete as control-plane data, not as playable kit implementations.
-- **`starter-kits:status` and `starter-kits:bootstrap`.** Source-complete and merged; runtime execution not
-  observed in this environment.
-- **Real-device touch.** Still unverified; responsive evidence is Chromium viewport emulation.
+- Expanded candidates are created through canonical `createGame`, validated through CLI, production-built,
+  booted in system Chrome and exercised through mechanic-specific generated-game journeys.
+- Candidate runs reject console errors/external requests and compare `package-lock.json` before/after.
+- P3-C candidate #56 and promoted replay #57 passed full expansion matrices at their respective boundaries.
+- The Lane Defense timing defect discovered during P3-C was repaired in game-side strategy code by replacing
+  a frame-sensitive modulo hit window with a deterministic 650 ms defender cooldown.
+- P3-D candidate #60 and promoted replay #61 passed full expansion matrices on the final scoped vehicle code.
+- P3-D added role-first particle feedback only where declared/needed and preserved existing racer layering.
+- P3-E initial mechanics run #62 passed; stricter run #63 exposed missing generated `ui.cursor` / `ui.panel`
+  roles instead of allowing fallback textures to count as semantic proof.
+- P3-E semantic-role repair candidate #64 and promoted replay #65 passed full expansion matrices. The repair
+  remained game-side and starter-specific; the shared generator/runtime and preset maturity were unchanged.
+- P3-F through P3-K completed the remaining Puzzle Arcade, Party Toy / Weird, Platforming, Simulation
+  Management, and Narrative Exploration batches. Candidate and promoted replay runs were green through
+  Actions `33073030298`; the final promoted registry head is `7bd3eff759da91ab4053773aee11de9cd38fe26c`.
+
+## Implemented but not fully workbench-verified after the accepted commit
+
+- **M7R1 repair merged at `bf8e4de4`.** Source/static inspection complete; dedicated full workbench browser/
+  regression ladder still pending even though repository `npm run validate` is repeatedly green in CI.
+- **Starter-kit expansion infrastructure merged at `d919cf1f`.** Its control plane and generated-game paths
+  are now runtime exercised by the active expansion CI, but this does not equal a full workbench UI pass.
+- **`rich-starter-kit` depth.** Implemented and populated by 69 expansion registrations on the active branch;
+  preset-browser/Game-Seed presentation still needs the dedicated workbench UI revalidation.
+- **69 per-preset scaffold records.** Complete as control-plane data; all 69 have promoted playable kits.
+- **Real-device touch.** Still unverified; responsive historical evidence is Chromium viewport emulation.
 - **Wall-clock performance.** No benchmark claim.
 - **Optional `AssetGenerationProvider`.** Interface only; no provider ships.
 
 ## Deliberately not implemented / not yet complete
 
-- **The 69 expanded starter kits themselves.** Scaffolding is complete, but no scaffold becomes a shipped
-  starter until Sonnet implements its loop and passes its proof gate.
+- **Unpromoted expansion starters.** None remain. All 69 expansion starters passed their bounded candidate
+  and promoted replay gates and are registered.
 - **Sprite-sheet animation playback.** Frame groups are detected/recorded; one representative frame is used.
 - **Host-side JPEG/WebP decoding.** Browser handles derivation for those formats.
 - **A universal weapon, bullet-hell, procedural-generation, grappling, pathfinding, RTS, vehicle-physics,
-  dialogue, creature-AI or advanced-physics engine.** Starter scaffolds explicitly prefer bounded game-side
-  implementations over pretending those reusable subsystems already exist.
+  dialogue, creature-AI or advanced-physics engine.** Starter implementations continue to prefer bounded
+  game-side code over pretending those reusable subsystems already exist.
 
-## Known validation debt / blocker
+## Known validation debt / execution boundary
 
-The available ChatGPT execution container cannot resolve `github.com`, so it cannot clone and execute this
-repository. GitHub connector reads/writes work, but there is no repository CI gate currently providing the
-missing browser/runtime evidence. This does **not** block Sonnet from beginning the starter-kit queue in a
-proper repository environment; it does block any fresh blanket PASS claim until the validation ladder runs.
+The available ChatGPT execution container still cannot clone/run the repository directly because its
+network path cannot resolve `github.com`. GitHub connector reads/writes and GitHub Actions provide a real
+execution path for the starter-expansion baseline and generated-game browser matrix. That evidence is
+accepted for the bounded starter batches it actually exercises.
+
+The expansion workflow does **not** run the complete workbench acceptance ladder (`qa:workbench`, smoke,
+proof, responsive, release verification, generated-runtime matrix, UI Validate/Build/Pack hygiene as one
+fresh gate). Those claims remain pending and must not be inferred from starter-kit CI success.
 
 ---
 
@@ -343,21 +468,14 @@ npm run qa:matrix       40/40
 npm run qa:workbench    16/16
 ```
 
-Those counts are historical. New repair/scaffold tests change the unit-test total, and no new exact count
-should be recorded until the suite is actually executed.
+Those exact counts remain historical. Expansion CI has fresh `npm run validate` evidence on current branch
+heads, but it is intentionally not represented as fresh proof of every command in the older full ladder.
 
 ---
 
 ## Next bounded action
 
-Give Sonnet `docs/handoff/SONNET_STARTER_KIT_EXPANSION.md` and the repository on `main`.
-
-Sonnet should begin with:
-
-```text
-npm run starter-kits:status
-npm run starter-kits:bootstrap -- <highest-priority-preset-id>
-```
-
-Implement P1 starters first, in 3-5 kit batches. A kit is promoted only after focused tests and real-browser
-proof of its scaffold mechanic obligations. Preserve the five existing rich proof kits and shared machine.
+The starter-kit expansion is complete at promoted P3-K commit `7bd3eff759da91ab4053773aee11de9cd38fe26c`.
+The next explicit workflow boundary is the smart-model bug sweep; it was not performed as part of this
+expansion. The separate full-workbench revalidation debt remains unchanged and must not be folded into
+starter-batch success.
