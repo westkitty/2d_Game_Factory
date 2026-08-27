@@ -1,4 +1,5 @@
 import { defineExpandedKit } from './common.ts';
+import { withDefaultThemeRoles } from './themeRoles.ts';
 
 export type PartyToyStarterVariant =
   | 'microgame-collection'
@@ -38,10 +39,29 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     const { width, height } = context.definition.viewport;
     const background = addBackground(scene, context.assets.has('background') ? context.assets.resolve('background') : null, width, height);
     const hero = scene.add.sprite(width * 0.5, 190, context.assets.resolve('player')).setDisplaySize(92, 92);
-    const cursorSprite = scene.add.sprite(GRID_X, GRID_Y, context.assets.resolve('checkpoint')).setDisplaySize(42, 42).setAlpha(0.7);
+    const cursorRoleSource = (VARIANT === 'drawing-game' || VARIANT === 'dress-up-character-toy') && context.assets.has('ui.cursor') ? 'ui.cursor' : 'checkpoint';
+    const cursorSprite = scene.add.sprite(GRID_X, GRID_Y, context.assets.resolve(cursorRoleSource)).setDisplaySize(42, 42).setAlpha(0.7);
+    const panelRoleSource = context.assets.has('ui.panel') ? 'ui.panel' : null;
+    const rolePanel = panelRoleSource ? scene.add.sprite(width * 0.5, 45, context.assets.resolve('ui.panel')).setDisplaySize(690, 58).setAlpha(0.88).setDepth(80) : null;
+    const buttonRoleSource = context.assets.has('ui.button') ? 'ui.button' : null;
+    const roleButton = buttonRoleSource ? scene.add.sprite(width - 95, 45, context.assets.resolve('ui.button')).setDisplaySize(92, 42).setAlpha(0.92).setDepth(90) : null;
+    const roleButtonLabel = buttonRoleSource ? scene.add.text(width - 95, 45, 'ACT', { fontFamily: 'ui-monospace, monospace', fontSize: '12px', color: '#14251f' }).setOrigin(0.5).setDepth(91) : null;
     const status = scene.add.text(width * 0.5, 350, '', { fontFamily: 'ui-monospace, monospace', fontSize: '17px', color: '#ffffff', align: 'center', wordWrap: { width: 820 } }).setOrigin(0.5, 0).setDepth(100);
     const hint = scene.add.text(width * 0.5, 475, '', { fontFamily: 'ui-monospace, monospace', fontSize: '14px', color: '#9fd7ff', align: 'center', wordWrap: { width: 820 } }).setOrigin(0.5).setDepth(100);
     const objects: Phaser.GameObjects.GameObject[] = [cursorSprite];
+    const drawingMarks: Phaser.GameObjects.Sprite[] = [];
+    const particleSprites: Phaser.GameObjects.Sprite[] = [];
+    const particleTextureKey = context.assets.has('particle') ? context.assets.resolve('particle') : null;
+    const rolePickupSource = (VARIANT === 'cooking-game' || VARIANT === 'dress-up-character-toy' || VARIANT === 'fishing-game') ? 'pickup' : null;
+    const rolePickup = rolePickupSource ? scene.add.sprite(210, 245, context.assets.resolve('pickup')).setDisplaySize(38, 38).setDepth(70) : null;
+    const wardrobeLabels = VARIANT === 'dress-up-character-toy'
+      ? scene.add.text(width * 0.5, 120, 'HAT       OUTFIT       COLOR', { fontFamily: 'ui-monospace, monospace', fontSize: '16px', color: '#e8ecf4' }).setOrigin(0.5).setDepth(90)
+      : null;
+    if (rolePickup) objects.push(rolePickup);
+    if (rolePanel) objects.push(rolePanel);
+    if (roleButton) objects.push(roleButton);
+    if (roleButtonLabel) objects.push(roleButtonLabel);
+    if (wardrobeLabels) objects.push(wardrobeLabels);
 
     let elapsedMs = 0;
     let outcome: 'playing' | 'complete' | 'failed' = 'playing';
@@ -83,6 +103,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     let fishingStateAt = 0;
     let fishCaught = 0;
     let fishMissed = 0;
+    let particleEffects = 0;
 
     const recipe = [0, 1, 2];
     let recipeStep = 0;
@@ -103,6 +124,12 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       if (step === 'up') gridCursor.row = Math.max(0, gridCursor.row - 1);
       if (step === 'down') gridCursor.row = Math.min(GRID_H - 1, gridCursor.row + 1);
       syncCursor();
+    }
+
+    function emitParticle(x: number, y: number, tint: number): void {
+      if (!particleTextureKey) return;
+      const particle = scene.add.sprite(x, y, particleTextureKey).setDisplaySize(18, 18).setTint(tint).setDepth(95);
+      objects.push(particle); particleSprites.push(particle); particleEffects += 1;
     }
 
     function setupToy(): void {
@@ -126,6 +153,10 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       }
     }
 
+    function setupDress(): void {
+      hero.setPosition(480, 245); cursorSprite.setVisible(true).setPosition(360, 165);
+    }
+
     function setupPhoto(): void {
       cursorSprite.setVisible(true); hero.setPosition(130, 270).setDisplaySize(48, 48); status.setPosition(width * 0.5, 420);
       for (const point of [{ x: 420, y: 150 }, { x: 650, y: 280 }, { x: 790, y: 400 }]) { const target = scene.add.sprite(point.x, point.y, context.assets.resolve('enemy')).setDisplaySize(44, 44); photoTargets.push(target); objects.push(target); }
@@ -135,6 +166,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     if (VARIANT === 'physics-toy') setupToy();
     else if (VARIANT === 'sandbox-playground' || VARIANT === 'drawing-game') setupGridToy();
     else if (VARIANT === 'photography-game') setupPhoto();
+    else if (VARIANT === 'dress-up-character-toy') setupDress();
     else cursorSprite.setVisible(false);
 
     function updateMicrogame(): void {
@@ -146,7 +178,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         }
       } else if (microgame === 1) {
         const expected = microProgress % 2 === 0 ? 'MOVE_LEFT' : 'MOVE_RIGHT';
-        if (context.input.justPressed(expected)) { microProgress += 1; lastAction = 'micro-two'; if (microProgress >= 4) { microScores[1] = 400; microgame = 2; microProgress = 0; } }
+        if (context.input.justPressed(expected)) { microProgress += 1; lastAction = 'micro-two'; if (microProgress >= 4) { microScores[1]! = 400; microgame = 2; microProgress = 0; } }
       } else if (microgame === 2) {
         if (context.input.justPressed('PRIMARY_ACTION')) { microProgress += 1; lastAction = 'micro-three'; if (microProgress >= 4) { microScores[2] = 400; score = microScores.reduce((sum, value) => sum + value, 0); outcome = 'complete'; microgame = 3; } }
       }
@@ -155,9 +187,9 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     function updateParty(): void {
       if (!context.input.justPressed('PRIMARY_ACTION') && !context.input.justPressed('CONFIRM')) return;
       const power = 1 + (partyTurns % 3);
-      partyScores[currentPlayer] += power;
+      partyScores[currentPlayer] = (partyScores[currentPlayer] ?? 0) + power;
       partyTurns += 1; lastAction = 'party-turn'; currentPlayer = currentPlayer === 0 ? 1 : 0;
-      if (partyTurns >= 6) { winner = partyScores[0] === partyScores[1] ? 0 : partyScores[0] > partyScores[1] ? 0 : 1; outcome = 'complete'; }
+      if (partyTurns >= 6) { const p1 = partyScores[0] ?? 0; const p2 = partyScores[1] ?? 0; winner = p1 === p2 ? 0 : p1 > p2 ? 0 : 1; outcome = 'complete'; }
     }
 
     function updateToy(deltaMs: number): void {
@@ -185,9 +217,13 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       const intent = uiSimulationController.read(context.input);
       if (intent.navigateLeftPressed) wardrobeCategory = Math.max(0, wardrobeCategory - 1);
       if (intent.navigateRightPressed) wardrobeCategory = Math.min(2, wardrobeCategory + 1);
-      if (intent.confirmPressed || intent.primaryPressed) { wardrobe[wardrobeCategory] = (wardrobe[wardrobeCategory]! + 1) % 4; wardrobeChanges += 1; lastAction = 'wardrobe'; }
+      cursorSprite.setPosition(360 + wardrobeCategory * 120, 165);
+      if (intent.confirmPressed || intent.primaryPressed) { wardrobe[wardrobeCategory] = ((wardrobe[wardrobeCategory] ?? 0) + 1) % 4; wardrobeChanges += 1; lastAction = 'wardrobe'; }
       if (context.input.justPressed('SECONDARY_ACTION')) { wardrobe.fill(0); dressResets += 1; lastAction = 'reset-look'; }
-      const colors = [0xffffff, 0x65d0a8, 0xe05fa0, 0xf0c274]; hero.setTint(colors[wardrobe[0]]!); hero.setAngle((wardrobe[1]! - 1) * 4); hero.setScale((92 / hero.height) * (1 + wardrobe[2]! * 0.05));
+      const colors = [0xffffff, 0x65d0a8, 0xe05fa0, 0xf0c274];
+      const hat = wardrobe[0] ?? 0; const outfit = wardrobe[1] ?? 0; const size = wardrobe[2] ?? 0; const selected = wardrobe[wardrobeCategory] ?? 0;
+      hero.setTint(colors[hat] ?? colors[0]!); hero.setAngle((outfit - 1) * 4); hero.setScale((92 / hero.height) * (1 + size * 0.05));
+      if (rolePickup) rolePickup.setPosition(hero.x + 76, hero.y).setTint(colors[selected] ?? colors[0]!);
       if (wardrobeChanges >= 4 && wardrobe.filter((value) => value > 0).length >= 2) outcome = 'complete';
     }
 
@@ -201,8 +237,8 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
 
     function updateDrawing(): void {
       const intent = gridController.read(context.input); moveGrid(intent.step);
-      if (intent.confirmPressed || context.input.justPressed('PRIMARY_ACTION')) { const key = gridCursor.col + ',' + gridCursor.row; if (!drawing.has(key)) { drawing.add(key); const dot = scene.add.sprite(...gridPixel(gridCursor.col, gridCursor.row), context.assets.resolve('pickup')).setDisplaySize(24, 24); objects.push(dot); } lastAction = 'draw'; }
-      if (context.input.justPressed('SECONDARY_ACTION')) { drawing.clear(); drawingResets += 1; lastAction = 'clear'; }
+      if (intent.confirmPressed || context.input.justPressed('PRIMARY_ACTION')) { const key = gridCursor.col + ',' + gridCursor.row; if (!drawing.has(key)) { drawing.add(key); const dot = scene.add.sprite(...gridPixel(gridCursor.col, gridCursor.row), context.assets.resolve('pickup')).setDisplaySize(24, 24); objects.push(dot); drawingMarks.push(dot); } lastAction = 'draw'; }
+      if (context.input.justPressed('SECONDARY_ACTION')) { drawing.clear(); for (const mark of drawingMarks) mark.destroy(); drawingMarks.length = 0; drawingResets += 1; lastAction = 'clear'; }
       if (drawing.size >= 5) outcome = 'complete';
     }
 
@@ -211,8 +247,8 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       if (fishingState === 'idle' && primary) { fishingState = 'cast'; fishingStateAt = elapsedMs; lastAction = 'cast'; }
       else if (fishingState === 'cast' && elapsedMs - fishingStateAt >= 1200) { fishingState = 'bite'; fishingStateAt = elapsedMs; lastAction = 'bite'; }
       else if (fishingState === 'bite') {
-        if (primary && elapsedMs - fishingStateAt <= 700) { fishingState = 'landed'; fishCaught += 1; score += 50; fishingStateAt = elapsedMs; lastAction = 'landed'; }
-        else if (elapsedMs - fishingStateAt > 700) { fishingState = 'idle'; fishMissed += 1; lastAction = 'missed'; }
+        if (primary && elapsedMs - fishingStateAt <= 700) { fishingState = 'landed'; fishCaught += 1; score += 50; fishingStateAt = elapsedMs; lastAction = 'landed'; emitParticle(470, 255, 0xffe28a); }
+        else if (elapsedMs - fishingStateAt > 700) { fishingState = 'idle'; fishMissed += 1; lastAction = 'missed'; emitParticle(470, 255, 0xe05fa0); }
       } else if (fishingState === 'landed' && elapsedMs - fishingStateAt >= 500) fishingState = 'idle';
       if (fishCaught >= 2) outcome = 'complete';
     }
@@ -222,8 +258,8 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       if (intent.navigateLeftPressed) cookingSelection = Math.max(0, cookingSelection - 1);
       if (intent.navigateRightPressed) cookingSelection = Math.min(2, cookingSelection + 1);
       if (intent.confirmPressed || intent.primaryPressed) {
-        if (cookingSelection === recipe[recipeStep]) { recipeStep += 1; lastAction = 'correct-step'; }
-        else { cookingMistakes += 1; dishScore = Math.max(0, dishScore - 20); lastAction = 'wrong-step'; }
+        if (cookingSelection === recipe[recipeStep]) { recipeStep += 1; lastAction = 'correct-step'; emitParticle(210, 245, 0x65d0a8); }
+        else { cookingMistakes += 1; dishScore = Math.max(0, dishScore - 20); lastAction = 'wrong-step'; emitParticle(210, 245, 0xe05fa0); }
         if (recipeStep >= recipe.length) { score = dishScore; outcome = 'complete'; lastAction = 'dish-complete'; }
       }
     }
@@ -242,14 +278,20 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       else if (VARIANT === 'dress-up-character-toy') status.setText('Category ' + (wardrobeCategory + 1) + ' · look ' + wardrobe.join('/') + ' · changes ' + wardrobeChanges);
       else if (VARIANT === 'sandbox-playground') status.setText('Placed ' + sandbox.size + ' · kind ' + sandboxKind + ' · resets ' + sandboxResets);
       else if (VARIANT === 'drawing-game') status.setText('Marks ' + drawing.size + ' · clears ' + drawingResets);
-      else if (VARIANT === 'fishing-game') status.setText('Fishing ' + fishingState + ' · caught ' + fishCaught + ' · missed ' + fishMissed);
-      else if (VARIANT === 'cooking-game') status.setText('Recipe step ' + recipeStep + '/3 · selected ' + cookingSelection + ' · mistakes ' + cookingMistakes + ' · score ' + dishScore);
+      else if (VARIANT === 'fishing-game') status.setText('Fishing ' + fishingState + ' · caught ' + fishCaught + ' · missed ' + fishMissed + ' · score ' + score);
+      else if (VARIANT === 'cooking-game') status.setText('Recipe step ' + recipeStep + '/3 · selected ' + cookingSelection + ' · mistakes ' + cookingMistakes + ' · score ' + dishScore + (outcome === 'complete' ? ' · DISH READY' : ''));
       else status.setText('Target ' + (photoTarget + 1) + ' · photos ' + photosTaken + ' · best ' + bestPhoto);
+      if (roleButton) roleButton.setTint(outcome === 'complete' ? 0xffe28a : 0xffffff);
+      if (rolePickup && VARIANT === 'cooking-game') rolePickup.setPosition(210 + cookingSelection * 90, 245);
+      if (rolePickup && VARIANT === 'fishing-game') rolePickup.setPosition(470, fishingState === 'bite' ? 225 : 255).setAlpha(fishingState === 'bite' || fishingState === 'landed' ? 1 : 0.45);
       hint.setText('PRIMARY / CONFIRM acts · SECONDARY changes/reset · arrows navigate' + (outcome !== 'playing' ? ' · ' + outcome.toUpperCase() : ''));
     }
 
     const debugHandle = context.debug.contribute('game.expanded-starter', () => ({
       presetId: VARIANT, family: 'party-toy-weird', playerTextureKey: hero.texture.key, backgroundTextureKey: background ? background.texture.key : null,
+      cursorTextureKey: cursorSprite.texture.key, cursorRoleSource, panelTextureKey: rolePanel?.texture.key ?? null, panelRoleSource,
+      buttonTextureKey: roleButton?.texture.key ?? null, buttonRoleSource, pickupTextureKey: rolePickup?.texture.key ?? null, pickupRoleSource: rolePickupSource,
+      particleTextureKey, particleEffects, drawingVisibleMarks: drawingMarks.length,
       elapsedMs: Math.round(elapsedMs), score, outcome, lastAction, microgame, microProgress, microSignal, microScores,
       currentPlayer, partyScores, partyTurns, winner, toySpawns, toyResets, toyBodies: toyBodies.map((body) => ({ x: Math.round(body.sprite.x), y: Math.round(body.sprite.y), vx: Math.round(body.vx), vy: Math.round(body.vy) })),
       hunger, happiness, petActions, wardrobeCategory, wardrobe, wardrobeChanges, dressResets, gridCursor, sandboxKind, sandboxSize: sandbox.size, sandboxResets, drawingSize: drawing.size, drawingResets,
@@ -281,11 +323,19 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
 }
 
 export function partyToyStarterKit(variant: PartyToyStarterVariant) {
-  return defineExpandedKit({
+  const base = defineExpandedKit({
     presetId: variant,
     shellPackId: 'game.expanded-party-toy',
     shellSource: shellSource(variant),
     level: { entities: [{ id: 1, class: 'PlayerSpawn', name: 'Display', x: 480, y: 190, width: 0, height: 0, properties: [] }] },
     tuning: { moveSpeed: 220, jumpVelocity: 430, gravity: 1100 },
   });
+  const roles = variant === 'cooking-game' || variant === 'fishing-game'
+    ? ['ui.panel', 'ui.button', 'particle'] as const
+    : variant === 'drawing-game' || variant === 'dress-up-character-toy'
+      ? ['ui.panel', 'ui.button', 'ui.cursor'] as const
+      : variant === 'local-party-game'
+        ? ['ui.panel', 'ui.button'] as const
+        : [] as const;
+  return withDefaultThemeRoles(base, roles);
 }

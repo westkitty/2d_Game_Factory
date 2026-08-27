@@ -50,6 +50,7 @@ jobs:
           - p3d
           - p3e
           - p3f
+          - p3g
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
