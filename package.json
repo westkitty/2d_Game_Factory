@@ -25,6 +25,7 @@
     "workbench:build": "vite build --config workbench/vite.config.ts",
     "workbench:start": "node workbench/server/main.ts --production",
     "workbench:test": "vitest run workbench/test",
+    "starter-kits:status": "node tools/scripts/starter-kit-status.ts",
     "starter:dev": "npm run dev --workspace @sw2d/starter",
     "build": "npm run build --workspace @sw2d/starter",
     "preview": "npm run preview --workspace @sw2d/starter",
