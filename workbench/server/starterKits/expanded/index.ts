@@ -6,16 +6,19 @@ import { starterKit as asteroidsShooter } from './asteroids-shooter.ts';
 import { starterKit as autoBattler } from './auto-battler.ts';
 import { starterKit as autoRunner } from './auto-runner.ts';
 import { starterKit as baseDefense } from './base-defense.ts';
+import { starterKit as boatFlightRacer } from './boat-flight-racer.ts';
 import { starterKit as bossRush } from './boss-rush.ts';
 import { starterKit as breakout } from './breakout.ts';
 import { starterKit as bulletHell } from './bullet-hell.ts';
 import { starterKit as collectathonPlatformer } from './collectathon-platformer.ts';
 import { starterKit as dungeonCrawler } from './dungeon-crawler.ts';
+import { starterKit as endlessDriving } from './endless-driving.ts';
 import { starterKit as endlessRunner } from './endless-runner.ts';
 import { starterKit as explorationGame } from './exploration-game.ts';
 import { starterKit as galleryShooter } from './gallery-shooter.ts';
 import { starterKit as heistGame } from './heist-game.ts';
 import { starterKit as horizontalShmup } from './horizontal-shmup.ts';
+import { starterKit as kartRacer } from './kart-racer.ts';
 import { starterKit as laneDefense } from './lane-defense.ts';
 import { starterKit as mazeGame } from './maze-game.ts';
 import { starterKit as metroidvania } from './metroidvania.ts';
@@ -53,16 +56,19 @@ export const EXPANDED_STARTER_KITS: readonly StarterKit[] = Object.freeze([
   autoBattler,
   autoRunner,
   baseDefense,
+  boatFlightRacer,
   bossRush,
   breakout,
   bulletHell,
   collectathonPlatformer,
   dungeonCrawler,
+  endlessDriving,
   endlessRunner,
   explorationGame,
   galleryShooter,
   heistGame,
   horizontalShmup,
+  kartRacer,
   laneDefense,
   mazeGame,
   metroidvania,
