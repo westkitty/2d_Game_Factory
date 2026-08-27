@@ -105,6 +105,15 @@ function animationGroupSlug(group: string): string {
   return slug || 'frames';
 }
 
+function effectiveFrameIndex(asset: AssetRecord, allAssets: readonly AssetRecord[]): number {
+  if (asset.frameIndex !== undefined) return asset.frameIndex;
+  if (asset.sourceAssetId) {
+    const source = allAssets.find((candidate) => candidate.id === asset.sourceAssetId);
+    if (source?.frameIndex !== undefined) return source.frameIndex;
+  }
+  return Number.MAX_SAFE_INTEGER;
+}
+
 function orderedAnimationFrames(
   input: SynthesisInput,
   role: WorkbenchAssetRole,
@@ -130,8 +139,11 @@ function orderedAnimationFrames(
   if (shippable.some((asset) => asset.width !== anchor.width || asset.height !== anchor.height)) return null;
 
   const frames = shippable.sort((a, b) => {
-    const ai = a.frameIndex ?? Number.MAX_SAFE_INTEGER;
-    const bi = b.frameIndex ?? Number.MAX_SAFE_INTEGER;
+    // Derived assets preserve sourceAssetId lineage but historically did not
+    // copy frameIndex. Recover the source ordinal before falling back to names
+    // so transformed animation frames keep the original walk/run/etc. order.
+    const ai = effectiveFrameIndex(a, input.assets.assets);
+    const bi = effectiveFrameIndex(b, input.assets.assets);
     if (ai !== bi) return ai - bi;
     const byName = a.displayName.localeCompare(b.displayName);
     return byName !== 0 ? byName : a.id.localeCompare(b.id);
