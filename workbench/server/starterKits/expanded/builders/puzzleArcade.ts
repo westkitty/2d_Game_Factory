@@ -14,7 +14,7 @@ export type PuzzleArcadeStarterVariant =
 function shellSource(variant: PuzzleArcadeStarterVariant): string {
   return String.raw`import Phaser from 'phaser';
 import type { InstalledSystemPack } from '@sw2d/contracts';
-import { gridController, uiSimulationController, type SceneContext, type ScenePackDefinition } from '@sw2d/runtime';
+import { gridController, type SceneContext, type ScenePackDefinition } from '@sw2d/runtime';
 import { addBackground } from './presentation.ts';
 
 const VARIANT = ${JSON.stringify(variant)} as const;
@@ -109,7 +109,11 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     function resolveMatches(): void {
       let cleared = 0;
       for (let row = 0; row < matchBoard.length; row++) {
-        if (matchBoard[row]![0] >= 0 && matchBoard[row]![0] === matchBoard[row]![1] && matchBoard[row]![1] === matchBoard[row]![2]) {
+        const values = matchBoard[row]!;
+        const first = values[0]!;
+        const second = values[1]!;
+        const third = values[2]!;
+        if (first >= 0 && first === second && second === third) {
           matchBoard[row] = [-1, -1, -1]; cleared += 3;
         }
       }
@@ -156,7 +160,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     function drawFalling(): void {
       clearBoardSprites();
       for (let row = 0; row < 8; row++) for (let col = 0; col < 6; col++) {
-        const occupied = matchBoard[row]![col] >= 0 || fallingCells().some((cell) => cell.col === col && cell.row === row);
+        const occupied = matchBoard[row]![col]! >= 0 || fallingCells().some((cell) => cell.col === col && cell.row === row);
         const [x, y] = [275 + col * 42, 105 + row * 42];
         boardSprites.push(scene.add.rectangle(x, y, 36, 36, occupied ? 0x65d0a8 : 0x202532, occupied ? 0.9 : 0.35));
       }
