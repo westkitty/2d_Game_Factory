@@ -12,9 +12,9 @@ baseline. This file governs the visual workbench and the starter-kit expansion b
 | Post-acceptance repair merged to `main` | `bf8e4de4e6e0f2ee5adf6e8aebc5912f544530b2` |
 | Starter-kit scaffold system merged to `main` | `d919cf1f71b2023c9839b517198dfd3626341f27` |
 | Active expansion branch | `starter-kits/implement-all` |
-| Current shipped rich kits on active branch | **5 proof-derived + 42 promoted expansion kits = 47 rich kits total** |
-| Expansion scaffolds | **69 / 69 present; 42 / 69 promoted; 27 remain unpromoted** |
-| Current milestone | **P3-D closed on promoted replay; P3-E Puzzle Arcade candidate gate active and unpromoted** |
+| Current shipped rich kits on active branch | **5 proof-derived + 45 promoted expansion kits = 50 rich kits total** |
+| Expansion scaffolds | **69 / 69 present; 45 / 69 promoted; 24 remain unpromoted** |
+| Current milestone | **P3-E Puzzle Arcade closed on promoted replay; next expansion batch not yet activated** |
 
 ---
 
@@ -36,10 +36,50 @@ implementation, canonical generated-game validation, real-browser mechanic proof
 inherited starter-batch replay, and a second full replay after registration.
 
 That expansion implementation is active on branch `starter-kits/implement-all`. As of promoted commit
-`4e11af942b1d558d6dd7e3da43ae89ba9c04e0ca`, **42 / 69 expansion starters are registered**. The original
-five proof-derived kits remain unchanged, so the branch exposes 47 rich kits total.
+`49822f8db04fd74b46aa71895cf3ec953394623f`, **45 / 69 expansion starters are registered**. The original
+five proof-derived kits remain unchanged, so the branch exposes 50 rich kits total.
 
-### Latest verified expansion boundary — P3-D vehicle movement
+### Latest verified expansion boundary — P3-E Puzzle Arcade
+
+P3-E promoted:
+
+- `match-puzzle`
+- `falling-block-puzzle`
+- `pong`
+
+The P3-E sequence deliberately preserved failed evidence rather than smoothing it away:
+
+1. Activation head `9c65d902dd7add3019028a60aaa21d5c41d3ea07` measured the existing implementations. GitHub Actions
+   run #62 (`33045615045`) was **SUCCESS** across repository baseline plus Core/P2-B/P2-C/P3-A/P3-B/P3-C/
+   P3-D/P3-E browser lanes. P3-E itself passed 3/3 mechanic journeys with `package-lock.json` unchanged.
+2. Presentation/role head `d5533c0ff95f7cd51c135079c6a1c82e3b7de218` tightened P3-E to require the scaffold-declared semantic
+   `ui.cursor` / `ui.panel` roles and to hide irrelevant generic arcade objects. Run #63 (`33046035424`)
+   **FAILED P3-E as intended**: generated default themes did not actually contain those UI roles, so the
+   game-side builder fell back to `checkpoint` / `platform`. The underlying Match/Falling/Pong mechanics,
+   board-role rendering and visibility cleanup still worked in the failure trace.
+3. Semantic-role repair head `6992a4c4d878b43976c826dd4e35e603effbed93` added only bounded starter-overlay theme roles. It uses the
+   canonical generated default theme and appends the supported `ui.panel` and, for Match, `ui.cursor`
+   placeholders only for these three P3-E starters. It did **not** widen the shared runtime, canonical
+   generator, preset maturity, registry, or already-promoted Puzzle Arcade variants. Run #64
+   (`33055897177`) was **SUCCESS** across baseline and every browser lane; P3-E passed 3/3 with strict
+   semantic-role proof and lockfile hygiene.
+4. Promotion commit `49822f8db04fd74b46aa71895cf3ec953394623f` changed only
+   `workbench/server/starterKits/expanded/index.ts`, registering the three P3-E starters. Promoted-state
+   replay run #65 (`33056172278`) was **SUCCESS** across baseline, Core, P2-B, P2-C, P3-A, P3-B, P3-C,
+   P3-D and P3-E.
+
+P3-E proof covers:
+
+- Match Puzzle visible cursor/select state, adjacent swap, real row match, board revision/clear count,
+  pickup-role board sprites, scaffold-declared `ui.cursor` + `ui.panel` participation and explicit completion;
+- Falling Block deterministic falling ticks, player movement/rotation affecting placement, platform-role
+  occupied cells, scaffold-declared `ui.panel`, real line clear, score change and completion;
+- Pong player paddle movement, a real player return/bounce, real score boundaries, opponent score-3 terminal
+  condition, scaffold-declared `ui.panel`, and removal of unrelated avatar/cursor decoration;
+- no console errors, no external network requests, and `package-lock.json` unchanged during candidate
+  generation/validation.
+
+### Previous verified expansion boundary — P3-D vehicle movement
 
 P3-D promoted:
 
@@ -133,8 +173,8 @@ confirm `git diff -- package-lock.json` is empty.
 - Every other preset has an explicit expansion scaffold: **69 / 69**.
 - At scaffold merge time `workbench/server/starterKits/expanded/index.ts` intentionally registered **none**
   of those 69. An unfinished scaffold could not change user-visible behavior.
-- On active branch `starter-kits/implement-all`, **42 / 69 expansion starters have passed their promotion
-  gates and are registered; 27 remain unpromoted**.
+- On active branch `starter-kits/implement-all`, **45 / 69 expansion starters have passed their promotion
+  gates and are registered; 24 remain unpromoted**.
 - A completed non-proof starter uses depth **`rich-starter-kit`**. Its preset maturity remains whatever
   the catalogue says (`recipe`, `smoke-validated`, etc.). `rich-proof-kit` remains reserved for the
   proof-derived starters. Starter depth and evidence maturity are separate claims.
@@ -175,6 +215,11 @@ The expansion overlay helper writes only normal game-side surfaces. It mirrors t
 for `content/game.json`: required pack ids receive JSON `config: {}`, while any code-configured pack
 continues to be owned by the canonical generated `src/game-specific/packConfig.ts`. The scaffold also
 records the exact live preset pack selections for inspection; it does not create a second pack policy.
+
+P3-E adds one bounded extension to that game-side pattern: a starter may overlay its generated default
+theme with scaffold-declared semantic UI placeholders when the canonical default theme does not contain
+those supported roles. This remains a starter/game-side overlay, uses the canonical theme generator as
+its base, and is not authority to widen shared runtime or generator behavior for one genre.
 
 Known missing reusable capabilities in a preset are **not** permission to add a new shared subsystem
 for one starter. A bounded game-specific implementation is preferred; if a useful starter truly cannot
@@ -238,7 +283,7 @@ mutation.
 | M7 | `qa:workbench`, responsive, security QA, full regression, docs, final acceptance | ACCEPTED AT `1ebc9a56`; SOME EVIDENCE STALE AFTER LATER AUDIT |
 | M7R1 | host boundary + lockfile/offline linking + undo evidence repair | MERGED AT `bf8e4de4`; FULL WORKBENCH REVALIDATION REQUIRED |
 | SK0 | 69-preset starter-kit expansion control plane, promotion seam, bootstrap/status tooling and Sonnet handoff | MERGED AT `d919cf1f`; CONTROL PLANE ACTIVE |
-| SK1+ | implement and prove the 69 expanded starter kits | **ACTIVE: 42 / 69 PROMOTED; P3-D CLOSED; P3-E ACTIVE/UNPROMOTED** |
+| SK1+ | implement and prove the 69 expanded starter kits | **ACTIVE: 45 / 69 PROMOTED; P3-E CLOSED; 24 REMAIN** |
 
 ---
 
@@ -302,9 +347,9 @@ for W08, W23, W25, W26, W27 and W28 until the dedicated full-workbench ladder oc
 | F15 | recipe-only presets presented as equally proven | **STATICALLY GUARDED; runtime UI revalidation required** |
 | F16 | required workflow needs cloud / key / account / credits | **WORKBENCH REVALIDATION REQUIRED; EXPANSION GENERATED-GAME QA MAKES NO CLOUD REQUESTS** |
 | F17 | large import has unbounded concurrency or all-in-memory behaviour | **NO (historical accepted evidence)** |
-| F18 | inherited regression suites removed, weakened or failing | **STARTER EXPANSION MATRIX GREEN THROUGH P3-D; FULL INHERITED LADDER STILL REVALIDATION REQUIRED** |
+| F18 | inherited regression suites removed, weakened or failing | **STARTER EXPANSION MATRIX GREEN THROUGH P3-E; FULL INHERITED LADDER STILL REVALIDATION REQUIRED** |
 | F19 | normal Validate / Build / Pack still requires the terminal | **NO (historical accepted evidence)** |
-| F20 | completion claimed without a real browser proof | **NO FOR PROMOTED EXPANSION BATCHES THROUGH P3-D; REMAINING KITS MAY NOT BE PROMOTED WITHOUT PROOF** |
+| F20 | completion claimed without a real browser proof | **NO FOR PROMOTED EXPANSION BATCHES THROUGH P3-E; REMAINING KITS MAY NOT BE PROMOTED WITHOUT PROOF** |
 
 ---
 
@@ -333,6 +378,10 @@ historical evidence and protected behavior; they are not fresh proof of later fu
   a frame-sensitive modulo hit window with a deterministic 650 ms defender cooldown.
 - P3-D candidate #60 and promoted replay #61 passed full expansion matrices on the final scoped vehicle code.
 - P3-D added role-first particle feedback only where declared/needed and preserved existing racer layering.
+- P3-E initial mechanics run #62 passed; stricter run #63 exposed missing generated `ui.cursor` / `ui.panel`
+  roles instead of allowing fallback textures to count as semantic proof.
+- P3-E semantic-role repair candidate #64 and promoted replay #65 passed full expansion matrices. The repair
+  remained game-side and starter-specific; the shared generator/runtime and preset maturity were unchanged.
 
 ## Implemented but not fully workbench-verified after the accepted commit
 
@@ -340,9 +389,9 @@ historical evidence and protected behavior; they are not fresh proof of later fu
   regression ladder still pending even though repository `npm run validate` is repeatedly green in CI.
 - **Starter-kit expansion infrastructure merged at `d919cf1f`.** Its control plane and generated-game paths
   are now runtime exercised by the active expansion CI, but this does not equal a full workbench UI pass.
-- **`rich-starter-kit` depth.** Implemented and populated by 42 expansion registrations on the active branch;
+- **`rich-starter-kit` depth.** Implemented and populated by 45 expansion registrations on the active branch;
   preset-browser/Game-Seed presentation still needs the dedicated workbench UI revalidation.
-- **69 per-preset scaffold records.** Complete as control-plane data; 42 have promoted playable kits and 27
+- **69 per-preset scaffold records.** Complete as control-plane data; 45 have promoted playable kits and 24
   remain unpromoted.
 - **Real-device touch.** Still unverified; responsive historical evidence is Chromium viewport emulation.
 - **Wall-clock performance.** No benchmark claim.
@@ -350,7 +399,7 @@ historical evidence and protected behavior; they are not fresh proof of later fu
 
 ## Deliberately not implemented / not yet complete
 
-- **The remaining 27 unpromoted expansion starters.** Scaffolding exists, but each stays out of the registry
+- **The remaining 24 unpromoted expansion starters.** Scaffolding exists, but each stays out of the registry
   until its loop, semantic roles, generated-game proof, inherited replay and promoted replay all pass.
 - **Sprite-sheet animation playback.** Frame groups are detected/recorded; one representative frame is used.
 - **Host-side JPEG/WebP decoding.** Browser handles derivation for those formats.
@@ -403,31 +452,19 @@ heads, but it is intentionally not represented as fresh proof of every command i
 
 ## Next bounded action
 
-P3-E is the first unpromoted Puzzle Arcade batch and contains:
+P3-E is closed. No next candidate batch has been activated yet.
 
-- `match-puzzle`
-- `falling-block-puzzle`
-- `pong`
+The clean next Puzzle Arcade remainder to evaluate is the deferred physics/timing-sensitive trio:
 
-Activation may add only its browser runner, package script, CI matrix lane, and this operational-state
-update. It must **not** register these kits, change preset maturity, or preemptively rewrite the shared
-Puzzle Arcade builder. First measure the existing implementation.
+- `physics-puzzle`
+- `rhythm-action`
+- `pinball-lite`
 
-The initial P3-E proof must demonstrate:
+Treat that as a prospective P3-F batch only after a fresh read-only scaffold/implementation check. In
+particular, `physics-puzzle` previously looked too shallow to claim its scaffold's collision requirement,
+so it must not be promoted by analogy with P3-E. Any next batch must begin unregistered, measure the
+existing implementation first, use mechanic-specific browser proof, preserve semantic-role obligations,
+and repeat the complete matrix after registration.
 
-- Match Puzzle: visible grid selection, adjacent swap, a real row match, board revision/clear count, and
-  explicit completion target;
-- Falling Block Puzzle: deterministic falling ticks, player movement and rotation affecting placement,
-  a real line clear, score change, and explicit completion;
-- Pong: player paddle movement causes a real return/bounce, scoring crosses a real boundary, and one side
-  reaches the bounded score-3 terminal condition.
-
-Known quality debt to inspect after first measurement, not to hide in the initial gate: the current shared
-Puzzle Arcade builder creates several generic paddle/opponent/ball objects before variant setup, so grid
-variants may display irrelevant objects; Match/Falling also need their declared semantic `ui.cursor`,
-`ui.panel`, `pickup`/`platform` roles checked for visible role-first participation. Pong needs its declared
-`ui.panel` role checked as well.
-
-A P3-E kit may be promoted only after the complete candidate matrix is green **and** those variant-specific
-presentation/semantic-role obligations are satisfied. After registry promotion, the complete matrix must
-pass again on the promoted state before P3-E is closed.
+The separate full-workbench revalidation debt remains unchanged and must not be folded into starter-batch
+success.
