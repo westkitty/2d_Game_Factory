@@ -12,9 +12,9 @@ baseline. This file governs the visual workbench and the starter-kit expansion b
 | Post-acceptance repair merged to `main` | `bf8e4de4e6e0f2ee5adf6e8aebc5912f544530b2` |
 | Starter-kit scaffold system merged to `main` | `d919cf1f71b2023c9839b517198dfd3626341f27` |
 | Active expansion branch | `starter-kits/implement-all` |
-| Current shipped rich kits on active branch | **5 proof-derived + 39 promoted expansion kits = 44 rich kits total** |
-| Expansion scaffolds | **69 / 69 present; 39 / 69 promoted; 30 remain unpromoted** |
-| Current milestone | **P3-C closed on promoted replay; P3-D vehicle candidate gate active and unpromoted** |
+| Current shipped rich kits on active branch | **5 proof-derived + 42 promoted expansion kits = 47 rich kits total** |
+| Expansion scaffolds | **69 / 69 present; 42 / 69 promoted; 27 remain unpromoted** |
+| Current milestone | **P3-D closed on promoted replay; P3-E Puzzle Arcade candidate gate active and unpromoted** |
 
 ---
 
@@ -35,22 +35,46 @@ It was **scaffolding, not 69 finished starter kits**. Expanded kits enter the sh
 implementation, canonical generated-game validation, real-browser mechanic proof, package-lock hygiene,
 inherited starter-batch replay, and a second full replay after registration.
 
-That expansion implementation is now active on branch `starter-kits/implement-all`. As of promoted commit
-`ab6911e5dac85ffec3f39736654db7b0bb23adb1`, **39 / 69 expansion starters are registered**. The original
-five proof-derived kits remain unchanged, so the branch exposes 44 rich kits total. P3-C added
-`action-roguelite`, `boss-rush`, `heist-game`, and `survivor-like` only after candidate run #56 passed,
-and promotion replay #57 then passed again on the registered state.
+That expansion implementation is active on branch `starter-kits/implement-all`. As of promoted commit
+`4e11af942b1d558d6dd7e3da43ae89ba9c04e0ca`, **42 / 69 expansion starters are registered**. The original
+five proof-derived kits remain unchanged, so the branch exposes 47 rich kits total.
 
-Verified expansion evidence at the current P3-C boundary:
+### Latest verified expansion boundary — P3-D vehicle movement
 
-- candidate head `e65379e6ef975939a9ff4f2288a2da05d2ef90a0` — GitHub Actions run #56
-  (`33040074568`) **SUCCESS**;
-- promoted head `ab6911e5dac85ffec3f39736654db7b0bb23adb1` — GitHub Actions run #57
-  (`33043970847`) **SUCCESS**;
-- both gates included repository baseline `npm run validate` plus generated-game browser lanes for Core,
-  P2-B, P2-C, P3-A, P3-B and P3-C;
-- P3-C promotion itself changed only `workbench/server/starterKits/expanded/index.ts` and added the four
-  registered top-down starters; preset maturity was not changed.
+P3-D promoted:
+
+- `kart-racer`
+- `endless-driving`
+- `boat-flight-racer`
+
+Final candidate head `570da353a469df2d711dc7cc69baee9687b13b1a` passed GitHub Actions run #60
+(`33045032117`) **SUCCESS**. The promoted registry head `4e11af942b1d558d6dd7e3da43ae89ba9c04e0ca`
+then passed GitHub Actions run #61 (`33045270123`) **SUCCESS**.
+
+Both gates included repository baseline `npm run validate` plus generated-game browser lanes for Core,
+P2-B, P2-C, P3-A, P3-B, P3-C and P3-D. Promotion itself changed only
+`workbench/server/starterKits/expanded/index.ts`; preset maturity did not change.
+
+P3-D proof covers:
+
+- Kart ordered checkpoint progression, real pickup/temporary boost, finish gating, and visible role-first
+  `particle` boost feedback;
+- Endless Driving continuous distance growth, real hazard collision penalty, and continued run state;
+- Boat ordered gates, low-altitude hazard collision, `SECONDARY_ACTION` (`KeyK`/`KeyC`) altitude change,
+  high-altitude hazard clearance, finish gating, and visible role-first particle/wake feedback;
+- no console errors, no external network requests, and `package-lock.json` unchanged during candidate
+  generation/validation.
+
+A scope-tightening pass before promotion also preserved the pre-existing sprite layering for already-
+promoted `top-down-racer` and `time-trial-racer`: depth 2 is applied only to vehicle variants that actually
+own the new particle marker.
+
+### Previous verified expansion boundary — P3-C top-down action
+
+P3-C candidate head `e65379e6ef975939a9ff4f2288a2da05d2ef90a0` passed run #56
+(`33040074568`) and promoted head `ab6911e5dac85ffec3f39736654db7b0bb23adb1` passed run #57
+(`33043970847`). P3-C added `action-roguelite`, `boss-rush`, `heist-game`, and `survivor-like` only after
+candidate and promoted replay gates were green.
 
 The starter-kit CI evidence does **not** retroactively close the separate full-workbench revalidation debt
 for W08, W23, W25, W26, W27 or W28. The expansion workflow runs `npm run validate` and its generated-game
@@ -96,10 +120,7 @@ confirm `git diff -- package-lock.json` is empty.
 
 ---
 
-## Starter-kit expansion control plane — merged to `main`, implementation active on branch
-
-The repository is deliberately scaffolded so expanded genre starters can be implemented without first
-reverse-engineering the catalogue, changing the engine, or lying about maturity.
+## Starter-kit expansion control plane
 
 ### Shipped vs scaffolded
 
@@ -112,8 +133,8 @@ reverse-engineering the catalogue, changing the engine, or lying about maturity.
 - Every other preset has an explicit expansion scaffold: **69 / 69**.
 - At scaffold merge time `workbench/server/starterKits/expanded/index.ts` intentionally registered **none**
   of those 69. An unfinished scaffold could not change user-visible behavior.
-- On active branch `starter-kits/implement-all`, **39 / 69 expansion starters have now passed their
-  promotion gates and are registered; 30 remain unpromoted**.
+- On active branch `starter-kits/implement-all`, **42 / 69 expansion starters have passed their promotion
+  gates and are registered; 27 remain unpromoted**.
 - A completed non-proof starter uses depth **`rich-starter-kit`**. Its preset maturity remains whatever
   the catalogue says (`recipe`, `smoke-validated`, etc.). `rich-proof-kit` remains reserved for the
   proof-derived starters. Starter depth and evidence maturity are separate claims.
@@ -179,8 +200,6 @@ batch is considered closed.
 
 ### Expansion implementation entry points
 
-Read these before implementation:
-
 1. `docs/handoff/SONNET_STARTER_KIT_EXPANSION.md`
 2. `docs/workbench/STARTER_KIT_EXPANSION.md`
 3. `workbench/server/starterKits/scaffolds.ts`
@@ -197,11 +216,6 @@ Commands:
 npm run starter-kits:status
 npm run starter-kits:bootstrap -- <preset-id>
 ```
-
-`starter-kits:status` is the implementation queue. `starter-kits:bootstrap` creates the exact target
-source file prefilled with the scaffold's loop, roles, required pack ids, reference kit, maturity lock,
-mechanic proofs and architecture notes; it refuses to overwrite an existing implementation. The file
-is deliberately not auto-registered.
 
 Default batch size remains **3-5 kits**, staying within one family when practical. Each kit needs focused
 coverage and real generated-game browser proof before promotion. The active CI matrix runs prior promoted
@@ -224,7 +238,7 @@ mutation.
 | M7 | `qa:workbench`, responsive, security QA, full regression, docs, final acceptance | ACCEPTED AT `1ebc9a56`; SOME EVIDENCE STALE AFTER LATER AUDIT |
 | M7R1 | host boundary + lockfile/offline linking + undo evidence repair | MERGED AT `bf8e4de4`; FULL WORKBENCH REVALIDATION REQUIRED |
 | SK0 | 69-preset starter-kit expansion control plane, promotion seam, bootstrap/status tooling and Sonnet handoff | MERGED AT `d919cf1f`; CONTROL PLANE ACTIVE |
-| SK1+ | implement and prove the 69 expanded starter kits | **ACTIVE: 39 / 69 PROMOTED ON `starter-kits/implement-all`; P3-C CLOSED; P3-D ACTIVE/UNPROMOTED** |
+| SK1+ | implement and prove the 69 expanded starter kits | **ACTIVE: 42 / 69 PROMOTED; P3-D CLOSED; P3-E ACTIVE/UNPROMOTED** |
 
 ---
 
@@ -269,10 +283,6 @@ for W08, W23, W25, W26, W27 and W28 until the dedicated full-workbench ladder oc
 
 ## Failure-condition ledger F01-F20
 
-The original acceptance recorded all as NO. Later changes do not receive a fresh NO merely from source
-presence. Items materially touched by the repair/scaffold work remain evidence-stale until the matching
-acceptance path is rerun.
-
 | Id | Failure condition | State |
 |---|---|---|
 | F01 | `npm run dev` still opens SW2D FOUNDATION | **NO (historical accepted evidence)** |
@@ -292,9 +302,9 @@ acceptance path is rerun.
 | F15 | recipe-only presets presented as equally proven | **STATICALLY GUARDED; runtime UI revalidation required** |
 | F16 | required workflow needs cloud / key / account / credits | **WORKBENCH REVALIDATION REQUIRED; EXPANSION GENERATED-GAME QA MAKES NO CLOUD REQUESTS** |
 | F17 | large import has unbounded concurrency or all-in-memory behaviour | **NO (historical accepted evidence)** |
-| F18 | inherited regression suites removed, weakened or failing | **STARTER EXPANSION MATRIX GREEN THROUGH P3-C; FULL INHERITED LADDER STILL REVALIDATION REQUIRED** |
+| F18 | inherited regression suites removed, weakened or failing | **STARTER EXPANSION MATRIX GREEN THROUGH P3-D; FULL INHERITED LADDER STILL REVALIDATION REQUIRED** |
 | F19 | normal Validate / Build / Pack still requires the terminal | **NO (historical accepted evidence)** |
-| F20 | completion claimed without a real browser proof | **NO FOR PROMOTED EXPANSION BATCHES THROUGH P3-C; REMAINING KITS MAY NOT BE PROMOTED WITHOUT PROOF** |
+| F20 | completion claimed without a real browser proof | **NO FOR PROMOTED EXPANSION BATCHES THROUGH P3-D; REMAINING KITS MAY NOT BE PROMOTED WITHOUT PROOF** |
 
 ---
 
@@ -318,33 +328,29 @@ historical evidence and protected behavior; they are not fresh proof of later fu
 - Expanded candidates are created through canonical `createGame`, validated through CLI, production-built,
   booted in system Chrome and exercised through mechanic-specific generated-game journeys.
 - Candidate runs reject console errors/external requests and compare `package-lock.json` before/after.
-- P3-C candidate gate #56 passed baseline + Core/P2-B/P2-C/P3-A/P3-B/P3-C.
-- P3-C promoted replay #57 passed the same complete matrix on registry commit `ab6911e5`.
+- P3-C candidate #56 and promoted replay #57 passed full expansion matrices at their respective boundaries.
 - The Lane Defense timing defect discovered during P3-C was repaired in game-side strategy code by replacing
-  a frame-sensitive modulo hit window with a deterministic 650 ms defender cooldown; #56/#57 prove the
-  inherited P2-C journey remains green after that repair.
-- P3-C strengthened proofs include Action Roguelite reset, Boss phase-two speed change, Heist hazard/alarm,
-  Survivor's 15-second no-upgrade hold plus explicit upgrade collection, and visible particle feedback.
+  a frame-sensitive modulo hit window with a deterministic 650 ms defender cooldown.
+- P3-D candidate #60 and promoted replay #61 passed full expansion matrices on the final scoped vehicle code.
+- P3-D added role-first particle feedback only where declared/needed and preserved existing racer layering.
 
 ## Implemented but not fully workbench-verified after the accepted commit
 
 - **M7R1 repair merged at `bf8e4de4`.** Source/static inspection complete; dedicated full workbench browser/
-  regression ladder still pending even though repository `npm run validate` is now repeatedly green in CI.
-- **Starter-kit expansion infrastructure merged at `d919cf1f`.** Its control plane and many generated-game
-  paths are now runtime exercised by the active expansion CI, but this does not equal a full workbench UI pass.
-- **`rich-starter-kit` depth.** Implemented and populated by 39 expansion registrations on the active branch;
+  regression ladder still pending even though repository `npm run validate` is repeatedly green in CI.
+- **Starter-kit expansion infrastructure merged at `d919cf1f`.** Its control plane and generated-game paths
+  are now runtime exercised by the active expansion CI, but this does not equal a full workbench UI pass.
+- **`rich-starter-kit` depth.** Implemented and populated by 42 expansion registrations on the active branch;
   preset-browser/Game-Seed presentation still needs the dedicated workbench UI revalidation.
-- **69 per-preset scaffold records.** Complete as control-plane data; 39 have promoted playable kits and 30
+- **69 per-preset scaffold records.** Complete as control-plane data; 42 have promoted playable kits and 27
   remain unpromoted.
-- **`starter-kits:status` and `starter-kits:bootstrap`.** Source-complete; direct interactive use is not the
-  evidence source for the current generated-game promotion pipeline.
 - **Real-device touch.** Still unverified; responsive historical evidence is Chromium viewport emulation.
 - **Wall-clock performance.** No benchmark claim.
 - **Optional `AssetGenerationProvider`.** Interface only; no provider ships.
 
 ## Deliberately not implemented / not yet complete
 
-- **The remaining 30 unpromoted expansion starters.** Scaffolding exists, but each stays out of the registry
+- **The remaining 27 unpromoted expansion starters.** Scaffolding exists, but each stays out of the registry
   until its loop, semantic roles, generated-game proof, inherited replay and promoted replay all pass.
 - **Sprite-sheet animation playback.** Frame groups are detected/recorded; one representative frame is used.
 - **Host-side JPEG/WebP decoding.** Browser handles derivation for those formats.
@@ -355,8 +361,8 @@ historical evidence and protected behavior; they are not fresh proof of later fu
 ## Known validation debt / execution boundary
 
 The available ChatGPT execution container still cannot clone/run the repository directly because its
-network path cannot resolve `github.com`. GitHub connector reads/writes and GitHub Actions now provide a
-real execution path for the starter-expansion baseline and generated-game browser matrix. That evidence is
+network path cannot resolve `github.com`. GitHub connector reads/writes and GitHub Actions provide a real
+execution path for the starter-expansion baseline and generated-game browser matrix. That evidence is
 accepted for the bounded starter batches it actually exercises.
 
 The expansion workflow does **not** run the complete workbench acceptance ladder (`qa:workbench`, smoke,
@@ -397,16 +403,31 @@ heads, but it is intentionally not represented as fresh proof of every command i
 
 ## Next bounded action
 
-Activate **P3-D vehicle movement** as a QA-only batch containing:
+P3-E is the first unpromoted Puzzle Arcade batch and contains:
 
-- `kart-racer`
-- `endless-driving`
-- `boat-flight-racer`
+- `match-puzzle`
+- `falling-block-puzzle`
+- `pong`
 
-The activation may add its browser runner, package script, CI matrix lane, and this operational-state
-update. It must **not** register the three kits or change preset maturity. First measure the existing
-vehicle builder. Then repair only evidence-backed mechanic/semantic-role gaps, with particular attention
-to visible `particle` feedback for the kart/boat roles and altitude-dependent hazard traversal for Boat.
+Activation may add only its browser runner, package script, CI matrix lane, and this operational-state
+update. It must **not** register these kits, change preset maturity, or preemptively rewrite the shared
+Puzzle Arcade builder. First measure the existing implementation.
 
-A P3-D kit may be promoted only after the complete candidate matrix is green. After registry promotion,
-the complete matrix must pass again on the promoted state before P3-D is closed.
+The initial P3-E proof must demonstrate:
+
+- Match Puzzle: visible grid selection, adjacent swap, a real row match, board revision/clear count, and
+  explicit completion target;
+- Falling Block Puzzle: deterministic falling ticks, player movement and rotation affecting placement,
+  a real line clear, score change, and explicit completion;
+- Pong: player paddle movement causes a real return/bounce, scoring crosses a real boundary, and one side
+  reaches the bounded score-3 terminal condition.
+
+Known quality debt to inspect after first measurement, not to hide in the initial gate: the current shared
+Puzzle Arcade builder creates several generic paddle/opponent/ball objects before variant setup, so grid
+variants may display irrelevant objects; Match/Falling also need their declared semantic `ui.cursor`,
+`ui.panel`, `pickup`/`platform` roles checked for visible role-first participation. Pong needs its declared
+`ui.panel` role checked as well.
+
+A P3-E kit may be promoted only after the complete candidate matrix is green **and** those variant-specific
+presentation/semantic-role obligations are satisfied. After registry promotion, the complete matrix must
+pass again on the promoted state before P3-E is closed.
