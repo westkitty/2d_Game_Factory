@@ -1,4 +1,5 @@
 import { defineExpandedKit } from './common.ts';
+import { withDefaultThemeRoles } from './themeRoles.ts';
 
 export type PuzzleArcadeStarterVariant =
   | 'match-puzzle'
@@ -34,14 +35,18 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     const status = scene.add.text(18, 15, '', { fontFamily: 'ui-monospace, monospace', fontSize: '14px', color: '#ffffff', backgroundColor: '#111827aa', padding: { x: 7, y: 4 } }).setDepth(100);
     const objects: Phaser.GameObjects.GameObject[] = [];
     const usesP3ePresentation = VARIANT === 'match-puzzle' || VARIANT === 'falling-block-puzzle' || VARIANT === 'pong';
-    const cursorRoleSource = VARIANT === 'match-puzzle' && context.assets.has('ui.cursor') ? 'ui.cursor' : 'checkpoint';
+    const cursorRoleSource = (VARIANT === 'match-puzzle' || VARIANT === 'physics-puzzle') && context.assets.has('ui.cursor') ? 'ui.cursor' : 'checkpoint';
     const cursorTextureKey = cursorRoleSource === 'ui.cursor' ? context.assets.resolve('ui.cursor') : context.assets.resolve('checkpoint');
-    const panelRoleSource = usesP3ePresentation ? (context.assets.has('ui.panel') ? 'ui.panel' : 'platform') : null;
+    const panelRoleSource = (usesP3ePresentation || VARIANT === 'rhythm-action' || VARIANT === 'pinball-lite')
+      ? (context.assets.has('ui.panel') ? 'ui.panel' : 'platform') : null;
     const panelTextureKey = panelRoleSource === 'ui.panel' ? context.assets.resolve('ui.panel') : panelRoleSource === 'platform' ? context.assets.resolve('platform') : null;
     const boardRoleSource = VARIANT === 'match-puzzle' ? 'pickup' : VARIANT === 'falling-block-puzzle' ? 'platform' : null;
     const boardRoleTextureKey = boardRoleSource === 'pickup' ? context.assets.resolve('pickup') : boardRoleSource === 'platform' ? context.assets.resolve('platform') : null;
     const rolePanel = panelTextureKey ? scene.add.sprite(185, 42, panelTextureKey).setDisplaySize(340, 58).setAlpha(0.28).setDepth(90) : null;
     if (rolePanel) objects.push(rolePanel);
+    const buttonRoleSource = VARIANT === 'rhythm-action' && context.assets.has('ui.button') ? 'ui.button' : null;
+    const button = buttonRoleSource ? scene.add.sprite(720, 105, context.assets.resolve('ui.button')).setDisplaySize(92, 42).setAlpha(0.9).setDepth(90) : null;
+    if (button) objects.push(button);
 
     let elapsedMs = 0;
     let score = 0;
@@ -82,11 +87,16 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     let falseStarts = 0;
     let bumperHits = 0;
     let drains = 0;
+    let collisionBounces = 0;
+    let hazardResolved = false;
+    let particleEffects = 0;
 
     const boardSprites: Phaser.GameObjects.Rectangle[] = [];
     const boardRoleSprites: Phaser.GameObjects.Sprite[] = [];
     const brickSprites: Phaser.GameObjects.Sprite[] = [];
     const bumperSprites: Phaser.GameObjects.Sprite[] = [];
+    const particleTextureKey = context.assets.has('particle') ? context.assets.resolve('particle') : null;
+    const particles: Phaser.GameObjects.Sprite[] = [];
     const cursorSprite = scene.add.sprite(190, 125, cursorTextureKey).setDisplaySize(46, 46).setAlpha(0.65);
     objects.push(cursorSprite);
     const paddle = scene.add.sprite(paddleX, paddleY, context.assets.resolve('player')).setDisplaySize(120, 22);
@@ -214,7 +224,9 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     }
 
     function setupPhysicsPuzzle(): void {
-      cursorSprite.setPosition(300, 300); paddle.setVisible(false); opponent.setVisible(false); ball.setPosition(320, 300); ballVx = 0; ballVy = 0;
+      cursorSprite.setPosition(300, 300); paddle.setVisible(false); opponent.setVisible(false); ballX = 320; ballY = 300; ball.setPosition(ballX, ballY); ballVx = 0; ballVy = 0;
+      const platform = scene.add.sprite(500, 360, context.assets.resolve('platform')).setDisplaySize(360, 28).setAlpha(0.9); objects.push(platform);
+      const hazard = scene.add.sprite(560, 300, context.assets.resolve('hazard')).setDisplaySize(44, 44).setAlpha(0.95); objects.push(hazard);
       const goal = scene.add.sprite(770, 300, context.assets.resolve('exit')).setDisplaySize(48, 70); objects.push(goal);
     }
 
@@ -231,8 +243,8 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     function setupTiming(): void { cursorSprite.setVisible(false); paddle.setVisible(false); opponent.setVisible(false); ball.setVisible(false); avatar.setPosition(width / 2, 180); }
 
     function setupPinball(): void {
-      cursorSprite.setVisible(false); opponent.setVisible(false); paddle.setDisplaySize(130, 18).setPosition(width / 2, height - 48); ball.setPosition(width / 2, height - 85); ballVx = 125; ballVy = -250; launched = false;
-      for (const point of [{ x: 390, y: 220 }, { x: 570, y: 220 }, { x: 480, y: 330 }]) { const bumper = scene.add.sprite(point.x, point.y, context.assets.resolve('hazard')).setDisplaySize(46, 46); bumperSprites.push(bumper); objects.push(bumper); }
+      cursorSprite.setVisible(false); opponent.setVisible(false); paddle.setDisplaySize(130, 18).setPosition(width / 2, height - 48); ballX = width / 2; ballY = height - 85; ball.setPosition(ballX, ballY); ballVx = 125; ballVy = -250; launched = false;
+      for (const point of [{ x: 620, y: 220 }, { x: 570, y: 220 }, { x: 480, y: 330 }]) { const bumper = scene.add.sprite(point.x, point.y, context.assets.resolve('hazard')).setDisplaySize(46, 46); bumperSprites.push(bumper); objects.push(bumper); }
     }
 
     if (VARIANT === 'match-puzzle') setupMatch();
@@ -269,8 +281,15 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     }
 
     function updatePhysicsPuzzle(deltaMs: number): void {
-      if (context.input.justPressed('PRIMARY_ACTION') || context.input.justPressed('CONFIRM')) { triggerActivated = true; ballVx = 175; lastAction = 'trigger'; }
-      if (triggerActivated && !goalReached) { ballX += ballVx * deltaMs / 1000; ball.setX(ballX); if (ballX >= 745) { goalReached = true; outcome = 'complete'; score = 100; lastAction = 'goal'; } }
+      const pointer = context.input.justPressed('PRIMARY_ACTION') || context.input.justPressed('CONFIRM');
+      if (pointer && !triggerActivated) { triggerActivated = true; ballVx = 175; ballVy = -90; lastAction = 'trigger'; }
+      if (triggerActivated && !goalReached) {
+        ballX += ballVx * deltaMs / 1000; ballY += ballVy * deltaMs / 1000; ballVy += 150 * deltaMs / 1000;
+        if (ballY >= 330 && ballVx > 0) { ballY = 330; ballVy = -Math.abs(ballVy); collisionBounces += 1; lastAction = 'platform-bounce'; }
+        if (!hazardResolved && ballX >= 538 && ballX <= 582 && Math.abs(ballY - 300) < 42) { hazardResolved = true; collisionBounces += 1; score += 10; lastAction = 'hazard-bounce'; }
+        if (ballX >= 745) { goalReached = true; outcome = 'complete'; score = 100; lastAction = 'goal'; }
+        ball.setPosition(ballX, ballY);
+      }
     }
 
     function updateMaze(step: 'up' | 'down' | 'left' | 'right' | null): void {
@@ -286,7 +305,10 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     function updateRhythm(): void {
       const cycle = Math.floor(elapsedMs / 500); beatWindowOpen = elapsedMs % 500 >= 190 && elapsedMs % 500 <= 310;
       beatIndex = Math.min(8, cycle);
-      if (context.input.justPressed('PRIMARY_ACTION') || context.input.justPressed('CONFIRM')) { if (beatWindowOpen) { beatHits += 1; score += 100; lastAction = 'hit'; } else { beatMisses += 1; lastAction = 'miss'; } }
+      if (context.input.justPressed('PRIMARY_ACTION') || context.input.justPressed('CONFIRM')) {
+        if (beatWindowOpen) { beatHits += 1; score += 100; lastAction = 'hit'; if (particleTextureKey) { const particle = scene.add.sprite(720, 105, particleTextureKey).setDisplaySize(24, 24).setAlpha(0.95); particles.push(particle); particleEffects += 1; } }
+        else { beatMisses += 1; lastAction = 'miss'; }
+      }
       if (beatIndex >= 8) outcome = 'complete';
     }
 
@@ -304,7 +326,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       if (!launched) return;
       ballX += ballVx * deltaMs / 1000; ballY += ballVy * deltaMs / 1000; ballVy += 110 * deltaMs / 1000;
       if (ballX < 18 || ballX > width - 18) ballVx *= -1; if (ballY < 55) ballVy = Math.abs(ballVy);
-      for (const bumper of bumperSprites) if (Phaser.Math.Distance.Between(ballX, ballY, bumper.x, bumper.y) < 38) { ballVy = -Math.abs(ballVy) - 40; ballVx += (ballX - bumper.x) * 2; score += 25; bumperHits += 1; lastAction = 'bumper'; }
+      for (const bumper of bumperSprites) if (Phaser.Math.Distance.Between(ballX, ballY, bumper.x, bumper.y) < 38) { ballVy = -Math.abs(ballVy) - 40; ballVx += (ballX - bumper.x) * 2; score += 25; bumperHits += 1; lastAction = 'bumper'; if (particleTextureKey) { const particle = scene.add.sprite(bumper.x, bumper.y, particleTextureKey).setDisplaySize(28, 28).setAlpha(0.95); particles.push(particle); particleEffects += 1; } }
       if (ballY > paddleY - 25 && ballY < paddleY + 15 && Math.abs(ballX - paddleX) < 75 && ballVy > 0) ballVy = -Math.abs(ballVy) - 60;
       if (ballY > height + 20) { drains += 1; lives -= 1; if (lives <= 0) outcome = 'complete'; else { launched = false; ballX = width / 2; ballY = height - 85; ballVx = 125; ballVy = -250; } }
       ball.setPosition(ballX, ballY);
@@ -318,12 +340,13 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     const debugHandle = context.debug.contribute('game.expanded-starter', () => ({
       presetId: VARIANT, family: 'puzzle-arcade', playerTextureKey: avatar.texture.key, backgroundTextureKey: background ? background.texture.key : null,
       cursorTextureKey: cursorSprite.texture.key, cursorRoleSource, panelTextureKey: rolePanel?.texture.key ?? null, panelRoleSource,
+      buttonTextureKey: button?.texture.key ?? null, buttonRoleSource, particleTextureKey,
       boardRoleTextureKey, boardRoleSource, boardRoleSpriteCount: boardRoleSprites.filter((sprite) => sprite.visible).length,
       avatarVisible: avatar.visible, cursorVisible: cursorSprite.visible, paddleVisible: paddle.visible, opponentVisible: opponent.visible, ballVisible: ball.visible,
       unexpectedDecorationVisible: VARIANT === 'match-puzzle' || VARIANT === 'falling-block-puzzle'
         ? paddle.visible || opponent.visible || ball.visible
         : VARIANT === 'pong' ? avatar.visible || cursorSprite.visible : false,
-      elapsedMs: Math.round(elapsedMs), score, outcome, lastAction, cursor, selected, boardRevision, matchesCleared,
+      elapsedMs: Math.round(elapsedMs), score, outcome, lastAction, cursor, selected, boardRevision, matchesCleared, collisionBounces, particleEffects, launched,
       pieceRow, pieceCol, pieceRotated, linesCleared, paddleX: Math.round(paddleX), paddleY: Math.round(paddleY), ballX: Math.round(ballX), ballY: Math.round(ballY),
       bricksRemaining, lives, playerScore, opponentScore, triggerActivated, goalReached, mazeCell, mazeHasPickup,
       beatIndex, beatHits, beatMisses, beatWindowOpen, reactionRound, reactionSignal, reactionTimes, falseStarts, bumperHits, drains,
@@ -333,7 +356,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     return {
       id: GAME_SPECIFIC_PACK.id,
       update(deltaMs: number): void {
-        if (disposed || outcome !== 'playing') return; elapsedMs += deltaMs;
+        if (disposed || outcome !== 'playing') return; elapsedMs += deltaMs; for (const particle of particles) particle.setAlpha(Math.max(0, particle.alpha - deltaMs / 500));
         if (VARIANT === 'match-puzzle') { const intent = gridController.read(context.input); matchInput(intent.step, intent.confirmPressed); }
         else if (VARIANT === 'falling-block-puzzle') {
           const intent = gridController.read(context.input); if (intent.step === 'left') pieceCol = Math.max(0, pieceCol - 1); if (intent.step === 'right') pieceCol = Math.min(pieceRotated ? 5 : 4, pieceCol + 1); if (intent.confirmPressed || context.input.justPressed('PRIMARY_ACTION')) pieceRotated = !pieceRotated;
@@ -355,11 +378,17 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
 }
 
 export function puzzleArcadeStarterKit(variant: PuzzleArcadeStarterVariant) {
-  return defineExpandedKit({
+  const base = defineExpandedKit({
     presetId: variant,
     shellPackId: 'game.expanded-puzzle-arcade',
     shellSource: shellSource(variant),
     level: { entities: [{ id: 1, class: 'PlayerSpawn', name: 'Start', x: 70, y: 70, width: 0, height: 0, properties: [] }] },
     tuning: { moveSpeed: 220, jumpVelocity: 430, gravity: 1100 },
   });
+  const roles = variant === 'match-puzzle' ? ['ui.panel', 'ui.cursor'] as const
+    : variant === 'physics-puzzle' ? ['ui.cursor'] as const
+    : variant === 'rhythm-action' ? ['ui.panel', 'ui.button', 'particle'] as const
+    : variant === 'pinball-lite' ? ['ui.panel', 'particle'] as const
+    : [] as const;
+  return roles.length > 0 ? withDefaultThemeRoles(base, roles) : base;
 }

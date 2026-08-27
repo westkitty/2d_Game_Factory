@@ -1,7 +1,7 @@
 import { generateTheme } from '@sw2d/cli/factory';
 import type { StarterKit } from '../../contracts.ts';
 
-type SupplementalUiRole = 'ui.panel' | 'ui.cursor';
+type SupplementalUiRole = 'ui.panel' | 'ui.cursor' | 'ui.button' | 'particle';
 
 const SUPPLEMENTAL_UI_ASSETS = {
   'ui.panel': {
@@ -28,6 +28,32 @@ const SUPPLEMENTAL_UI_ASSETS = {
       stroke: '#e8ecf4',
       strokeWidth: 2,
       cornerRadius: 8,
+    },
+  },
+  'ui.button': {
+    role: 'ui.button',
+    key: 'theme/default/ui.button',
+    spec: {
+      kind: 'generated',
+      width: 92,
+      height: 42,
+      fill: '#65d0a8',
+      stroke: '#e8ecf4',
+      strokeWidth: 2,
+      cornerRadius: 10,
+    },
+  },
+  particle: {
+    role: 'particle',
+    key: 'theme/default/particle',
+    spec: {
+      kind: 'generated',
+      width: 12,
+      height: 12,
+      fill: '#ffe28a',
+      stroke: '#fff7d6',
+      strokeWidth: 1,
+      cornerRadius: 6,
     },
   },
 } as const;
