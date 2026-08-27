@@ -26,6 +26,22 @@ function requiredPackIds(presetId: string, extraPackIds: readonly string[]): rea
 }
 
 /**
+ * Family builders emit one shell body with a concrete preset id embedded in it.
+ * If that id is written with `as const`, TypeScript narrows every sibling
+ * branch to an impossible comparison in the generated game. The runtime value
+ * is still immutable; only its compile-time type needs to stay broad enough for
+ * the shared family implementation to typecheck.
+ */
+function widenGeneratedVariant(source: string): string {
+  if (!source.includes('const VARIANT = ')) return source;
+  const widened = source.replace(/const VARIANT = ([^;\n]+) as const;/, 'const VARIANT: string = $1;');
+  if (widened === source) {
+    throw new Error('Expanded starter shell declares VARIANT in an unsupported form.');
+  }
+  return widened;
+}
+
+/**
  * Defines one expanded starter without changing preset maturity or inventing a
  * second generator. The canonical factory still creates the game first; this
  * helper only supplies the normal game-side overlay that the factory already
@@ -45,7 +61,7 @@ export function defineExpandedKit(spec: ExpandedKitSpec): StarterKit {
         gameId,
         displayName,
         shellPackId: spec.shellPackId,
-        shellSource: spec.shellSource,
+        shellSource: widenGeneratedVariant(spec.shellSource),
         requiredPackIds: requiredPackIds(spec.presetId, spec.extraPackIds ?? []),
         ...(spec.level !== undefined ? { level: spec.level } : {}),
         ...(spec.tuning !== undefined ? { tuning: spec.tuning } : {}),
