@@ -200,11 +200,23 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
 `;
 }
 
-const ground = [
+const metroidGround = [
   { id: 1, class: 'Solid', name: 'Ground', x: 0, y: 500, width: 960, height: 40 },
   { id: 2, class: 'Solid', name: 'Ledge A', x: 240, y: 410, width: 130, height: 16 },
   { id: 3, class: 'Solid', name: 'Ledge B', x: 500, y: 335, width: 150, height: 16 },
   { id: 4, class: 'Solid', name: 'Ledge C', x: 720, y: 260, width: 140, height: 16 },
+] as const;
+
+// The traditional starter needs a clean sightline from its midpoint checkpoint
+// into the first jump. The original shared Ledge A sat directly above that
+// run-up, so a valid jump hit the underside, lost vertical velocity, and fell
+// into the spikes. Keep the richer platform rhythm, but begin it after the
+// introductory hazard instead of turning the first jump into a ceiling trap.
+const traditionalGround = [
+  { id: 1, class: 'Solid', name: 'Ground', x: 0, y: 500, width: 960, height: 40 },
+  { id: 2, class: 'Solid', name: 'Ledge A', x: 525, y: 390, width: 125, height: 16 },
+  { id: 3, class: 'Solid', name: 'Ledge B', x: 690, y: 320, width: 120, height: 16 },
+  { id: 4, class: 'Solid', name: 'Ledge C', x: 830, y: 255, width: 100, height: 16 },
 ] as const;
 
 function prop(name: string, type: string, value: string | number | boolean): { name: string; type: string; value: string | number | boolean } {
@@ -219,23 +231,16 @@ export function platformStarterKit(variant: PlatformStarterVariant) {
       shellSource: shellSource(variant),
       extraPackIds: ['sw2d.world', 'sw2d.arcade'],
       level: {
-        solids: ground,
+        solids: traditionalGround,
         entities: [
           { id: 10, class: 'PlayerSpawn', name: 'Start', x: 70, y: 440, width: 0, height: 0, properties: [] },
           { id: 11, class: 'Checkpoint', name: 'Midpoint', x: 300, y: 450, width: 24, height: 32, properties: [prop('checkpointId', 'string', 'mid')] },
           { id: 12, class: 'Collectible', name: 'Coin A', x: 215, y: 450, width: 18, height: 18, properties: [prop('itemId', 'string', 'coin-a'), prop('value', 'int', 5)] },
           { id: 13, class: 'Collectible', name: 'Coin B', x: 690, y: 450, width: 18, height: 18, properties: [prop('itemId', 'string', 'coin-b'), prop('value', 'int', 5)] },
-          // This is the first authored hazard in the beginner/reference kit.
-          // Keep it visually unmistakable but give the player enough approach
-          // distance and a compact hitbox so the default collision body clears
-          // it with a normal moving jump rather than edge-perfect timing.
           { id: 14, class: 'Hazard', name: 'Spikes', x: 430, y: 488, width: 36, height: 12, properties: [prop('damage', 'int', 1)] },
           { id: 15, class: 'Exit', name: 'Finish', x: 900, y: 438, width: 26, height: 56, properties: [prop('exitId', 'string', 'finish')] },
         ],
       },
-      // This is intentionally a forgiving first-platformer arc. It changes
-      // only authored starter tuning; the shared platform controller and
-      // physics ownership remain untouched.
       tuning: { moveSpeed: 225, jumpVelocity: 520, gravity: 1000 },
     });
   }
@@ -246,7 +251,7 @@ export function platformStarterKit(variant: PlatformStarterVariant) {
     shellSource: shellSource(variant),
     extraPackIds: ['sw2d.world', 'sw2d.arcade'],
     level: {
-      solids: ground,
+      solids: metroidGround,
       entities: [
         { id: 20, class: 'PlayerSpawn', name: 'Start', x: 300, y: 440, width: 0, height: 0, properties: [] },
         { id: 21, class: 'Checkpoint', name: 'Ability Camp', x: 610, y: 450, width: 24, height: 32, properties: [prop('checkpointId', 'string', 'ability-camp')] },
