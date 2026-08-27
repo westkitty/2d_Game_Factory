@@ -31,7 +31,7 @@ Implement the remaining scaffolded starter kits in bounded batches until the 69-
 ## Per-kit procedure
 
 1. Choose the next scaffold from `npm run starter-kits:status` (priority 1 first, then 2, then 3; stay within one family when practical).
-2. Copy `expanded/TEMPLATE.ts` to the scaffold's exact `implementationPath`.
+2. Run `npm run starter-kits:bootstrap -- <preset-id>`. It creates the scaffold's exact `implementationPath`, prefilled with its loop, roles, required packs, architecture notes, and mechanic-proof TODOs. It refuses to overwrite an existing implementation.
 3. Implement the scaffold's `loop`, `usefulRoles`, `mechanicProofs`, and `implementationNotes`. Use the preset's live controllers, required packs, content roles, and known limitations from `allStarterKitScaffolds()`.
 4. Keep specialized behavior in `src/game-specific/**` output. Use `authoring.ts` for the normal manifest/level/tuning/presentation overlay shape.
 5. Add focused unit tests. Then add/extend real-browser QA so the mechanic proofs are observed in the generated running Phaser game. Do not substitute source-string assertions for behavior.
@@ -56,4 +56,4 @@ Implement the remaining scaffolded starter kits in bounded batches until the 69-
 
 ## Completion reporting
 
-Report only: kits completed, files changed, exact validation results, any scaffold blocked by an actual architecture decision, and the next queue item. Do not claim all 69 complete until `starterKitScaffolds.test.ts` and the status command show no unimplemented scaffold and all expanded kits have runtime proof.
+Report only: kits completed, files changed, exact validation results, any scaffold blocked by an actual architecture decision, and the next queue item. Do not claim all 69 complete until `npm run starter-kits:status` reports 69/69 implemented and every expanded kit has committed runtime proof.
