@@ -36,11 +36,13 @@ describe('starter-kit expansion scaffolds', () => {
     }
   });
 
-  it('derives controller, pack, content-role and limitation metadata from the live preset catalogue', () => {
+  it('derives controller, exact pack selections, content roles and limitations from the live preset catalogue', () => {
     for (const scaffold of allStarterKitScaffolds()) {
       const preset = getPreset(scaffold.presetId);
       expect(scaffold.currentMaturity).toBe(preset.maturity);
       expect(scaffold.controllerFamilies).toEqual(preset.controllerFamilies);
+      expect(scaffold.requiredSystemPacks).toEqual(preset.requiredSystemPacks);
+      expect(scaffold.optionalSystemPacks).toEqual(preset.optionalSystemPacks);
       expect(scaffold.requiredPackIds).toEqual(preset.requiredSystemPacks.map((entry) => entry.packId));
       expect(scaffold.optionalPackIds).toEqual(preset.optionalSystemPacks.map((entry) => entry.packId));
       expect(scaffold.requiredContentRoles).toEqual(preset.requiredContentRoles);
@@ -68,7 +70,7 @@ describe('starter-kit authoring helper', () => {
       displayName: 'Sample Game',
       shellPackId: 'game.sample-shell',
       shellSource: "export const GAME_SPECIFIC_PACK = { id: 'game.sample-shell' };\n",
-      systemPacks: [{ packId: 'sw2d.arcade' }],
+      systemPacks: [{ packId: 'sw2d.arcade', config: { gravity: 900 } }],
       level: { entities: [{ id: 1, class: 'PlayerSpawn', name: 'Spawn', x: 20, y: 20, width: 0, height: 0, properties: [] }] },
       tuning: { moveSpeed: 200 },
     });
@@ -80,10 +82,11 @@ describe('starter-kit authoring helper', () => {
       'src/game-specific/shellPack.ts',
     ]);
     for (const path of files.keys()) expect(path.startsWith('packages/')).toBe(false);
-    const manifest = JSON.parse(files.get('content/game.json')!) as { id: string; displayName: string; systemPacks: { packId: string }[] };
+    const manifest = JSON.parse(files.get('content/game.json')!) as { id: string; displayName: string; systemPacks: { packId: string; config: unknown }[] };
     expect(manifest.id).toBe('sample-game');
     expect(manifest.displayName).toBe('Sample Game');
     expect(manifest.systemPacks.map((entry) => entry.packId)).toEqual(['sw2d.arcade', 'game.sample-shell']);
+    expect(manifest.systemPacks[0]?.config).toEqual({ gravity: 900 });
     const tuning = JSON.parse(files.get('content/tuning.json')!) as { player: Record<string, number> };
     for (const value of Object.values(tuning.player)) expect(value).toBeGreaterThan(0);
   });
