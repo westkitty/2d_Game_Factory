@@ -18,11 +18,11 @@ export interface ExpandedKitSpec {
   readonly includePresentation?: boolean;
 }
 
-function requiredPacks(presetId: string, extraPackIds: readonly string[]): readonly { readonly packId: string }[] {
+function requiredPackIds(presetId: string, extraPackIds: readonly string[]): readonly string[] {
   const preset = getPreset(presetId);
   const ids = new Set<string>(preset.requiredSystemPacks.map((selection) => selection.packId));
   for (const packId of extraPackIds) ids.add(packId);
-  return [...ids].map((packId) => ({ packId }));
+  return [...ids];
 }
 
 /**
@@ -46,7 +46,7 @@ export function defineExpandedKit(spec: ExpandedKitSpec): StarterKit {
         displayName,
         shellPackId: spec.shellPackId,
         shellSource: spec.shellSource,
-        systemPacks: requiredPacks(spec.presetId, spec.extraPackIds ?? []),
+        requiredPackIds: requiredPackIds(spec.presetId, spec.extraPackIds ?? []),
         level: spec.level,
         tuning: spec.tuning,
         extraFiles: spec.extraFiles,
