@@ -77,16 +77,32 @@ describe('theme-manifest', () => {
 
   it('ThemeManifest schema keys match the ThemeManifest interface', () => {
     expect(propertyKeys('theme-manifest')).toEqual(
-      [...Object.keys(fixture), 'ui', 'highContrastTokens'].sort(),
+      [...Object.keys(fixture), 'animations', 'ui', 'highContrastTokens'].sort(),
     );
   });
 
-  it('validates a minimal theme with no ui/highContrastTokens', () => {
+  it('validates a minimal theme with no animations/ui/highContrastTokens', () => {
     expect(validateDocument('theme-manifest', 'fixture', fixture).valid).toBe(true);
   });
 
-  it('validates a full theme with ui and highContrastTokens', () => {
-    const full: ThemeManifest = { ...fixture, ui: { title: 'X' }, highContrastTokens: { text: '#ffffff' } };
+  it('validates a full theme with animations, ui and highContrastTokens', () => {
+    const full: ThemeManifest = {
+      ...fixture,
+      animations: [
+        {
+          role: 'player',
+          key: 'demo/player/walk',
+          frames: [
+            { key: 'demo/player/walk/0', url: 'assets/player-0.png' },
+            { key: 'demo/player/walk/1', url: 'assets/player-1.png' },
+          ],
+          frameRate: 8,
+          repeat: -1,
+        },
+      ],
+      ui: { title: 'X' },
+      highContrastTokens: { text: '#ffffff' },
+    };
     expect(validateDocument('theme-manifest', 'fixture', full).valid).toBe(true);
   });
 
