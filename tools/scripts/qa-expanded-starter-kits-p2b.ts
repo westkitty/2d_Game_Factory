@@ -180,20 +180,18 @@ async function breakoutRun(harness: Harness): Promise<SmokeOutcome> {
   const initial = await shell<S>(harness);
   let state = initial;
 
-  // Breakout is deterministic but the final bricks can require several return
-  // cycles. Track the actual ball position and spend more simulated frames
-  // while it is safely away from the paddle; keep tighter updates near the
-  // bottom where missing a return would invalidate the mechanic proof.
-  for (let step = 0; step < 900 && state.outcome === 'playing'; step++) {
+  // Three-frame tracking is intentionally conservative: it proved stable with
+  // all lives intact in the shorter run. Extend the same control policy instead
+  // of sampling more coarsely and accidentally turning QA into a worse player.
+  for (let step = 0; step < 1400 && state.outcome === 'playing'; step++) {
     const delta = state.ballX - state.paddleX;
-    const frames = state.ballY > 380 ? 2 : 8;
     if (Math.abs(delta) > 14) {
       const key = delta < 0 ? 'ArrowLeft' : 'ArrowRight';
       await harness.keyDown(key);
-      await harness.stepFrames(frames);
+      await harness.stepFrames(3);
       await harness.keyUp(key);
     } else {
-      await harness.stepFrames(frames);
+      await harness.stepFrames(3);
     }
     state = await shell<S>(harness);
   }
@@ -226,7 +224,11 @@ async function endlessRunnerRun(harness: Harness): Promise<SmokeOutcome> {
   type S = { x: number; y: number; elapsedMs: number; collected: number; score: number; hazardHits: number; distanceScore: number; lastAction: string; outcome: string };
   await start(harness);
   const initial = await shell<S>(harness);
-  const launch = await waitUntil<S>(harness, (state) => state.x >= 370 || state.outcome !== 'playing', 100, 2);
+
+  // The player controls jump timing. Launch close enough to the authored
+  // obstacle that the normal arc crosses it while airborne rather than landing
+  // on it after an unnecessarily early jump.
+  const launch = await waitUntil<S>(harness, (state) => state.x >= 405 || state.outcome !== 'playing', 120, 2);
   await harness.keyDown('Space');
   await harness.stepFrames(2);
   await harness.keyUp('Space');
