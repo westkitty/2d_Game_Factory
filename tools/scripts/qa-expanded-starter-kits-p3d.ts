@@ -28,6 +28,9 @@ interface VehicleState {
   readonly altitude: number;
   readonly collisions: number;
   readonly distanceScore: number;
+  readonly particleTextureKey: string | null;
+  readonly particleVisible: boolean;
+  readonly particleEffects: number;
   readonly outcome: string;
 }
 
@@ -127,10 +130,12 @@ async function kartRun(harness: Harness): Promise<SmokeOutcome> {
 
   const passed =
     initial.checkpointIndex === 0 && initial.pickupCollected === false && initial.outcome === 'racing' &&
+    initial.particleTextureKey !== null && initial.particleVisible === false && initial.particleEffects === 0 &&
     firstGate.checkpointIndex >= 1 &&
     pickup.pickupCollected === true && pickup.boostRemainingMs > 0 &&
+    pickup.particleTextureKey !== null && pickup.particleVisible === true && pickup.particleEffects >= 1 &&
     finished.checkpointIndex === 3 && finished.lastCheckpointAttempt === 2 &&
-    finished.finishTimeMs !== null && finished.outcome === 'finished';
+    finished.finishTimeMs !== null && finished.particleEffects >= 1 && finished.outcome === 'finished';
   return { passed, details: { initial, firstGate, pickup, finished } };
 }
 
@@ -138,10 +143,6 @@ async function endlessRun(harness: Harness): Promise<SmokeOutcome> {
   await start(harness);
   const initial = await shell<VehicleState>(harness);
   const pressure = await waitUntil<VehicleState>(harness, (state) => state.distanceScore >= 120, 80, 4);
-
-  // The authored obstacle's first pass is at y=360. Steering toward that lane
-  // before it reaches the car proves a real collision penalty without relying
-  // on wall-clock sleeps or a hidden teleport.
   const lane = await driveToward(
     harness,
     initial.x + 300,
@@ -161,7 +162,7 @@ async function endlessRun(harness: Harness): Promise<SmokeOutcome> {
   );
 
   const passed =
-    initial.outcome === 'racing' && initial.collisions === 0 &&
+    initial.outcome === 'racing' && initial.collisions === 0 && initial.particleTextureKey === null &&
     pressure.distanceScore > initial.distanceScore && pressure.speed >= 140 &&
     firstHit.collisions >= 1 && firstHit.distanceScore > pressure.distanceScore &&
     continued.distanceScore > firstHit.distanceScore && continued.outcome === 'racing';
@@ -174,8 +175,6 @@ async function boatRun(harness: Harness): Promise<SmokeOutcome> {
   const firstGate = await driveToward(harness, 300, 270, (state) => state.checkpointIndex >= 1, 150, 2);
   const secondGate = await driveToward(harness, 520, 270, (state) => state.checkpointIndex >= 2, 150, 2);
 
-  // At the default altitude (0.5), intersecting the authored hazard must
-  // register a collision. This proves the low-altitude side of navigation.
   const lowPass = await driveToward(
     harness,
     650,
@@ -190,9 +189,6 @@ async function boatRun(harness: Harness): Promise<SmokeOutcome> {
   const raised = await shell<VehicleState>(harness);
   const collisionsBeforeHighPass = raised.collisions;
 
-  // Cross the same hazard location above the 0.65 clearance threshold. The
-  // collision count must stay fixed, demonstrating that altitude changes the
-  // traversable route rather than being decorative state.
   const highPass = await driveToward(
     harness,
     700,
@@ -205,10 +201,13 @@ async function boatRun(harness: Harness): Promise<SmokeOutcome> {
 
   const passed =
     initial.altitude === 0.5 && initial.collisions === 0 && initial.checkpointIndex === 0 &&
+    initial.particleTextureKey !== null && initial.particleVisible === true && initial.particleEffects === 0 &&
     firstGate.checkpointIndex >= 1 && secondGate.checkpointIndex >= 2 &&
-    lowPass.collisions >= 1 &&
+    lowPass.collisions >= 1 && lowPass.particleEffects >= 1 &&
     raised.altitude > 0.65 && raised.collisions === lowPass.collisions &&
+    raised.particleVisible === true && raised.particleEffects > lowPass.particleEffects &&
     highPass.x >= 690 && highPass.collisions === collisionsBeforeHighPass &&
+    highPass.particleTextureKey !== null && highPass.particleVisible === true &&
     finished.checkpointIndex === 3 && finished.lastCheckpointAttempt === 2 &&
     finished.finishTimeMs !== null && finished.outcome === 'finished';
   return { passed, details: { initial, firstGate, secondGate, lowPass, raised, highPass, finished } };

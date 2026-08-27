@@ -28,7 +28,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     const scene = context.scene;
     const { width, height } = context.definition.viewport;
     const background = addBackground(scene, context.assets.has('background') ? context.assets.resolve('background') : null, width, height);
-    const racer = scene.add.sprite(110, height / 2, context.assets.resolve('player'));
+    const racer = scene.add.sprite(110, height / 2, context.assets.resolve('player')).setDepth(2);
     racer.setScale(44 / racer.height);
 
     const checkpoints = [
@@ -46,6 +46,12 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     const hazard = (VARIANT === 'endless-driving' || VARIANT === 'boat-flight-racer')
       ? scene.add.sprite(650, 360, context.assets.resolve('hazard')).setDisplaySize(48, 48)
       : null;
+    const particleTextureKey = (VARIANT === 'kart-racer' || VARIANT === 'boat-flight-racer')
+      ? (context.assets.has('particle') ? context.assets.resolve('particle') : context.assets.resolve('checkpoint'))
+      : null;
+    const particleMarker = particleTextureKey
+      ? scene.add.sprite(racer.x, racer.y, particleTextureKey).setDisplaySize(58, 58).setAlpha(VARIANT === 'boat-flight-racer' ? 0.32 : 0).setDepth(1)
+      : null;
 
     const status = scene.add.text(18, 16, '', {
       fontFamily: 'ui-monospace, monospace', fontSize: '15px', color: '#ffffff', backgroundColor: '#111827aa', padding: { x: 8, y: 5 },
@@ -62,11 +68,30 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     let boostRemainingMs = 0;
     let collisions = 0;
     let distanceScore = 0;
+    let particleEffects = 0;
     let outcome: 'racing' | 'finished' | 'crashed' = 'racing';
     let lastCheckpointAttempt = -1;
 
     function near(x: number, y: number, radius = 50): boolean {
       return Phaser.Math.Distance.Between(racer.x, racer.y, x, y) <= radius;
+    }
+
+    function refreshParticleMarker(): void {
+      if (!particleMarker) return;
+      particleMarker.setPosition(racer.x, racer.y);
+      if (VARIANT === 'kart-racer') {
+        particleMarker.setAlpha(boostRemainingMs > 0 ? 0.52 : 0);
+        particleMarker.setDisplaySize(boostRemainingMs > 0 ? 64 : 58, boostRemainingMs > 0 ? 64 : 58);
+      } else {
+        particleMarker.setAlpha(0.16 + altitude * 0.38);
+        particleMarker.setDisplaySize(46 + altitude * 28, 46 + altitude * 28);
+      }
+    }
+
+    function recordParticleEffect(): void {
+      if (!particleMarker) return;
+      particleEffects += 1;
+      refreshParticleMarker();
     }
 
     function checkCheckpoints(): void {
@@ -90,6 +115,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       pickupCollected = true;
       pickup.setVisible(false);
       boostRemainingMs = 3000;
+      recordParticleEffect();
     }
 
     function checkHazard(): void {
@@ -98,6 +124,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       collisions += 1;
       speed *= 0.25;
       racer.setPosition(Math.max(80, racer.x - 60), Math.max(60, racer.y - 50));
+      if (VARIANT === 'boat-flight-racer') recordParticleEffect();
       if (VARIANT === 'endless-driving' && collisions >= 2) outcome = 'crashed';
     }
 
@@ -117,6 +144,9 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       x: Math.round(racer.x), y: Math.round(racer.y),
       playerTextureKey: racer.texture.key,
       backgroundTextureKey: background ? background.texture.key : null,
+      particleTextureKey,
+      particleVisible: particleMarker ? particleMarker.alpha > 0.01 : false,
+      particleEffects,
       heading,
       speed: Math.round(speed),
       checkpointIndex,
@@ -165,7 +195,10 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         }
 
         if (VARIANT === 'boat-flight-racer') {
-          if (intent.secondaryPressed) altitude += 0.22;
+          if (intent.secondaryPressed) {
+            altitude += 0.22;
+            recordParticleEffect();
+          }
           if (intent.brake > 0) altitude -= 0.35 * deltaMs / 1000;
           altitude = Phaser.Math.Clamp(altitude, 0, 1);
           racer.setScale((44 / racer.height) * (0.85 + altitude * 0.3));
@@ -174,6 +207,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         checkPickup();
         checkHazard();
         if (VARIANT !== 'endless-driving') checkCheckpoints();
+        refreshParticleMarker();
         render();
       },
       dispose(): void {
@@ -181,7 +215,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         disposed = true;
         debugHandle.dispose();
         try {
-          background?.destroy(); racer.destroy(); finish.destroy(); status.destroy(); pickup?.destroy(); hazard?.destroy();
+          background?.destroy(); racer.destroy(); finish.destroy(); status.destroy(); pickup?.destroy(); hazard?.destroy(); particleMarker?.destroy();
           for (const sprite of checkpointSprites) sprite.destroy();
         } catch {
           /* scene already tearing down */
