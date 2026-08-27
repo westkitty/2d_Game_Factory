@@ -191,10 +191,10 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
 
     function territory(confirmPressed: boolean, deltaMs: number): void {
       const zoneIndex = cursor.col < 4 ? 0 : cursor.col < 8 ? 1 : 2;
-      if (confirmPressed) { captureProgress[zoneIndex] += 35; lastAction = 'capture'; }
+      if (confirmPressed) { captureProgress[zoneIndex] = captureProgress[zoneIndex]! + 35; lastAction = 'capture'; }
       for (let i = 0; i < captureProgress.length; i++) {
-        captureProgress[i] = Phaser.Math.Clamp(captureProgress[i] + (i === zoneIndex ? deltaMs * 0.006 : -deltaMs * 0.002), 0, 100);
-        if (captureProgress[i] >= 100) zones[i] = 1;
+        captureProgress[i] = Phaser.Math.Clamp(captureProgress[i]! + (i === zoneIndex ? deltaMs * 0.006 : -deltaMs * 0.002), 0, 100);
+        if (captureProgress[i]! >= 100) zones[i] = 1;
       }
       holdScore += zones.filter((zone) => zone === 1).length * deltaMs / 1000;
       if (holdScore >= 8) outcome = 'victory';
