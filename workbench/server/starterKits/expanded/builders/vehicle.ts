@@ -28,7 +28,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     const scene = context.scene;
     const { width, height } = context.definition.viewport;
     const background = addBackground(scene, context.assets.has('background') ? context.assets.resolve('background') : null, width, height);
-    const racer = scene.add.sprite(110, height / 2, context.assets.resolve('player')).setDepth(2);
+    const racer = scene.add.sprite(110, height / 2, context.assets.resolve('player'));
     racer.setScale(44 / racer.height);
 
     const checkpoints = [
@@ -52,6 +52,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     const particleMarker = particleTextureKey
       ? scene.add.sprite(racer.x, racer.y, particleTextureKey).setDisplaySize(58, 58).setAlpha(VARIANT === 'boat-flight-racer' ? 0.32 : 0).setDepth(1)
       : null;
+    if (particleMarker) racer.setDepth(2);
 
     const status = scene.add.text(18, 16, '', {
       fontFamily: 'ui-monospace, monospace', fontSize: '15px', color: '#ffffff', backgroundColor: '#111827aa', padding: { x: 8, y: 5 },
