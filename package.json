@@ -25,8 +25,8 @@
     "workbench:build": "vite build --config workbench/vite.config.ts",
     "workbench:start": "node workbench/server/main.ts --production",
     "workbench:test": "vitest run workbench/test",
-    "starter-kits:status": "node tools/scripts/starter-kit-status.ts",
-    "starter-kits:bootstrap": "node tools/scripts/bootstrap-starter-kit.ts",
+    "starter-kits:status": "node --experimental-strip-types tools/scripts/starter-kit-status.ts",
+    "starter-kits:bootstrap": "node --experimental-strip-types tools/scripts/bootstrap-starter-kit.ts",
     "starter:dev": "npm run dev --workspace @sw2d/starter",
     "build": "npm run build --workspace @sw2d/starter",
     "preview": "npm run preview --workspace @sw2d/starter",
@@ -38,7 +38,7 @@
     "release:verify": "node tools/scripts/release-verify.ts",
     "qa:matrix": "node tools/scripts/generated-runtime-matrix.ts",
     "qa:workbench": "node workbench/qa/runWorkbenchQa.ts",
-    "qa:starter-kits": "node tools/scripts/qa-expanded-starter-kits.ts",
+    "qa:starter-kits": "node --experimental-strip-types tools/scripts/qa-expanded-starter-kits.ts",
     "validate": "npm run typecheck && npm run test && npm run build && npm run check:offline"
   },
   "devDependencies": {
