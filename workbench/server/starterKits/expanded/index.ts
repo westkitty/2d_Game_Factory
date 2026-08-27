@@ -132,13 +132,13 @@ export const EXPANDED_STARTER_KITS: readonly StarterKit[] = Object.freeze([
   sandboxPlayground,
   virtualPet,
   photographyGame,
-  // P3-I: Platforming kits promoted after the candidate matrix passed.
-  climbingGame,
-  grapplingPlatformer,
   // P3-J: Simulation management kits promoted after the candidate matrix passed.
   aquariumTerrarium,
   colonyLite,
   farmingLite,
   petCreature,
   restaurant,
+  // P3-I: Platforming kits promoted after the candidate matrix passed.
+  climbingGame,
+  grapplingPlatformer,
 ]);
