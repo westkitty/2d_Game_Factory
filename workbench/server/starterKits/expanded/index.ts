@@ -15,14 +15,17 @@ import { starterKit as dungeonCrawler } from './dungeon-crawler.ts';
 import { starterKit as endlessDriving } from './endless-driving.ts';
 import { starterKit as endlessRunner } from './endless-runner.ts';
 import { starterKit as explorationGame } from './exploration-game.ts';
+import { starterKit as fallingBlockPuzzle } from './falling-block-puzzle.ts';
 import { starterKit as galleryShooter } from './gallery-shooter.ts';
 import { starterKit as heistGame } from './heist-game.ts';
 import { starterKit as horizontalShmup } from './horizontal-shmup.ts';
 import { starterKit as kartRacer } from './kart-racer.ts';
 import { starterKit as laneDefense } from './lane-defense.ts';
+import { starterKit as matchPuzzle } from './match-puzzle.ts';
 import { starterKit as mazeGame } from './maze-game.ts';
 import { starterKit as metroidvania } from './metroidvania.ts';
 import { starterKit as museumExhibit } from './museum-exhibit.ts';
+import { starterKit as pong } from './pong.ts';
 import { starterKit as precisionPlatformer } from './precision-platformer.ts';
 import { starterKit as puzzlePlatformer } from './puzzle-platformer.ts';
 import { starterKit as railShooter } from './rail-shooter.ts';
@@ -65,14 +68,17 @@ export const EXPANDED_STARTER_KITS: readonly StarterKit[] = Object.freeze([
   endlessDriving,
   endlessRunner,
   explorationGame,
+  fallingBlockPuzzle,
   galleryShooter,
   heistGame,
   horizontalShmup,
   kartRacer,
   laneDefense,
+  matchPuzzle,
   mazeGame,
   metroidvania,
   museumExhibit,
+  pong,
   precisionPlatformer,
   puzzlePlatformer,
   railShooter,
