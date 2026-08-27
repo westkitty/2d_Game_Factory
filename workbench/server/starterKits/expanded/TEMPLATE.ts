@@ -19,7 +19,7 @@ export const starterKit: StarterKit = {
       displayName,
       shellPackId: 'game.TODO-shell',
       shellSource: SHELL,
-      systemPacks: [],
+      requiredPackIds: [],
       level: { entities: [], solids: [] },
       tuning: {},
     });
