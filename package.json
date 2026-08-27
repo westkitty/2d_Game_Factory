@@ -37,7 +37,7 @@
     "qa:responsive": "node --experimental-strip-types tools/scripts/qa-responsive.ts",
     "release:verify": "node --experimental-strip-types tools/scripts/release-verify.ts",
     "qa:matrix": "node --experimental-strip-types tools/scripts/generated-runtime-matrix.ts",
-    "qa:workbench": "node --experimental-strip-types workbench/qa/runWorkbenchQa.ts",
+    "qa:workbench": "npm run workbench:build && node --experimental-strip-types workbench/qa/runWorkbenchQa.ts",
     "qa:starter-kits:core": "node --experimental-strip-types tools/scripts/qa-expanded-starter-kits.ts",
     "qa:starter-kits:p2b": "node --experimental-strip-types tools/scripts/qa-expanded-starter-kits-p2b.ts",
     "qa:starter-kits:p2c": "node --experimental-strip-types tools/scripts/qa-expanded-starter-kits-p2c.ts",
