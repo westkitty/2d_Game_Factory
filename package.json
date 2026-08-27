@@ -38,6 +38,7 @@
     "release:verify": "node tools/scripts/release-verify.ts",
     "qa:matrix": "node tools/scripts/generated-runtime-matrix.ts",
     "qa:workbench": "node workbench/qa/runWorkbenchQa.ts",
+    "qa:starter-kits": "node tools/scripts/qa-expanded-starter-kits.ts",
     "validate": "npm run typecheck && npm run test && npm run build && npm run check:offline"
   },
   "devDependencies": {
