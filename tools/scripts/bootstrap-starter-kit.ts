@@ -67,7 +67,7 @@ export const starterKit: StarterKit = {
       displayName,
       shellPackId: ${JSON.stringify(shellPackId)},
       shellSource: SHELL,
-      systemPacks: ${JSON.stringify(scaffold.requiredPackIds.map((packId) => ({ packId })))},
+      systemPacks: ${JSON.stringify(scaffold.requiredSystemPacks)},
       level: { entities: [], solids: [] },
       tuning: {},
     });
