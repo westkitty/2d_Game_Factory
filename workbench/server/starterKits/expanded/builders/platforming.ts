@@ -226,17 +226,17 @@ export function platformStarterKit(variant: PlatformStarterVariant) {
           { id: 12, class: 'Collectible', name: 'Coin A', x: 215, y: 450, width: 18, height: 18, properties: [prop('itemId', 'string', 'coin-a'), prop('value', 'int', 5)] },
           { id: 13, class: 'Collectible', name: 'Coin B', x: 690, y: 450, width: 18, height: 18, properties: [prop('itemId', 'string', 'coin-b'), prop('value', 'int', 5)] },
           // This is the first authored hazard in the beginner/reference kit.
-          // It should teach "jump over a hazard", not require edge-perfect
-          // timing. Keep it wide enough to be visually obvious, but short
-          // enough that the default player body clears it with a normal jump.
-          { id: 14, class: 'Hazard', name: 'Spikes', x: 405, y: 482, width: 48, height: 18, properties: [prop('damage', 'int', 1)] },
+          // Keep it visually unmistakable but give the player enough approach
+          // distance and a compact hitbox so the default collision body clears
+          // it with a normal moving jump rather than edge-perfect timing.
+          { id: 14, class: 'Hazard', name: 'Spikes', x: 430, y: 488, width: 36, height: 12, properties: [prop('damage', 'int', 1)] },
           { id: 15, class: 'Exit', name: 'Finish', x: 900, y: 438, width: 26, height: 56, properties: [prop('exitId', 'string', 'finish')] },
         ],
       },
-      // A slightly longer, readable first-platformer arc gives the player
-      // room to understand checkpoint -> hazard -> recovery without changing
-      // the shared platform controller or introducing game-specific physics.
-      tuning: { moveSpeed: 225, jumpVelocity: 470, gravity: 1050 },
+      // This is intentionally a forgiving first-platformer arc. It changes
+      // only authored starter tuning; the shared platform controller and
+      // physics ownership remain untouched.
+      tuning: { moveSpeed: 225, jumpVelocity: 520, gravity: 1000 },
     });
   }
 
