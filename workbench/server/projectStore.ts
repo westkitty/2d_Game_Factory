@@ -200,6 +200,8 @@ export function listProjects(): readonly ProjectSummary[] {
     try {
       summaries.push(summarizeProject(entry));
     } catch {
+      // A project whose metadata is unreadable still deserves to be listed;
+      // the user needs to be able to see it in order to fix it.
       summaries.push({
         gameId: entry,
         presetId: 'unknown',
@@ -217,7 +219,11 @@ export function listProjects(): readonly ProjectSummary[] {
 
 /**
  * Rebuilds workbench metadata for a project that predates it, non-destructively.
- * Reads native documents and writes only into `.sw2d/`.
+ *
+ * Reads what the native documents already say - the preset from
+ * `package.json`, the palette from the existing theme's generated fills - and
+ * writes only into `.sw2d/`. No game file is touched, so adopting a project
+ * cannot break it (section 28).
  */
 export function adoptProject(gameId: string): ProjectDocument {
   if (!projectExists(gameId)) throw new SecurityError(404, `No project "${gameId}" under games/.`);
@@ -263,9 +269,12 @@ export interface PresetSummary {
 }
 
 /**
- * Presets, flattened for the browser. Maturity is passed through verbatim;
- * starter-kit depth is a separate statement about how much playable starting
- * material ships for that preset.
+ * Presets, flattened for the browser.
+ *
+ * `maturity` and `knownLimitations` are passed through verbatim from the
+ * catalogue. The workbench never upgrades a `recipe` preset's presentation to
+ * look like a proven one - that is failure condition F15, and the honest
+ * label is the whole point of the field.
  */
 export function listPresetSummaries(starterKitDepth: (presetId: string) => PresetSummary['starterKitDepth']): readonly PresetSummary[] {
   return listPresets().map((preset) => ({
