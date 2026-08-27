@@ -63,16 +63,18 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
 
     function near(point: { x: number; y: number }, radius = 48): boolean { return Phaser.Math.Distance.Between(player.x, player.y, point.x, point.y) <= radius; }
 
-    function worldInteract(): void {
-      points.forEach((point, index) => {
-        if (!discovered[index] && near(point)) {
-          discovered[index] = true;
-          markers[index]?.setAlpha(0.3);
-          clueCount += 1;
-          lastAction = VARIANT === 'museum-exhibit' ? 'view-exhibit' : VARIANT === 'investigation-game' ? 'collect-clue' : 'discover';
-        }
-      });
-      if (VARIANT === 'investigation-game' && clueCount >= 3 && context.input.justPressed('SECONDARY_ACTION')) {
+    function worldInteract(interactPressed: boolean, secondaryPressed: boolean): void {
+      if (interactPressed) {
+        points.forEach((point, index) => {
+          if (!discovered[index] && near(point)) {
+            discovered[index] = true;
+            markers[index]?.setAlpha(0.3);
+            clueCount += 1;
+            lastAction = VARIANT === 'museum-exhibit' ? 'view-exhibit' : VARIANT === 'investigation-game' ? 'collect-clue' : 'discover';
+          }
+        });
+      }
+      if (VARIANT === 'investigation-game' && clueCount >= 3 && secondaryPressed) {
         deductionMade = true;
         lastAction = 'deduction';
       }
@@ -173,8 +175,8 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         if (worldMode) {
           const intent = topDownController.read(context.input);
           player.setVelocity(intent.moveX * 210, intent.moveY * 210);
-          if (intent.interactPressed || intent.primaryPressed || context.input.justPressed('SECONDARY_ACTION')) worldInteract();
-          worldInteract();
+          const secondaryPressed = context.input.justPressed('SECONDARY_ACTION');
+          worldInteract(intent.interactPressed || intent.primaryPressed, secondaryPressed);
         } else if (VARIANT === 'visual-novel') {
           visualNovel(uiSimulationController.read(context.input));
         } else if (VARIANT === 'interactive-fiction-hybrid') {
