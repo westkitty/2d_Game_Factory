@@ -1,0 +1,42 @@
+name: Starter Kit Expansion QA
+
+on:
+  push:
+    branches:
+      - starter-kits/implement-all
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  starter-kit-qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Use Node 22.12
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.12.0
+          cache: npm
+
+      - name: Install locked workspace
+        run: npm ci --no-audit --no-fund
+
+      - name: Locate system Chrome
+        shell: bash
+        run: |
+          CHROME="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || command -v chromium-browser)"
+          echo "PLAYWRIGHT_CHROME_PATH=$CHROME" >> "$GITHUB_ENV"
+          "$CHROME" --version
+
+      - name: Validate repository baseline
+        run: npm run validate
+
+      - name: Validate expanded starter candidates
+        run: npm run qa:starter-kits
