@@ -28,12 +28,15 @@ import { starterKit as laneDefense } from './lane-defense.ts';
 import { starterKit as localPartyGame } from './local-party-game.ts';
 import { starterKit as matchPuzzle } from './match-puzzle.ts';
 import { starterKit as mazeGame } from './maze-game.ts';
+import { starterKit as microgameCollection } from './microgame-collection.ts';
 import { starterKit as metroidvania } from './metroidvania.ts';
 import { starterKit as museumExhibit } from './museum-exhibit.ts';
 import { starterKit as pong } from './pong.ts';
 import { starterKit as physicsPuzzle } from './physics-puzzle.ts';
 import { starterKit as rhythmAction } from './rhythm-action.ts';
 import { starterKit as pinballLite } from './pinball-lite.ts';
+import { starterKit as photographyGame } from './photography-game.ts';
+import { starterKit as physicsToy } from './physics-toy.ts';
 import { starterKit as precisionPlatformer } from './precision-platformer.ts';
 import { starterKit as puzzlePlatformer } from './puzzle-platformer.ts';
 import { starterKit as railShooter } from './rail-shooter.ts';
@@ -41,6 +44,7 @@ import { starterKit as reactionTiming } from './reaction-timing.ts';
 import { starterKit as runAndGun } from './run-and-gun.ts';
 import { starterKit as shopkeeper } from './shopkeeper.ts';
 import { starterKit as simpleRts } from './simple-rts.ts';
+import { starterKit as sandboxPlayground } from './sandbox-playground.ts';
 import { starterKit as stealthGame } from './stealth-game.ts';
 import { starterKit as survivorLike } from './survivor-like.ts';
 import { starterKit as territoryControl } from './territory-control.ts';
@@ -52,6 +56,7 @@ import { starterKit as turnBasedTactics } from './turn-based-tactics.ts';
 import { starterKit as tycoonLite } from './tycoon-lite.ts';
 import { starterKit as verticalShmup } from './vertical-shmup.ts';
 import { starterKit as visualNovel } from './visual-novel.ts';
+import { starterKit as virtualPet } from './virtual-pet.ts';
 
 /**
  * Post-proof rich starter kits that have passed canonical generation,
@@ -114,4 +119,10 @@ export const EXPANDED_STARTER_KITS: readonly StarterKit[] = Object.freeze([
   dressUpCharacterToy,
   fishingGame,
   localPartyGame,
+  // P3-H: remaining Party Toy / Weird kits promoted after the candidate matrix passed.
+  microgameCollection,
+  physicsToy,
+  sandboxPlayground,
+  virtualPet,
+  photographyGame,
 ]);

@@ -39,7 +39,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     const { width, height } = context.definition.viewport;
     const background = addBackground(scene, context.assets.has('background') ? context.assets.resolve('background') : null, width, height);
     const hero = scene.add.sprite(width * 0.5, 190, context.assets.resolve('player')).setDisplaySize(92, 92);
-    const cursorRoleSource = (VARIANT === 'drawing-game' || VARIANT === 'dress-up-character-toy') && context.assets.has('ui.cursor') ? 'ui.cursor' : 'checkpoint';
+    const cursorRoleSource = (VARIANT === 'drawing-game' || VARIANT === 'dress-up-character-toy' || VARIANT === 'microgame-collection' || VARIANT === 'photography-game' || VARIANT === 'physics-toy' || VARIANT === 'sandbox-playground') && context.assets.has('ui.cursor') ? 'ui.cursor' : 'checkpoint';
     const cursorSprite = scene.add.sprite(GRID_X, GRID_Y, context.assets.resolve(cursorRoleSource)).setDisplaySize(42, 42).setAlpha(0.7);
     const panelRoleSource = context.assets.has('ui.panel') ? 'ui.panel' : null;
     const rolePanel = panelRoleSource ? scene.add.sprite(width * 0.5, 45, context.assets.resolve('ui.panel')).setDisplaySize(690, 58).setAlpha(0.88).setDepth(80) : null;
@@ -50,10 +50,12 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     const hint = scene.add.text(width * 0.5, 475, '', { fontFamily: 'ui-monospace, monospace', fontSize: '14px', color: '#9fd7ff', align: 'center', wordWrap: { width: 820 } }).setOrigin(0.5).setDepth(100);
     const objects: Phaser.GameObjects.GameObject[] = [cursorSprite];
     const drawingMarks: Phaser.GameObjects.Sprite[] = [];
+    const sandboxMarks: Phaser.GameObjects.Sprite[] = [];
     const particleSprites: Phaser.GameObjects.Sprite[] = [];
     const particleTextureKey = context.assets.has('particle') ? context.assets.resolve('particle') : null;
-    const rolePickupSource = (VARIANT === 'cooking-game' || VARIANT === 'dress-up-character-toy' || VARIANT === 'fishing-game') ? 'pickup' : null;
+    const rolePickupSource = (VARIANT === 'cooking-game' || VARIANT === 'dress-up-character-toy' || VARIANT === 'fishing-game' || VARIANT === 'virtual-pet') ? 'pickup' : null;
     const rolePickup = rolePickupSource ? scene.add.sprite(210, 245, context.assets.resolve('pickup')).setDisplaySize(38, 38).setDepth(70) : null;
+    const platformTextureKey = context.assets.has('platform') ? context.assets.resolve('platform') : null;
     const wardrobeLabels = VARIANT === 'dress-up-character-toy'
       ? scene.add.text(width * 0.5, 120, 'HAT       OUTFIT       COLOR', { fontFamily: 'ui-monospace, monospace', fontSize: '16px', color: '#e8ecf4' }).setOrigin(0.5).setDepth(90)
       : null;
@@ -133,7 +135,8 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     }
 
     function setupToy(): void {
-      hero.setPosition(170, 250); cursorSprite.setVisible(false);
+      hero.setPosition(170, 250); cursorSprite.setVisible(true).setPosition(300, 250);
+      if (platformTextureKey) { const ground = scene.add.sprite(width * 0.5, height - 28, platformTextureKey).setDisplaySize(width - 80, 34).setAlpha(0.35); objects.push(ground); }
       for (let i = 0; i < 3; i++) {
         const sprite = scene.add.sprite(400 + i * 90, 210 + i * 45, context.assets.resolve(i === 2 ? 'hazard' : 'pickup')).setDisplaySize(34, 34);
         objects.push(sprite); toyBodies.push({ sprite, vx: 35 + i * 18, vy: -10 + i * 8 });
@@ -153,6 +156,10 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       }
     }
 
+    function setupMicrogame(): void {
+      cursorSprite.setVisible(true).setPosition(width * 0.5, 250);
+    }
+
     function setupDress(): void {
       hero.setPosition(480, 245); cursorSprite.setVisible(true).setPosition(360, 165);
     }
@@ -163,7 +170,8 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       cursorSprite.setPosition(photoTargets[0]!.x, photoTargets[0]!.y);
     }
 
-    if (VARIANT === 'physics-toy') setupToy();
+    if (VARIANT === 'microgame-collection') setupMicrogame();
+    else if (VARIANT === 'physics-toy') setupToy();
     else if (VARIANT === 'sandbox-playground' || VARIANT === 'drawing-game') setupGridToy();
     else if (VARIANT === 'photography-game') setupPhoto();
     else if (VARIANT === 'dress-up-character-toy') setupDress();
@@ -171,16 +179,16 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
 
     function updateMicrogame(): void {
       if (microgame === 0) {
-        if (!microSignal && elapsedMs - microSignalAt >= 900) { microSignal = true; microSignalAt = elapsedMs; lastAction = 'micro-signal'; }
+        if (!microSignal && elapsedMs - microSignalAt >= 900) { microSignal = true; microSignalAt = elapsedMs; cursorSprite.setPosition(600, 250); lastAction = 'micro-signal'; emitParticle(600, 250, 0xffe28a); }
         if (context.input.justPressed('PRIMARY_ACTION') || context.input.justPressed('CONFIRM')) {
-          if (microSignal) { microScores[0] = Math.max(0, 1000 - Math.round(elapsedMs - microSignalAt)); microgame = 1; microProgress = 0; lastAction = 'micro-one'; }
+          if (microSignal) { microScores[0] = Math.max(0, 1000 - Math.round(elapsedMs - microSignalAt)); microgame = 1; microProgress = 0; cursorSprite.setPosition(400, 250); lastAction = 'micro-one'; emitParticle(400, 250, 0x65d0a8); }
           else microScores[0] = 0;
         }
       } else if (microgame === 1) {
         const expected = microProgress % 2 === 0 ? 'MOVE_LEFT' : 'MOVE_RIGHT';
-        if (context.input.justPressed(expected)) { microProgress += 1; lastAction = 'micro-two'; if (microProgress >= 4) { microScores[1]! = 400; microgame = 2; microProgress = 0; } }
+        if (context.input.justPressed(expected)) { microProgress += 1; lastAction = 'micro-two'; cursorSprite.setPosition(400 + microProgress * 24, 250); emitParticle(cursorSprite.x, cursorSprite.y, 0xffe28a); if (microProgress >= 4) { microScores[1]! = 400; microgame = 2; microProgress = 0; } }
       } else if (microgame === 2) {
-        if (context.input.justPressed('PRIMARY_ACTION')) { microProgress += 1; lastAction = 'micro-three'; if (microProgress >= 4) { microScores[2] = 400; score = microScores.reduce((sum, value) => sum + value, 0); outcome = 'complete'; microgame = 3; } }
+        if (context.input.justPressed('PRIMARY_ACTION')) { microProgress += 1; lastAction = 'micro-three'; emitParticle(560, 250, 0x65d0a8); if (microProgress >= 4) { microScores[2] = 400; score = microScores.reduce((sum, value) => sum + value, 0); outcome = 'complete'; microgame = 3; } }
       }
     }
 
@@ -194,7 +202,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
 
     function updateToy(deltaMs: number): void {
       if (context.input.justPressed('PRIMARY_ACTION')) {
-        const sprite = scene.add.sprite(hero.x + 80, hero.y, context.assets.resolve('pickup')).setDisplaySize(30, 30); objects.push(sprite); toyBodies.push({ sprite, vx: 150, vy: -80 }); toySpawns += 1; lastAction = 'spawn-object';
+        const sprite = scene.add.sprite(hero.x + 80, hero.y, context.assets.resolve('pickup')).setDisplaySize(30, 30); objects.push(sprite); toyBodies.push({ sprite, vx: 150, vy: -80 }); toySpawns += 1; lastAction = 'spawn-object'; emitParticle(hero.x + 80, hero.y, 0xffe28a);
       }
       if (context.input.justPressed('SECONDARY_ACTION')) resetToy();
       for (const body of toyBodies) {
@@ -210,6 +218,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       if (context.input.justPressed('SECONDARY_ACTION')) { happiness += 25; petActions += 1; lastAction = 'play'; }
       hunger = Phaser.Math.Clamp(hunger, 0, 100); happiness = Phaser.Math.Clamp(happiness, 0, 100);
       hero.setScale((92 / hero.height) * (0.9 + happiness / 500));
+      if (rolePickup) rolePickup.setPosition(hero.x + 76, hero.y).setTint(happiness >= 80 ? 0x65d0a8 : 0xf0c274);
       if (hunger >= 85 && happiness >= 85 && petActions >= 2) outcome = 'complete';
     }
 
@@ -230,8 +239,8 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     function updateSandbox(): void {
       const intent = gridController.read(context.input); moveGrid(intent.step);
       if (context.input.justPressed('PRIMARY_ACTION')) { sandboxKind = sandboxKind === 0 ? 1 : 0; lastAction = 'toggle-kind'; }
-      if (intent.confirmPressed) { const key = gridCursor.col + ',' + gridCursor.row; sandbox.set(key, sandboxKind); const sprite = scene.add.sprite(...gridPixel(gridCursor.col, gridCursor.row), context.assets.resolve(sandboxKind === 0 ? 'pickup' : 'hazard')).setDisplaySize(30, 30); objects.push(sprite); lastAction = 'place'; }
-      if (context.input.justPressed('SECONDARY_ACTION')) { sandbox.clear(); sandboxResets += 1; lastAction = 'reset'; }
+      if (intent.confirmPressed) { const key = gridCursor.col + ',' + gridCursor.row; sandbox.set(key, sandboxKind); const sprite = scene.add.sprite(...gridPixel(gridCursor.col, gridCursor.row), context.assets.resolve(sandboxKind === 0 ? 'pickup' : 'hazard')).setDisplaySize(30, 30); objects.push(sprite); sandboxMarks.push(sprite); lastAction = 'place'; emitParticle(...gridPixel(gridCursor.col, gridCursor.row), sandboxKind === 0 ? 0x65d0a8 : 0xe05fa0); }
+      if (context.input.justPressed('SECONDARY_ACTION')) { sandbox.clear(); for (const mark of sandboxMarks) mark.destroy(); sandboxMarks.length = 0; sandboxResets += 1; lastAction = 'reset'; }
       if (sandbox.size >= 3 && new Set(sandbox.values()).size >= 2) outcome = 'complete';
     }
 
@@ -267,7 +276,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     function updatePhoto(deltaMs: number): void {
       const intent = topDownController.read(context.input); hero.x = Phaser.Math.Clamp(hero.x + intent.moveX * 190 * deltaMs / 1000, 30, width - 30); hero.y = Phaser.Math.Clamp(hero.y + intent.moveY * 190 * deltaMs / 1000, 70, height - 70);
       if (context.input.justPressed('SECONDARY_ACTION')) { photoTarget = (photoTarget + 1) % photoTargets.length; cursorSprite.setPosition(photoTargets[photoTarget]!.x, photoTargets[photoTarget]!.y); lastAction = 'frame'; }
-      if (intent.primaryPressed) { const target = photoTargets[photoTarget]!; const distance = Phaser.Math.Distance.Between(hero.x, hero.y, target.x, target.y); const photoScore = Math.max(0, Math.round(100 - distance / 5)); photosTaken += 1; bestPhoto = Math.max(bestPhoto, photoScore); score += photoScore; lastAction = 'capture'; if (photosTaken >= 2 && bestPhoto >= 70) outcome = 'complete'; }
+      if (intent.primaryPressed) { const target = photoTargets[photoTarget]!; const distance = Phaser.Math.Distance.Between(hero.x, hero.y, target.x, target.y); const photoScore = Math.max(0, Math.round(100 - distance / 5)); photosTaken += 1; bestPhoto = Math.max(bestPhoto, photoScore); score += photoScore; lastAction = 'capture'; emitParticle(target.x, target.y, photoScore >= 70 ? 0x65d0a8 : 0xe05fa0); if (photosTaken >= 2 && bestPhoto >= 70) outcome = 'complete'; }
     }
 
     function render(): void {
@@ -291,7 +300,8 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       presetId: VARIANT, family: 'party-toy-weird', playerTextureKey: hero.texture.key, backgroundTextureKey: background ? background.texture.key : null,
       cursorTextureKey: cursorSprite.texture.key, cursorRoleSource, panelTextureKey: rolePanel?.texture.key ?? null, panelRoleSource,
       buttonTextureKey: roleButton?.texture.key ?? null, buttonRoleSource, pickupTextureKey: rolePickup?.texture.key ?? null, pickupRoleSource: rolePickupSource,
-      particleTextureKey, particleEffects, drawingVisibleMarks: drawingMarks.length,
+      platformTextureKey,
+      particleTextureKey, particleEffects, drawingVisibleMarks: drawingMarks.length, sandboxVisibleObjects: sandboxMarks.length,
       elapsedMs: Math.round(elapsedMs), score, outcome, lastAction, microgame, microProgress, microSignal, microScores,
       currentPlayer, partyScores, partyTurns, winner, toySpawns, toyResets, toyBodies: toyBodies.map((body) => ({ x: Math.round(body.sprite.x), y: Math.round(body.sprite.y), vx: Math.round(body.vx), vy: Math.round(body.vy) })),
       hunger, happiness, petActions, wardrobeCategory, wardrobe, wardrobeChanges, dressResets, gridCursor, sandboxKind, sandboxSize: sandbox.size, sandboxResets, drawingSize: drawing.size, drawingResets,
@@ -336,6 +346,14 @@ export function partyToyStarterKit(variant: PartyToyStarterVariant) {
       ? ['ui.panel', 'ui.button', 'ui.cursor'] as const
       : variant === 'local-party-game'
         ? ['ui.panel', 'ui.button'] as const
-        : [] as const;
+        : variant === 'microgame-collection'
+          ? ['ui.panel', 'ui.button', 'ui.cursor', 'particle'] as const
+          : variant === 'photography-game'
+            ? ['ui.cursor', 'ui.panel', 'particle'] as const
+            : variant === 'physics-toy' || variant === 'sandbox-playground'
+              ? ['ui.cursor', 'particle'] as const
+              : variant === 'virtual-pet'
+                ? ['ui.panel', 'ui.button'] as const
+                : [] as const;
   return withDefaultThemeRoles(base, roles);
 }
