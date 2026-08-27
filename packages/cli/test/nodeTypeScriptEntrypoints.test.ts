@@ -34,8 +34,17 @@ describe('Node TypeScript command entrypoints', () => {
     }
   });
 
-  it('builds the workbench before the clean-checkout real-browser QA starts', () => {
+  it('materializes ignored batch fixtures and builds the workbench before real-browser QA starts', () => {
     const command = rootPackage().scripts?.['qa:workbench'];
-    expect(command).toMatch(/^npm run workbench:build && node --experimental-strip-types\s/);
+    expect(command).toBe(
+      'node --experimental-strip-types workbench/qa/prepareBatchFixture.ts && npm run workbench:build && node --experimental-strip-types workbench/qa/runWorkbenchQa.ts',
+    );
+  });
+
+  it('runs the workbench Pack subprocess through Node 22.12 type stripping', () => {
+    const source = readFileSync(path.join(REPO_ROOT, 'workbench/server/factoryService.ts'), 'utf8');
+    expect(source).toContain(
+      "['--experimental-strip-types', resolveContained(REPO_ROOT, 'packages', 'cli', 'src', 'bin.ts'), 'pack', gameId]",
+    );
   });
 });
