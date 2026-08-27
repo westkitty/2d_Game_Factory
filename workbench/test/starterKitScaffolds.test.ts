@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { getPreset, listPresets } from '../../packages/presets/src/index.ts';
 import { buildStarterKitOverlay } from '../server/starterKits/authoring.ts';
-import { allStarterKits, starterKitFor } from '../server/starterKits/index.ts';
+import { starterKitFor } from '../server/starterKits/index.ts';
 import {
   ORIGINAL_RICH_KIT_IDS,
   allStarterKitScaffolds,
@@ -20,7 +20,7 @@ describe('starter-kit expansion scaffolds', () => {
     expect(actual).toHaveLength(69);
   });
 
-  it('gives every pending preset an actionable, unique implementation slot', () => {
+  it('gives every expansion preset an actionable, unique implementation slot', () => {
     const paths = new Set<string>();
     for (const scaffold of allStarterKitScaffolds()) {
       expect(scaffold.targetDepth).toBe('rich-starter-kit');
@@ -48,14 +48,16 @@ describe('starter-kit expansion scaffolds', () => {
     }
   });
 
-  it('does not accidentally register scaffolds as shipped kits', () => {
-    expect(allStarterKits().map((kit) => kit.presetId).sort()).toEqual([...ORIGINAL].sort());
-    for (const scaffold of allStarterKitScaffolds()) expect(starterKitFor(scaffold.presetId)).toBeUndefined();
+  it('allows promotion only as rich-starter-kit while preserving the scaffold record', () => {
+    for (const scaffold of allStarterKitScaffolds()) {
+      const kit = starterKitFor(scaffold.presetId);
+      if (kit) expect(kit.depth, scaffold.presetId).toBe('rich-starter-kit');
+      expect(starterKitScaffoldFor(scaffold.presetId)?.presetId).toBe(scaffold.presetId);
+    }
   });
 
-  it('can find every scaffold directly by preset id', () => {
-    for (const scaffold of allStarterKitScaffolds()) expect(starterKitScaffoldFor(scaffold.presetId)?.presetId).toBe(scaffold.presetId);
-    expect(starterKitScaffoldFor('chase-platformer')).toBeUndefined();
+  it('does not create scaffold records for the original proof kits', () => {
+    for (const presetId of ORIGINAL_RICH_KIT_IDS) expect(starterKitScaffoldFor(presetId)).toBeUndefined();
   });
 });
 
