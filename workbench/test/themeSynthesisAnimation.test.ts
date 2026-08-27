@@ -4,15 +4,22 @@ import { buildTheme } from '../server/themeSynthesis.ts';
 
 const OWNED: Provenance = { kind: 'project-owned', modificationStatus: 'unmodified' };
 
-function frame(id: string, frameIndex: number, group = 'walk', provenance: Provenance = OWNED): AssetRecord {
+function frame(
+  id: string,
+  frameIndex: number,
+  group = 'walk',
+  provenance: Provenance = OWNED,
+  width = 32,
+  height = 32,
+): AssetRecord {
   return {
     id,
     kind: 'source',
     displayName: `${id}.png`,
     relativePath: `.sw2d/source-assets/${id}.png`,
     mime: 'image/png',
-    width: 32,
-    height: 32,
+    width,
+    height,
     byteSize: 128,
     sha256: id.padEnd(64, '0').slice(0, 64),
     roleAssignments: [],
@@ -60,6 +67,16 @@ describe('frame-group theme synthesis', () => {
     const assets: AssetsDocument = { version: 1, assets: [frame('src_only', 1, 'solo')] };
     const result = buildTheme({ gameId: 'static-game', assets, blueprint: blueprint('src_only') });
     expect(result.theme.animations).toBeUndefined();
+  });
+
+  it('keeps a name-group static when any shippable frame changes dimensions', () => {
+    const assets: AssetsDocument = {
+      version: 1,
+      assets: [frame('src_a', 1), frame('src_b', 2, 'walk', OWNED, 64, 32), frame('src_c', 3)],
+    };
+    const result = buildTheme({ gameId: 'mixed-size-game', assets, blueprint: blueprint('src_a') });
+    expect(result.theme.animations).toBeUndefined();
+    expect(result.copiedFiles).toEqual(['src_a.png']);
   });
 
   it('never ships a reference-only sibling merely because it shares the group', () => {
