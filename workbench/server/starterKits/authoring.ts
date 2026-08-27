@@ -7,12 +7,10 @@
  * actual mechanic policy stays in that kit's game-specific shell.
  */
 
+import type { SystemPackSelection } from '@sw2d/contracts';
 import { PRESENTATION_MODULE } from './presentation.ts';
 
-export interface StarterSystemPackSelection {
-  readonly packId: string;
-  readonly config?: Readonly<Record<string, unknown>>;
-}
+export type StarterSystemPackSelection = SystemPackSelection;
 
 export interface StarterLevelSpec {
   readonly entities?: readonly Readonly<Record<string, unknown>>[];
@@ -49,7 +47,10 @@ export function starterManifest(
   systemPacks: readonly StarterSystemPackSelection[],
 ): string {
   const selections = [
-    ...systemPacks.map((selection) => ({ packId: selection.packId, config: selection.config ?? {} })),
+    ...systemPacks.map((selection) => ({
+      packId: selection.packId,
+      config: selection.config === undefined ? {} : selection.config,
+    })),
     { packId: shellPackId, config: {} },
   ];
   return `${JSON.stringify({
