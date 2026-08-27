@@ -186,8 +186,8 @@ async function survivorRun(harness: Harness): Promise<SmokeOutcome> {
 
   const passed =
     initial.spawnedTotal === 0 && initial.attackDamage === 1 && initial.particleEffects === 0 &&
-    pressure.spawnedTotal >= 3 && pressure.outcome === 'playing' && pressure.particleEffects > 0 &&
-    upgradeReady.elapsedMs >= 7000 && upgradeReady.upgradeAvailable === true && upgradeReady.upgradeCollected === false &&
+    pressure.spawnedTotal >= 3 && pressure.outcome === 'playing' &&
+    upgradeReady.elapsedMs >= 7000 && upgradeReady.upgradeAvailable === true && upgradeReady.upgradeCollected === false && upgradeReady.particleEffects > 0 &&
     preUpgradeGate.elapsedMs >= 15000 && preUpgradeGate.upgradeCollected === false &&
     preUpgradeGate.playerHealth > 0 && preUpgradeGate.outcome === 'playing' &&
     upgraded.upgradeCollected === true && upgraded.upgradeAvailable === false && upgraded.attackDamage === 2 &&
