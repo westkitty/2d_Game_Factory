@@ -41,25 +41,29 @@ describe('overlay containment', () => {
 });
 
 describe('starter kit registry', () => {
-  it('has a rich kit for every proof-validated preset (W17)', () => {
-    for (const presetId of PROOF_PRESETS) {
+  it('has a rich proof kit for every proof-validated preset (W17)', () => {
+    const proofValidated = listPresets()
+      .filter((preset) => preset.maturity === 'proof-validated')
+      .map((preset) => preset.id)
+      .sort();
+    expect(proofValidated).toEqual([...PROOF_PRESETS].sort());
+    for (const presetId of proofValidated) {
       const kit = starterKitFor(presetId);
       expect(kit, `no starter kit for ${presetId}`).toBeDefined();
       expect(kit!.depth).toBe('rich-proof-kit');
     }
   });
 
-  it('covers every preset the catalogue marks proof-validated, with none missed', () => {
-    const proofValidated = listPresets()
-      .filter((preset) => preset.maturity === 'proof-validated')
-      .map((preset) => preset.id)
-      .sort();
-    expect(proofValidated).toEqual([...PROOF_PRESETS].sort());
-    expect(allStarterKits().map((kit) => kit.presetId).sort()).toEqual(proofValidated);
+  it('keeps registry ids unique and keeps kit depth honest about preset maturity', () => {
+    const ids = allStarterKits().map((kit) => kit.presetId);
+    expect(new Set(ids).size).toBe(ids.length);
+    for (const kit of allStarterKits()) {
+      const preset = getPreset(kit.presetId);
+      expect(kit.depth).toBe(preset.maturity === 'proof-validated' ? 'rich-proof-kit' : 'rich-starter-kit');
+    }
   });
 
   it('reports depth honestly for presets with no kit (F15)', () => {
-    // A recipe preset must never be described as having a proof kit.
     expect(starterKitDepthFor('idle-clicker', 'recipe')).toBe('generated-shell');
     expect(starterKitDepthFor('traditional-platformer', 'smoke-validated')).toBe('smoke-kit');
     expect(starterKitDepthFor('chase-platformer', 'proof-validated')).toBe('rich-proof-kit');
@@ -94,7 +98,6 @@ describe('starter kit output', () => {
     for (const kit of allStarterKits()) {
       for (const [path, contents] of kit.overlay('demo-game', 'Demo Game')) {
         expect(path.startsWith('packages/')).toBe(false);
-        // Runtime code is imported by package name, never inlined.
         expect(contents.includes('from \'../../../packages/')).toBe(false);
       }
     }
@@ -103,11 +106,7 @@ describe('starter kit output', () => {
   it('resolves art through semantic roles, never a file name', () => {
     for (const kit of allStarterKits()) {
       const shell = kit.overlay('demo-game', 'Demo Game').get('src/game-specific/shellPack.ts')!;
-      // Every kit must consume the `player` role somewhere, or an imported
-      // character would have nothing to drive in that genre - which is the
-      // whole product. Tower-defense uses it for the placed tower.
       expect(shell, kit.presetId).toContain("context.assets.resolve('player')");
-      // A hard-coded asset path in a shell would break asset swapping outright.
       expect(shell).not.toMatch(/assets\/workbench\//);
       expect(shell).not.toMatch(/\.png['"]/);
     }
@@ -121,8 +120,6 @@ describe('starter kit output', () => {
   });
 
   it('writes tuning values the content schema will accept', () => {
-    // Every player field must be > 0. Writing 0 to mean "this kit does not use
-    // gravity" fails validation at boot, which is how this was caught.
     for (const kit of allStarterKits()) {
       const tuning = JSON.parse(kit.overlay('demo-game', 'Demo Game').get('content/tuning.json')!) as {
         player: Record<string, number>;
