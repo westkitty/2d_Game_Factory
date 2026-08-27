@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { AssetRecord, AssetsDocument, BlueprintDocument, Provenance } from '../shared/types.ts';
+import { EMPTY_RECIPE } from '../shared/types.ts';
 import { buildTheme } from '../server/themeSynthesis.ts';
 
 const OWNED: Provenance = { kind: 'project-owned', modificationStatus: 'unmodified' };
@@ -26,6 +27,25 @@ function frame(
     provenance,
     group,
     frameIndex,
+  };
+}
+
+function derivedFrame(id: string, sourceAssetId: string, displayName: string, group = 'walk'): AssetRecord {
+  return {
+    id,
+    kind: 'derived',
+    displayName,
+    relativePath: `public/assets/workbench/${id}.png`,
+    mime: 'image/png',
+    width: 32,
+    height: 32,
+    byteSize: 128,
+    sha256: id.padEnd(64, '0').slice(0, 64),
+    sourceAssetId,
+    transformRecipe: EMPTY_RECIPE,
+    roleAssignments: [],
+    provenance: { ...OWNED, modificationStatus: 'modified' },
+    group,
   };
 }
 
@@ -61,6 +81,23 @@ describe('frame-group theme synthesis', () => {
     const staticPlayer = result.theme.assets.find((descriptor) => descriptor.role === 'player');
     expect(staticPlayer?.spec.kind).toBe('image');
     expect(staticPlayer?.key).toContain('src_b'.padEnd(64, '0').slice(0, 12));
+  });
+
+  it('recovers transformed-frame order from source lineage when derivatives have no frameIndex', () => {
+    const sources = [frame('src_a', 1), frame('src_b', 2), frame('src_c', 3)];
+    const derived = [
+      derivedFrame('der_z', 'src_a', 'z-last-by-name.png'),
+      derivedFrame('der_m', 'src_b', 'm-middle.png'),
+      derivedFrame('der_a', 'src_c', 'a-first-by-name.png'),
+    ];
+    const assets: AssetsDocument = { version: 1, assets: [...sources, ...derived] };
+
+    const result = buildTheme({ gameId: 'derived-animation', assets, blueprint: blueprint('der_m') });
+    expect(result.theme.animations?.[0]?.frames.map((item) => item.url)).toEqual([
+      'assets/workbench/der_z.png',
+      'assets/workbench/der_m.png',
+      'assets/workbench/der_a.png',
+    ]);
   });
 
   it('leaves an ungrouped or one-frame role static', () => {
