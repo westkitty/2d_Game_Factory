@@ -1,10 +1,12 @@
 import type { StarterKit } from '../contracts.ts';
 import { starterKit as actionAdventure } from './action-adventure.ts';
+import { starterKit as actionRoguelite } from './action-roguelite.ts';
 import { starterKit as arenaCombat } from './arena-combat.ts';
 import { starterKit as asteroidsShooter } from './asteroids-shooter.ts';
 import { starterKit as autoBattler } from './auto-battler.ts';
 import { starterKit as autoRunner } from './auto-runner.ts';
 import { starterKit as baseDefense } from './base-defense.ts';
+import { starterKit as bossRush } from './boss-rush.ts';
 import { starterKit as breakout } from './breakout.ts';
 import { starterKit as bulletHell } from './bullet-hell.ts';
 import { starterKit as collectathonPlatformer } from './collectathon-platformer.ts';
@@ -12,6 +14,7 @@ import { starterKit as dungeonCrawler } from './dungeon-crawler.ts';
 import { starterKit as endlessRunner } from './endless-runner.ts';
 import { starterKit as explorationGame } from './exploration-game.ts';
 import { starterKit as galleryShooter } from './gallery-shooter.ts';
+import { starterKit as heistGame } from './heist-game.ts';
 import { starterKit as horizontalShmup } from './horizontal-shmup.ts';
 import { starterKit as laneDefense } from './lane-defense.ts';
 import { starterKit as mazeGame } from './maze-game.ts';
@@ -25,6 +28,7 @@ import { starterKit as runAndGun } from './run-and-gun.ts';
 import { starterKit as shopkeeper } from './shopkeeper.ts';
 import { starterKit as simpleRts } from './simple-rts.ts';
 import { starterKit as stealthGame } from './stealth-game.ts';
+import { starterKit as survivorLike } from './survivor-like.ts';
 import { starterKit as territoryControl } from './territory-control.ts';
 import { starterKit as timeTrialRacer } from './time-trial-racer.ts';
 import { starterKit as topDownAdventure } from './top-down-adventure.ts';
@@ -43,11 +47,13 @@ import { starterKit as visualNovel } from './visual-novel.ts';
  */
 export const EXPANDED_STARTER_KITS: readonly StarterKit[] = Object.freeze([
   actionAdventure,
+  actionRoguelite,
   arenaCombat,
   asteroidsShooter,
   autoBattler,
   autoRunner,
   baseDefense,
+  bossRush,
   breakout,
   bulletHell,
   collectathonPlatformer,
@@ -55,6 +61,7 @@ export const EXPANDED_STARTER_KITS: readonly StarterKit[] = Object.freeze([
   endlessRunner,
   explorationGame,
   galleryShooter,
+  heistGame,
   horizontalShmup,
   laneDefense,
   mazeGame,
@@ -68,6 +75,7 @@ export const EXPANDED_STARTER_KITS: readonly StarterKit[] = Object.freeze([
   shopkeeper,
   simpleRts,
   stealthGame,
+  survivorLike,
   territoryControl,
   timeTrialRacer,
   topDownAdventure,
