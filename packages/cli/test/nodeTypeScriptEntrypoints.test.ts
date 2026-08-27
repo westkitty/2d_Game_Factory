@@ -15,19 +15,27 @@ function rootPackage(): RootPackageJson {
 }
 
 describe('Node TypeScript command entrypoints', () => {
-  it('keeps direct .ts entrypoints runnable on the declared Node 22.12 minimum', () => {
+  it('keeps every direct .ts process runnable on the declared Node 22.12 minimum', () => {
     const pkg = rootPackage();
     expect(pkg.engines?.node).toBe('>=22.12.0');
 
-    const directTypeScript = Object.entries(pkg.scripts ?? {}).filter(([, command]) =>
-      command.startsWith('node ') && /(?:^|\s)[^\s]+\.ts(?:\s|$)/.test(command),
+    const directTypeScript = Object.entries(pkg.scripts ?? {}).flatMap(([name, command]) =>
+      command
+        .split(/\s*(?:&&|\|\||;)\s*/)
+        .filter((segment) => segment.startsWith('node ') && /(?:^|\s)[^\s]+\.ts(?:\s|$)/.test(segment))
+        .map((segment) => ({ name, segment })),
     );
 
     expect(directTypeScript.length).toBeGreaterThan(0);
-    for (const [name, command] of directTypeScript) {
-      expect(command, `${name} launches TypeScript without Node 22.12 type stripping`).toMatch(
+    for (const { name, segment } of directTypeScript) {
+      expect(segment, `${name} launches TypeScript without Node 22.12 type stripping`).toMatch(
         /^node --experimental-strip-types\s/,
       );
     }
+  });
+
+  it('builds the workbench before the clean-checkout real-browser QA starts', () => {
+    const command = rootPackage().scripts?.['qa:workbench'];
+    expect(command).toMatch(/^npm run workbench:build && node --experimental-strip-types\s/);
   });
 });
