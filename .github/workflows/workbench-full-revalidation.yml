@@ -1,0 +1,72 @@
+name: Full Workbench Revalidation
+
+on:
+  push:
+    branches:
+      - qa/full-workbench-revalidation
+  workflow_dispatch:
+
+concurrency:
+  group: full-workbench-revalidation-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  full-workbench-revalidation:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Use Node 22.12
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.12.0
+          cache: npm
+
+      - name: Install locked workspace
+        run: npm ci --no-audit --no-fund
+
+      - name: Locate system Chrome
+        shell: bash
+        run: |
+          set -euo pipefail
+          CHROME="$(command -v google-chrome || command -v google-chrome-stable || command -v chromium || command -v chromium-browser)"
+          test -n "$CHROME"
+          echo "PLAYWRIGHT_CHROME_PATH=$CHROME" >> "$GITHUB_ENV"
+          "$CHROME" --version
+
+      - name: Validate repository
+        run: npm run validate
+
+      - name: Workbench real-browser acceptance
+        run: npm run qa:workbench
+
+      - name: Prove workbench Validate Build Pack did not mutate lockfile
+        shell: bash
+        run: git diff --exit-code -- package-lock.json
+
+      - name: Inherited smoke QA
+        run: npm run qa:smoke
+
+      - name: Inherited proof QA
+        run: npm run qa:proof
+
+      - name: Responsive QA
+        run: npm run qa:responsive
+
+      - name: Release verification
+        run: npm run release:verify
+
+      - name: Generated-runtime matrix
+        run: npm run qa:matrix
+
+      - name: Final tracked-source cleanliness
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --exit-code -- package-lock.json
+          test -z "$(git status --porcelain --untracked-files=no)"
