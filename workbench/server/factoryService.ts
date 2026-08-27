@@ -227,7 +227,12 @@ export async function packProject(gameId: string, handle: JobHandle): Promise<Pi
   requireProject(gameId);
   await ensureWorkspaceLinked(handle);
   handle.setStep('Packing release candidate');
-  const result = await runProcess('node', [resolveContained(REPO_ROOT, 'packages', 'cli', 'src', 'bin.ts'), 'pack', gameId], REPO_ROOT, handle);
+  const result = await runProcess(
+    'node',
+    ['--experimental-strip-types', resolveContained(REPO_ROOT, 'packages', 'cli', 'src', 'bin.ts'), 'pack', gameId],
+    REPO_ROOT,
+    handle,
+  );
   const ok = result.code === 0;
   return {
     ok,
