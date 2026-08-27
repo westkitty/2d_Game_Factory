@@ -26,6 +26,9 @@ import { starterKit as mazeGame } from './maze-game.ts';
 import { starterKit as metroidvania } from './metroidvania.ts';
 import { starterKit as museumExhibit } from './museum-exhibit.ts';
 import { starterKit as pong } from './pong.ts';
+import { starterKit as physicsPuzzle } from './physics-puzzle.ts';
+import { starterKit as rhythmAction } from './rhythm-action.ts';
+import { starterKit as pinballLite } from './pinball-lite.ts';
 import { starterKit as precisionPlatformer } from './precision-platformer.ts';
 import { starterKit as puzzlePlatformer } from './puzzle-platformer.ts';
 import { starterKit as railShooter } from './rail-shooter.ts';
@@ -79,6 +82,9 @@ export const EXPANDED_STARTER_KITS: readonly StarterKit[] = Object.freeze([
   metroidvania,
   museumExhibit,
   pong,
+  physicsPuzzle,
+  rhythmAction,
+  pinballLite,
   precisionPlatformer,
   puzzlePlatformer,
   railShooter,
