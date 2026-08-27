@@ -1,2 +1,4 @@
 import { puzzleArcadeStarterKit } from './builders/puzzleArcade.ts';
-export const starterKit = puzzleArcadeStarterKit('falling-block-puzzle');
+import { withDefaultThemeRoles } from './builders/themeRoles.ts';
+
+export const starterKit = withDefaultThemeRoles(puzzleArcadeStarterKit('falling-block-puzzle'), ['ui.panel']);
