@@ -42,6 +42,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     const paddle = scene.add.sprite(paddleX, paddleY, context.assets.resolve('player')).setDisplaySize(150, 22);
     const ball = scene.add.sprite(ballX, ballY, context.assets.resolve('pickup')).setDisplaySize(18, 18);
     const bricks: Phaser.GameObjects.Sprite[] = [];
+    const particles: Phaser.GameObjects.Sprite[] = [];
     for (let row = 0; row < 2; row++) {
       for (let col = 0; col < 6; col++) {
         const brick = scene.add
@@ -83,6 +84,22 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       lastAction = 'paddle-return';
     }
 
+    function brickBurst(): void {
+      const particle = scene.add
+        .sprite(ballX, ballY, context.assets.resolve('particle'))
+        .setDisplaySize(14, 14)
+        .setAlpha(0.95)
+        .setDepth(20);
+      particles.push(particle);
+      scene.tweens.add({
+        targets: particle,
+        alpha: 0,
+        scale: 1.8,
+        duration: 140,
+        onComplete: () => particle.destroy(),
+      });
+    }
+
     function hitBrick(): void {
       for (const brick of bricks) {
         if (!brick.visible) continue;
@@ -92,6 +109,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         score += 10;
         ballVy *= -1;
         lastAction = 'brick';
+        brickBurst();
         if (bricksRemaining === 0) {
           outcome = 'complete';
           ballVx = 0;
@@ -178,6 +196,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
           ball.destroy();
           status.destroy();
           for (const brick of bricks) brick.destroy();
+          for (const particle of particles) if (particle.active) particle.destroy();
         } catch {
           /* scene teardown */
         }
