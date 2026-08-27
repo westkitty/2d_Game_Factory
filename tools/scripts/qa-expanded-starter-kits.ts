@@ -58,13 +58,22 @@ async function traditionalRun(harness: Harness): Promise<SmokeOutcome> {
   await hold(harness, 'ArrowRight', 40);
   const afterHazard = await shell<S>(harness);
 
-  await harness.keyDown('ArrowRight');
+  // Respawn returns to the activated checkpoint. Let Arcade settle the body on
+  // the ground, then create vertical clearance before applying horizontal
+  // motion; holding Right first can legitimately re-enter the spike overlap
+  // before the jump edge is consumed.
+  await harness.stepFrames(12);
+  const settled = await shell<S>(harness);
   await harness.keyTap('Space');
-  await harness.stepFrames(10);
+  await harness.stepFrames(8);
   const airborne = await shell<S>(harness);
-  await harness.stepFrames(55);
+  await harness.keyDown('ArrowRight');
+  await harness.stepFrames(46);
   await harness.keyUp('ArrowRight');
-  await hold(harness, 'ArrowRight', 150);
+  await harness.stepFrames(4);
+  const cleared = await shell<S>(harness);
+
+  await hold(harness, 'ArrowRight', 130);
   const finished = await shell<S>(harness);
 
   const passed =
@@ -72,10 +81,13 @@ async function traditionalRun(harness: Harness): Promise<SmokeOutcome> {
     checkpoint.collected >= 1 &&
     checkpoint.checkpoint === 'mid' &&
     afterHazard.hazardHits >= 1 &&
-    airborne.y < afterHazard.y &&
+    settled.hazardHits === afterHazard.hazardHits &&
+    airborne.y < settled.y &&
+    cleared.x > 480 &&
+    cleared.hazardHits === settled.hazardHits &&
     finished.collected >= 2 &&
     finished.outcome === 'complete';
-  return { passed, details: { initial, checkpoint, afterHazard, airborne, finished } };
+  return { passed, details: { initial, checkpoint, afterHazard, settled, airborne, cleared, finished } };
 }
 
 async function metroidvaniaRun(harness: Harness): Promise<SmokeOutcome> {
@@ -217,7 +229,6 @@ async function visualNovelRun(harness: Harness): Promise<SmokeOutcome> {
   const midnight = await shell<S>(harness);
 
   await restartPlay(harness);
-  await harness.keyTap('Space');
   await harness.keyTap('Space');
   await harness.keyTap('ArrowLeft');
   await harness.keyTap('Space');
