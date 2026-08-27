@@ -1,9 +1,22 @@
 import { generateTheme } from '@sw2d/cli/factory';
 import type { StarterKit } from '../../contracts.ts';
 
-type SupplementalUiRole = 'ui.panel' | 'ui.cursor' | 'ui.button' | 'particle';
+type SupplementalUiRole = 'background' | 'ui.panel' | 'ui.cursor' | 'ui.button' | 'particle';
 
 const SUPPLEMENTAL_UI_ASSETS = {
+  background: {
+    role: 'background',
+    key: 'theme/default/background',
+    spec: {
+      kind: 'generated',
+      width: 640,
+      height: 360,
+      fill: '#0b0d13',
+      stroke: '#1f2937',
+      strokeWidth: 2,
+      cornerRadius: 0,
+    },
+  },
   'ui.panel': {
     role: 'ui.panel',
     key: 'theme/default/ui.panel',

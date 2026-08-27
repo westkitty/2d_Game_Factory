@@ -1,4 +1,5 @@
 import { defineExpandedKit } from './common.ts';
+import { withDefaultThemeRoles } from './themeRoles.ts';
 
 export type SimulationStarterVariant =
   | 'shopkeeper'
@@ -30,6 +31,8 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     const scene = context.scene;
     const { width, height } = context.definition.viewport;
     const background = addBackground(scene, context.assets.has('background') ? context.assets.resolve('background') : null, width, height);
+    const panel = scene.add.image(width * 0.5, 350, context.assets.resolve('ui.panel')).setDisplaySize(860, 130).setAlpha(0.92).setDepth(1);
+    const button = scene.add.image(width * 0.5, 505, context.assets.resolve('ui.button')).setDisplaySize(142, 48).setDepth(1);
     const mascot = scene.add.sprite(width * 0.5, 185, context.assets.resolve('player')).setDisplaySize(96, 96);
     const resourceIcon = scene.add.sprite(width * 0.5 - 110, 185, context.assets.resolve('pickup')).setDisplaySize(34, 34);
     const status = scene.add.text(width * 0.5, 290, '', { fontFamily: 'ui-monospace, monospace', fontSize: '18px', color: '#ffffff', align: 'center', wordWrap: { width: 820 } }).setOrigin(0.5, 0).setDepth(50);
@@ -164,6 +167,8 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
 
     const debugHandle = context.debug.contribute('game.expanded-starter', () => ({
       presetId: VARIANT, family: 'simulation-management', playerTextureKey: mascot.texture.key, backgroundTextureKey: background ? background.texture.key : null,
+      pickupTextureKey: resourceIcon.texture.key, panelRoleSource: 'ui.panel', panelTextureKey: panel.texture.key,
+      buttonRoleSource: 'ui.button', buttonTextureKey: button.texture.key,
       elapsedMs: Math.round(elapsedMs), outcome, lastAction, currency: Math.floor(currency * 100) / 100, stock, sellValue, sales, upgradeA, upgradeB, incomeRate, businessValue,
       plots, selectedPlot, harvested, hunger, mood, wellbeingHoldMs, careActions, wood, stone, woodWorkers, stoneWorkers, selectedJob, constructionComplete,
       orders, revenue, served, water, food, habitatHealthyMs,
@@ -188,7 +193,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         else updateHabitat(deltaMs, primary, secondary);
         render();
       },
-      dispose(): void { if (disposed) return; disposed = true; debugHandle.dispose(); try { background?.destroy(); mascot.destroy(); resourceIcon.destroy(); status.destroy(); hint.destroy(); } catch { /* scene teardown */ } },
+      dispose(): void { if (disposed) return; disposed = true; debugHandle.dispose(); try { background?.destroy(); panel.destroy(); button.destroy(); mascot.destroy(); resourceIcon.destroy(); status.destroy(); hint.destroy(); } catch { /* scene teardown */ } },
     };
   },
 };
@@ -196,11 +201,11 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
 }
 
 export function simulationStarterKit(variant: SimulationStarterVariant) {
-  return defineExpandedKit({
+  return withDefaultThemeRoles(defineExpandedKit({
     presetId: variant,
     shellPackId: 'game.expanded-simulation-starter',
     shellSource: shellSource(variant),
     level: { entities: [{ id: 1, class: 'PlayerSpawn', name: 'Display', x: 480, y: 185, width: 0, height: 0, properties: [] }] },
     tuning: { moveSpeed: 220, jumpVelocity: 430, gravity: 1100 },
-  });
+  }), ['background', 'ui.panel', 'ui.button']);
 }
