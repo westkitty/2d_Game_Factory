@@ -41,6 +41,9 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
 
     const paddle = scene.add.sprite(paddleX, paddleY, context.assets.resolve('player')).setDisplaySize(150, 22);
     const ball = scene.add.sprite(ballX, ballY, context.assets.resolve('pickup')).setDisplaySize(18, 18);
+    const particleTextureKey = context.assets.has('particle')
+      ? context.assets.resolve('particle')
+      : context.assets.resolve('pickup');
     const bricks: Phaser.GameObjects.Sprite[] = [];
     const particles: Phaser.GameObjects.Sprite[] = [];
     for (let row = 0; row < 2; row++) {
@@ -86,7 +89,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
 
     function brickBurst(): void {
       const particle = scene.add
-        .sprite(ballX, ballY, context.assets.resolve('particle'))
+        .sprite(ballX, ballY, particleTextureKey)
         .setDisplaySize(14, 14)
         .setAlpha(0.95)
         .setDepth(20);
