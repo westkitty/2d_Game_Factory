@@ -10,6 +10,7 @@
  *  - a seed says which roles the project actually covers and which will fall
  *    back to generated art, rather than implying full coverage;
  *  - if only one or two presets genuinely fit, one or two seeds are returned.
+ *    Padding to three with bad matches would be three fake promises (section 18).
  */
 
 import { getPreset, listPresets } from '@sw2d/presets';
@@ -18,6 +19,7 @@ import type { AssetsDocument, GameSeed, RoleAssignment, SingleImageMode, Workben
 import { starterKitFor, starterKitDepthFor } from './starterKits/index.ts';
 import { derivePalette } from './projectStore.ts';
 
+/** How strongly a preset benefits from each role. Used only for scoring and for the "these roles matter here" ordering. */
 const ROLE_WEIGHT: Readonly<Record<string, number>> = {
   player: 4,
   background: 2,
@@ -39,16 +41,25 @@ const MATURITY_SCORE: Readonly<Record<string, number>> = {
 
 export interface SeedInput {
   readonly assets: AssetsDocument;
+  /** What the user said the image is for. `unsure` means "suggest" and biases nothing. */
   readonly mode?: SingleImageMode;
   readonly limit?: number;
 }
 
+/** Roles the project already has an asset for. */
 function coveredRoles(assets: AssetsDocument): readonly WorkbenchAssetRole[] {
   const roles = new Set<WorkbenchAssetRole>();
   for (const asset of assets.assets) for (const role of asset.roleAssignments) roles.add(role);
   return [...roles];
 }
 
+/**
+ * How well a preset is served by what the project actually has.
+ *
+ * 0 when the preset's kit wants roles the project cannot supply at all; 1
+ * when everything the kit draws is covered. Reported on the seed card, so a
+ * user can see *why* one direction is being recommended over another.
+ */
 export function assetCoverageScore(preset: PresetDefinition, covered: readonly WorkbenchAssetRole[]): number {
   const kit = starterKitFor(preset.id);
   const wanted = kit?.usefulRoles ?? ['player'];
@@ -62,6 +73,14 @@ export function assetCoverageScore(preset: PresetDefinition, covered: readonly W
   return total === 0 ? 0 : have / total;
 }
 
+/**
+ * The mode the user chose narrows what makes sense.
+ *
+ * A background image points at genres with a world to stand in; a sprite
+ * sheet points at anything with an animated actor. `reference` deliberately
+ * scores nothing extra: its pixels never ship, so the palette is all the
+ * project gets and no genre is favoured by it.
+ */
 function modeBonus(preset: PresetDefinition, mode: SingleImageMode | undefined, covered: readonly WorkbenchAssetRole[]): number {
   if (mode === undefined || mode === 'unsure' || mode === 'reference') return 0;
   if (mode === 'direct' && covered.includes('player')) {
@@ -77,6 +96,9 @@ export function rankPresets(assets: AssetsDocument, mode?: SingleImageMode): rea
     .map((preset) => {
       const coverage = assetCoverageScore(preset, covered);
       const maturity = MATURITY_SCORE[preset.maturity] ?? 0;
+      // Maturity dominates: recommending a well-covered but unproven recipe
+      // over a proven kit would be optimising the score rather than the user's
+      // outcome. Coverage and mode break ties within a maturity tier.
       const score = maturity + coverage * 30 + modeBonus(preset, mode, covered);
       return { preset, score, coverage };
     })
@@ -94,10 +116,12 @@ function rolePlanFor(preset: PresetDefinition, assets: AssetsDocument): readonly
 }
 
 /**
- * A seed must have something meaningfully playable behind the button. A
- * registered starter kit qualifies regardless of the preset's evidence
- * maturity; otherwise only smoke-validated presets qualify. This lets a
- * recipe preset gain a rich starter without falsely becoming proof-validated.
+ * Builds up to `limit` seeds.
+ *
+ * A seed is a recommendation to press one button and get something meaningfully
+ * playable. A registered starter kit qualifies regardless of preset evidence
+ * maturity; without a kit, only a smoke-validated preset qualifies. The card
+ * still reports the preset's original maturity verbatim.
  */
 export function buildSeeds(input: SeedInput): readonly GameSeed[] {
   const limit = input.limit ?? 3;
@@ -109,6 +133,8 @@ export function buildSeeds(input: SeedInput): readonly GameSeed[] {
   const seeds: GameSeed[] = [];
   const familiesSeen = new Set<string>();
 
+  // One per family first, so three seeds are three genuinely different
+  // directions rather than three variations on the same genre.
   for (const entry of ranked) {
     if (seeds.length >= limit) break;
     if (familiesSeen.has(entry.preset.family)) continue;
@@ -142,6 +168,7 @@ function toSeed(preset: PresetDefinition, coverage: number, assets: AssetsDocume
   };
 }
 
+/** A single seed for an explicitly chosen preset - what the preset browser's "use this" produces. */
 export function seedForPreset(presetId: string, assets: AssetsDocument): GameSeed {
   const preset = getPreset(presetId);
   const coverage = assetCoverageScore(preset, coveredRoles(assets));
