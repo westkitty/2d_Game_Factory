@@ -1,31 +1,41 @@
-import { run } from './exec.ts';
+import { existsSync } from 'node:fs';
+import path from 'node:path';
 import { REPO_ROOT } from './paths.ts';
 
 /**
- * The one allowed npm invocation for linking generated games into the local
- * workspace. It is deliberately offline and package-lock-free:
- *
- * - generated games live under the root `games/*` workspace and therefore
- *   need npm to refresh workspace links after creation;
- * - ordinary factory use must not contact the registry; the repository has
- *   already been installed before the workbench starts;
- * - scratch games must never become tracked `package-lock.json` entries.
+ * Repository-installed packages/tools a generated game relies on through
+ * ordinary ancestor node_modules resolution. A generated game does not need a
+ * second npm install or a game-local workspace link: tsc, Vite and Node all
+ * resolve these from the already-installed factory root.
  */
-export const WORKSPACE_INSTALL_ARGS = ['install', '--offline', '--no-package-lock', '--no-audit', '--no-fund'] as const;
+export const WORKSPACE_REQUIRED_PATHS = [
+  'node_modules/@sw2d/contracts/package.json',
+  'node_modules/@sw2d/content-pipeline/package.json',
+  'node_modules/@sw2d/packs/package.json',
+  'node_modules/@sw2d/runtime/package.json',
+  'node_modules/@sw2d/schemas/package.json',
+  'node_modules/@sw2d/qa/package.json',
+  'node_modules/phaser/package.json',
+  'node_modules/typescript/package.json',
+  'node_modules/vite/package.json',
+  'node_modules/vitest/package.json',
+] as const;
 
 /**
- * Link a freshly-generated game into the npm workspace so its
- * `@sw2d/*`/`phaser` dependencies resolve from the repository's own
- * node_modules (MASTER_PROJECT.md section 7: "generated source may consume
- * local factory workspaces while inside this repository").
+ * Prove the factory root was installed before operating on a generated game.
  *
- * The operation is intentionally local-only and does not rewrite the tracked
- * lockfile. If the repository was not installed first, npm fails instead of
- * silently reaching the network.
+ * This intentionally performs no package-manager mutation. Earlier code ran
+ * `npm install --offline --no-package-lock` after every generated game, which
+ * still depended on npm's cache and could fail on a clean offline machine.
+ * Generated games already resolve dependencies from the root node_modules, so
+ * the correct operation is a read-only readiness check.
  */
 export async function ensureWorkspaceInstalled(): Promise<void> {
-  const result = await run('npm', WORKSPACE_INSTALL_ARGS, { cwd: REPO_ROOT });
-  if (result.code !== 0) {
-    throw new Error(`offline npm workspace linking failed:\n${result.stderr || result.stdout}`);
+  const missing = WORKSPACE_REQUIRED_PATHS.filter((relativePath) => !existsSync(path.join(REPO_ROOT, relativePath)));
+  if (missing.length > 0) {
+    throw new Error(
+      `Factory dependencies are not installed. Missing: ${missing.join(', ')}. ` +
+        'Install the repository dependencies once before using generated games.',
+    );
   }
 }

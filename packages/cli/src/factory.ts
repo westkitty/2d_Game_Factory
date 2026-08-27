@@ -57,11 +57,7 @@ export function assertOverlayContained(paths: Iterable<string>): void {
 export interface CreateGameRequest {
   readonly gameId: string;
   readonly presetId: string;
-  /**
-   * Files written on top of the canonical generation. Used by workbench
-   * starter kits and by nothing else today. Every path is containment-checked
-   * before any write happens, so a bad overlay cannot half-create a game.
-   */
+  /** Files written on top of canonical generation. Every path is containment-checked before any write happens. */
   readonly overlay?: ReadonlyMap<string, string>;
 }
 
@@ -74,14 +70,7 @@ export interface CreateGameResult {
   readonly overlaidPaths: readonly string[];
 }
 
-/**
- * Generates a real, runnable game.
- *
- * Order matters: validate the id, resolve the preset, prove the target is
- * free, build the whole tree in memory, check the overlay, check for
- * unresolved template tokens, and only then touch the disk. Every failure
- * mode therefore leaves the filesystem exactly as it was.
- */
+/** Generate a real, runnable game through the one canonical path. */
 export function createGame(request: CreateGameRequest): CreateGameResult {
   assertValidSlug('game id', request.gameId);
   const preset = getPreset(request.presetId);
@@ -90,7 +79,6 @@ export function createGame(request: CreateGameRequest): CreateGameResult {
   assertDoesNotExist(`Game "${request.gameId}"`, targetPath);
 
   const files = new Map(buildGameFiles(request.gameId, preset));
-
   const overlaidPaths: string[] = [];
   if (request.overlay && request.overlay.size > 0) {
     assertOverlayContained(request.overlay.keys());
@@ -106,7 +94,6 @@ export function createGame(request: CreateGameRequest): CreateGameResult {
   }
 
   writeGameFiles(files, targetPath);
-
   return {
     gameId: request.gameId,
     presetId: request.presetId,
@@ -121,4 +108,4 @@ export { buildGameFiles, findUnresolvedTokens, writeGameFiles } from './generato
 export { generateGameManifest, generateResourceManifest, generateTheme, generateTiledLevel, generateTuning } from './generator/contentDocuments.ts';
 export { GAMES_ROOT, REPO_ROOT, PathEscapeError, TargetExistsError, assertDoesNotExist, resolveUnder } from './paths.ts';
 export { InvalidSlugError, assertValidSlug } from './slug.ts';
-export { WORKSPACE_INSTALL_ARGS, ensureWorkspaceInstalled } from './workspace.ts';
+export { WORKSPACE_REQUIRED_PATHS, ensureWorkspaceInstalled } from './workspace.ts';
