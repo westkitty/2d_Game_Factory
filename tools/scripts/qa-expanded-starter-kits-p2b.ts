@@ -180,15 +180,20 @@ async function breakoutRun(harness: Harness): Promise<SmokeOutcome> {
   const initial = await shell<S>(harness);
   let state = initial;
 
-  for (let step = 0; step < 520 && state.outcome === 'playing'; step++) {
+  // Breakout is deterministic but the final bricks can require several return
+  // cycles. Track the actual ball position and spend more simulated frames
+  // while it is safely away from the paddle; keep tighter updates near the
+  // bottom where missing a return would invalidate the mechanic proof.
+  for (let step = 0; step < 900 && state.outcome === 'playing'; step++) {
     const delta = state.ballX - state.paddleX;
+    const frames = state.ballY > 380 ? 2 : 8;
     if (Math.abs(delta) > 14) {
       const key = delta < 0 ? 'ArrowLeft' : 'ArrowRight';
       await harness.keyDown(key);
-      await harness.stepFrames(3);
+      await harness.stepFrames(frames);
       await harness.keyUp(key);
     } else {
-      await harness.stepFrames(3);
+      await harness.stepFrames(frames);
     }
     state = await shell<S>(harness);
   }
