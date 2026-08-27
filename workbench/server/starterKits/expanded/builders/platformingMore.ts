@@ -24,6 +24,7 @@ const LEVEL_DOCUMENT = 'levels/main';
 const TUNING_DOCUMENT = 'tuning';
 const PLAYER_HEIGHT = 46;
 const COLLECTATHON_QUOTA = 3;
+const GROUND_GRACE_MS = 120;
 
 interface Tuning { moveSpeed: number; jumpVelocity: number; gravity: number; }
 
@@ -75,6 +76,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     let anchor: Phaser.GameObjects.Sprite | null = null;
     let switchSprite: Phaser.GameObjects.Sprite | null = null;
     let exitSprite: Phaser.GameObjects.Sprite | null = null;
+    let groundGraceMs = GROUND_GRACE_MS;
 
     function staticMarker(object: { x: number; y: number; width: number; height: number }, role: 'pickup' | 'hazard' | 'checkpoint' | 'exit'): Phaser.GameObjects.Sprite {
       const sprite = scene.add.sprite(object.x + object.width / 2, object.y + object.height / 2, context.assets.resolve(role));
@@ -82,7 +84,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       scene.physics.add.existing(sprite, true); decorations.push(sprite); return sprite;
     }
     function respawn(): void {
-      player.setVelocity(0, 0); player.setPosition(checkpoint.x, checkpoint.y); respawns += 1; presentation.flash();
+      player.setVelocity(0, 0); player.setPosition(checkpoint.x, checkpoint.y); respawns += 1; groundGraceMs = GROUND_GRACE_MS; presentation.flash();
     }
 
     for (const object of level.objects) {
@@ -173,13 +175,21 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         const intent = platformController.read(context.input);
         const automatic = VARIANT === 'endless-runner' || VARIANT === 'auto-runner';
         player.setVelocityX((automatic ? 1 : intent.moveAxis) * tuning.moveSpeed);
-        const grounded = player.body.blocked.down;
-        if (intent.jumpPressed && grounded) { player.setVelocityY(-tuning.jumpVelocity); presentation.squash(-0.14); lastAction = 'jump'; }
+        const physicallyGrounded = player.body.blocked.down || player.body.touching.down;
+        if (physicallyGrounded) groundGraceMs = GROUND_GRACE_MS;
+        else groundGraceMs = Math.max(0, groundGraceMs - deltaMs);
+        const grounded = physicallyGrounded || groundGraceMs > 0;
+        if (intent.jumpPressed && grounded) {
+          player.setVelocityY(-tuning.jumpVelocity);
+          groundGraceMs = 0;
+          presentation.squash(-0.14);
+          lastAction = 'jump';
+        }
         distanceScore = Math.max(distanceScore, player.x - (spawn?.x ?? 70));
         maxHeightReached = Math.min(maxHeightReached, player.y);
         updatePuzzle(); updateGrapple();
         if (VARIANT === 'endless-runner' && elapsedMs >= 9000 && outcome === 'playing') { outcome = 'complete'; lastAction = 'survived'; player.setVelocity(0, 0); }
-        presentation.update(deltaMs, grounded); bobbing.update(deltaMs); render();
+        presentation.update(deltaMs, physicallyGrounded); bobbing.update(deltaMs); render();
       },
       dispose(): void {
         if (disposed) return; disposed = true; debugHandle.dispose(); presentation.dispose(); bobbing.dispose();
