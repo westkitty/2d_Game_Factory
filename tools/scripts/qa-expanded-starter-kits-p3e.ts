@@ -32,6 +32,19 @@ interface PuzzleState {
   readonly ballY: number;
   readonly playerScore: number;
   readonly opponentScore: number;
+  readonly cursorTextureKey: string;
+  readonly cursorRoleSource: string;
+  readonly panelTextureKey: string | null;
+  readonly panelRoleSource: string | null;
+  readonly boardRoleTextureKey: string | null;
+  readonly boardRoleSource: string | null;
+  readonly boardRoleSpriteCount: number;
+  readonly avatarVisible: boolean;
+  readonly cursorVisible: boolean;
+  readonly paddleVisible: boolean;
+  readonly opponentVisible: boolean;
+  readonly ballVisible: boolean;
+  readonly unexpectedDecorationVisible: boolean;
 }
 
 interface Candidate {
@@ -77,9 +90,16 @@ async function matchRun(harness: Harness): Promise<SmokeOutcome> {
 
   const passed =
     initial.cursor.col === 1 && initial.cursor.row === 0 && initial.matchesCleared === 0 && initial.outcome === 'playing' &&
+    initial.cursorRoleSource === 'ui.cursor' && initial.cursorTextureKey.length > 0 &&
+    initial.panelRoleSource === 'ui.panel' && initial.panelTextureKey !== null &&
+    initial.boardRoleSource === 'pickup' && initial.boardRoleTextureKey !== null && initial.boardRoleSpriteCount === 9 &&
+    initial.avatarVisible === true && initial.cursorVisible === true &&
+    initial.paddleVisible === false && initial.opponentVisible === false && initial.ballVisible === false &&
+    initial.unexpectedDecorationVisible === false &&
     selected.selected?.col === 1 && selected.selected?.row === 0 && selected.lastAction === 'select' &&
     moved.cursor.col === 1 && moved.cursor.row === 1 &&
     resolved.selected === null && resolved.boardRevision >= 2 && resolved.matchesCleared === 3 &&
+    resolved.boardRoleSpriteCount === 6 && resolved.unexpectedDecorationVisible === false &&
     resolved.score >= 30 && resolved.lastAction === 'match-clear' && resolved.outcome === 'complete';
   return { passed, details: { initial, selected, moved, resolved } };
 }
@@ -102,10 +122,16 @@ async function fallingRun(harness: Harness): Promise<SmokeOutcome> {
 
   const passed =
     initial.pieceCol === 2 && initial.pieceRotated === false && initial.linesCleared === 0 &&
+    initial.panelRoleSource === 'ui.panel' && initial.panelTextureKey !== null &&
+    initial.boardRoleSource === 'platform' && initial.boardRoleTextureKey !== null && initial.boardRoleSpriteCount >= 6 &&
+    initial.avatarVisible === true && initial.cursorVisible === false &&
+    initial.paddleVisible === false && initial.opponentVisible === false && initial.ballVisible === false &&
+    initial.unexpectedDecorationVisible === false &&
     moved.pieceCol === 3 &&
     rotated.pieceCol === 3 && rotated.pieceRotated === true &&
     restored.pieceCol === 2 && restored.pieceRotated === false &&
-    cleared.linesCleared === 1 && cleared.score >= 100 && cleared.lastAction === 'line-clear' && cleared.outcome === 'complete';
+    cleared.linesCleared === 1 && cleared.boardRoleSpriteCount >= 2 && cleared.unexpectedDecorationVisible === false &&
+    cleared.score >= 100 && cleared.lastAction === 'line-clear' && cleared.outcome === 'complete';
   return { passed, details: { initial, moved, rotated, restored, cleared } };
 }
 
@@ -139,8 +165,6 @@ async function forceOpponentWin(harness: Harness, initialScore: number): Promise
   for (let step = 0; step < 1400 && state.opponentScore < 3 && state.outcome === 'playing'; step++) {
     const headingLeft = state.ballX < previousBallX;
     if (headingLeft && state.ballX < 360) {
-      // Move the paddle to the opposite half from the incoming ball so the
-      // score boundary is reached through the real miss path.
       if (state.ballY < VIEWPORT_MID_Y) {
         await harness.keyDown('ArrowDown');
         await harness.keyUp('ArrowUp');
@@ -174,9 +198,13 @@ async function pongRun(harness: Harness): Promise<SmokeOutcome> {
 
   const passed =
     initial.playerScore === 0 && initial.opponentScore === 0 && initial.outcome === 'playing' &&
+    initial.panelRoleSource === 'ui.panel' && initial.panelTextureKey !== null &&
+    initial.avatarVisible === false && initial.cursorVisible === false &&
+    initial.paddleVisible === true && initial.opponentVisible === true && initial.ballVisible === true &&
+    initial.unexpectedDecorationVisible === false &&
     returned.lastAction === 'player-return' && returned.paddleY !== initial.paddleY &&
     afterReturn.ballX > returned.ballX &&
-    lost.opponentScore === 3 && lost.playerScore < 3 && lost.outcome === 'failed';
+    lost.opponentScore === 3 && lost.playerScore < 3 && lost.unexpectedDecorationVisible === false && lost.outcome === 'failed';
   return { passed, details: { initial, returned, afterReturn, lost } };
 }
 

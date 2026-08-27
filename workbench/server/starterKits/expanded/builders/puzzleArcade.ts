@@ -33,6 +33,15 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     const avatar = scene.add.sprite(70, 70, context.assets.resolve('player')).setDisplaySize(40, 40);
     const status = scene.add.text(18, 15, '', { fontFamily: 'ui-monospace, monospace', fontSize: '14px', color: '#ffffff', backgroundColor: '#111827aa', padding: { x: 7, y: 4 } }).setDepth(100);
     const objects: Phaser.GameObjects.GameObject[] = [];
+    const usesP3ePresentation = VARIANT === 'match-puzzle' || VARIANT === 'falling-block-puzzle' || VARIANT === 'pong';
+    const cursorRoleSource = VARIANT === 'match-puzzle' && context.assets.has('ui.cursor') ? 'ui.cursor' : 'checkpoint';
+    const cursorTextureKey = cursorRoleSource === 'ui.cursor' ? context.assets.resolve('ui.cursor') : context.assets.resolve('checkpoint');
+    const panelRoleSource = usesP3ePresentation ? (context.assets.has('ui.panel') ? 'ui.panel' : 'platform') : null;
+    const panelTextureKey = panelRoleSource === 'ui.panel' ? context.assets.resolve('ui.panel') : panelRoleSource === 'platform' ? context.assets.resolve('platform') : null;
+    const boardRoleSource = VARIANT === 'match-puzzle' ? 'pickup' : VARIANT === 'falling-block-puzzle' ? 'platform' : null;
+    const boardRoleTextureKey = boardRoleSource === 'pickup' ? context.assets.resolve('pickup') : boardRoleSource === 'platform' ? context.assets.resolve('platform') : null;
+    const rolePanel = panelTextureKey ? scene.add.sprite(185, 42, panelTextureKey).setDisplaySize(340, 58).setAlpha(0.28).setDepth(90) : null;
+    if (rolePanel) objects.push(rolePanel);
 
     let elapsedMs = 0;
     let score = 0;
@@ -75,9 +84,10 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     let drains = 0;
 
     const boardSprites: Phaser.GameObjects.Rectangle[] = [];
+    const boardRoleSprites: Phaser.GameObjects.Sprite[] = [];
     const brickSprites: Phaser.GameObjects.Sprite[] = [];
     const bumperSprites: Phaser.GameObjects.Sprite[] = [];
-    const cursorSprite = scene.add.sprite(190, 125, context.assets.resolve('checkpoint')).setDisplaySize(46, 46).setAlpha(0.65);
+    const cursorSprite = scene.add.sprite(190, 125, cursorTextureKey).setDisplaySize(46, 46).setAlpha(0.65);
     objects.push(cursorSprite);
     const paddle = scene.add.sprite(paddleX, paddleY, context.assets.resolve('player')).setDisplaySize(120, 22);
     const opponent = scene.add.sprite(width - 55, opponentY, context.assets.resolve('enemy')).setDisplaySize(22, 110);
@@ -93,15 +103,22 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
 
     function boardPixel(col: number, row: number): [number, number] { return [190 + col * CELL, 125 + row * CELL]; }
     function tintFor(value: number): number { return [0x65d0a8, 0xe05fa0, 0xf0c274, 0x4f9ee0][Math.abs(value) % 4]!; }
-    function clearBoardSprites(): void { while (boardSprites.length) boardSprites.pop()!.destroy(); }
+    function clearBoardSprites(): void {
+      while (boardSprites.length) boardSprites.pop()!.destroy();
+      while (boardRoleSprites.length) boardRoleSprites.pop()!.destroy();
+    }
 
     function drawMatchBoard(): void {
       clearBoardSprites();
       for (let row = 0; row < matchBoard.length; row++) for (let col = 0; col < matchBoard[row]!.length; col++) {
         const value = matchBoard[row]![col]!;
         const [x, y] = boardPixel(col, row);
-        const rect = scene.add.rectangle(x, y, CELL - 6, CELL - 6, value < 0 ? 0x22242c : tintFor(value), value < 0 ? 0.25 : 0.9).setStrokeStyle(1, 0xffffff, 0.25);
+        const rect = scene.add.rectangle(x, y, CELL - 6, CELL - 6, 0x202532, value < 0 ? 0.2 : 0.55).setStrokeStyle(1, 0xffffff, 0.25);
         boardSprites.push(rect);
+        if (value >= 0 && boardRoleTextureKey) {
+          const tile = scene.add.sprite(x, y, boardRoleTextureKey).setDisplaySize(CELL - 13, CELL - 13).setTint(tintFor(value)).setAlpha(0.92);
+          boardRoleSprites.push(tile);
+        }
       }
       cursorSprite.setPosition(...boardPixel(cursor.col, cursor.row));
     }
@@ -142,10 +159,16 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       selected = null;
     }
 
+    function setupMatch(): void {
+      cursor = { col: 1, row: 0 };
+      paddle.setVisible(false); opponent.setVisible(false); ball.setVisible(false);
+      drawMatchBoard();
+    }
+
     function setupFalling(): void {
       matchBoard = Array.from({ length: 8 }, () => Array(6).fill(-1) as number[]);
       matchBoard[7] = [1, 1, -1, -1, 1, 1];
-      cursorSprite.setVisible(false);
+      cursorSprite.setVisible(false); paddle.setVisible(false); opponent.setVisible(false); ball.setVisible(false);
     }
 
     function fallingCells(): readonly { col: number; row: number }[] {
@@ -162,7 +185,10 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       for (let row = 0; row < 8; row++) for (let col = 0; col < 6; col++) {
         const occupied = matchBoard[row]![col]! >= 0 || fallingCells().some((cell) => cell.col === col && cell.row === row);
         const [x, y] = [275 + col * 42, 105 + row * 42];
-        boardSprites.push(scene.add.rectangle(x, y, 36, 36, occupied ? 0x65d0a8 : 0x202532, occupied ? 0.9 : 0.35));
+        boardSprites.push(scene.add.rectangle(x, y, 36, 36, 0x202532, occupied ? 0.5 : 0.28).setStrokeStyle(1, 0xffffff, occupied ? 0.18 : 0.08));
+        if (occupied && boardRoleTextureKey) {
+          boardRoleSprites.push(scene.add.sprite(x, y, boardRoleTextureKey).setDisplaySize(31, 31).setTint(0x65d0a8).setAlpha(0.9));
+        }
       }
     }
 
@@ -183,7 +209,8 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     }
 
     function setupPong(): void {
-      cursorSprite.setVisible(false); paddle.setDisplaySize(22, 110).setPosition(55, height / 2); paddleY = height / 2; opponent.setVisible(true); ball.setPosition(width / 2, height / 2); ballVx = 210; ballVy = 145;
+      avatar.setVisible(false); cursorSprite.setVisible(false); paddle.setVisible(true); ball.setVisible(true);
+      paddle.setDisplaySize(22, 110).setPosition(55, height / 2); paddleY = height / 2; opponent.setVisible(true); ball.setPosition(width / 2, height / 2); ballVx = 210; ballVy = 145;
     }
 
     function setupPhysicsPuzzle(): void {
@@ -208,7 +235,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       for (const point of [{ x: 390, y: 220 }, { x: 570, y: 220 }, { x: 480, y: 330 }]) { const bumper = scene.add.sprite(point.x, point.y, context.assets.resolve('hazard')).setDisplaySize(46, 46); bumperSprites.push(bumper); objects.push(bumper); }
     }
 
-    if (VARIANT === 'match-puzzle') { cursor = { col: 1, row: 0 }; drawMatchBoard(); }
+    if (VARIANT === 'match-puzzle') setupMatch();
     else if (VARIANT === 'falling-block-puzzle') { setupFalling(); drawFalling(); }
     else if (VARIANT === 'breakout') setupBricks();
     else if (VARIANT === 'pong') setupPong();
@@ -290,6 +317,12 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
 
     const debugHandle = context.debug.contribute('game.expanded-starter', () => ({
       presetId: VARIANT, family: 'puzzle-arcade', playerTextureKey: avatar.texture.key, backgroundTextureKey: background ? background.texture.key : null,
+      cursorTextureKey: cursorSprite.texture.key, cursorRoleSource, panelTextureKey: rolePanel?.texture.key ?? null, panelRoleSource,
+      boardRoleTextureKey, boardRoleSource, boardRoleSpriteCount: boardRoleSprites.filter((sprite) => sprite.visible).length,
+      avatarVisible: avatar.visible, cursorVisible: cursorSprite.visible, paddleVisible: paddle.visible, opponentVisible: opponent.visible, ballVisible: ball.visible,
+      unexpectedDecorationVisible: VARIANT === 'match-puzzle' || VARIANT === 'falling-block-puzzle'
+        ? paddle.visible || opponent.visible || ball.visible
+        : VARIANT === 'pong' ? avatar.visible || cursorSprite.visible : false,
       elapsedMs: Math.round(elapsedMs), score, outcome, lastAction, cursor, selected, boardRevision, matchesCleared,
       pieceRow, pieceCol, pieceRotated, linesCleared, paddleX: Math.round(paddleX), paddleY: Math.round(paddleY), ballX: Math.round(ballX), ballY: Math.round(ballY),
       bricksRemaining, lives, playerScore, opponentScore, triggerActivated, goalReached, mazeCell, mazeHasPickup,
