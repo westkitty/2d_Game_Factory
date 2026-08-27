@@ -71,6 +71,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     let outcome: 'playing' | 'victory' | 'defeat' = 'playing';
     let baseHealth = 6;
     let defenderLane: number | null = null;
+    let defenderSprite: Phaser.GameObjects.Sprite | null = null;
     let laneWaveProgress = 0;
     let autoBattleStarted = false;
     let autoTickMs = 0;
@@ -134,6 +135,13 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     function laneDefense(confirmPressed: boolean, deltaMs: number): void {
       if (confirmPressed) {
         defenderLane = cursor.row % 3;
+        const defenderCell = { col: 4, row: 2 + defenderLane };
+        if (!defenderSprite) {
+          defenderSprite = scene.add.sprite(...toPixel(defenderCell), context.assets.resolve('pickup')).setDisplaySize(36, 36);
+          decorations.push(defenderSprite);
+        } else {
+          defenderSprite.setPosition(...toPixel(defenderCell));
+        }
         lastAction = 'place-defender';
       }
       laneWaveProgress += deltaMs * 0.035;

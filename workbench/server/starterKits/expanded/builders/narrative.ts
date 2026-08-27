@@ -29,6 +29,9 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     const { width, height } = context.definition.viewport;
     const background = addBackground(scene, context.assets.has('background') ? context.assets.resolve('background') : null, width, height);
     const worldMode = WORLD_VARIANTS.has(VARIANT);
+    const startMarker = worldMode && context.assets.has('checkpoint')
+      ? scene.add.sprite(120, 270, context.assets.resolve('checkpoint')).setDisplaySize(54, 54).setAlpha(0.32)
+      : null;
     const player = scene.physics.add.sprite(worldMode ? 120 : width * 0.5, worldMode ? 270 : 155, context.assets.resolve('player'));
     player.setScale((worldMode ? 44 : 96) / player.height);
     player.body.setAllowGravity(false);
@@ -195,7 +198,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         disposed = true;
         debugHandle.dispose();
         try {
-          background?.destroy(); player.destroy(); title.destroy(); hint.destroy(); exit.destroy(); cursor?.destroy();
+          background?.destroy(); startMarker?.destroy(); player.destroy(); title.destroy(); hint.destroy(); exit.destroy(); cursor?.destroy();
           for (const marker of markers) marker.destroy();
         } catch {
           /* scene already tearing down */

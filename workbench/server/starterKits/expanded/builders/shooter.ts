@@ -63,8 +63,10 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
 
     const playerBullets = new ProjectilePool({ scene, textureKey: context.assets.resolve('pickup'), displaySize: 8, lifetimeMs: 1800, worldWidth: width, worldHeight: height });
     const enemyBullets = new ProjectilePool({ scene, textureKey: context.assets.resolve('hazard'), displaySize: 9, lifetimeMs: 2600, worldWidth: width, worldHeight: height });
+    const particleTextureKey = context.assets.has('particle') ? context.assets.resolve('particle') : context.assets.resolve('pickup');
     const enemies: Enemy[] = [];
     const decorations: Phaser.GameObjects.GameObject[] = [];
+    const impactParticles: Phaser.GameObjects.Sprite[] = [];
 
     let playerHealth = 5;
     let lastHitMs = -1000;
@@ -96,9 +98,22 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
 
     function liveEnemies(): Enemy[] { return enemies.filter((enemy) => enemy.alive); }
 
+    function impactBurst(x: number, y: number): void {
+      const particle = scene.add.sprite(x, y, particleTextureKey).setDisplaySize(13, 13).setDepth(40);
+      impactParticles.push(particle);
+      scene.tweens.add({
+        targets: particle,
+        alpha: 0,
+        scale: 1.8,
+        duration: 130,
+        onComplete: () => particle.destroy(),
+      });
+    }
+
     function damageEnemy(enemy: Enemy, amount = 1): void {
       if (!enemy.alive) return;
       enemy.health -= amount;
+      impactBurst(enemy.sprite.x, enemy.sprite.y);
       enemy.sprite.setTint(0xffffff);
       scene.time.delayedCall(70, () => enemy.sprite.active && enemy.sprite.clearTint());
       if (enemy.health <= 0) {
@@ -151,6 +166,8 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     function configure(): void {
       if (VARIANT === 'horizontal-shmup') {
         spawnEnemy(500, 170, 2); spawnEnemy(660, 300, 2); spawnEnemy(810, 220, 2);
+        const exit = scene.add.sprite(918, 270, context.assets.resolve('exit')).setDisplaySize(28, 70).setAlpha(0.72);
+        decorations.push(exit);
       } else if (VARIANT === 'vertical-shmup') {
         spawnEnemy(280, 120, 2); spawnEnemy(480, 90, 2); spawnEnemy(700, 140, 2);
       } else if (VARIANT === 'bullet-hell') {
@@ -162,8 +179,9 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         spawnEnemy(360, 170, 1); spawnEnemy(520, 270, 1); spawnEnemy(680, 150, 1); spawnEnemy(760, 360, 1); spawnEnemy(420, 380, 1);
       } else if (VARIANT === 'run-and-gun') {
         spawnEnemy(420, 466, 2); spawnEnemy(650, 466, 2); spawnEnemy(810, 466, 2);
+        const hazardMarker = scene.add.sprite(560, 432, context.assets.resolve('hazard')).setDisplaySize(30, 30).setAlpha(0.82);
         const exit = scene.add.sprite(905, 450, context.assets.resolve('exit')).setDisplaySize(30, 60);
-        decorations.push(exit);
+        decorations.push(hazardMarker, exit);
       }
     }
     configure();
@@ -235,6 +253,13 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       backgroundTextureKey: background ? background.texture.key : null,
       playerHealth,
       enemiesRemaining: liveEnemies().length,
+      enemyStates: enemies.map((enemy, index) => ({
+        index,
+        x: Math.round(enemy.sprite.x),
+        y: Math.round(enemy.sprite.y),
+        health: enemy.health,
+        alive: enemy.alive,
+      })),
       score,
       shotsFired,
       hits,
@@ -318,6 +343,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
           background?.destroy(); player.destroy(); status.destroy();
           for (const enemy of enemies) enemy.sprite.destroy();
           for (const object of decorations) object.destroy();
+          for (const particle of impactParticles) if (particle.active) particle.destroy();
           ground?.clear(true, true); ground?.destroy(true);
         } catch {
           /* scene already tearing down */

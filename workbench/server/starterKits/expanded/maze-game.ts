@@ -1,2 +1,2 @@
-import { puzzleArcadeStarterKit } from './builders/puzzleArcade.ts';
-export const starterKit = puzzleArcadeStarterKit('maze-game');
+import { mazeStarterKit } from './builders/maze.ts';
+export const starterKit = mazeStarterKit();
