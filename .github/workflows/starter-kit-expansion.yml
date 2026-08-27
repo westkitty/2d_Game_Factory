@@ -46,6 +46,7 @@ jobs:
           - p2c
           - p3a
           - p3b
+          - p3c
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
