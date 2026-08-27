@@ -64,13 +64,13 @@ describe('starter-kit expansion scaffolds', () => {
 });
 
 describe('starter-kit authoring helper', () => {
-  it('produces the canonical overlay surfaces without touching the machine', () => {
+  it('produces the canonical overlay surfaces and canonical empty JSON pack configs without touching the machine', () => {
     const files = buildStarterKitOverlay({
       gameId: 'sample-game',
       displayName: 'Sample Game',
       shellPackId: 'game.sample-shell',
       shellSource: "export const GAME_SPECIFIC_PACK = { id: 'game.sample-shell' };\n",
-      systemPacks: [{ packId: 'sw2d.arcade', config: { gravity: 900 } }],
+      requiredPackIds: ['sw2d.arcade'],
       level: { entities: [{ id: 1, class: 'PlayerSpawn', name: 'Spawn', x: 20, y: 20, width: 0, height: 0, properties: [] }] },
       tuning: { moveSpeed: 200 },
     });
@@ -85,8 +85,10 @@ describe('starter-kit authoring helper', () => {
     const manifest = JSON.parse(files.get('content/game.json')!) as { id: string; displayName: string; systemPacks: { packId: string; config: unknown }[] };
     expect(manifest.id).toBe('sample-game');
     expect(manifest.displayName).toBe('Sample Game');
-    expect(manifest.systemPacks.map((entry) => entry.packId)).toEqual(['sw2d.arcade', 'game.sample-shell']);
-    expect(manifest.systemPacks[0]?.config).toEqual({ gravity: 900 });
+    expect(manifest.systemPacks).toEqual([
+      { packId: 'sw2d.arcade', config: {} },
+      { packId: 'game.sample-shell', config: {} },
+    ]);
     const tuning = JSON.parse(files.get('content/tuning.json')!) as { player: Record<string, number> };
     for (const value of Object.values(tuning.player)) expect(value).toBeGreaterThan(0);
   });
