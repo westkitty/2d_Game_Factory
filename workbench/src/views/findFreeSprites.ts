@@ -53,7 +53,13 @@ function rightsUsable(status: RightsStatus): boolean {
   return status === 'verified' || status === 'attribution-required' || status === 'stale-verification';
 }
 
-function candidateCard(candidate: SourceCandidate, onAcquire: ((c: SourceCandidate) => void) | null): HTMLElement {
+const MATCH_LEVEL_CLASS: Readonly<Record<string, string>> = {
+  excellent: 'badge badge--proof',
+  strong: 'badge badge--smoke',
+  partial: 'badge badge--recipe',
+};
+
+function candidateCard(candidate: SourceCandidate, onAcquire: ((c: SourceCandidate) => void) | null, onReverse?: (c: SourceCandidate) => void): HTMLElement {
   const roleHints = Object.entries(candidate.roleHints)
     .filter(([, weight]) => (weight ?? 0) >= 0.5)
     .sort((a, b) => (b[1] ?? 0) - (a[1] ?? 0))
@@ -91,13 +97,18 @@ function candidateCard(candidate: SourceCandidate, onAcquire: ((c: SourceCandida
         : 'No attribution required.',
       el('div', { class: 'mono faint', style: { 'font-size': '10px', 'margin-top': '3px' }, text: candidate.rights.evidenceUrl }),
     ),
-    onAcquire
-      ? button(usable ? 'Acquire pack' : 'Blocked by licence', () => onAcquire(candidate), {
-          class: usable ? 'btn btn--primary' : 'btn',
-          disabled: !usable,
-          title: usable ? `Download from ${candidate.acquisitionUrl}` : 'This licence is not on the accepted list.',
-        })
-      : el('div', { class: 'faint', style: { 'font-size': '11px' }, text: 'Open a project to acquire this pack.' }),
+    el(
+      'div',
+      { class: 'row', style: { gap: '6px' } },
+      onAcquire
+        ? button(usable ? 'Acquire pack' : 'Blocked by licence', () => onAcquire(candidate), {
+            class: usable ? 'btn btn--primary' : 'btn',
+            disabled: !usable,
+            title: usable ? `Download from ${candidate.acquisitionUrl}` : 'This licence is not on the accepted list.',
+          })
+        : el('div', { class: 'faint', style: { 'font-size': '11px' }, text: 'Open a project to acquire this pack.' }),
+      onReverse ? button('What can I make with this?', () => onReverse(candidate), { class: 'btn btn--sm btn--ghost' }) : null,
+    ),
   );
 }
 
@@ -126,7 +137,7 @@ function roleCoverageGrid(entries: readonly RoleCoverageEntry[]): HTMLElement {
   );
 }
 
-function matchCard(match: PackMatch, onAcquire: (c: SourceCandidate) => void, onReskin?: (c: SourceCandidate) => void): HTMLElement {
+function matchCard(match: PackMatch, onAcquire: (c: SourceCandidate) => void, onReskin?: (c: SourceCandidate) => void, onReverse?: (c: SourceCandidate) => void): HTMLElement {
   const c = match.candidate;
   const usable = !match.blockedReason && rightsUsable(c.rights.status);
   return el(
@@ -163,6 +174,7 @@ function matchCard(match: PackMatch, onAcquire: (c: SourceCandidate) => void, on
       usable && onReskin && match.totalRequired > 0 && match.coveredRequired === match.totalRequired
         ? button('Preview this look', () => onReskin(c), { class: 'btn', title: 'Acquire and audition this pack as a coherent visual treatment' })
         : null,
+      onReverse ? button('What can I make with this?', () => onReverse(c), { class: 'btn btn--sm btn--ghost' }) : null,
     ),
   );
 }
@@ -290,7 +302,12 @@ export async function openFindFreeSprites(): Promise<void> {
       }
       audition(candidate, outcome.result.batchId, outcome.result.provenance, outcome.plan.files, asLook ? outcome.reskinProposal : undefined);
     } catch (error) {
-      toast(errorText(error), 'err');
+      const message = errorText(error);
+      if (/timed out|request failed|did not resolve|HTTP 5\d\d|not HTTPS|allowlist|non-public/.test(message)) {
+        toast('Source unavailable - your game is unaffected. Try again when online, or keep the generated art.', 'warn');
+      } else {
+        toast(message, 'err');
+      }
     }
   }
 
@@ -469,16 +486,25 @@ export async function openFindFreeSprites(): Promise<void> {
     }
   }
 
+  const allOffline = providers.length > 0 && providers.every((provider) => !provider.online);
+
   function providerStripEl(): HTMLElement {
     return el(
       'div',
-      { class: 'row row--wrap', style: { gap: '6px', 'margin-bottom': '10px' } },
-      ...providers.map((provider) =>
-        el('span', { class: 'badge', title: provider.homepage, text: `${provider.title} · ${provider.online ? 'reachable' : 'offline'} · ${provider.candidateCount} packs` }),
-      ),
-      vault.length > 0
-        ? button(`Local vault · ${vault.length}`, () => showVault(), { class: 'btn btn--sm', title: 'Packs already acquired and verified locally - reused without re-downloading' })
+      {},
+      allOffline
+        ? el('div', { class: 'warnbox', attrs: { 'data-testid': 'ffs-offline' }, text: 'Providers are unreachable - you appear to be offline. Generated art still works, and any packs already in the local vault can still be used.' })
         : null,
+      el(
+        'div',
+        { class: 'row row--wrap', style: { gap: '6px', 'margin-bottom': '10px' } },
+        ...providers.map((provider) =>
+          el('span', { class: 'badge', title: provider.homepage, text: `${provider.title} · ${provider.online ? 'reachable' : 'offline'} · ${provider.candidateCount} packs` }),
+        ),
+        vault.length > 0
+          ? button(`Local vault · ${vault.length}`, () => showVault(), { class: 'btn btn--sm', title: 'Packs already acquired and verified locally - reused without re-downloading' })
+          : null,
+      ),
     );
   }
 
@@ -573,13 +599,72 @@ export async function openFindFreeSprites(): Promise<void> {
     );
   }
 
+  interface PresetSuggestionLite {
+    readonly presetId: string;
+    readonly presetDisplayName: string;
+    readonly family: string;
+    readonly maturity: string;
+    readonly matchLevel: string;
+    readonly score: number;
+    readonly coveredRoles: readonly WorkbenchAssetRole[];
+    readonly missingRoles: readonly WorkbenchAssetRole[];
+    readonly note: string;
+  }
+
+  async function showReverse(candidate: SourceCandidate): Promise<void> {
+    replace(bodyHost, el('div', { class: 'empty', attrs: { 'data-testid': 'ffs-reverse-loading' }, text: `Working out what "${candidate.title}" could make…` }));
+    replace(footerHost);
+    let suggestions: readonly PresetSuggestionLite[] = [];
+    try {
+      const result = await api.get<{ suggestions: readonly PresetSuggestionLite[] }>('/sources/reverse', { providerId: candidate.providerId, packId: candidate.packId });
+      suggestions = result.suggestions;
+    } catch (error) {
+      toast(errorText(error), 'err');
+      recommendation ? showRecommendations() : showCatalogue();
+      return;
+    }
+    replace(
+      bodyHost,
+      el('div', { class: 'row', style: { 'margin-bottom': '8px' } }, button('← Back', () => (recommendation ? showRecommendations() : showCatalogue()), { class: 'btn btn--sm' })),
+      el('h3', { style: { margin: '0 0 4px' }, text: `What you can make with ${candidate.title}` }),
+      el('p', { class: 'muted', style: { 'margin-top': '0', 'font-size': '12px' } }, `Ranked by how well the pack covers each genre's real visual roles - not by genre labels. ${candidate.rights.licenseName}.`),
+      suggestions.length === 0
+        ? el('div', { class: 'empty', text: 'No genre in the catalogue is a strong enough fit for this pack on its own.' })
+        : el(
+            'div',
+            { class: 'seeds' },
+            ...suggestions.map((suggestion) =>
+              el(
+                'div',
+                { class: 'seed' },
+                el(
+                  'div',
+                  { class: 'row row--wrap', style: { gap: '6px' } },
+                  el('span', { class: MATCH_LEVEL_CLASS[suggestion.matchLevel] ?? 'badge', text: `${suggestion.matchLevel} match` }),
+                  el('span', { class: 'badge', text: suggestion.family }),
+                  el('span', { class: 'badge', text: `${suggestion.score}%` }),
+                ),
+                el('div', { class: 'seed__title', text: suggestion.presetDisplayName }),
+                el('div', { class: 'faint', style: { 'font-size': '11px' }, text: `Covers: ${suggestion.coveredRoles.map((r) => ROLE_LABELS[r]).join(', ') || '—'}` }),
+                suggestion.missingRoles.length > 0
+                  ? el('div', { class: 'faint', style: { 'font-size': '11px' }, text: `Generated fallback: ${suggestion.missingRoles.map((r) => ROLE_LABELS[r]).join(', ')}` })
+                  : null,
+                el('div', { class: 'seed__limits', text: suggestion.note }),
+                gameId ? null : button('Make this game', () => { close(); openCreateDialog({ mode: 'gameplay', presetId: suggestion.presetId }); }, { class: 'btn btn--sm' }),
+              ),
+            ),
+          ),
+    );
+    replace(footerHost, el('span', { class: 'faint', text: `${suggestions.length} compatible genre(s)` }));
+  }
+
   function showCatalogue(): void {
     replace(
       bodyHost,
       el('p', { class: 'muted', style: { 'margin-top': '0' } }, 'Every pack in the catalogue. Rights are shown before anything downloads.'),
       providerStripEl(),
       recommendation ? button('← Back to recommendations', () => showRecommendations(), { class: 'btn btn--sm' }) : null,
-      el('div', { class: 'seeds', style: { 'margin-top': '10px' } }, ...candidates.map((candidate) => withVaultNote(candidate, candidateCard(candidate, gameId ? (c) => void acquire(c, false) : null)))),
+      el('div', { class: 'seeds', style: { 'margin-top': '10px' } }, ...candidates.map((candidate) => withVaultNote(candidate, candidateCard(candidate, gameId ? (c) => void acquire(c, false) : null, (c) => void showReverse(c))))),
     );
   }
 
@@ -610,7 +695,7 @@ export async function openFindFreeSprites(): Promise<void> {
           ? el('div', { class: 'faint', style: { 'font-size': '11px', 'margin-top': '4px' }, text: `No pack covers: ${uncovered.map((role) => ROLE_LABELS[role]).join(', ')} — these use generated fallback art.` })
           : null,
       ),
-      el('div', { class: 'seeds' }, ...usableMatches.map((match) => matchCard(match, gameId ? (c) => void acquire(c, false) : () => toast('Open a project to acquire packs.', 'warn'), gameId ? (c) => void acquire(c, true) : undefined))),
+      el('div', { class: 'seeds' }, ...usableMatches.map((match) => matchCard(match, gameId ? (c) => void acquire(c, false) : () => toast('Open a project to acquire packs.', 'warn'), gameId ? (c) => void acquire(c, true) : undefined, (c) => void showReverse(c)))),
       blocked.length > 0
         ? el('details', { style: { 'margin-top': '10px' } }, el('summary', { class: 'faint', text: `${blocked.length} pack(s) excluded by licence/format` }), el('div', { class: 'seeds', style: { 'margin-top': '8px' } }, ...blocked.map((match) => matchCard(match, () => undefined))))
         : null,

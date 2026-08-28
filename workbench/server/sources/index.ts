@@ -24,6 +24,7 @@ export type {
 export { deriveProfile, cameraForControllers } from './requirements.ts';
 export { rankPacks, matchPack, uncoveredRoles } from './matching.ts';
 export { recommendForPreset, type Recommendation } from './recommend.ts';
+export { whatCanIMakeWith, type ReverseDiscovery, type PresetSuggestion, type MatchLevel } from './reverse.ts';
 export { proposeReskin, type ReskinAssignment, type ReskinProposal, type StagedFileLite } from './reskin.ts';
 export {
   listVault,

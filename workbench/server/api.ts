@@ -54,6 +54,7 @@ import {
   reverifyVault,
   removeFromVault,
   vaultByteTotal,
+  whatCanIMakeWith,
   CATALOG_VERIFIED_AT,
 } from './sources/index.ts';
 import { JobManager } from './jobManager.ts';
@@ -694,6 +695,23 @@ const ROUTES: ReadonlyMap<string, Handler> = new Map<string, Handler>([
         return ok({ pack: reverifyVault(sha256) });
       } catch {
         throw new SecurityError(404, `No vault pack ${sha256}.`);
+      }
+    },
+  ],
+
+  [
+    // Reverse discovery: what game types this pack could serve.
+    'GET /sources/reverse',
+    (request) => {
+      const providerId = request.query.get('providerId');
+      const packId = request.query.get('packId');
+      if (!providerId || !packId) throw new SecurityError(400, 'Provide providerId and packId.');
+      if (!/^[a-z][a-z0-9-]{0,40}$/.test(providerId)) throw new SecurityError(400, `Invalid providerId ${JSON.stringify(providerId)}.`);
+      if (!/^[a-z0-9][a-z0-9-]{0,60}$/.test(packId)) throw new SecurityError(400, `Invalid packId ${JSON.stringify(packId)}.`);
+      try {
+        return ok(whatCanIMakeWith(providerId, packId));
+      } catch {
+        throw new SecurityError(404, `No pack "${packId}" from "${providerId}".`);
       }
     },
   ],
