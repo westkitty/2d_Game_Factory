@@ -56,9 +56,17 @@ export function isDisallowedAddress(address: string): boolean {
   if (v === 6) {
     const lower = address.toLowerCase();
     if (lower === '::1' || lower === '::') return true;
-    if (lower.startsWith('fe80') || lower.startsWith('fc') || lower.startsWith('fd')) return true; // link-local, ULA
-    const mapped = lower.match(/^::ffff:(\d+\.\d+\.\d+\.\d+)$/);
-    if (mapped?.[1]) return isDisallowedAddress(mapped[1]);
+    // fe80::/10 link-local (fe80-febf), fc00::/7 ULA (fc/fd)
+    if (/^fe[89ab]/.test(lower) || lower.startsWith('fc') || lower.startsWith('fd')) return true;
+    const mappedDecimal = lower.match(/^::ffff:(\d+\.\d+\.\d+\.\d+)$/);
+    if (mappedDecimal?.[1]) return isDisallowedAddress(mappedDecimal[1]);
+    // IPv4-mapped in hex form, e.g. ::ffff:7f00:1
+    const mappedHex = lower.match(/^::ffff:([0-9a-f]{1,4}):([0-9a-f]{1,4})$/);
+    if (mappedHex) {
+      const hi = Number.parseInt(mappedHex[1]!, 16);
+      const lo = Number.parseInt(mappedHex[2]!, 16);
+      return isDisallowedAddress(`${hi >> 8}.${hi & 0xff}.${lo >> 8}.${lo & 0xff}`);
+    }
     return false;
   }
   return true; // not a parseable IP - refuse
@@ -129,74 +137,88 @@ export async function providerGet(providerId: string, rawUrl: string, options: P
     }
     await assertReachableHost(current.hostname, lookupImpl);
 
+    // One abort timer covers the whole hop - the fetch AND the body read - so a
+    // server that sends headers fast then trickles the body cannot hang this.
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), options.timeoutMs);
-    let response: Response;
     try {
-      response = await fetchImpl(current.href, {
-        method: 'GET',
-        redirect: 'manual',
-        signal: controller.signal,
-        headers: {
-          'user-agent': 'SW2D-Workbench (local authoring)',
-          ...(options.accept ? { accept: options.accept } : {}),
-        },
-      });
-    } catch (error) {
-      throw new SourceNetworkError(
-        controller.signal.aborted
-          ? `Provider request timed out after ${options.timeoutMs}ms.`
-          : `Provider request failed: ${error instanceof Error ? error.message : String(error)}.`,
-        504,
-      );
+      let response: Response;
+      try {
+        response = await fetchImpl(current.href, {
+          method: 'GET',
+          redirect: 'manual',
+          signal: controller.signal,
+          headers: {
+            'user-agent': 'SW2D-Workbench (local authoring)',
+            ...(options.accept ? { accept: options.accept } : {}),
+          },
+        });
+      } catch (error) {
+        throw new SourceNetworkError(
+          controller.signal.aborted
+            ? `Provider request timed out after ${options.timeoutMs}ms.`
+            : `Provider request failed: ${error instanceof Error ? error.message : String(error)}.`,
+          504,
+        );
+      }
+
+      if (response.status >= 300 && response.status < 400) {
+        const location = response.headers.get('location');
+        if (!location) throw new SourceNetworkError(`Provider redirect (${response.status}) had no Location.`, 502);
+        try {
+          current = new URL(location, current);
+        } catch {
+          throw new SourceNetworkError(`Provider redirect Location "${location}" is not a valid URL.`, 502);
+        }
+        continue;
+      }
+
+      if (!response.ok) throw new SourceNetworkError(`Provider returned HTTP ${response.status}.`, 502);
+
+      const contentType = (response.headers.get('content-type') ?? '').toLowerCase();
+      const declaredLength = Number.parseInt(response.headers.get('content-length') ?? '', 10);
+      if (Number.isFinite(declaredLength) && declaredLength > options.maxBytes) {
+        throw new SourceNetworkError(`Provider response is ${declaredLength} bytes, over the ${options.maxBytes}-byte cap.`, 413);
+      }
+
+      const body = response.body;
+      if (!body) throw new SourceNetworkError('Provider response had no body.', 502);
+
+      const reader = body.getReader();
+      const chunks: Uint8Array[] = [];
+      let total = 0;
+      try {
+        for (;;) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          if (!value) continue;
+          total += value.byteLength;
+          if (total > options.maxBytes) {
+            await reader.cancel().catch(() => undefined);
+            throw new SourceNetworkError(`Provider response exceeded the ${options.maxBytes}-byte cap.`, 413);
+          }
+          chunks.push(value);
+        }
+      } catch (error) {
+        if (error instanceof SourceNetworkError) throw error;
+        throw new SourceNetworkError(
+          controller.signal.aborted
+            ? `Provider response stalled and timed out after ${options.timeoutMs}ms.`
+            : `Provider response read failed: ${error instanceof Error ? error.message : String(error)}.`,
+          504,
+        );
+      }
+
+      const bytes = new Uint8Array(total);
+      let cursor = 0;
+      for (const chunk of chunks) {
+        bytes.set(chunk, cursor);
+        cursor += chunk.byteLength;
+      }
+      return { bytes, contentType, finalUrl: current.href };
     } finally {
       clearTimeout(timer);
     }
-
-    if (response.status >= 300 && response.status < 400) {
-      const location = response.headers.get('location');
-      if (!location) throw new SourceNetworkError(`Provider redirect (${response.status}) had no Location.`, 502);
-      try {
-        current = new URL(location, current);
-      } catch {
-        throw new SourceNetworkError(`Provider redirect Location "${location}" is not a valid URL.`, 502);
-      }
-      continue;
-    }
-
-    if (!response.ok) throw new SourceNetworkError(`Provider returned HTTP ${response.status}.`, 502);
-
-    const contentType = (response.headers.get('content-type') ?? '').toLowerCase();
-    const declaredLength = Number.parseInt(response.headers.get('content-length') ?? '', 10);
-    if (Number.isFinite(declaredLength) && declaredLength > options.maxBytes) {
-      throw new SourceNetworkError(`Provider response is ${declaredLength} bytes, over the ${options.maxBytes}-byte cap.`, 413);
-    }
-
-    const body = response.body;
-    if (!body) throw new SourceNetworkError('Provider response had no body.', 502);
-
-    const reader = body.getReader();
-    const chunks: Uint8Array[] = [];
-    let total = 0;
-    for (;;) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      if (!value) continue;
-      total += value.byteLength;
-      if (total > options.maxBytes) {
-        await reader.cancel().catch(() => undefined);
-        throw new SourceNetworkError(`Provider response exceeded the ${options.maxBytes}-byte cap.`, 413);
-      }
-      chunks.push(value);
-    }
-
-    const bytes = new Uint8Array(total);
-    let cursor = 0;
-    for (const chunk of chunks) {
-      bytes.set(chunk, cursor);
-      cursor += chunk.byteLength;
-    }
-    return { bytes, contentType, finalUrl: current.href };
   }
 
   throw new SourceNetworkError(`Provider exceeded ${maxRedirects} redirects.`, 502);

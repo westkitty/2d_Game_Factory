@@ -37,17 +37,41 @@ and reverse discovery.
 | Phase E — intelligent sprite presentation | IMPLEMENTED — `workbench/shared/spritePresentation.ts` pure classifier: `classifyFrames` infers idle/walk/run/move `confident`, attack/hurt/death/jump only `suggested`, always identifies a static fallback frame, detects directional variants; `suggestVisualBounds` proposes pivot/trim/footprint with an explicit "does not change collision" note. Surfaced read-only in the inspector as "Presentation (suggested)" for frame groups. No runtime/theme-contract change. `workbench/test/spritePresentation.test.ts` 9 tests. typecheck PASS, build PASS, `vitest run workbench/test` 191/191 |
 | Phase F — verified local asset vault + provenance receipt | IMPLEMENTED — `workbench/server/sources/vault.ts` (SHA-256-keyed pack cache at `workbench/.sw2d-vault/`, gitignored, `SW2D_VAULT_DIR`-overridable; licence snapshot at acquisition never rewritten; freshness recomputed on read; reverify/remove; authoring-only, deleting it cannot break a game). `acquirePack` checks the vault first — a cached pack re-acquires offline (`fromVault`). API `GET /sources/vault`, `POST /sources/vault/reverify|remove`. Client "Local vault" view + in-vault note on cards. `pack` now writes `THIRD_PARTY_ASSET_NOTICES.txt` (human-readable credits, mechanically derived from `RESOURCE_MANIFEST.json`). `workbench/test/vault.test.ts` + `packages/cli/test/notices.test.ts` extension. typecheck PASS, build PASS, `npm test` 2023/2023 |
 | Phase G — reverse discovery + polish | IMPLEMENTED — `sources/reverse.ts` `whatCanIMakeWith` (same matcher backwards: rank presets for a pack, family-diverse, covered/missing roles partitioned); API `GET /sources/reverse`; client "What can I make with this?" on every pack card + a reverse-discovery panel; offline banner + "source unavailable" toast; `docs/workbench/FREE_SPRITE_SOURCING.md`. `workbench/test/reverseDiscovery.test.ts` 5 tests. typecheck PASS, build PASS, `vitest run workbench/test` 202/202 |
-| Latest completed phase commit | `pending` |
-| Validation state | `npm test` 2023/2023 PASS · `npm run typecheck` PASS · `npm run workbench:build` PASS at Phase F HEAD (BASE baseline was 139 workbench tests) |
-| Live-provider proof state | DOWNLOAD STAGE PROVEN — Kenney "Tiny Dungeon" fetched through the narrow net path: 98530 bytes, `application/zip`, sha256 `c109438ab06f65fd80f9b2686a4cf9c7c11dc64444b47333ec71d602f8bb5fc7`, 136 PNG / 0 SVG entries, readZip clean. Full stage→render→pack→offline proof deferred to post-Phase-G LIVE SOURCE PROOF |
-| Final bug-sweep state | PENDING |
+| Latest completed phase commit | Phase G `85d1b68`; bug-sweep/certification commit follows |
+| Validation state | **`npm run validate` PASS** · `npm test` 2029/2029 · `npm run qa:workbench` 16/16 · `npm run qa:smoke` 14/14 · `npm run release:verify` PASS (6/6 controller families, deterministic pack) · `npm run qa:responsive` 19/19 · `npm run qa:matrix` 40/40 · `npm run typecheck` PASS · `npm run workbench:build` PASS |
+| Live-provider proof state | **COMPLETE** — Kenney "Pixel Platformer" fetched LIVE through the narrow net path (260312 bytes, sha256 `d01a196dbe3cc964e00d83ba3b987df62f332dc9260c9f941b4fbcc9047130f4`), 8 PNG staged / 244 ignored, → canonical staged import → 3 roles (player/platform/pickup) → `writeTheme` same-origin `assets/workbench/*.png` → `RESOURCE_MANIFEST.json` 3 `third-party` `CC0-1.0` `approved` records → `sw2d validate` PASS incl. real browser smoke → `sw2d pack` PASS (offline guard, checksums, `THIRD_PARTY_ASSET_NOTICES.txt` with Kenney/CC0) → 0 remote sprite/kenney URLs in packed code → **deleting the workbench vault left the packed game's offline guard still green**. Scratch game cleaned up. |
+| Final bug-sweep state | **COMPLETE** — 6 passes over the BASE→HEAD surface. Confirmed defects fixed: (1) `net.ts` body-read had no timeout after headers (slow-loris body would hang `acquirePack`) → one abort timer now spans fetch+stream, with a body-stall test; (2) `net.ts` IPv6 link-local only matched `fe80` not the full `fe80::/10`, and IPv4-mapped hex form was unguarded → tightened + tested; (3) `acquirePack` left a staged batch orphaned when a pack had 0 usable images → self-cleans; (4) vault-bytes integrity: a swapped/corrupt cached file was trusted → hash-checked, falls back to download; TOCTOU vault delete now falls back too; (5) `/sources/recommend` 500'd on a missing project and did not shape-validate `presetId` → 404 + regex; (6) audition eagerly fetched a thumbnail per staged file (1000+ for the largest pack) and pre-accepted all roleful files → per-role tile cap + large-pack default-none. No regression found (all broad gates green). |
 | Known genuine blockers | none |
-| Next bounded action | Pre-bug-sweep validation: `npm run validate` + `npm run qa:workbench` (system Chrome present) + mandatory user-journey proofs, then the multi-pass bug sweep |
+| Next bounded action | Milestone complete on `feature/free-sprite-intelligence`. Optional: open a PR to `main`. |
 
 Architectural laws in force: gameplay never requires art; one canonical factory; normal game
 format; semantic roles are the contract; static fallback survives animation; source art is
 non-destructive; rights are data; **no runtime internet**; no generic fetch pipe; no arbitrary
 local path access; free ≠ licensed; **SVG is never a sprite source**.
+
+### Phase checkpoints (branch `feature/free-sprite-intelligence`, BASE `d222b1e`)
+
+| Phase | Commit |
+|---|---|
+| A — game-first factory | `6e7326d` (+ QA journey alignment `65f46a4`) |
+| B — verified free-sprite source foundation | `3e3a843` |
+| C — game-aware sprite requirement engine | `7c86883` |
+| D — asset audition + coherent reskin | `b730fe4` |
+| E — intelligent sprite presentation | `5b6f7fb` |
+| F — verified local asset vault + provenance receipt | `d1f32db` |
+| G — reverse discovery + polish | `85d1b68` |
+| bug-sweep / certification | this commit |
+
+### Mandatory user-journey proofs
+
+| Journey | Evidence |
+|---|---|
+| J1 zero-asset game | `qa:workbench` WB-BOOT-001 (six actions, game-first) + WB-SEED-001 (3 honest seeds, no imported art) + WB-BUILD-001 (validate/build/pack from buttons, offline guard); `seedsGameFirst.test.ts` locks the recommendation layer |
+| J2 existing local art | `qa:workbench` WB-IMAGE-001 (imported pixels render as the game texture), WB-MULTI-001, WB-REIMPORT-001, WB-REMIX-001 — all PASS with the milestone code |
+| J3 free sprite source | LIVE SOURCE PROOF above — real Kenney pack → canonical import → render → build → pack → offline; `sources.test.ts` / `spriteAudition.test.ts` cover the offline path incl. SVG skip |
+| J4 source failure | `sources.test.ts` (timeout, body-stall, malformed, allowlist/redirect/private refusals); client shows an offline banner and a "source unavailable — your game is unaffected" message; vault re-serves a cached pack with the network down (`vault.test.ts`) |
+| J5 rights failure | `rights.test`/`matching.test` — unsupported licence is a hard gate (blocked, score 0, not acquirable); `acquirePack` throws 422 with a rights-specific message |
+| J6 reverse discovery | `reverseDiscovery.test.ts` — ranked compatible presets from real role coverage, covered/missing partitioned, no fabricated compatibility |
 
 ---
 

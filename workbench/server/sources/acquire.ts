@@ -32,6 +32,8 @@ export interface AcquireInput {
   readonly now?: number;
   /** When set, also compute a one-per-role reskin proposal for this preset. */
   readonly reskinForPresetId?: string;
+  /** Optional cooperative-cancel check, polled between download and staging. */
+  readonly throwIfCancelled?: () => void;
 }
 
 export interface AcquireOutcome {
@@ -63,20 +65,32 @@ export async function acquirePack(input: AcquireInput): Promise<AcquireOutcome> 
   }
 
   // Vault first: a pack acquired before is re-used from the local cache and
-  // never re-downloaded. The network is only reached on a genuine miss.
+  // never re-downloaded. The network is only reached on a genuine miss. A
+  // vault entry whose bytes no longer hash to its recorded id is treated as a
+  // miss rather than trusted.
   const hit = vaultLookup(input.providerId, input.packId);
-  let zipBytes: Uint8Array;
+  let zipBytes: Uint8Array | undefined;
   let fromVault = false;
   if (hit) {
-    zipBytes = readVaultBytes(hit.record.sha256);
-    fromVault = true;
-  } else {
+    try {
+      const cached = readVaultBytes(hit.record.sha256);
+      if (sha256Hex(cached) === hit.record.sha256) {
+        zipBytes = cached;
+        fromVault = true;
+      }
+    } catch {
+      // vault bytes vanished between lookup and read - fall through to download
+    }
+  }
+  if (zipBytes === undefined) {
     const downloaded = await provider.download(input.packId, input.net);
     zipBytes = downloaded.bytes;
   }
   if (!looksLikeZip(zipBytes)) {
     throw new SecurityError(502, `"${candidate.title}" ${fromVault ? 'in the local vault is not' : 'did not download as'} a ZIP archive.`);
   }
+
+  input.throwIfCancelled?.();
 
   const sha256 = sha256Hex(zipBytes);
   const batchId = beginBatch(input.gameId);
@@ -87,6 +101,12 @@ export async function acquirePack(input: AcquireInput): Promise<AcquireOutcome> 
 
     if (!fromVault && !svgOnly && staged.staged > 0) {
       vaultStore({ candidate, sha256, bytes: zipBytes, fileCount: staged.staged, ...(input.now !== undefined ? { now: input.now } : {}) });
+    }
+
+    // A pack with nothing usable leaves no batch to review - clean it up here
+    // rather than relying on the caller to discard it.
+    if (staged.staged === 0) {
+      discardBatch(input.gameId, batchId);
     }
 
     const result: AcquisitionResult = {

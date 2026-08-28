@@ -125,6 +125,33 @@ describe('provider network boundary', () => {
     for (const good of ['8.8.8.8', '203.0.113.10', '1.1.1.1', '2606:4700:4700::1111']) {
       expect(isDisallowedAddress(good), `${good} should be allowed`).toBe(false);
     }
+    // link-local across the whole fe80::/10 block, and IPv4-mapped in hex form
+    for (const bad of ['fe90::1', 'fea0::1', 'feb0::1', '::ffff:7f00:1']) {
+      expect(isDisallowedAddress(bad), `${bad} should be disallowed`).toBe(true);
+    }
+  });
+
+  it('caps a response whose body stalls after headers (no hang)', async () => {
+    const fetchImpl = (async (_url: string, init?: RequestInit) => {
+      const signal = init?.signal;
+      const body = new ReadableStream<Uint8Array>({
+        start(controller) {
+          controller.enqueue(new Uint8Array(4));
+          // never close, never enqueue again - a trickle/stall
+          signal?.addEventListener('abort', () => {
+            try {
+              controller.error(new DOMException('aborted', 'AbortError'));
+            } catch {
+              /* already errored */
+            }
+          });
+        },
+      });
+      return new Response(body, { status: 200, headers: { 'content-type': 'application/zip' } });
+    }) as unknown as typeof fetch;
+    await expect(
+      providerGet('kenney', 'https://kenney.nl/x.zip', { maxBytes: 1024, timeoutMs: 200, lookupImpl: publicLookup, fetchImpl }),
+    ).rejects.toThrow(/stalled|timed out/);
   });
 
   it('refuses a non-HTTPS URL', async () => {

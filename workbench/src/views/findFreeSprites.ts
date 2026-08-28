@@ -6,9 +6,12 @@
  * map to semantic roles through the canonical import pipeline. Downloaded art
  * is always project-local; a finished game never depends on a provider.
  *
- * Phase B: providers and the curated catalogue with exact rights, plus the
- * acquisition plumbing (download -> canonical staged import). Preset-aware
- * ranking (Phase C), audition and coherent reskin (Phase D) layer on top.
+ * It layers: the curated catalogue with exact rights; preset-aware ranked
+ * matches with a "why this fits" and a role-coverage grid; an audition surface
+ * (staged thumbnails by role, accept/reject/change) and a coherent "preview
+ * this look"; the verified local vault; and reverse discovery ("what can I
+ * make with this?"). Acquisition always goes through the canonical staged
+ * import, so provenance and offline guarantees are inherited, not re-built.
  */
 
 import { button, el, replace, toast } from '../dom.ts';
@@ -344,9 +347,13 @@ export async function openFindFreeSprites(): Promise<void> {
         state.set(file.stagingId, { role: role ?? '', accepted: role !== undefined });
       }
     } else {
+      // For a large pack, default nothing accepted - importing 800 sprites on
+      // one click is rarely what the user wants. A small pack keeps the
+      // convenience of pre-accepting anything with a suggested role.
+      const preAccept = files.length <= 120;
       for (const file of files) {
         const role = file.suggestedRoles[0] ?? '';
-        state.set(file.stagingId, { role, accepted: role !== '' });
+        state.set(file.stagingId, { role, accepted: preAccept && role !== '' });
       }
     }
 
@@ -420,6 +427,9 @@ export async function openFindFreeSprites(): Promise<void> {
         }
       }
 
+      // Cap thumbnails drawn per section: a large pack can hold 1000+ files and
+      // each tile eagerly fetches its staged bytes.
+      const TILE_CAP = 80;
       const roleSections = [...byRole.entries()].map(([role, group]) =>
         el(
           'div',
@@ -430,7 +440,10 @@ export async function openFindFreeSprites(): Promise<void> {
             el('span', { class: 'badge badge--role', text: ROLE_LABELS[role as WorkbenchAssetRole] }),
             el('span', { class: 'faint', style: { 'font-size': '11px' }, text: `${group.length} candidate${group.length === 1 ? '' : 's'} · ${group.filter((f) => state.get(f.stagingId)!.accepted).length} in use` }),
           ),
-          el('div', { class: 'row row--wrap', style: { gap: '6px' } }, ...group.map(tile)),
+          el('div', { class: 'row row--wrap', style: { gap: '6px' } }, ...group.slice(0, TILE_CAP).map(tile)),
+          group.length > TILE_CAP
+            ? el('div', { class: 'faint', style: { 'font-size': '11px', 'margin-top': '3px' }, text: `+${group.length - TILE_CAP} more in this role are still imported; only the first ${TILE_CAP} preview here.` })
+            : null,
         ),
       );
 

@@ -638,8 +638,13 @@ const ROUTES: ReadonlyMap<string, Handler> = new Map<string, Handler>([
     (request) => {
       const rawGameId = request.query.get('gameId');
       let presetId = request.query.get('presetId') ?? undefined;
-      if (rawGameId) presetId = loadProject(assertValidGameId(rawGameId)).presetId;
+      if (rawGameId) {
+        const gameId = assertValidGameId(rawGameId);
+        if (!projectExists(gameId)) throw new SecurityError(404, `No project "${gameId}" under games/.`);
+        presetId = loadProject(gameId).presetId;
+      }
       if (!presetId) throw new SecurityError(400, 'Provide gameId or presetId.');
+      if (!/^[a-z0-9][a-z0-9-]{0,60}$/.test(presetId)) throw new SecurityError(400, `Invalid presetId ${JSON.stringify(presetId)}.`);
       try {
         return ok(recommendForPreset(presetId));
       } catch {
@@ -667,7 +672,13 @@ const ROUTES: ReadonlyMap<string, Handler> = new Map<string, Handler>([
         handle.setStep('Checking recorded rights');
         handle.setProgress(0.1);
         handle.setStep('Downloading pack');
-        const outcome = await acquirePack({ gameId, providerId, packId, ...(reskinForPresetId ? { reskinForPresetId } : {}) });
+        const outcome = await acquirePack({
+          gameId,
+          providerId,
+          packId,
+          throwIfCancelled: () => handle.throwIfCancelled(),
+          ...(reskinForPresetId ? { reskinForPresetId } : {}),
+        });
         handle.log(`Staged ${outcome.result.staged} raster image(s); ignored ${outcome.result.ignored}.`);
         if (outcome.result.svgOnly) handle.log('This pack contained only SVG art and is unsuitable for sprites.');
         handle.setStep('Ready to review');
