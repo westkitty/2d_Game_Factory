@@ -45,6 +45,7 @@ import { buildSeeds, seedForPreset } from './seeds.ts';
 import { loadScene, listLevels, newObject, objectClassOptions, saveScene, SceneValidationError, type SceneDocument } from './sceneStore.ts';
 import { buildProject, createProject, packProject, validateProject } from './factoryService.ts';
 import { starterKitDepthFor, starterKitFor } from './starterKits/index.ts';
+import { acquirePack, allCandidates, listProviderInfo, CATALOG_VERIFIED_AT } from './sources/index.ts';
 import { JobManager } from './jobManager.ts';
 import { applyRebuildResult, currentPreview, listPreviews, nextGeneration, previewModeOf, startFastPreview, startProductionPreview, stopPreview } from './previewManager.ts';
 import { getPreset } from '@sw2d/presets';
@@ -589,6 +590,46 @@ const ROUTES: ReadonlyMap<string, Handler> = new Map<string, Handler>([
       const blueprint: BlueprintDocument = refreshBlueprint(gameId);
       const synthesis = writeTheme({ gameId, assets: loadAssets(gameId), blueprint });
       return ok({ synthesis: summariseSynthesis(synthesis), state: projectState(gameId) });
+    },
+  ],
+
+  // --- free-sprite sourcing (authoring-time only) --------------------------
+
+  [
+    'GET /sources/providers',
+    async () => ok({ providers: await listProviderInfo({ probeOnline: true }) }),
+  ],
+
+  [
+    'GET /sources/catalog',
+    () => ok({ candidates: allCandidates(), verifiedAt: CATALOG_VERIFIED_AT }),
+  ],
+
+  [
+    'POST /sources/acquire',
+    (request) => {
+      const body = bodyObject(request);
+      const gameId = gameIdOf(request, body);
+      if (!projectExists(gameId)) throw new SecurityError(404, `No project "${gameId}" under games/.`);
+      const providerId = requiredString(body, 'providerId');
+      const packId = requiredString(body, 'packId');
+      // Closed identifiers, never paths: the provider and pack are looked up
+      // in code, and the acquisition URL is a provider-owned constant.
+      if (!/^[a-z][a-z0-9-]{0,40}$/.test(providerId)) throw new SecurityError(400, `Invalid providerId ${JSON.stringify(providerId)}.`);
+      if (!/^[a-z0-9][a-z0-9-]{0,60}$/.test(packId)) throw new SecurityError(400, `Invalid packId ${JSON.stringify(packId)}.`);
+
+      const jobId = jobs.run('source-acquire', `Acquire "${packId}" from ${providerId}`, true, async (handle) => {
+        handle.setStep('Checking recorded rights');
+        handle.setProgress(0.1);
+        handle.setStep('Downloading pack');
+        const outcome = await acquirePack({ gameId, providerId, packId });
+        handle.log(`Staged ${outcome.result.staged} raster image(s); ignored ${outcome.result.ignored}.`);
+        if (outcome.result.svgOnly) handle.log('This pack contained only SVG art and is unsuitable for sprites.');
+        handle.setStep('Ready to review');
+        handle.setProgress(1);
+        return outcome;
+      });
+      return ok({ jobId });
     },
   ],
 

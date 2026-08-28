@@ -153,6 +153,59 @@ export function stageFile(input: StageFileInput): { readonly staged: number; rea
   return { staged: result ? 1 : 0, ignored: result ? 0 : 1 };
 }
 
+/**
+ * Stages a downloaded asset pack ZIP.
+ *
+ * Same per-entry path as `stageFile`'s ZIP branch, but with the batch-sized
+ * cap (a pack is legitimately larger than one upload) and an explicit,
+ * counted refusal of SVG entries: Kenney-style packs carry a `Vector/` folder
+ * of SVGs beside the PNGs, and this workflow only ever uses the PNGs
+ * (architectural law 12). `svgSkipped` lets the caller tell "this pack had no
+ * usable raster art" from "this pack was fine".
+ */
+export function stagePack(
+  batchId: string,
+  zipBytes: Uint8Array,
+  packName: string,
+): { readonly staged: number; readonly ignored: number; readonly svgSkipped: number } {
+  const state = batchState(batchId);
+  if (zipBytes.byteLength > LIMITS.batchUploadBytes) {
+    throw new SecurityError(413, `"${packName}" is ${zipBytes.byteLength} bytes, over the ${LIMITS.batchUploadBytes}-byte pack limit.`);
+  }
+  if (!looksLikeZip(zipBytes)) throw new SecurityError(415, `"${packName}" is not a ZIP archive.`);
+
+  const zip = readZip(zipBytes);
+  let staged = 0;
+  let ignored = 0;
+  let svgSkipped = 0;
+
+  for (const skipped of zip.skipped) {
+    state.ignored.push({ displayName: skipped.name, reason: skipped.reason });
+    ignored += 1;
+  }
+  for (const entry of zip.entries) {
+    if (/\.svgz?$/i.test(entry.name)) {
+      state.ignored.push({ displayName: entry.name, reason: 'SVG is not used as a sprite source; the pack’s PNG version is used instead.' });
+      ignored += 1;
+      svgSkipped += 1;
+      continue;
+    }
+    const result = stageOne(state, batchId, entry.bytes, entry.name, entry.name, undefined);
+    if (result) staged += 1;
+    else {
+      ignored += 1;
+      // A `.png`-named entry that is actually SVG text still counts as an SVG skip.
+      if (isSvgBytes(entry.bytes)) svgSkipped += 1;
+    }
+  }
+  return { staged, ignored, svgSkipped };
+}
+
+function isSvgBytes(bytes: Uint8Array): boolean {
+  const head = new TextDecoder('utf-8', { fatal: false }).decode(bytes.subarray(0, 200)).trimStart().toLowerCase();
+  return head.startsWith('<?xml') || head.startsWith('<svg');
+}
+
 function stageOne(
   state: { gameId: string; files: StagedRecord[]; ignored: IgnoredFile[] },
   batchId: string,

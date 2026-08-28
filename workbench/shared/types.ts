@@ -339,7 +339,8 @@ export type JobKind =
   | 'validate'
   | 'build'
   | 'pack'
-  | 'preview-rebuild';
+  | 'preview-rebuild'
+  | 'source-acquire';
 
 export type JobStatus = 'queued' | 'running' | 'completed' | 'failed' | 'cancelled';
 

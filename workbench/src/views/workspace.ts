@@ -22,6 +22,7 @@ import { renderSceneComposer } from './sceneComposer.ts';
 import { renderPreview } from './previewPane.ts';
 import { renderActivity } from './activity.ts';
 import { openImportInbox } from './importInbox.ts';
+import { openFindFreeSprites } from './findFreeSprites.ts';
 import { maturityBadgeClass, depthLabel } from '../dom.ts';
 
 type Workspace = 'lab' | 'scene' | 'preview';
@@ -145,6 +146,7 @@ export function renderWorkspace(host: HTMLElement): () => void {
       current.preset ? el('span', { class: 'badge', text: depthLabel(current.preset.starterKitDepth) }) : null,
       el('div', { class: 'grow' }),
       button('Import', () => openImportInbox({ gameId: current.project.gameId, onDone: () => undefined }), { class: 'btn btn--sm' }),
+      button('Find free sprites', () => void openFindFreeSprites(), { class: 'btn btn--sm', title: 'Find coherent, licence-checked free raster packs that fit this game' }),
       button('Re-theme', () => void synthesizeTheme(), { class: 'btn btn--sm', title: 'Rewrite the theme from the current roles and palette' }),
       el('div', { class: 'topbar__sep' }),
       button('Run game', () => {

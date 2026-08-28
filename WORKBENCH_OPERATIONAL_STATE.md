@@ -31,7 +31,7 @@ and reverse discovery.
 | BASE SHA | `d222b1eafc8fb972cd300d07f1107f3842349308` |
 | Working branch | `feature/free-sprite-intelligence` |
 | Phase A — game-first factory | IMPLEMENTED — home reframed game-first, `Make a Game` primary, `Find Free Sprites` route added, `createDialog` gains `gameplay` mode; `workbench/test/seedsGameFirst.test.ts` locks zero-art path. typecheck PASS, `workbench:build` PASS, `vitest run workbench/test` 143/143 PASS |
-| Phase B — verified free-sprite source foundation | PENDING |
+| Phase B — verified free-sprite source foundation | IMPLEMENTED — `workbench/server/sources/*` (narrow allowlisted net, rights vs `resource-policy.json`, curated Kenney CC0 catalogue of 5 packs, acquire→canonical staged import); API `GET /sources/providers`, `GET /sources/catalog`, `POST /sources/acquire`; client `findFreeSprites` browses catalogue with exact rights + acquires into an open project; `stagePack` skips SVG. `workbench/test/sources.test.ts` 22 tests (offline). typecheck PASS, `workbench:build` PASS, `vitest run workbench/test` 165/165 |
 | Phase C — game-aware sprite requirement engine | PENDING |
 | Phase D — asset audition + coherent reskin | PENDING |
 | Phase E — intelligent sprite presentation | PENDING |
@@ -39,10 +39,10 @@ and reverse discovery.
 | Phase G — reverse discovery + polish | PENDING |
 | Latest completed phase commit | `pending` |
 | Validation state | baseline: `npm run typecheck` PASS, `npx vitest run workbench/test` 139/139 PASS at BASE |
-| Live-provider proof state | PENDING — external network reachable (kenney.nl 200, opengameart.org 200) |
+| Live-provider proof state | DOWNLOAD STAGE PROVEN — Kenney "Tiny Dungeon" fetched through the narrow net path: 98530 bytes, `application/zip`, sha256 `c109438ab06f65fd80f9b2686a4cf9c7c11dc64444b47333ec71d602f8bb5fc7`, 136 PNG / 0 SVG entries, readZip clean. Full stage→render→pack→offline proof deferred to post-Phase-G LIVE SOURCE PROOF |
 | Final bug-sweep state | PENDING |
 | Known genuine blockers | none |
-| Next bounded action | Phase B: narrow authoring-time free-sprite provider foundation (Kenney primary) |
+| Next bounded action | Phase C: derive a Sprite Requirement Profile from preset/starter metadata and rank catalogue packs against it |
 
 Architectural laws in force: gameplay never requires art; one canonical factory; normal game
 format; semantic roles are the contract; static fallback survives animation; source art is
