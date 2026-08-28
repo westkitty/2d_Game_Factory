@@ -1,22 +1,23 @@
 /**
  * The project home.
  *
- * The four primary actions are the product's front door (acceptance W02), and
- * "Make Something From an Image" is deliberately the largest, first and
- * highest-contrast thing on the page - the lesson from every
- * image-in/playable-out tool is that the entry point should not be behind
- * engine setup (section 18).
+ * The product makes browser games. An image is optional. So the front door
+ * leads with "Make a Game" - pick a type, create instantly, play with
+ * generated art - and every art route (your own sprites, free sourced packs,
+ * one image) is a peer option below it, never a precondition (acceptance W02,
+ * architectural law 1).
  */
 
 import { button, el, maturityBadgeClass, replace, toast } from '../dom.ts';
 import { getState, subscribe, type AppState } from '../state.ts';
-import { goPresets, openProject, refreshProjects } from '../actions.ts';
+import { goPresets, openProject, openProjectAndRun, refreshProjects } from '../actions.ts';
 import { openCreateDialog } from './createDialog.ts';
 import { openImportFirstFlow } from './importFirstFlow.ts';
+import { openFindFreeSprites } from './findFreeSprites.ts';
 import * as api from '../api.ts';
 
 function actionCard(
-  icon: string,
+  marker: string,
   title: string,
   description: string,
   onClick: () => void,
@@ -25,7 +26,7 @@ function actionCard(
   return el(
     'button',
     { class: `action${hero ? ' action--hero' : ''}`, attrs: { type: 'button' }, on: { click: onClick } },
-    el('div', { class: 'action__icon', text: icon }),
+    el('div', { class: 'action__marker', text: marker }),
     el('div', { class: 'action__title', text: title }),
     el('div', { class: 'action__desc', text: description }),
   );
@@ -47,24 +48,30 @@ function projectCard(summary: AppState['projects'][number]): HTMLElement {
   }
 
   return el(
-    'button',
-    { class: 'card', attrs: { type: 'button' }, on: { click: () => void openProject(summary.gameId) } },
-    thumb,
+    'div',
+    { class: 'project-card' },
     el(
-      'div',
-      { class: 'card__head' },
-      el('span', { class: 'card__name truncate', text: summary.displayName }),
-      el('span', { class: maturityBadgeClass(summary.maturity), text: summary.maturity }),
+      'button',
+      { class: 'card', attrs: { type: 'button' }, on: { click: () => void openProject(summary.gameId) } },
+      thumb,
+      el(
+        'div',
+        { class: 'card__head' },
+        el('span', { class: 'card__name truncate', text: summary.displayName }),
+        el('span', { class: maturityBadgeClass(summary.maturity), text: summary.maturity }),
+      ),
+      el(
+        'div',
+        { class: 'card__meta' },
+        el('span', { class: 'mono', text: summary.presetId }),
+        el('span', { text: `${summary.assetCount} asset${summary.assetCount === 1 ? '' : 's'}` }),
+        el('span', { text: summary.lastBuildState === 'packed' ? 'packed' : summary.lastBuildState === 'built' ? 'built' : 'not built' }),
+        !summary.hasWorkbenchMetadata ? el('span', { class: 'badge', text: 'adopt on open' }) : null,
+        summary.provenanceBlocked ? el('span', { class: 'badge badge--danger', text: 'provenance blocks release' }) : null,
+      ),
+      el('span', { class: 'card__edit', text: 'Open editor' }),
     ),
-    el(
-      'div',
-      { class: 'card__meta' },
-      el('span', { class: 'mono', text: summary.presetId }),
-      el('span', { text: `${summary.assetCount} asset${summary.assetCount === 1 ? '' : 's'}` }),
-      el('span', { text: summary.lastBuildState === 'packed' ? 'packed' : summary.lastBuildState === 'built' ? 'built' : 'not built' }),
-      !summary.hasWorkbenchMetadata ? el('span', { class: 'badge', text: 'adopt on open' }) : null,
-      summary.provenanceBlocked ? el('span', { class: 'badge badge--danger', text: 'provenance blocks release' }) : null,
-    ),
+    button('Run game', () => void openProjectAndRun(summary.gameId), { class: 'btn btn--run btn--project', attrs: { 'aria-label': `Run ${summary.displayName}` } }),
   );
 }
 
@@ -79,7 +86,7 @@ export function renderHome(host: HTMLElement): () => void {
             'div',
             { class: 'empty' },
             el('strong', { text: 'No games here yet' }),
-            el('div', { text: 'Start with an image you already have, or pick a preset and build up from there.' }),
+            el('div', { text: 'Pick a game type and press create - art is something you add afterwards, not before.' }),
           )
         : el('div', { class: 'cards' }, ...state.projects.map(projectCard)),
     );
@@ -93,25 +100,39 @@ export function renderHome(host: HTMLElement): () => void {
       el(
         'div',
         { class: 'home__inner' },
+        el('div', { class: 'home__eyebrow', text: 'Make browser games. An image is optional.' }),
         el('h1', { class: 'home__title', text: 'Stinky Weasel Game Factory' }),
         el('p', {
           class: 'home__sub',
-          text: 'Give it something you already have - one image, a folder of art, a sprite sheet - and it turns that into a real, playable SW2D game you can refine, preview and package here. Everything runs on this machine: no account, no API key, no upload.',
+          text: 'Choose a game type and the factory builds a real, playable browser game with generated art straight away. Bring your own sprites, source free ones, or start from one image whenever you want - each is one route in, never a requirement. Finished games need no network to run.',
         }),
+        el(
+          'div',
+          { class: 'build-track', attrs: { 'aria-label': 'How the factory works' } },
+          ...['Pick a game type', 'Create - playable now', 'Add art if you want', 'Run and pack offline'].map((label, index) =>
+            el('div', { class: 'build-track__step' }, el('span', { text: String(index + 1).padStart(2, '0') }), el('strong', { text: label })),
+          ),
+        ),
         el(
           'div',
           { class: 'actions' },
           actionCard(
-            '🖼️',
-            'Make Something From an Image',
-            'Import one image, see candidate playable directions built from it, and pick one. You get a real game, not a mockup.',
-            () => void openImportFirstFlow(),
+            'START HERE',
+            'Make a Game',
+            'Pick a game type or preset and create it now. It is playable immediately with generated art - no image, upload, account or terminal.',
+            () => openCreateDialog({ mode: 'gameplay' }),
             true,
           ),
-          actionCard('🗂️', 'Create From Assets', 'Start a project, then bring in a folder, a sprite sheet or a ZIP of art and map it onto game roles.', () =>
+          actionCard('YOUR ART', 'Use My Sprites', 'Start a project, then bring in a folder, sprite sheet or ZIP of your own raster art and map it onto game roles.', () =>
             openCreateDialog({ mode: 'assets' }),
           ),
-          actionCard('📂', 'Open Existing Project', 'Reopen a game you made here, or adopt one generated by the CLI - your assets, roles and layout come back.', () => {
+          actionCard('FREE PACKS', 'Find Free Sprites', 'Let the factory find coherent, free-to-use raster sprite packs that fit the game you are making, with licence and provenance checked before use.', () =>
+            void openFindFreeSprites(),
+          ),
+          actionCard('ONE IMAGE', 'Make Something From an Image', 'Import a single image, choose a playable direction, and let the factory derive validated sprite art before it opens the finished game.', () =>
+            void openImportFirstFlow(),
+          ),
+          actionCard('PROJECTS', 'Open Existing Project', 'Reopen a game made here, or adopt one generated by the command-line interface (CLI).', () => {
             const { projects } = getState();
             if (projects.length === 0) {
               toast('No projects under games/ yet. Make one first.', 'warn');
@@ -119,7 +140,7 @@ export function renderHome(host: HTMLElement): () => void {
             }
             document.getElementById('recent-projects')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
           }),
-          actionCard('🎛️', 'Browse Presets', 'All 74 genre recipes, with honest maturity, required packs and known limitations.', () => goPresets()),
+          actionCard('RECIPES', 'Browse Presets', 'Browse every genre recipe with its maturity, required systems, and known limitations.', () => goPresets()),
         ),
         el('div', { attrs: { id: 'recent-projects' } }, el('h2', { class: 'section-title', text: 'Your games' }), projectsHost),
         el(
@@ -129,7 +150,7 @@ export function renderHome(host: HTMLElement): () => void {
           el(
             'div',
             { class: 'infobox' },
-            el('div', { text: 'This workbench drives the SW2D factory directly: the same generator, schemas, content pipeline and release packer the command line uses. Games it makes are ordinary SW2D projects - editable outside the workbench, and buildable without it.' }),
+            el('div', { text: 'This workbench drives the SW2D factory directly: the same generator, schemas, content pipeline and release packer the command line uses. Games it makes are ordinary SW2D projects - editable outside the workbench, buildable without it, and with no network access required to play.' }),
           ),
         ),
       ),

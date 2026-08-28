@@ -77,6 +77,38 @@ export function trimAlpha(raster: Raster, threshold = DEFAULT_ALPHA_THRESHOLD): 
   return crop(raster, bounds);
 }
 
+/**
+ * Moves visible pixels to a stable anchor without changing the frame size.
+ * Sprite-sheet frames often wander inside otherwise identical cells; a fixed
+ * center or bottom-center anchor removes that jitter while preserving the
+ * transparent canvas expected by the runtime.
+ */
+export function alignFrame(raster: Raster, anchor: 'center' | 'bottom-center', threshold = DEFAULT_ALPHA_THRESHOLD): Raster {
+  const bounds = alphaBounds(raster, threshold);
+  if (!bounds) return cloneRaster(raster);
+  const visibleCenterX = bounds.x + (bounds.width - 1) / 2;
+  const visibleAnchorY = anchor === 'center' ? bounds.y + (bounds.height - 1) / 2 : bounds.y + bounds.height - 1;
+  const targetX = (raster.width - 1) / 2;
+  const targetY = anchor === 'center' ? (raster.height - 1) / 2 : raster.height - 1;
+  const offsetX = Math.round(targetX - visibleCenterX);
+  const offsetY = Math.round(targetY - visibleAnchorY);
+  const out = createRaster(raster.width, raster.height);
+  for (let y = 0; y < raster.height; y++) {
+    for (let x = 0; x < raster.width; x++) {
+      const dx = x + offsetX;
+      const dy = y + offsetY;
+      if (dx < 0 || dy < 0 || dx >= raster.width || dy >= raster.height) continue;
+      const sourceIndex = pixelIndex(raster, x, y);
+      const targetIndex = pixelIndex(out, dx, dy);
+      out.data[targetIndex] = raster.data[sourceIndex]!;
+      out.data[targetIndex + 1] = raster.data[sourceIndex + 1]!;
+      out.data[targetIndex + 2] = raster.data[sourceIndex + 2]!;
+      out.data[targetIndex + 3] = raster.data[sourceIndex + 3]!;
+    }
+  }
+  return out;
+}
+
 export function flip(raster: Raster, axis: 'horizontal' | 'vertical'): Raster {
   const out = createRaster(raster.width, raster.height);
   for (let y = 0; y < raster.height; y++) {
@@ -541,9 +573,9 @@ export function suggestGrids(width: number, height: number): readonly GridSugges
 }
 
 export function gridCell(raster: Raster, columns: number, rows: number, cell: number): Raster {
-  if (columns <= 0 || rows <= 0) throw new RasterError(`Grid must have positive columns and rows; got ${columns}x${rows}.`);
+  if (!Number.isInteger(columns) || !Number.isInteger(rows) || columns <= 0 || rows <= 0) throw new RasterError(`Grid must have positive whole-number columns and rows; got ${columns}x${rows}.`);
   const count = columns * rows;
-  if (cell < 0 || cell >= count) throw new RasterError(`Cell ${cell} is outside a ${columns}x${rows} grid (${count} cells).`);
+  if (!Number.isInteger(cell) || cell < 0 || cell >= count) throw new RasterError(`Cell ${cell} is outside a ${columns}x${rows} grid (${count} cells).`);
   const frameWidth = Math.floor(raster.width / columns);
   const frameHeight = Math.floor(raster.height / rows);
   if (frameWidth <= 0 || frameHeight <= 0) throw new RasterError(`A ${columns}x${rows} grid does not fit a ${raster.width}x${raster.height} image.`);

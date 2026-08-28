@@ -21,7 +21,7 @@ const BATCH_GAME = 'qa-batch-game';
 async function createProjectThroughUi(session: WorkbenchSession, gameId: string, presetLabel: string): Promise<void> {
   resetProject(gameId);
   await session.open();
-  await session.clickContaining('Create From Assets', '.actions');
+  await session.clickContaining('Use My Sprites', '.actions');
   await session.waitForText('Create a project');
   await session.fill('.modal input[type=text]', gameId);
   await session.page.selectOption('.modal select', { label: presetLabel });
@@ -322,6 +322,49 @@ export async function wbSecurity001({ session, note }: JourneyContext): Promise<
   await fetch(`${host.url}/api/import/discard`, { method: 'POST', headers: good, body: JSON.stringify({ gameId: PRIMARY_GAME, batchId }) });
   expect(!existsSync('/evil.png'), 'a traversal-shaped filename escaped containment');
 
+  // Transform recipes are persisted authority: malformed steps, derivative
+  // chains, and bytes that do not match their claimed source replay must all
+  // fail before an asset record or public file is written.
+  const projectAssets = readAssets(PRIMARY_GAME);
+  const source = projectAssets.find((asset) => asset.kind === 'source');
+  const derived = projectAssets.find((asset) => asset.kind === 'derived');
+  expect(source && derived, 'security recipe probes need the image-first source and derivative');
+  const sourceBytes = readFileSync(resolveContained(gameRoot(PRIMARY_GAME), source!.relativePath));
+  const deriveHeaders = (sourceId: string, recipe: unknown, purpose?: string): Record<string, string> => ({
+    'x-sw2d-session': host.sessionToken,
+    Origin: host.url,
+    'Content-Type': 'application/octet-stream',
+    'x-sw2d-game': PRIMARY_GAME,
+    'x-sw2d-source': sourceId,
+    'x-sw2d-name': encodeURIComponent('security-probe.png'),
+    'x-sw2d-recipe': encodeURIComponent(JSON.stringify(recipe)),
+    ...(purpose ? { 'x-sw2d-purpose': purpose } : {}),
+  });
+  const malformedRecipe = await fetch(`${host.url}/api/assets/derive`, {
+    method: 'POST',
+    headers: deriveHeaders(source!.id, { version: 1, steps: 'not-an-array' }),
+    body: sourceBytes,
+  });
+  expectEqual(malformedRecipe.status, 400, 'a malformed transform recipe crossed the API boundary');
+  const malformedHeader = await fetch(`${host.url}/api/assets/derive`, {
+    method: 'POST',
+    headers: { ...deriveHeaders(source!.id, { version: 1, steps: [] }), 'x-sw2d-name': '%' },
+    body: sourceBytes,
+  });
+  expectEqual(malformedHeader.status, 400, 'malformed percent-encoded metadata became an internal server error');
+  const chainedDerivative = await fetch(`${host.url}/api/assets/derive`, {
+    method: 'POST',
+    headers: deriveHeaders(derived!.id, { version: 1, steps: [{ op: 'flip', axis: 'horizontal' }] }),
+    body: readFileSync(resolveContained(gameRoot(PRIMARY_GAME), derived!.relativePath)),
+  });
+  expectEqual(chainedDerivative.status, 400, 'a derived-on-derived lineage chain was stored');
+  const falseReplay = await fetch(`${host.url}/api/assets/derive`, {
+    method: 'POST',
+    headers: deriveHeaders(source!.id, { version: 1, steps: [{ op: 'flip', axis: 'horizontal' }] }, 'sprite'),
+    body: readFileSync(fixture('sheet-4x2.png')),
+  });
+  expectEqual(falseReplay.status, 422, 'unrelated pixels received a supplied-image validation badge');
+
   // No generic command or filesystem endpoint exists, by enumeration rather
   // than by spot-check.
   const routes = apiRoutes();
@@ -342,7 +385,7 @@ export async function wbSecurity001({ session, note }: JourneyContext): Promise<
   }).catch(() => ({ status: 413 }) as Response);
   expect(oversized.status === 413 || oversized.status === 400, `an oversized JSON body returned ${oversized.status}`);
 
-  note(`${routes.length} endpoints, none command- or path-shaped; token, origin, slug, filename and body limits all enforced`);
+  note(`${routes.length} endpoints; token, origin, slug, filename, recipe, lineage, pixel-replay and body limits all enforced`);
 }
 
 // ---------------------------------------------------------------------------
@@ -368,16 +411,16 @@ export async function wbResponsive001({ session, note }: JourneyContext): Promis
 
     // The primary actions stay reachable.
     const actions = await session.count('.action');
-    expectEqual(actions, 4, `${viewport.label}: expected 4 primary actions, saw ${actions}`);
+    expectEqual(actions, 6, `${viewport.label}: expected 6 primary actions, saw ${actions}`);
 
     await session.openProject(PRIMARY_GAME);
 
     const workspaceOverflow = await session.page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     expect(workspaceOverflow <= 1, `${viewport.label}: the workspace overflows horizontally by ${workspaceOverflow}px`);
 
-    // Import, preview and status stay reachable at every width.
+    // Import, run and release controls stay reachable at every width.
     const topbarText = await session.text('.topbar');
-    for (const control of ['Import', 'Preview', 'Validate', 'Build', 'Pack']) {
+    for (const control of ['Import', 'Run game', 'Validate', 'Build', 'Pack']) {
       expect(topbarText.includes(control), `${viewport.label}: the "${control}" control is unreachable`);
     }
     const statusVisible = await session.count('.statusbar');

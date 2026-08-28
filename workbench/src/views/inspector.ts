@@ -17,6 +17,7 @@ import { reimportAsset } from './assetLab.ts';
 import { openImportInbox } from './importInbox.ts';
 import { thumbnailFor } from '../image/clientImage.ts';
 import { ROLE_LABELS, type AssetRecord, type Provenance, type RoleAssignment } from '../../shared/types.ts';
+import { classifyFrames } from '../../shared/spritePresentation.ts';
 
 const PROVENANCE_LABELS: Readonly<Record<Provenance['kind'], string>> = {
   'project-owned': 'I made or own this',
@@ -158,6 +159,21 @@ export function renderInspector(host: HTMLElement): () => void {
       source
         ? el('div', { class: 'infobox', style: { 'margin-top': '10px' } }, el('div', { text: `Derived from "${source.displayName}".` }), el('div', { class: 'faint', text: `${asset.transformRecipe?.steps.length ?? 0} recorded step(s) - rebuildable from the source at any time.` }))
         : null,
+      asset.validation
+        ? el(
+            'div',
+            { class: `validation validation--${asset.validation.status}`, attrs: { 'data-testid': 'sprite-validation' } },
+            el(
+              'div',
+              { class: 'validation__head' },
+              el('strong', { text: asset.validation.status === 'valid' && !asset.stale ? 'Sprite validated' : 'Sprite needs attention' }),
+              el('span', { class: `badge${asset.validation.status === 'valid' && !asset.stale ? ' badge--proof' : ' badge--danger'}`, text: asset.validation.status === 'valid' && !asset.stale ? 'ready for play' : 'not ready' }),
+            ),
+            ...asset.validation.checks.map((check) =>
+              el('div', { class: `validation__check${check.passed ? ' validation__check--pass' : ''}` }, el('span', { text: check.passed ? 'PASS' : 'FAIL' }), el('div', {}, el('strong', { text: check.label }), el('small', { text: check.detail }))),
+            ),
+          )
+        : null,
       asset.stale
         ? el('div', { class: 'warnbox', style: { 'margin-top': '10px' }, text: 'Its source changed after this was made. Rebuild it to pick up the new pixels.' })
         : null,
@@ -177,6 +193,49 @@ export function renderInspector(host: HTMLElement): () => void {
         replacePicker,
       ),
       provenanceSection(asset),
+    );
+  }
+
+  /**
+   * Read-only presentation suggestions for a frame group. Everything here is
+   * derived from frame names and is a suggestion a person confirms - it never
+   * changes gameplay, collision, or the static role art (law 5).
+   */
+  function presentationSection(asset: AssetRecord, state: AppState): HTMLElement | null {
+    if (!asset.group) return null;
+    const current = state.current!;
+    const members = current.assets.filter((candidate) => candidate.group === asset.group);
+    if (members.length < 2) return null;
+
+    const summary = classifyFrames(members.map((member) => ({ ref: member.id, name: member.displayName, ...(member.frameIndex !== undefined ? { frameIndex: member.frameIndex } : {}) })));
+    const fallback = summary.staticFallbackRef ? members.find((member) => member.id === summary.staticFallbackRef) : null;
+
+    return el(
+      'div',
+      {},
+      el('h3', { class: 'section-title', style: { 'margin-top': '16px' }, text: 'Presentation (suggested)' }),
+      el('div', { class: 'faint', style: { 'font-size': '11px', 'margin-bottom': '6px' }, text: `Frame group "${asset.group}" · ${summary.totalFrames} frames` }),
+      summary.namesWereUninformative
+        ? el('div', { class: 'faint', style: { 'font-size': '11px' }, text: 'Frame names carry no animation vocabulary - treated as one unnamed sequence.' })
+        : el(
+            'div',
+            {},
+            ...summary.states.map((animState) =>
+              el(
+                'div',
+                { class: 'row', style: { gap: '6px', 'font-size': '12px', margin: '2px 0' } },
+                el('span', { class: `badge${animState.confidence === 'confident' ? ' badge--proof' : ''}`, text: animState.confidence }),
+                el('span', { text: `${animState.state} — ${animState.frames.length} frame${animState.frames.length === 1 ? '' : 's'}` }),
+              ),
+            ),
+          ),
+      summary.directions.length > 0
+        ? el('div', { class: 'faint', style: { 'font-size': '11px', 'margin-top': '4px' }, text: `Directional variants: ${summary.directions.map((d) => d.direction).join(', ')}` })
+        : null,
+      fallback
+        ? el('div', { class: 'faint', style: { 'font-size': '11px', 'margin-top': '4px' }, text: `Static fallback frame: "${fallback.displayName}". This is what a static role assignment uses.` })
+        : null,
+      el('div', { class: 'infobox', style: { 'margin-top': '8px', 'font-size': '11px' }, text: 'Suggestions from frame names only. Nothing here changes gameplay or collision, and static role art stays valid.' }),
     );
   }
 
@@ -223,6 +282,7 @@ export function renderInspector(host: HTMLElement): () => void {
           )
         : null,
       asset ? assetSection(asset, state) : el('div', { class: 'faint', style: { 'margin-top': '16px' }, text: 'Select an asset to see its details.' }),
+      asset ? presentationSection(asset, state) : null,
     );
   }
 

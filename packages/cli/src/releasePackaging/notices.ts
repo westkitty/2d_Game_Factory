@@ -102,3 +102,49 @@ export function formatThirdPartyNoticesText(deps: readonly ShippedDependency[]):
   });
   return `THIRD-PARTY NOTICES\n\n${sections.join('\n\n')}\n`;
 }
+
+/**
+ * A shipped third-party visual asset, as recorded in the game's
+ * resources/RESOURCE_MANIFEST.json.
+ */
+export interface ShippedAsset {
+  readonly originalSource?: string;
+  readonly license: string;
+  readonly attributionRequired: boolean;
+  readonly modificationStatus: 'unmodified' | 'modified' | 'generated';
+  readonly localPath: string;
+}
+
+/**
+ * Human-readable credits for bundled third-party artwork, grouped by source.
+ *
+ * Derived mechanically from the resource manifest the workbench/CLI already
+ * maintains from real provenance - not a hand-kept list. Every file named here
+ * is local to the build; the running game makes no network request for it.
+ */
+export function formatThirdPartyAssetNoticesText(assets: readonly ShippedAsset[]): string {
+  if (assets.length === 0) {
+    return 'THIRD-PARTY ASSET NOTICES\n\nNo third-party visual assets are bundled in this build. All artwork is project-owned or generated locally.\n';
+  }
+  const bySource = new Map<string, ShippedAsset[]>();
+  for (const asset of assets) {
+    const key = asset.originalSource ?? '(source not recorded)';
+    const bucket = bySource.get(key) ?? [];
+    bucket.push(asset);
+    bySource.set(key, bucket);
+  }
+  const sections = [...bySource.entries()]
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .map(([source, group]) => {
+      const first = group[0]!;
+      const lines = [`Source: ${source}`];
+      lines.push(`  Licence: ${first.license}`);
+      lines.push(`  Attribution: ${first.attributionRequired ? 'required - see the source page for the credit line' : 'not required'}`);
+      const mods = [...new Set(group.map((a) => a.modificationStatus))].join(', ');
+      lines.push(`  Modifications: ${mods}`);
+      lines.push('  Files:');
+      for (const asset of group.slice().sort((a, b) => a.localPath.localeCompare(b.localPath))) lines.push(`    ${asset.localPath}`);
+      return lines.join('\n');
+    });
+  return `THIRD-PARTY ASSET NOTICES\n\nThis build bundles the following third-party visual assets. Every file is\nlocal to the game; the running game makes no network request for them.\n\n${sections.join('\n\n')}\n`;
+}

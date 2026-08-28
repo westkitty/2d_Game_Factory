@@ -11,6 +11,7 @@
 import type { TransformRecipe, TransformStep } from '../types.ts';
 import { type Raster, cloneRaster } from './raster.ts';
 import {
+  alignFrame,
   crop,
   damageFlash,
   desaturate,
@@ -72,6 +73,8 @@ export function applyStep(current: Raster, step: TransformStep, original: Raster
       return extractComponent(current, step.index, step.alphaThreshold);
     case 'gridCell':
       return gridCell(current, step.columns, step.rows, step.cell);
+    case 'alignFrame':
+      return alignFrame(current, step.anchor, step.alphaThreshold);
     case 'outline':
       return outline(current, step.color, step.thickness);
     case 'dropShadow':
@@ -129,6 +132,8 @@ export function describeStep(step: TransformStep): string {
       return `Extract component ${step.index + 1}`;
     case 'gridCell':
       return `Grid cell ${step.cell + 1} of ${step.columns}x${step.rows}`;
+    case 'alignFrame':
+      return `Align frame ${step.anchor === 'center' ? 'to center' : 'to bottom center'}`;
     case 'outline':
       return `Outline ${step.thickness}px ${step.color}`;
     case 'dropShadow':

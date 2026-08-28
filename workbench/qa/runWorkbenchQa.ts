@@ -35,7 +35,7 @@ const JOURNEYS: readonly Journey[] = [
   { id: 'WB-DERIVE-001', title: 'derivation is non-destructive, recorded and undoable', run: wbDerive001 },
   { id: 'WB-REIMPORT-001', title: 'a replaced source keeps its identity, role and lineage', run: wbReimport001 },
   { id: 'WB-MULTI-001', title: 'bulk import tolerates mixed naming and catches duplicates', run: wbMulti001 },
-  { id: 'WB-SHEET-001', title: 'a sprite sheet can be sliced and a frame assigned to a role', run: wbSheet001 },
+  { id: 'WB-SHEET-001', title: 'Dex Sprite compiles a validated frame set and assigns frame 1', run: wbSheet001 },
   { id: 'WB-SCENE-001', title: 'a real level can be edited visually and still validates', run: wbScene001 },
   { id: 'WB-OVERLAP-001', title: 'a covered scene object stays selectable', run: wbOverlap001 },
   { id: 'WB-REOPEN-001', title: 'project state survives a reload', run: wbReopen001 },

@@ -22,6 +22,7 @@ import { renderSceneComposer } from './sceneComposer.ts';
 import { renderPreview } from './previewPane.ts';
 import { renderActivity } from './activity.ts';
 import { openImportInbox } from './importInbox.ts';
+import { openFindFreeSprites } from './findFreeSprites.ts';
 import { maturityBadgeClass, depthLabel } from '../dom.ts';
 
 type Workspace = 'lab' | 'scene' | 'preview';
@@ -36,6 +37,7 @@ export function renderWorkspace(host: HTMLElement): () => void {
   const tabs = el('div', { class: 'tabs' });
   const centerBody = el('div', { style: { flex: '1 1 auto', display: 'flex', 'flex-direction': 'column', 'min-height': '0' } });
   const topbar = el('div', { class: 'topbar' });
+  const guidebar = el('div', { class: 'guidebar' });
   const statusbar = el('div', { class: 'statusbar' });
   const activityHost = el('div');
 
@@ -57,6 +59,14 @@ export function renderWorkspace(host: HTMLElement): () => void {
     else disposeCenter = renderPreview(centerBody);
   }
 
+  function activate(next: Workspace): void {
+    if (active === next) return;
+    active = next;
+    savePanels({ activeWorkspace: next });
+    paintTabs();
+    mountCenter();
+  }
+
   function paintTabs(): void {
     const entries: readonly { readonly id: Workspace; readonly label: string; readonly hint: string }[] = [
       { id: 'lab', label: 'Asset Lab', hint: 'Crop, mask, slice and derive from your art' },
@@ -66,13 +76,7 @@ export function renderWorkspace(host: HTMLElement): () => void {
     replace(
       tabs,
       ...entries.map((entry) =>
-        button(entry.label, () => {
-          if (active === entry.id) return;
-          active = entry.id;
-          savePanels({ activeWorkspace: entry.id });
-          paintTabs();
-          mountCenter();
-        }, { class: 'tab', title: entry.hint, attrs: { 'aria-selected': active === entry.id, role: 'tab' } }),
+        button(entry.label, () => activate(entry.id), { class: 'tab', title: entry.hint, attrs: { 'aria-selected': active === entry.id, role: 'tab' } }),
       ),
       el('div', { class: 'grow' }),
       el(
@@ -82,6 +86,38 @@ export function renderWorkspace(host: HTMLElement): () => void {
         button('Work', () => setMobilePane('center'), { class: 'btn btn--sm btn--ghost' }),
         button('Details', () => setMobilePane('inspector'), { class: 'btn btn--sm btn--ghost' }),
       ),
+    );
+  }
+
+  function paintGuide(state: AppState): void {
+    const current = state.current;
+    if (!current) return;
+    const validSprites = current.assets.filter((asset) => asset.validation?.purpose === 'sprite' && asset.validation.status === 'valid' && !asset.stale).length;
+    const assigned = current.blueprint.roleAssignments.filter((entry) => entry.assetId !== null).length;
+    const steps: readonly { label: string; detail: string; workspace: Workspace; done: boolean }[] = [
+      { label: 'Add art', detail: `${current.assets.filter((asset) => asset.kind === 'source').length} source image${current.assets.filter((asset) => asset.kind === 'source').length === 1 ? '' : 's'}`, workspace: 'lab', done: current.assets.length > 0 },
+      { label: 'Make sprites', detail: `${validSprites} validated`, workspace: 'lab', done: validSprites > 0 },
+      { label: 'Compose', detail: `${assigned} role${assigned === 1 ? '' : 's'} assigned`, workspace: 'scene', done: assigned > 0 },
+      { label: 'Play', detail: current.preview ? 'running now' : 'ready to run', workspace: 'preview', done: Boolean(current.preview) },
+    ];
+    replace(
+      guidebar,
+      el('div', { class: 'guidebar__label' }, el('span', { text: 'BUILD TRACK' }), el('strong', { text: 'Follow the steps, then play the actual game.' })),
+      el(
+        'div',
+        { class: 'guidebar__steps' },
+        ...steps.map((step, index) =>
+          button(`${index + 1}. ${step.label}`, () => activate(step.workspace), {
+            class: `guide-step${active === step.workspace ? ' guide-step--active' : ''}${step.done ? ' guide-step--done' : ''}`,
+            title: step.detail,
+            attrs: { 'aria-label': `${step.label}: ${step.detail}` },
+          }),
+        ),
+      ),
+      button(current.preview ? 'Game running' : 'Run game', () => {
+        activate('preview');
+        if (!current.preview) void startPreview('fast');
+      }, { class: 'btn btn--run', attrs: { 'data-testid': 'run-game' } }),
     );
   }
 
@@ -110,9 +146,13 @@ export function renderWorkspace(host: HTMLElement): () => void {
       current.preset ? el('span', { class: 'badge', text: depthLabel(current.preset.starterKitDepth) }) : null,
       el('div', { class: 'grow' }),
       button('Import', () => openImportInbox({ gameId: current.project.gameId, onDone: () => undefined }), { class: 'btn btn--sm' }),
+      button('Find free sprites', () => void openFindFreeSprites(), { class: 'btn btn--sm', title: 'Find coherent, licence-checked free raster packs that fit this game' }),
       button('Re-theme', () => void synthesizeTheme(), { class: 'btn btn--sm', title: 'Rewrite the theme from the current roles and palette' }),
       el('div', { class: 'topbar__sep' }),
-      button('Preview', () => void startPreview('fast'), { class: 'btn btn--sm', title: 'Start the real game on its own dev server' }),
+      button('Run game', () => {
+        activate('preview');
+        void startPreview('fast');
+      }, { class: 'btn btn--run btn--sm', title: 'Open and run the real generated game' }),
       button('Validate', () => void runPipeline('validate'), { class: 'btn btn--sm', disabled: busy }),
       button('Build', () => void runPipeline('build'), { class: 'btn btn--sm', disabled: busy }),
       button('Pack', () => void runPipeline('pack'), { class: 'btn btn--sm', disabled: busy, title: 'Produce an offline-verified, checksummed release candidate' }),
@@ -171,7 +211,7 @@ export function renderWorkspace(host: HTMLElement): () => void {
   libraryPane.style.width = `${initial.panels.libraryWidth}px`;
   inspectorPane.style.width = `${initial.panels.inspectorWidth}px`;
 
-  replace(host, topbar, workspaceGrid, statusbar, activityHost);
+  replace(host, topbar, guidebar, workspaceGrid, statusbar, activityHost);
 
   disposers.push(renderLibrary(libraryPane));
   disposers.push(renderInspector(inspectorPane));
@@ -179,11 +219,18 @@ export function renderWorkspace(host: HTMLElement): () => void {
   paintTabs();
   mountCenter();
   paintTopbar(initial);
+  paintGuide(initial);
   paintStatus(initial);
 
   disposers.push(
     subscribe((state) => {
+      if (state.panels.activeWorkspace !== active) {
+        active = state.panels.activeWorkspace;
+        paintTabs();
+        mountCenter();
+      }
       paintTopbar(state);
+      paintGuide(state);
       paintStatus(state);
     }),
   );

@@ -16,9 +16,54 @@
 | Starter-kit smart-model sweep repair | `f0106ea94165332d81d97dc0b2288c14cfd012ac`; Actions `33076295154` SUCCESS |
 | Full-workbench repair/revalidation | tested at `f294d7d688a4c1a8d62efadebde4c251ec878ccc`, Actions `33086331815`; merged at `e6a53dc541f84b964620fdb0e37e73fda8fdc7b2` |
 | Frame-group animation feature | tested at `7d473239a2ffffc51f8f2f3a8d80f7bd037f1a43`, Actions `33095319394`; PR #5 merged at `24f1cd89c0f66fac8d30b01e9277e77a24cb8467` |
+| Free-Sprite Intelligence reconciliation | branch `repair/free-sprite-main-reconciliation`, merges `feature/free-sprite-intelligence` (`616a679`) onto `main` (`6e721aa`); revalidated on the reconciled HEAD |
 | Shipped rich kits | **5 proof-derived + 69 expanded = 74 total** |
 | Expansion scaffolds | **69 / 69 implemented, registered, and mechanically required by regression test** |
-| Current milestone | **Starter expansion, smart-model sweep, full-workbench revalidation, and ordered imported frame-sequence playback complete** |
+| Current milestone | **Free-Sprite Intelligence reconciled with current `main` (frame-group animation preserved); rights-freshness model corrected** |
+
+---
+
+## Free-Sprite Intelligence — reconciled onto current `main`
+
+The Free-Sprite Intelligence milestone was originally built on `starter-kits/implement-all`
+(`d222b1e`), not on current `main`, so `feature/free-sprite-intelligence` (`616a679`) by
+itself is **not** merge-ready: it predates the accepted frame-group animation runtime stack
+(`AnimationFrameDescriptor` / `RoleAnimationDescriptor` / `ContentBundle.animations` /
+`packages/runtime/src/content/roleAnimations.ts` / animation-aware `themeSynthesis.ts` /
+`BootScene` frame queuing). This branch reconciles the two lineages so both systems ship
+together, and corrects the rights-freshness hole found in review.
+
+**Goal.** Game-first workbench (an image is optional) + intelligent, legally safe,
+offline-preserving free raster-asset sourcing — preset-aware pack recommendations, exact
+rights, audition, coherent reskin, a verified local vault, provenance receipts, reverse
+discovery — layered on top of, not instead of, the accepted frame-group animation runtime.
+
+| Field | Value |
+|---|---|
+| Reconciliation branch | `repair/free-sprite-main-reconciliation` |
+| Base `main` SHA | `6e721aaf44ae1a315e4220c27f4747f0196483ce` |
+| Incorporated feature SHA | `616a679157feb698de78dd8ca912f2564b8a44a8` |
+| Phase A — game-first factory | `feature` `6e7326d` (+ QA alignment `65f46a4`) — home reframed game-first, `Make a Game` primary, `Find Free Sprites` route, `createDialog` `gameplay` mode. `workbench/test/seedsGameFirst.test.ts`. |
+| Phase B — verified free-sprite source foundation | `feature` `3e3a843` — `workbench/server/sources/*`: narrow allowlisted net, rights vs `resource-policy.json`, curated Kenney CC0 5-pack catalogue, acquire → canonical staged import; `stagePack` skips SVG. `workbench/test/sources.test.ts`. |
+| Phase C — game-aware sprite requirement engine | `feature` `7c86883` — `sources/requirements.ts` derives a `SpriteRequirementProfile`; `sources/matching.ts` deterministic `rankPacks` with hard gates + "why this fits" + per-role coverage. `workbench/test/spriteRequirements.test.ts`. |
+| Phase D — asset audition + coherent reskin | `feature` `b730fe4` — `GET /import/staged-bytes`; `sources/reskin.ts` `proposeReskin`; client `audition()` groups staged thumbnails by proposed role with accept/reject/change; "Preview this look"; commit → canonical `/import/commit`. `workbench/test/spriteAudition.test.ts`. |
+| Phase E — intelligent sprite presentation | `feature` `5b6f7fb` — `workbench/shared/spritePresentation.ts` pure `classifyFrames` (idle/walk/run/move confident; attack/hurt/death only suggested; always a static fallback frame; directional variants) + `suggestVisualBounds` (pivot/trim, "does not change collision"). Read-only inspector panel. Additive to — not a replacement for — the runtime frame-group animation stack. `workbench/test/spritePresentation.test.ts`. |
+| Phase F — verified local asset vault + provenance receipt | `feature` `d1f32db` — `workbench/server/sources/vault.ts` (SHA-256 pack cache at `workbench/.sw2d-vault/`, gitignored, `SW2D_VAULT_DIR`-overridable; acquisition licence snapshot never rewritten; freshness recomputed on read; reverify/remove; authoring-only). `pack` writes `THIRD_PARTY_ASSET_NOTICES.txt`. `workbench/test/vault.test.ts`. |
+| Phase G — reverse discovery + polish | `feature` `85d1b68` — `sources/reverse.ts` `whatCanIMakeWith`; `GET /sources/reverse`; client "What can I make with this?"; offline banner; `docs/workbench/FREE_SPRITE_SOURCING.md`. `workbench/test/reverseDiscovery.test.ts`. |
+| Feature bug-sweep | `feature` `616a679` — 6 passes; net.ts body-stall timeout, IPv6 link-local widening, svg-only batch self-clean, vault byte integrity, `/sources/recommend` 404/regex, audition tile cap. |
+| Reconciliation commit | *(this section is finalized below after revalidation)* |
+| Rights-freshness repair | *(see "Rights-freshness repair" below)* |
+| Frame-animation preservation | *(see "Frame-group animation preservation" below)* |
+
+### Architectural laws in force (Free-Sprite)
+
+Gameplay never requires art; one canonical factory; normal game format; semantic roles are the
+contract; **static fallback survives animation**; source art is non-destructive; rights are
+data; **no runtime internet**; no generic fetch pipe; no arbitrary local path access;
+free ≠ licensed; **SVG is never a sprite source**. Frame-group animation is presentation
+metadata, not gameplay state, and its static-role fallback is never weakened.
+
+---
 
 ## Current truth
 

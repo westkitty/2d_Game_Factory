@@ -16,7 +16,7 @@
 import { createHash } from 'node:crypto';
 import { existsSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
-import type { AssetRecord, AssetsDocument, Provenance, TransformRecipe, WorkbenchAssetRole } from '../shared/types.ts';
+import type { AssetRecord, AssetsDocument, AssetValidation, AssetValidationCheck, Provenance, TransformRecipe, WorkbenchAssetRole } from '../shared/types.ts';
 import { applyRecipe } from '../shared/image/recipe.ts';
 import { extractPalette } from '../shared/image/transforms.ts';
 import { decodePng, encodePng, isPng } from './png.ts';
@@ -24,6 +24,8 @@ import { sniffImage } from './imageMeta.ts';
 import { SecurityError, extensionForMime, isSupportedImageMime, normalizeFileName } from './security.ts';
 import { readJsonVersioned, writeJsonAtomic } from './atomicJson.ts';
 import { derivedAssetsDir, ensureDir, gameRoot, resolveContained, sourceAssetsDir, sw2dDir } from './paths.ts';
+import { groupKey, parseName } from '../shared/grouping.ts';
+import { assertTransformRecipe } from './recipeValidation.ts';
 
 const EMPTY_ASSETS: AssetsDocument = { version: 1, assets: [] };
 
@@ -138,6 +140,81 @@ export interface StoreDerivedInput {
   readonly bytes: Uint8Array;
   readonly displayName: string;
   readonly recipe: TransformRecipe;
+  readonly purpose?: 'sprite';
+}
+
+/**
+ * Validates the actual encoded pixels, dimensions, lineage and replay recipe.
+ * This runs on the host after upload; client-side canvas output is not trusted
+ * merely because it came from the workbench UI.
+ */
+export function validateSprite(
+  bytes: Uint8Array,
+  source: AssetRecord,
+  recipe: TransformRecipe,
+  sourceBytes?: Uint8Array,
+): AssetValidation {
+  let formatPassed = false;
+  let formatDetail = 'Sprites must be valid PNG files.';
+  let width = 0;
+  let height = 0;
+  let visiblePixels = 0;
+  let decoded: ReturnType<typeof decodePng> | null = null;
+  if (isPng(bytes)) {
+    try {
+      decoded = decodePng(bytes);
+      formatPassed = true;
+      formatDetail = 'Decoded as a valid PNG.';
+    } catch (error) {
+      formatDetail = `PNG decode failed: ${error instanceof Error ? error.message : String(error)}`;
+    }
+  }
+  if (decoded) {
+    const raster = decoded;
+    width = raster.width;
+    height = raster.height;
+    for (let offset = 3; offset < raster.data.length; offset += 4) {
+      if (raster.data[offset]! > 8) visiblePixels += 1;
+    }
+  }
+
+  const dimensionsPassed = width >= 8 && height >= 8 && width <= 512 && height <= 512 && width / height >= 0.25 && width / height <= 4;
+  const sourceHashMatches = sourceBytes === undefined || sha256Hex(sourceBytes) === source.sha256;
+  const checks: AssetValidationCheck[] = [
+    { id: 'format', label: 'Lossless sprite format', passed: formatPassed, detail: formatDetail },
+    { id: 'dimensions', label: 'Runtime-safe dimensions', passed: dimensionsPassed, detail: `${width}x${height}; required 8–512 px with a usable aspect ratio.` },
+    { id: 'visible-pixels', label: 'Visible artwork', passed: visiblePixels > 0, detail: `${visiblePixels.toLocaleString('en-US')} visible pixel${visiblePixels === 1 ? '' : 's'}.` },
+    {
+      id: 'source-lineage',
+      label: 'Supplied-image lineage',
+      passed: source.kind === 'source' && sourceHashMatches,
+      detail: sourceHashMatches
+        ? `Derived against ${source.displayName} (${source.sha256.slice(0, 12)}).`
+        : `The stored source file no longer matches its recorded hash (${source.sha256.slice(0, 12)}).`,
+    },
+    { id: 'recipe', label: 'Rebuildable recipe', passed: recipe.steps.length > 0, detail: `${recipe.steps.length} recorded transform step${recipe.steps.length === 1 ? '' : 's'}.` },
+  ];
+  if (decoded && sourceBytes && isPng(sourceBytes)) {
+    let replayPassed = false;
+    let replayDetail = 'The uploaded pixels do not match replaying the recipe against the supplied source.';
+    try {
+      const replayed = applyRecipe(decodePng(sourceBytes), recipe);
+      replayPassed = replayed.width === decoded.width
+        && replayed.height === decoded.height
+        && replayed.data.length === decoded.data.length
+        && replayed.data.every((value, index) => value === decoded!.data[index]);
+      if (replayPassed) replayDetail = 'Pixels exactly match a host-side replay against the supplied PNG.';
+    } catch (error) {
+      replayDetail = `Recipe replay failed: ${error instanceof Error ? error.message : String(error)}`;
+    }
+    checks.push({ id: 'pixel-replay', label: 'Supplied-image pixel replay', passed: replayPassed, detail: replayDetail });
+  }
+  return {
+    purpose: 'sprite',
+    status: checks.every((check) => check.passed) ? 'valid' : 'invalid',
+    sourceSha256: source.sha256,
+    checks,
+  };
 }
 
 /**
@@ -150,14 +227,22 @@ export interface StoreDerivedInput {
  * unknown-licence image is itself unknown and still blocks release.
  */
 export function storeDerived(input: StoreDerivedInput): StoreResult {
+  const recipe = assertTransformRecipe(input.recipe);
   const document = loadAssets(input.gameId);
   const source = document.assets.find((asset) => asset.id === input.sourceAssetId);
   if (!source) throw new SecurityError(404, `No source asset "${input.sourceAssetId}" in this project.`);
+  if (source.kind !== 'source') throw new SecurityError(400, `Derived assets must point directly to a source; "${source.displayName}" is already derived.`);
   if (source.provenance.kind === 'reference-only') {
     throw new SecurityError(400, `"${source.displayName}" is marked reference-only: its pixels may not be copied into the game. Derive a palette or generated art from it instead.`);
   }
 
   const sniffed = sniffImage(input.bytes);
+  const sourceBytes = new Uint8Array(readFileSync(resolveContained(gameRoot(input.gameId), source.relativePath)));
+  const validation = input.purpose === 'sprite' ? validateSprite(input.bytes, source, recipe, sourceBytes) : undefined;
+  if (validation?.status === 'invalid') {
+    const failures = validation.checks.filter((check) => !check.passed).map((check) => check.detail).join(' ');
+    throw new SecurityError(422, `The derived sprite did not validate. ${failures}`);
+  }
   const hash = sha256Hex(input.bytes);
   const id = mintAssetId('der', `${source.id}:${hash}`, takenIds(document));
   const fileName = storedFileName(id, sniffed.mime);
@@ -167,6 +252,7 @@ export function storeDerived(input: StoreDerivedInput): StoreResult {
   writeFileSync(resolveContained(dir, fileName), input.bytes);
 
   const palette = isPng(input.bytes) ? extractPalette(decodePng(input.bytes), 6) : undefined;
+  const namedFrame = parseName(input.displayName);
 
   const record: AssetRecord = {
     id,
@@ -179,11 +265,16 @@ export function storeDerived(input: StoreDerivedInput): StoreResult {
     byteSize: input.bytes.byteLength,
     sha256: hash,
     sourceAssetId: source.id,
-    transformRecipe: input.recipe,
+    transformRecipe: recipe,
     roleAssignments: [],
     provenance: { ...source.provenance, modificationStatus: 'modified' },
+    ...(validation ? { validation } : {}),
     ...(palette && palette.length > 0 ? { palette } : {}),
-    ...(source.group !== undefined ? { group: source.group } : {}),
+    ...(namedFrame.frameIndex !== undefined
+      ? { group: groupKey(input.displayName), frameIndex: namedFrame.frameIndex }
+      : source.group !== undefined
+        ? { group: source.group }
+        : {}),
   };
 
   const next: AssetsDocument = { version: 1, assets: [...document.assets, record] };
@@ -304,6 +395,7 @@ export function rebuildDerivedOnHost(gameId: string, derivedId: string): AssetRe
     height: sniffed.height,
     byteSize: rebuilt.byteLength,
     sha256: sha256Hex(rebuilt),
+    ...(derived.validation ? { validation: validateSprite(rebuilt, source, derived.transformRecipe, sourceBytes) } : {}),
     stale: false,
   };
   saveAssets(gameId, { version: 1, assets: document.assets.map((asset) => (asset.id === derived.id ? updated : asset)) });

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createRaster, rasterFrom, setPixel, parseHexColor, toHexColor, RasterError } from '../shared/image/raster.ts';
 import {
+  alignFrame,
   alphaBounds,
   crop,
   desaturate,
@@ -100,6 +101,22 @@ describe('crop and trim', () => {
     crop(raster, { x: 0, y: 0, width: 5, height: 5 });
     trimAlpha(raster);
     expect([...raster.data]).toEqual([...before]);
+  });
+});
+
+describe('frame alignment', () => {
+  it('bottom-centres visible pixels without changing the frame dimensions', () => {
+    const raster = withRect(16, 16, { x: 1, y: 2, width: 4, height: 5 }, [80, 170, 240, 255]);
+    const aligned = alignFrame(raster, 'bottom-center');
+
+    expect(aligned.width).toBe(16);
+    expect(aligned.height).toBe(16);
+    expect(alphaBounds(aligned)).toEqual({ x: 6, y: 11, width: 4, height: 5 });
+    expect(alphaBounds(raster)).toEqual({ x: 1, y: 2, width: 4, height: 5 });
+  });
+
+  it('leaves an empty frame empty instead of inventing pixels', () => {
+    expect(alphaBounds(alignFrame(createRaster(8, 8), 'center'))).toBeNull();
   });
 });
 
@@ -294,6 +311,8 @@ describe('grid slicing', () => {
     const raster = createRaster(8, 4);
     expect(() => gridCell(raster, 2, 1, 5)).toThrow(RasterError);
     expect(() => gridCell(raster, 0, 1, 0)).toThrow(RasterError);
+    expect(() => gridCell(raster, 2.5, 1, 0)).toThrow(/whole-number/);
+    expect(() => gridCell(raster, 2, 1, 0.5)).toThrow(/outside/);
   });
 });
 

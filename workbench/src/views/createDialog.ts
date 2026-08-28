@@ -32,7 +32,12 @@ export function suggestSlug(text: string): string {
 }
 
 export interface CreateDialogOptions {
-  readonly mode?: 'assets' | 'preset';
+  /**
+   * 'gameplay' is the game-first front door: create now, add art later.
+   * 'assets' frames the same create step as the precursor to bringing in art.
+   * 'preset' is the preset browser's "use this recipe" entry.
+   */
+  readonly mode?: 'gameplay' | 'assets' | 'preset';
   readonly presetId?: string;
   readonly suggestedName?: string;
 }
@@ -131,10 +136,16 @@ export function openCreateDialog(options: CreateDialogOptions = {}): void {
   );
 
   const close = openModal({
-    title: options.mode === 'assets' ? 'Create a project, then bring in your assets' : 'Create a game',
+    title: options.mode === 'assets' ? 'Create a project, then bring in your assets' : 'Make a game',
     body: el(
       'div',
       {},
+      options.mode === 'gameplay'
+        ? el('div', {
+            class: 'infobox',
+            text: 'No artwork needed. Every visual role starts as generated placeholder art the factory draws locally - the game is playable the moment it is created. Replace any role later with your own sprites, a free sourced pack, or an image.',
+          })
+        : null,
       el('label', { class: 'field' }, el('span', { text: 'Game id' }), idInput, problemNode),
       el('label', { class: 'field' }, el('span', { text: 'Preset' }), presetSelect),
       detailNode,

@@ -113,6 +113,19 @@ export function assetBlobUrl(gameId: string, assetId: string, sha256: string): P
   return pending;
 }
 
+/**
+ * Bytes of a staged (pre-commit) file, for the sourcing audition. Same token
+ * gate as every call; not cached, because a batch is short-lived.
+ */
+export async function stagedBlobUrl(gameId: string, batchId: string, stagingId: string): Promise<string> {
+  const response = await fetch(
+    `/api/import/staged-bytes?gameId=${encodeURIComponent(gameId)}&batchId=${encodeURIComponent(batchId)}&stagingId=${encodeURIComponent(stagingId)}`,
+    { headers: { 'x-sw2d-session': SESSION_TOKEN } },
+  );
+  if (!response.ok) throw new ApiError(response.status, `Could not load staged bytes (${response.status}).`);
+  return URL.createObjectURL(await response.blob());
+}
+
 export async function assetBlob(gameId: string, assetId: string): Promise<Blob> {
   const response = await fetch(
     `/api/assets/bytes?gameId=${encodeURIComponent(gameId)}&assetId=${encodeURIComponent(assetId)}`,

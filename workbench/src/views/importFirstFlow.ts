@@ -14,14 +14,15 @@
 
 import { el, button, replace, toast } from '../dom.ts';
 import * as api from '../api.ts';
-import { analyseFile, rasterToDataUrl, blobToRaster } from '../image/clientImage.ts';
+import { analyseFile, rasterToDataUrl, rasterToPngBlob, blobToRaster, type AnalysisHints } from '../image/clientImage.ts';
 import { fitWithin } from '../../shared/image/transforms.ts';
+import { applyRecipe } from '../../shared/image/recipe.ts';
 import { openModal } from './modal.ts';
-import { createProject, errorText, openProject, refreshCurrent } from '../actions.ts';
+import { createProject, errorText, openProject, refreshCurrent, savePanels, startPreview } from '../actions.ts';
 import { slugProblem, suggestSlug } from './createDialog.ts';
 import { depthExplanation, depthLabel, maturityBadgeClass } from '../dom.ts';
-import { ROLE_LABELS, type GameSeed, type SingleImageMode, type WorkbenchAssetRole } from '../../shared/types.ts';
-import { getState } from '../state.ts';
+import { ROLE_LABELS, type AssetRecord, type GameSeed, type ImageAnalysis, type SingleImageMode, type TransformRecipe, type WorkbenchAssetRole } from '../../shared/types.ts';
+import { getState, update } from '../state.ts';
 
 interface Picked {
   readonly file: File;
@@ -31,6 +32,34 @@ interface Picked {
   readonly palette: readonly string[];
   readonly hasAlpha: boolean;
   readonly pixelArtLikely: boolean;
+  readonly analysis: AnalysisHints;
+}
+
+function spriteRecipeFor(source: ReturnType<typeof applyRecipe>, analysis: ImageAnalysis, mode: SingleImageMode, pixelArt: boolean): { recipe: TransformRecipe; raster: ReturnType<typeof applyRecipe> } {
+  const steps: TransformRecipe['steps'][number][] = [];
+  if (mode === 'spritesheet') {
+    const grid = analysis.gridSuggestions[0];
+    if (grid) steps.push({ op: 'gridCell', columns: grid.columns, rows: grid.rows, cell: 0 });
+  } else if (!analysis.hasAlpha) {
+    steps.push({ op: 'removeBackground', sampleX: 0, sampleY: 0, tolerance: 24, edgeConnected: true });
+  }
+  steps.push({ op: 'trimAlpha', threshold: 8 });
+
+  let recipe: TransformRecipe = { version: 1, steps };
+  let raster = applyRecipe(source, recipe);
+  const maxSide = Math.max(raster.width, raster.height);
+  const minSide = Math.min(raster.width, raster.height);
+  let scale = 1;
+  if (maxSide > 256) scale = 256 / maxSide;
+  else if (minSide < 8) scale = 8 / minSide;
+  if (scale !== 1) {
+    const width = Math.max(1, Math.round(raster.width * scale));
+    const height = Math.max(1, Math.round(raster.height * scale));
+    steps.push({ op: 'scale', width, height, mode: pixelArt ? 'nearest' : 'smooth' });
+    recipe = { version: 1, steps };
+    raster = applyRecipe(source, recipe);
+  }
+  return { recipe, raster };
 }
 
 /**
@@ -116,6 +145,7 @@ export async function openImportFirstFlow(): Promise<void> {
         palette: hints.palette,
         hasAlpha: hints.hasAlpha,
         pixelArtLikely: hints.pixelArtLikely,
+        analysis: hints,
       };
       // A transparent, portrait-ish cut-out is almost always a character; a
       // wide opaque image is almost always scenery. Pre-selecting the likely
@@ -269,18 +299,19 @@ export async function openImportFirstFlow(): Promise<void> {
     // through exactly the same staged import path the Import Inbox uses.
     try {
       const { batchId } = await api.post<{ batchId: string }>('/import/begin', { gameId });
-      const hints = await analyseFile(picked.file);
+      const hints = picked.analysis;
       await api.postBytes('/import/file', picked.file, {
         'x-sw2d-batch': batchId,
         'x-sw2d-name': picked.file.name,
         'x-sw2d-path': picked.file.name,
         'x-sw2d-hints': JSON.stringify(hints),
       });
-      const plan = await api.get<{ files: readonly { stagingId: string }[] }>('/import/plan', { gameId, batchId });
-      const stagingId = plan.files[0]?.stagingId;
+      const plan = await api.get<{ files: readonly { stagingId: string; analysis: ImageAnalysis }[] }>('/import/plan', { gameId, batchId });
+      const staged = plan.files[0];
+      const stagingId = staged?.stagingId;
       if (!stagingId) throw new Error('That image could not be read after all.');
 
-      await api.post('/import/commit', {
+      const committed = await api.post<{ state: { assets: readonly AssetRecord[] } }>('/import/commit', {
         gameId,
         batchId,
         selections: [{ stagingId, ...(mode.roles[0] ? { role: mode.roles[0] } : {}) }],
@@ -289,11 +320,35 @@ export async function openImportFirstFlow(): Promise<void> {
             ? { kind: 'reference-only', modificationStatus: 'unmodified' }
             : { kind: 'project-owned', modificationStatus: 'unmodified' },
       });
+
+      let sprite: AssetRecord | null = null;
+      if (mode.roles[0] === 'player' && staged) {
+        const source = committed.state.assets.find((asset) => asset.kind === 'source' && asset.sha256 === staged.analysis.sha256);
+        if (!source) throw new Error('The supplied image was imported, but its source record could not be found for sprite creation.');
+        const sourceRaster = await blobToRaster(picked.file);
+        const prepared = spriteRecipeFor(sourceRaster, staged.analysis, mode.id, picked.pixelArtLikely);
+        const blob = await rasterToPngBlob(prepared.raster);
+        const derived = await api.postBytes<{ asset: AssetRecord }>('/assets/derive', blob, {
+          'x-sw2d-game': gameId,
+          'x-sw2d-source': source.id,
+          'x-sw2d-name': `${picked.file.name.replace(/\.[a-z0-9]+$/i, '')}-player-sprite.png`,
+          'x-sw2d-recipe': JSON.stringify(prepared.recipe),
+          'x-sw2d-purpose': 'sprite',
+        });
+        sprite = derived.asset;
+        if (sprite.validation?.status !== 'valid') throw new Error('The sprite was created but did not pass validation.');
+        await api.post('/assets/role', { gameId, role: 'player', assetId: sprite.id });
+      }
       await refreshCurrent();
       await openProject(gameId);
+      savePanels({ activeWorkspace: 'preview' });
+      await startPreview('fast');
+      if (sprite) update({ selectedAssetId: sprite.id });
       toast(
-        mode.roles[0]
-          ? `Your image is now the ${ROLE_LABELS[mode.roles[0]]}. Press Preview to play it.`
+        sprite
+          ? `Created and validated ${sprite.displayName} against your supplied image. The game is running now.`
+          : mode.roles[0]
+          ? `Your image is now the ${ROLE_LABELS[mode.roles[0]]}. The game is running now.`
           : 'Imported as reference. Its palette drives the theme; the pixels stay out of the game.',
         'ok',
       );

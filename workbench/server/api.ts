@@ -26,6 +26,7 @@ import {
   setProvenance,
   storeDerived,
 } from './assetStore.ts';
+import { assertTransformRecipe } from './recipeValidation.ts';
 import {
   adoptProject,
   hasWorkbenchMetadata,
@@ -38,12 +39,24 @@ import {
   saveProject,
   summarizeProject,
 } from './projectStore.ts';
-import { buildPlan, beginBatch, clearStaging, commitImport, discardBatch, stageFile, type ClientAnalysisHints } from './importService.ts';
+import { buildPlan, beginBatch, clearStaging, commitImport, discardBatch, readStagedBytes, stageFile, type ClientAnalysisHints } from './importService.ts';
 import { SYNTHESIZABLE_ROLES, writeTheme } from './themeSynthesis.ts';
 import { buildSeeds, seedForPreset } from './seeds.ts';
 import { loadScene, listLevels, newObject, objectClassOptions, saveScene, SceneValidationError, type SceneDocument } from './sceneStore.ts';
 import { buildProject, createProject, packProject, validateProject } from './factoryService.ts';
 import { starterKitDepthFor, starterKitFor } from './starterKits/index.ts';
+import {
+  acquirePack,
+  allCandidates,
+  listProviderInfo,
+  recommendForPreset,
+  listVault,
+  reverifyVault,
+  removeFromVault,
+  vaultByteTotal,
+  whatCanIMakeWith,
+  CATALOG_VERIFIED_AT,
+} from './sources/index.ts';
 import { JobManager } from './jobManager.ts';
 import { applyRebuildResult, currentPreview, listPreviews, nextGeneration, previewModeOf, startFastPreview, startProductionPreview, stopPreview } from './previewManager.ts';
 import { getPreset } from '@sw2d/presets';
@@ -93,6 +106,16 @@ function optionalString(source: Record<string, unknown>, key: string): string | 
   if (value === undefined || value === null) return undefined;
   if (typeof value !== 'string') throw new SecurityError(400, `Invalid "${key}".`);
   return value;
+}
+
+function decodedHeader(request: ApiRequest, key: string, fallback?: string): string | undefined {
+  const raw = request.headers[key] ?? fallback;
+  if (raw === undefined) return undefined;
+  try {
+    return decodeURIComponent(raw);
+  } catch {
+    throw new SecurityError(400, `Malformed percent-encoding in "${key}" header.`);
+  }
 }
 
 function gameIdOf(request: ApiRequest, source?: Record<string, unknown>): string {
@@ -286,8 +309,8 @@ const ROUTES: ReadonlyMap<string, Handler> = new Map<string, Handler>([
     (request) => {
       const batchId = request.headers['x-sw2d-batch'];
       if (!batchId) throw new SecurityError(400, 'Missing x-sw2d-batch header.');
-      const fileName = decodeURIComponent(request.headers['x-sw2d-name'] ?? 'asset');
-      const relativePath = decodeURIComponent(request.headers['x-sw2d-path'] ?? fileName);
+      const fileName = decodedHeader(request, 'x-sw2d-name', 'asset')!;
+      const relativePath = decodedHeader(request, 'x-sw2d-path', fileName)!;
       let hints: ClientAnalysisHints | undefined;
       const rawHints = request.headers['x-sw2d-hints'];
       if (rawHints) {
@@ -352,6 +375,21 @@ const ROUTES: ReadonlyMap<string, Handler> = new Map<string, Handler>([
     },
   ],
 
+  [
+    // Staged (pre-commit) bytes, for the audition surface. Same token gate as
+    // every /api call; the staging id must be one this batch holds.
+    'GET /import/staged-bytes',
+    (request) => {
+      const gameId = gameIdOf(request);
+      const batchId = request.query.get('batchId');
+      const stagingId = request.query.get('stagingId');
+      if (!batchId || !stagingId) throw new SecurityError(400, 'Missing batchId or stagingId.');
+      const staged = readStagedBytes(gameId, batchId, stagingId);
+      if (!isSupportedImageMime(staged.mime)) throw new SecurityError(400, 'Not a servable image.');
+      return { status: 200, bytes: staged.bytes, contentType: staged.mime, headers: { 'Cache-Control': 'no-store' } };
+    },
+  ],
+
   // --- assets ---------------------------------------------------------------
 
   ['GET /assets', (request) => ok({ assets: loadAssets(gameIdOf(request)).assets })],
@@ -382,22 +420,23 @@ const ROUTES: ReadonlyMap<string, Handler> = new Map<string, Handler>([
     (request) => {
       const gameId = assertValidGameId(request.headers['x-sw2d-game']);
       const sourceAssetId = assertValidAssetId(request.headers['x-sw2d-source']);
-      const displayName = decodeURIComponent(request.headers['x-sw2d-name'] ?? 'derived.png');
+      const displayName = decodedHeader(request, 'x-sw2d-name', 'derived.png')!;
+      const purpose = request.headers['x-sw2d-purpose'];
+      if (purpose !== undefined && purpose !== 'sprite') throw new SecurityError(400, `Unknown derived-asset purpose ${JSON.stringify(purpose)}.`);
       let recipe: unknown;
       try {
         recipe = JSON.parse(decodeURIComponent(request.headers['x-sw2d-recipe'] ?? '{"version":1,"steps":[]}'));
       } catch {
         throw new SecurityError(400, 'Malformed transform recipe.');
       }
-      if (typeof recipe !== 'object' || recipe === null || (recipe as { version?: unknown }).version !== 1) {
-        throw new SecurityError(400, 'Unsupported transform recipe version.');
-      }
+      const transformRecipe = assertTransformRecipe(recipe);
       const { record } = storeDerived({
         gameId,
         sourceAssetId,
         bytes: request.body,
         displayName,
-        recipe: recipe as { version: 1; steps: [] },
+        recipe: transformRecipe,
+        ...(purpose === 'sprite' ? { purpose } : {}),
       });
       return ok({ asset: record, assets: loadAssets(gameId).assets });
     },
@@ -408,7 +447,7 @@ const ROUTES: ReadonlyMap<string, Handler> = new Map<string, Handler>([
     (request) => {
       const gameId = assertValidGameId(request.headers['x-sw2d-game']);
       const assetId = assertValidAssetId(request.headers['x-sw2d-asset']);
-      const displayName = request.headers['x-sw2d-name'] ? decodeURIComponent(request.headers['x-sw2d-name']) : undefined;
+      const displayName = decodedHeader(request, 'x-sw2d-name');
       const result = reimportSource(gameId, assetId, request.body, displayName);
       // Rebuild what the host can (PNG sources); the rest is handed back to
       // the client, which has the decoders the host deliberately does not.
@@ -577,6 +616,124 @@ const ROUTES: ReadonlyMap<string, Handler> = new Map<string, Handler>([
       const blueprint: BlueprintDocument = refreshBlueprint(gameId);
       const synthesis = writeTheme({ gameId, assets: loadAssets(gameId), blueprint });
       return ok({ synthesis: summariseSynthesis(synthesis), state: projectState(gameId) });
+    },
+  ],
+
+  // --- free-sprite sourcing (authoring-time only) --------------------------
+
+  [
+    'GET /sources/providers',
+    async () => ok({ providers: await listProviderInfo({ probeOnline: true }) }),
+  ],
+
+  [
+    'GET /sources/catalog',
+    () => ok({ candidates: allCandidates(), verifiedAt: CATALOG_VERIFIED_AT }),
+  ],
+
+  [
+    // Preset-aware ranked packs. `gameId` (a real project) or `presetId` (a
+    // preset the user is about to create). No search term - the game is the query.
+    'GET /sources/recommend',
+    (request) => {
+      const rawGameId = request.query.get('gameId');
+      let presetId = request.query.get('presetId') ?? undefined;
+      if (rawGameId) {
+        const gameId = assertValidGameId(rawGameId);
+        if (!projectExists(gameId)) throw new SecurityError(404, `No project "${gameId}" under games/.`);
+        presetId = loadProject(gameId).presetId;
+      }
+      if (!presetId) throw new SecurityError(400, 'Provide gameId or presetId.');
+      if (!/^[a-z0-9][a-z0-9-]{0,60}$/.test(presetId)) throw new SecurityError(400, `Invalid presetId ${JSON.stringify(presetId)}.`);
+      try {
+        return ok(recommendForPreset(presetId));
+      } catch {
+        throw new SecurityError(404, `Unknown preset "${presetId}".`);
+      }
+    },
+  ],
+
+  [
+    'POST /sources/acquire',
+    (request) => {
+      const body = bodyObject(request);
+      const gameId = gameIdOf(request, body);
+      if (!projectExists(gameId)) throw new SecurityError(404, `No project "${gameId}" under games/.`);
+      const providerId = requiredString(body, 'providerId');
+      const packId = requiredString(body, 'packId');
+      // Closed identifiers, never paths: the provider and pack are looked up
+      // in code, and the acquisition URL is a provider-owned constant.
+      if (!/^[a-z][a-z0-9-]{0,40}$/.test(providerId)) throw new SecurityError(400, `Invalid providerId ${JSON.stringify(providerId)}.`);
+      if (!/^[a-z0-9][a-z0-9-]{0,60}$/.test(packId)) throw new SecurityError(400, `Invalid packId ${JSON.stringify(packId)}.`);
+      const reskin = body['reskin'] === true;
+      const reskinForPresetId = reskin ? loadProject(gameId).presetId : undefined;
+
+      const jobId = jobs.run('source-acquire', `Acquire "${packId}" from ${providerId}`, true, async (handle) => {
+        handle.setStep('Checking recorded rights');
+        handle.setProgress(0.1);
+        handle.setStep('Downloading pack');
+        const outcome = await acquirePack({
+          gameId,
+          providerId,
+          packId,
+          throwIfCancelled: () => handle.throwIfCancelled(),
+          ...(reskinForPresetId ? { reskinForPresetId } : {}),
+        });
+        handle.log(`Staged ${outcome.result.staged} raster image(s); ignored ${outcome.result.ignored}.`);
+        if (outcome.result.svgOnly) handle.log('This pack contained only SVG art and is unsuitable for sprites.');
+        handle.setStep('Ready to review');
+        handle.setProgress(1);
+        return outcome;
+      });
+      return ok({ jobId });
+    },
+  ],
+
+  [
+    // The verified local vault. Authoring cache only - deleting it cannot
+    // break any game, and no game reads from it.
+    'GET /sources/vault',
+    () => ok({ packs: listVault(), byteTotal: vaultByteTotal() }),
+  ],
+
+  [
+    'POST /sources/vault/reverify',
+    (request) => {
+      const body = bodyObject(request);
+      const sha256 = requiredString(body, 'sha256');
+      if (!/^[a-f0-9]{64}$/.test(sha256)) throw new SecurityError(400, 'Invalid sha256.');
+      try {
+        return ok({ pack: reverifyVault(sha256) });
+      } catch {
+        throw new SecurityError(404, `No vault pack ${sha256}.`);
+      }
+    },
+  ],
+
+  [
+    // Reverse discovery: what game types this pack could serve.
+    'GET /sources/reverse',
+    (request) => {
+      const providerId = request.query.get('providerId');
+      const packId = request.query.get('packId');
+      if (!providerId || !packId) throw new SecurityError(400, 'Provide providerId and packId.');
+      if (!/^[a-z][a-z0-9-]{0,40}$/.test(providerId)) throw new SecurityError(400, `Invalid providerId ${JSON.stringify(providerId)}.`);
+      if (!/^[a-z0-9][a-z0-9-]{0,60}$/.test(packId)) throw new SecurityError(400, `Invalid packId ${JSON.stringify(packId)}.`);
+      try {
+        return ok(whatCanIMakeWith(providerId, packId));
+      } catch {
+        throw new SecurityError(404, `No pack "${packId}" from "${providerId}".`);
+      }
+    },
+  ],
+
+  [
+    'POST /sources/vault/remove',
+    (request) => {
+      const body = bodyObject(request);
+      const sha256 = requiredString(body, 'sha256');
+      if (!/^[a-f0-9]{64}$/.test(sha256)) throw new SecurityError(400, 'Invalid sha256.');
+      return ok({ removed: removeFromVault(sha256) });
     },
   ],
 

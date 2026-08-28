@@ -273,6 +273,23 @@ export async function createGame(options: CreateGameOptions): Promise<GameRuntim
 
   for (const extension of options.extensions ?? []) extension.setup(context);
 
+  // F is the one consistent way to take any generated game fullscreen. The
+  // browser keeps Escape as the universal exit, so games do not invent a
+  // second trapdoor or hide this behind a preset-specific menu.
+  const toggleFullscreen = (): void => {
+    if (document.fullscreenElement) void document.exitFullscreen();
+    else void game.canvas.requestFullscreen();
+  };
+  const onFullscreenKey = (event: KeyboardEvent): void => {
+    if (event.code !== 'KeyF' || event.repeat) return;
+    const target = event.target;
+    if (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target instanceof HTMLSelectElement) return;
+    event.preventDefault();
+    toggleFullscreen();
+  };
+  window.addEventListener('keydown', onFullscreenKey);
+  rootBag.addFn(() => window.removeEventListener('keydown', onFullscreenKey));
+
   const runtime: GameRuntime = {
     context,
     phaser: game,
@@ -282,9 +299,27 @@ export async function createGame(options: CreateGameOptions): Promise<GameRuntim
       game.destroy(true);
       const host = globalThis as Record<string, unknown>;
       if (host[RUNTIME_GLOBAL_KEY] === runtime) delete host[RUNTIME_GLOBAL_KEY];
+      if (host['render_game_to_text'] === renderGameToText) delete host['render_game_to_text'];
+      if (host['advanceTime'] === advanceTime) delete host['advanceTime'];
     },
   };
 
-  (globalThis as Record<string, unknown>)[RUNTIME_GLOBAL_KEY] = runtime;
+  const renderGameToText = (): string => JSON.stringify({
+    coordinateSystem: 'Canvas origin is top-left; x increases right and y increases down.',
+    ...runtime.snapshot(),
+  });
+  let deterministicClock = performance.now();
+  const advanceTime = (ms: number): void => {
+    game.loop.stop();
+    const frames = Math.max(1, Math.round(Math.max(0, ms) / (1000 / 60)));
+    for (let frame = 0; frame < frames; frame++) {
+      deterministicClock += 1000 / 60;
+      game.loop.step(deterministicClock);
+    }
+  };
+  const host = globalThis as Record<string, unknown>;
+  host[RUNTIME_GLOBAL_KEY] = runtime;
+  host['render_game_to_text'] = renderGameToText;
+  host['advanceTime'] = advanceTime;
   return runtime;
 }

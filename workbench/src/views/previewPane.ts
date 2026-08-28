@@ -31,13 +31,13 @@ export function renderPreview(host: HTMLElement): () => void {
 
     replace(
       toolbar,
-      el('span', { class: 'pane__title', text: 'Preview' }),
+      el('div', { class: 'play-head' }, el('span', { class: 'pane__title', text: 'Playable game' }), el('strong', { text: current.project.displayName })),
       el(
         'div',
         { class: 'toolgroup' },
-        button('Fast preview', () => void startPreview('fast'), {
+        button('Run live', () => void startPreview('fast'), {
           class: `btn btn--sm${preview?.mode === 'fast' ? ' btn--primary' : ''}`,
-          title: "The game's own dev server, with hot reload",
+          title: "The game's own server, with live asset and scene updates",
         }),
         button('Production preview', () => void startPreview('production'), {
           class: `btn btn--sm${preview?.mode === 'production' ? ' btn--primary' : ''}`,
@@ -49,10 +49,11 @@ export function renderPreview(host: HTMLElement): () => void {
         { class: 'toolgroup' },
         button('Rebuild', () => void runPipeline('build'), { class: 'btn btn--sm', title: 'Run a production build now' }),
         button('Reload', () => { if (frame && shownUrl) frame.src = `${shownUrl}?r=${Date.now()}`; }, { class: 'btn btn--sm', disabled: !preview }),
+        button('Open in window', () => { if (preview) window.open(preview.url, '_blank', 'noopener,noreferrer'); }, { class: 'btn btn--sm', disabled: !preview, title: 'Play without editor panels around the game' }),
         button('Stop', () => void stopPreview(), { class: 'btn btn--sm', disabled: !preview }),
       ),
       el('div', { class: 'grow' }),
-      preview ? el('span', { class: 'faint mono', style: { 'font-size': '11px' }, text: preview.url }) : null,
+      preview ? el('span', { class: 'play-status', text: `${preview.mode === 'fast' ? 'LIVE' : 'BUILD'} · RUNNING` }) : null,
     );
 
     if (!preview) {
@@ -64,9 +65,11 @@ export function renderPreview(host: HTMLElement): () => void {
           el(
             'div',
             { class: 'empty', style: { 'max-width': '440px' } },
-            el('strong', { text: 'Nothing running yet' }),
-            el('div', { style: { 'margin-bottom': '12px' }, text: 'Fast preview starts this game’s own dev server, so asset and level changes show up in seconds. Production preview serves a real build - that is what Validate and Pack rely on.' }),
-            button('Start fast preview', () => void startPreview('fast'), { class: 'btn btn--primary' }),
+            el('div', { class: 'preview__playmark', text: 'PLAY' }),
+            el('strong', { text: 'Your game is ready to run' }),
+            el('div', { style: { 'margin-bottom': '14px' }, text: 'Run live opens the real generated game here. Click inside the game, start it, then use its on-screen controls or the keyboard.' }),
+            button('Run game', () => void startPreview('fast'), { class: 'btn btn--run btn--lg' }),
+            el('div', { class: 'preview__hint', text: `Inputs available: ${current.preset?.inputModes.join(', ') || 'keyboard'}. Press F inside the game for fullscreen.` }),
           ),
         ),
       );
@@ -85,6 +88,7 @@ export function renderPreview(host: HTMLElement): () => void {
           // The preview is the user's own game on loopback; it gets scripts
           // and same-origin storage, and nothing else.
           sandbox: 'allow-scripts allow-same-origin allow-pointer-lock',
+          allow: 'fullscreen; autoplay',
           'data-testid': 'preview-frame',
         },
       }) as HTMLIFrameElement;

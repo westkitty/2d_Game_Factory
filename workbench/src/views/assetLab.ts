@@ -15,7 +15,7 @@ import { getState, selectedAsset, subscribe, update } from '../state.ts';
 import { errorText, refreshCurrent } from '../actions.ts';
 import { blobToRaster, drawRasterInto, rasterToPngBlob } from '../image/clientImage.ts';
 import { applyRecipe, describeStep, pushStep, truncateRecipe } from '../../shared/image/recipe.ts';
-import { findComponents, suggestGrids, alphaBounds } from '../../shared/image/transforms.ts';
+import { findComponents, suggestGrids, alphaBounds, alignFrame, gridCell } from '../../shared/image/transforms.ts';
 import type { Raster } from '../../shared/image/raster.ts';
 import { EMPTY_RECIPE, type TransformRecipe, type TransformStep, type WorkbenchAssetRole } from '../../shared/types.ts';
 import { openModal } from './modal.ts';
@@ -267,6 +267,7 @@ export function renderAssetLab(host: HTMLElement): () => void {
         { class: 'toolgroup' },
         button('Split pieces…', () => openComponentsDialog(raster, addStep), { class: 'btn btn--sm', title: 'Find and extract disconnected shapes' }),
         button('Slice sheet…', () => openGridDialog(raster, addStep), { class: 'btn btn--sm', title: 'Treat this as a sprite sheet' }),
+        button('Dex Sprite…', () => { if (raster) void openDexSpriteDialog(raster, asset, activeRecipe()); }, { class: 'btn btn--sm btn--dex', title: 'Compile, preview and validate an ordered frame set' }),
         button('Variants…', () => openVariantsDialog(addStep), { class: 'btn btn--sm', title: 'Outline, shadow, silhouette, tint, damage flash' }),
       ),
       el('div', { class: 'grow' }),
@@ -472,9 +473,9 @@ function openGridDialog(rasterOrNull: Raster | null, addStep: (step: TransformSt
     info.textContent = `${columns * rows} cells of ${frameWidth}x${frameHeight}. Extracting cell ${cell + 1}.`;
   }
 
-  const columnsInput = el('input', { attrs: { type: 'number', min: '1', max: '64', value: String(columns) }, on: { input: (event) => { columns = Math.max(1, Number((event.target as HTMLInputElement).value) || 1); paintInfo(); } } });
-  const rowsInput = el('input', { attrs: { type: 'number', min: '1', max: '64', value: String(rows) }, on: { input: (event) => { rows = Math.max(1, Number((event.target as HTMLInputElement).value) || 1); paintInfo(); } } });
-  const cellInput = el('input', { attrs: { type: 'number', min: '1', value: '1' }, on: { input: (event) => { cell = Math.max(0, (Number((event.target as HTMLInputElement).value) || 1) - 1); paintInfo(); } } });
+  const columnsInput = el('input', { attrs: { type: 'number', min: '1', max: '64', step: '1', value: String(columns) }, on: { input: (event) => { columns = Math.max(1, Math.trunc(Number((event.target as HTMLInputElement).value) || 1)); paintInfo(); } } });
+  const rowsInput = el('input', { attrs: { type: 'number', min: '1', max: '64', step: '1', value: String(rows) }, on: { input: (event) => { rows = Math.max(1, Math.trunc(Number((event.target as HTMLInputElement).value) || 1)); paintInfo(); } } });
+  const cellInput = el('input', { attrs: { type: 'number', min: '1', step: '1', value: '1' }, on: { input: (event) => { cell = Math.max(0, Math.trunc(Number((event.target as HTMLInputElement).value) || 1) - 1); paintInfo(); } } });
 
   const close = openModal({
     title: 'Slice as a sprite sheet',
@@ -509,6 +510,254 @@ function openGridDialog(rasterOrNull: Raster | null, addStep: (step: TransformSt
     footer: [button('Extract cell', () => { close(); addStep({ op: 'gridCell', columns, rows, cell }); }, { class: 'btn btn--primary' })],
   });
   paintInfo();
+}
+
+/**
+ * Dex Sprite's useful capability, integrated into the factory instead of
+ * launching a separate editor with no import/export protocol. Every chosen
+ * cell becomes its own validated, replayable derivative and a tolerant name
+ * group keeps the ordered frames together in the library.
+ */
+async function openDexSpriteDialog(
+  raster: Raster,
+  asset: NonNullable<ReturnType<typeof selectedAsset>>,
+  baseRecipe: TransformRecipe,
+): Promise<void> {
+  const { current } = getState();
+  if (!current) return;
+  const gameId = current.project.gameId;
+  const suggestions = suggestGrids(raster.width, raster.height);
+  // Animation sheets commonly contain roughly 4–12 square-ish frames. The
+  // generic grid helper deliberately orders from coarse to fine, which made a
+  // 4x2 sheet open as two giant cells. Rank only the initial choice; every
+  // suggestion remains visible and user-controlled below.
+  const preferred = [...suggestions].sort((left, right) => {
+    const score = (candidate: (typeof suggestions)[number]): number => {
+      const frameAspect = candidate.frameWidth / candidate.frameHeight;
+      const unsafe = candidate.columns * candidate.rows > 64 || candidate.frameWidth > 512 || candidate.frameHeight > 512;
+      return (unsafe ? 10_000 : 0) + Math.abs(candidate.columns * candidate.rows - 8) + Math.abs(Math.log(frameAspect)) * 6;
+    };
+    return score(left) - score(right);
+  })[0];
+  let columns = preferred?.columns ?? 4;
+  let rows = preferred?.rows ?? 1;
+  let fps = 8;
+  let stabilize = true;
+  let useFirstFrame = true;
+  let frameCursor = 0;
+  let timer = 0;
+  let compiling = false;
+  let selectedCells = new Set<number>();
+  const defaultName = asset.displayName.replace(/\.[a-z0-9]+$/i, '').replace(/[^a-z0-9_-]+/gi, '-').replace(/^-+|-+$/g, '') || 'sprite';
+
+  const preview = el('canvas', { class: 'dex-sprite__preview', attrs: { 'data-testid': 'dex-sprite-preview', 'aria-label': 'Animation preview' } });
+  const cellsHost = el('div', { class: 'dex-sprite__cells', attrs: { 'data-testid': 'dex-sprite-cells' } });
+  const summary = el('div', { class: 'faint', attrs: { 'data-testid': 'dex-sprite-summary' } });
+  const nameInput = el('input', { attrs: { type: 'text', value: `${defaultName}-dex`, maxlength: '80', 'aria-label': 'Frame set name' } });
+  const columnsInput = el('input', { attrs: { type: 'number', min: '1', max: '64', step: '1', value: String(columns), 'aria-label': 'Columns' } });
+  const rowsInput = el('input', { attrs: { type: 'number', min: '1', max: '64', step: '1', value: String(rows), 'aria-label': 'Rows' } });
+  const fpsInput = el('input', { attrs: { type: 'number', min: '1', max: '24', value: String(fps), 'aria-label': 'Preview FPS' } });
+  const compileButton = button('Compile validated frames', () => void compile(), { class: 'btn btn--primary', attrs: { 'data-testid': 'dex-sprite-compile' } });
+
+  function frameFor(cell: number): Raster {
+    const sliced = gridCell(raster, columns, rows, cell);
+    return stabilize ? alignFrame(sliced, 'bottom-center', 8) : sliced;
+  }
+
+  function gridConfigurationIssue(): string | null {
+    if (!Number.isInteger(columns) || !Number.isInteger(rows) || columns < 1 || rows < 1) return 'Columns and rows must be positive whole numbers.';
+    const total = columns * rows;
+    if (total > 64) return `This grid contains ${total} cells; Dex Sprite compiles at most 64 at once.`;
+    const frameWidth = Math.floor(raster.width / columns);
+    const frameHeight = Math.floor(raster.height / rows);
+    if (frameWidth < 8 || frameHeight < 8) return `Frames would be ${frameWidth}x${frameHeight}px; validated sprites must be at least 8x8px.`;
+    if (frameWidth > 512 || frameHeight > 512) return `Frames would be ${frameWidth}x${frameHeight}px; scale the sheet or add grid divisions so each frame is at most 512px.`;
+    return null;
+  }
+
+  function stopTimer(): void {
+    if (timer !== 0) window.clearInterval(timer);
+    timer = 0;
+  }
+
+  function paintPreview(): void {
+    const selected = [...selectedCells].sort((a, b) => a - b);
+    if (selected.length === 0) {
+      preview.width = Math.max(1, Math.floor(raster.width / columns));
+      preview.height = Math.max(1, Math.floor(raster.height / rows));
+      preview.getContext('2d')?.clearRect(0, 0, preview.width, preview.height);
+      return;
+    }
+    frameCursor %= selected.length;
+    drawRasterInto(preview, frameFor(selected[frameCursor]!));
+  }
+
+  function restartTimer(): void {
+    stopTimer();
+    paintPreview();
+    timer = window.setInterval(() => {
+      frameCursor += 1;
+      paintPreview();
+    }, Math.max(42, Math.round(1000 / fps)));
+  }
+
+  function rebuildCells(resetSelection: boolean): void {
+    stopTimer();
+    const issue = gridConfigurationIssue();
+    if (issue) {
+      selectedCells.clear();
+      summary.textContent = issue;
+      replace(cellsHost, el('div', { class: 'warnbox', text: issue }));
+      preview.width = 1;
+      preview.height = 1;
+      compileButton.disabled = true;
+      return;
+    }
+    const total = columns * rows;
+    if (resetSelection) {
+      selectedCells = new Set<number>();
+      for (let cell = 0; cell < total; cell++) {
+        if (alphaBounds(gridCell(raster, columns, rows, cell), 8)) selectedCells.add(cell);
+      }
+    } else {
+      selectedCells = new Set([...selectedCells].filter((cell) => cell < total));
+    }
+    replace(cellsHost, ...Array.from({ length: total }, (_, cell) => {
+      const thumb = el('canvas', { attrs: { 'aria-hidden': 'true' } });
+      drawRasterInto(thumb, frameFor(cell));
+      const enabled = selectedCells.has(cell);
+      return el(
+        'button',
+        {
+          class: `dex-frame${enabled ? ' dex-frame--selected' : ''}`,
+          attrs: { type: 'button', 'aria-pressed': String(enabled), 'data-cell': String(cell) },
+          on: { click: () => { enabled ? selectedCells.delete(cell) : selectedCells.add(cell); rebuildCells(false); restartTimer(); } },
+        },
+        thumb,
+        el('span', { text: String(cell + 1) }),
+      );
+    }));
+    const frameWidth = Math.floor(raster.width / columns);
+    const frameHeight = Math.floor(raster.height / rows);
+    summary.textContent = `${selectedCells.size} of ${total} cells selected · ${frameWidth}x${frameHeight}px · ${fps} frames per second preview`;
+    compileButton.disabled = selectedCells.size === 0 || compiling;
+    restartTimer();
+  }
+
+  async function compile(): Promise<void> {
+    if (compiling || selectedCells.size === 0) return;
+    const gridIssue = gridConfigurationIssue();
+    if (gridIssue) {
+      toast(gridIssue, 'warn');
+      return;
+    }
+    const groupName = nameInput.value.trim().replace(/\.[a-z0-9]+$/i, '').replace(/[^a-z0-9_-]+/gi, '-').replace(/^-+|-+$/g, '');
+    if (!groupName) {
+      toast('Give the frame set a name.', 'warn');
+      nameInput.focus();
+      return;
+    }
+    compiling = true;
+    compileButton.disabled = true;
+    compileButton.textContent = 'Compiling…';
+    stopTimer();
+    const selected = [...selectedCells].sort((a, b) => a - b);
+    const sourceAssetId = asset.sourceAssetId ?? asset.id;
+    let firstId: string | null = null;
+    try {
+      for (let index = 0; index < selected.length; index++) {
+        const cell = selected[index]!;
+        const steps: TransformStep[] = [
+          ...baseRecipe.steps,
+          { op: 'gridCell', columns, rows, cell },
+          ...(stabilize ? [{ op: 'alignFrame', anchor: 'bottom-center', alphaThreshold: 8 } as const] : []),
+        ];
+        const frame = frameFor(cell);
+        const blob = await rasterToPngBlob(frame);
+        const result = await api.postBytes<{ asset: { id: string } }>('/assets/derive', blob, {
+          'x-sw2d-game': gameId,
+          'x-sw2d-source': sourceAssetId,
+          'x-sw2d-name': `${groupName}-${String(index + 1).padStart(2, '0')}.png`,
+          'x-sw2d-recipe': JSON.stringify({ version: 1, steps }),
+          'x-sw2d-purpose': 'sprite',
+        });
+        firstId ??= result.asset.id;
+        compileButton.textContent = `Compiling ${index + 1}/${selected.length}…`;
+      }
+      if (useFirstFrame && firstId) {
+        await api.post('/assets/role', { gameId, role: 'player', assetId: firstId });
+      }
+      close();
+      await refreshCurrent();
+      if (firstId) update({ selectedAssetId: firstId });
+      toast(`${selected.length} source-validated frames compiled${useFirstFrame ? '; frame 1 is now the player.' : '.'}`, 'ok', 6500);
+    } catch (error) {
+      compiling = false;
+      compileButton.textContent = 'Compile validated frames';
+      compileButton.disabled = false;
+      restartTimer();
+      toast(errorText(error), 'err', 7000);
+    }
+  }
+
+  const close = openModal({
+    title: 'Dex Sprite compiler',
+    wide: true,
+    onClose: stopTimer,
+    body: el(
+      'div',
+      { class: 'dex-sprite' },
+      el('div', { class: 'infobox', text: 'Turn a supplied sprite sheet into an ordered frame set. Transparent cells are skipped; every saved frame is checked against the source image and keeps a replayable recipe.' }),
+      el('div', { class: 'dex-sprite__layout' },
+        el('div', { class: 'dex-sprite__controls' },
+          el('label', { class: 'field' }, el('span', { text: 'Frame set name' }), nameInput),
+          el('div', { class: 'row' },
+            el('label', { class: 'field grow' }, el('span', { text: 'Columns' }), columnsInput),
+            el('label', { class: 'field grow' }, el('span', { text: 'Rows' }), rowsInput),
+            el('label', { class: 'field grow' }, el('span', { text: 'Preview FPS' }), fpsInput),
+          ),
+          suggestions.length > 0
+            ? el('div', { class: 'row row--wrap', style: { 'margin-bottom': '12px' } },
+                ...suggestions.map((suggestion) => button(`${suggestion.columns}x${suggestion.rows}`, () => {
+                  columns = suggestion.columns;
+                  rows = suggestion.rows;
+                  columnsInput.value = String(columns);
+                  rowsInput.value = String(rows);
+                  rebuildCells(true);
+                }, { class: 'btn btn--sm' })),
+              )
+            : null,
+          el('label', { class: 'row dex-sprite__check' },
+            el('input', { attrs: { type: 'checkbox', checked: true }, on: { change: (event) => { stabilize = (event.target as HTMLInputElement).checked; rebuildCells(false); } } }),
+            el('span', { text: 'Stabilize on bottom center (removes frame jitter)' }),
+          ),
+          el('label', { class: 'row dex-sprite__check' },
+            el('input', { attrs: { type: 'checkbox', checked: true }, on: { change: (event) => { useFirstFrame = (event.target as HTMLInputElement).checked; } } }),
+            el('span', { text: 'Use frame 1 as the player so Play updates immediately' }),
+          ),
+          el('div', { class: 'dex-sprite__preview-wrap' }, preview, el('span', { class: 'faint', text: 'Loop preview' })),
+        ),
+        el('div', { class: 'dex-sprite__frames' }, summary, cellsHost),
+      ),
+    ),
+    footer: [compileButton],
+  });
+
+  const changeGrid = (): void => {
+    columns = Math.max(1, Math.min(64, Math.trunc(Number(columnsInput.value) || 1)));
+    rows = Math.max(1, Math.min(64, Math.trunc(Number(rowsInput.value) || 1)));
+    columnsInput.value = String(columns);
+    rowsInput.value = String(rows);
+    rebuildCells(true);
+  };
+  columnsInput.addEventListener('change', changeGrid);
+  rowsInput.addEventListener('change', changeGrid);
+  fpsInput.addEventListener('change', () => {
+    fps = Math.max(1, Math.min(24, Number(fpsInput.value) || 8));
+    fpsInput.value = String(fps);
+    rebuildCells(false);
+  });
+  rebuildCells(true);
 }
 
 function openVariantsDialog(addStep: (step: TransformStep) => void): void {
