@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { deflateSync } from 'node:zlib';
 import { createRaster, setPixel } from '../shared/image/raster.ts';
 import { PngError, decodePng, encodePng, isPng } from '../server/png.ts';
+import { validateSprite } from '../server/assetStore.ts';
+import type { AssetRecord, TransformRecipe } from '../shared/types.ts';
 
 /** Builds a minimal PNG chunk with a correct CRC, so decode-path tests are not written against hand-typed bytes. */
 function buildPng(ihdr: Uint8Array, extra: readonly { type: string; data: Uint8Array }[]): Uint8Array {
@@ -146,5 +148,40 @@ describe('PNG codec', () => {
   it('refuses truncated pixel data instead of returning a partly-black image', () => {
     const png = buildPng(ihdr(4, 4, 8, 6), [{ type: 'IDAT', data: new Uint8Array(deflateSync(new Uint8Array(10))) }]);
     expect(() => decodePng(png)).toThrow(/expected at least/);
+  });
+});
+
+describe('sprite validation', () => {
+  const source: AssetRecord = {
+    id: 'src_0123456789abcdef',
+    kind: 'source',
+    displayName: 'supplied-character.png',
+    relativePath: '.sw2d/source-assets/src_0123456789abcdef.png',
+    mime: 'image/png',
+    width: 32,
+    height: 32,
+    byteSize: 100,
+    sha256: 'a'.repeat(64),
+    roleAssignments: [],
+    provenance: { kind: 'project-owned', modificationStatus: 'unmodified' },
+  };
+  const recipe: TransformRecipe = { version: 1, steps: [{ op: 'trimAlpha', threshold: 8 }] };
+
+  it('accepts visible, runtime-sized PNG pixels and records supplied-image lineage', () => {
+    const raster = createRaster(32, 32);
+    setPixel(raster, 12, 12, 80, 170, 240, 255);
+
+    const report = validateSprite(encodePng(raster), source, recipe);
+
+    expect(report.status).toBe('valid');
+    expect(report.sourceSha256).toBe(source.sha256);
+    expect(report.checks.every((check) => check.passed)).toBe(true);
+  });
+
+  it('rejects an all-transparent result instead of calling an empty file a sprite', () => {
+    const report = validateSprite(encodePng(createRaster(32, 32)), source, recipe);
+
+    expect(report.status).toBe('invalid');
+    expect(report.checks.find((check) => check.id === 'visible-pixels')?.passed).toBe(false);
   });
 });

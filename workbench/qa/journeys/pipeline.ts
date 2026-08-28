@@ -375,9 +375,9 @@ export async function wbResponsive001({ session, note }: JourneyContext): Promis
     const workspaceOverflow = await session.page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     expect(workspaceOverflow <= 1, `${viewport.label}: the workspace overflows horizontally by ${workspaceOverflow}px`);
 
-    // Import, preview and status stay reachable at every width.
+    // Import, run and release controls stay reachable at every width.
     const topbarText = await session.text('.topbar');
-    for (const control of ['Import', 'Preview', 'Validate', 'Build', 'Pack']) {
+    for (const control of ['Import', 'Run game', 'Validate', 'Build', 'Pack']) {
       expect(topbarText.includes(control), `${viewport.label}: the "${control}" control is unreachable`);
     }
     const statusVisible = await session.count('.statusbar');

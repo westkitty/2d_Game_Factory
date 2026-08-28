@@ -158,6 +158,21 @@ export function renderInspector(host: HTMLElement): () => void {
       source
         ? el('div', { class: 'infobox', style: { 'margin-top': '10px' } }, el('div', { text: `Derived from "${source.displayName}".` }), el('div', { class: 'faint', text: `${asset.transformRecipe?.steps.length ?? 0} recorded step(s) - rebuildable from the source at any time.` }))
         : null,
+      asset.validation
+        ? el(
+            'div',
+            { class: `validation validation--${asset.validation.status}`, attrs: { 'data-testid': 'sprite-validation' } },
+            el(
+              'div',
+              { class: 'validation__head' },
+              el('strong', { text: asset.validation.status === 'valid' && !asset.stale ? 'Sprite validated' : 'Sprite needs attention' }),
+              el('span', { class: `badge${asset.validation.status === 'valid' && !asset.stale ? ' badge--proof' : ' badge--danger'}`, text: asset.validation.status === 'valid' && !asset.stale ? 'ready for play' : 'not ready' }),
+            ),
+            ...asset.validation.checks.map((check) =>
+              el('div', { class: `validation__check${check.passed ? ' validation__check--pass' : ''}` }, el('span', { text: check.passed ? 'PASS' : 'FAIL' }), el('div', {}, el('strong', { text: check.label }), el('small', { text: check.detail }))),
+            ),
+          )
+        : null,
       asset.stale
         ? el('div', { class: 'warnbox', style: { 'margin-top': '10px' }, text: 'Its source changed after this was made. Rebuild it to pick up the new pixels.' })
         : null,

@@ -131,6 +131,22 @@ export const EMPTY_RECIPE: TransformRecipe = { version: 1, steps: [] };
 
 export type AssetKindTag = 'source' | 'derived';
 
+export interface AssetValidationCheck {
+  readonly id: 'format' | 'dimensions' | 'visible-pixels' | 'source-lineage' | 'recipe';
+  readonly label: string;
+  readonly passed: boolean;
+  readonly detail: string;
+}
+
+/** A recorded, host-verified fitness report for a derived gameplay sprite. */
+export interface AssetValidation {
+  readonly purpose: 'sprite';
+  readonly status: 'valid' | 'invalid';
+  /** Hash of the supplied source bytes this report was checked against. */
+  readonly sourceSha256: string;
+  readonly checks: readonly AssetValidationCheck[];
+}
+
 export interface AssetRecord {
   /** `src_<16 hex>` / `der_<16 hex>`. Stable for the life of the project - never a path (P02). */
   readonly id: string;
@@ -148,6 +164,8 @@ export interface AssetRecord {
   readonly roleAssignments: readonly WorkbenchAssetRole[];
   readonly palette?: readonly string[];
   readonly provenance: Provenance;
+  /** Present when the host has checked this derivative as a gameplay sprite. */
+  readonly validation?: AssetValidation;
   /** True when the source changed and this derivative has not been rebuilt (P04). */
   readonly stale?: boolean;
   /** Naming-tolerant animation/frame group hint (P07). Never load-bearing. */

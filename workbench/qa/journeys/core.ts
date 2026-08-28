@@ -56,6 +56,11 @@ export async function wbBoot001({ session, note }: JourneyContext): Promise<void
   });
   expect(heroIsFirst, '"Make Something From an Image" is not the first, highest-salience action');
 
+  const track = await session.text('.build-track');
+  for (const step of ['Supply image', 'Create + validate sprites', 'Arrange the scene', 'Run the game']) {
+    expect(track.includes(step), `home build track is missing "${step}"`);
+  }
+
   note(`four primary actions present; ${actions.length} total`);
 }
 
@@ -94,9 +99,24 @@ export async function wbImage001({ session, note }: JourneyContext): Promise<voi
   await session.waitFor('.topbar', 90_000);
   await session.page.waitForTimeout(1500);
 
-  // The asset is in the project and holds the player role.
+  // The source remains untouched and a validated derivative holds the player role.
   const roleText = await session.text('.role-row');
-  expect(roleText.includes('weasel'), `the player role does not show the imported asset: "${roleText}"`);
+  expect(roleText.includes('weasel-player-sprite'), `the player role does not show the generated sprite: "${roleText}"`);
+
+  const importedAssets = readAssets(PRIMARY_GAME);
+  const source = importedAssets.find((asset) => asset.kind === 'source');
+  const sprite = importedAssets.find((asset) => asset.validation?.purpose === 'sprite');
+  expect(source, 'the supplied source image was not preserved');
+  expect(sprite, 'no sprite derivative was created from the supplied image');
+  expectEqual(sprite!.sourceAssetId, source!.id, 'the sprite is not linked to the supplied source image');
+  expectEqual(sprite!.validation?.status, 'valid', 'the sprite did not pass host validation');
+  expectEqual(sprite!.validation?.sourceSha256, source!.sha256, 'sprite validation was not recorded against the supplied source hash');
+  expectEqual(sha256Of(firstSourceFile(PRIMARY_GAME)), sha256Of(fixture('weasel.png')), 'sprite creation modified the supplied source bytes');
+
+  // Image-first creation ends on the running game, without a separate hidden
+  // preview step.
+  await session.waitFor('iframe.preview__frame', 90_000);
+  expect((await session.text('.play-status')).includes('RUNNING'), 'the created game is not visibly running');
 
   // Build, then show the production preview: what final validation relies on.
   await session.clickText('Build', '.topbar');
@@ -119,14 +139,14 @@ export async function wbImage001({ session, note }: JourneyContext): Promise<voi
   // asset's own content hash.
   const textureKey = String(shell!['playerTextureKey']);
   const textureWidth = Number(shell!['playerTextureWidth']);
-  const fixtureHash = sha256Of(fixture('weasel.png'));
+  const spriteHash = sprite!.sha256;
 
   expect(textureKey.startsWith('wb/'), `the game is drawing "${textureKey}", not an imported asset`);
   expect(
-    textureKey.includes(fixtureHash.slice(0, 12)),
-    `the drawn texture key "${textureKey}" does not carry the imported image's content hash ${fixtureHash.slice(0, 12)}`,
+    textureKey.includes(spriteHash.slice(0, 12)),
+    `the drawn texture key "${textureKey}" does not carry the validated sprite hash ${spriteHash.slice(0, 12)}`,
   );
-  expectEqual(textureWidth, 96, "the drawn texture's source width does not match the imported image");
+  expectEqual(textureWidth, sprite!.width, "the drawn texture's width does not match the validated sprite");
 
   // The generated placeholder is 28px wide; if this were still the placeholder
   // the assertion above would have caught it, but stating it makes the failure
@@ -138,11 +158,11 @@ export async function wbImage001({ session, note }: JourneyContext): Promise<voi
   expect(shipped?.spec.kind === 'image', 'the player role is not image-backed in the written theme');
   expectEqual(
     sha256Of(resolveContained(gameRoot(PRIMARY_GAME), 'public', String(shipped!.spec.url))),
-    fixtureHash,
-    'the file the game loads is not byte-identical to the imported image',
+    spriteHash,
+    'the file the game loads is not byte-identical to the validated sprite',
   );
 
-  note(`rendered texture ${textureKey} at ${textureWidth}px; fixture hash ${fixtureHash.slice(0, 12)}`);
+  note(`validated sprite ${sprite!.id} rendered as ${textureKey} at ${textureWidth}px; source preserved`);
 }
 
 // ---------------------------------------------------------------------------
@@ -263,8 +283,9 @@ export async function wbReimport001({ session, note }: JourneyContext): Promise<
   expect(sourceBefore, 'no source asset to reimport');
   const idBefore = sourceBefore!.id;
   const hashBefore = sourceBefore!.sha256;
-  const rolesBefore = [...sourceBefore!.roleAssignments];
-  expect(rolesBefore.length > 0, 'the source asset holds no role, so this journey would prove nothing');
+  const roleAssetBefore = before.find((asset) => asset.sourceAssetId === idBefore && asset.roleAssignments.length > 0);
+  expect(roleAssetBefore, 'no derived asset holds a role, so this journey would prove nothing');
+  const rolesBefore = [...roleAssetBefore!.roleAssignments];
 
   // Select the source in the library, then replace its bytes.
   await session.page.evaluate((assetId) => {
@@ -282,32 +303,30 @@ export async function wbReimport001({ session, note }: JourneyContext): Promise<
   const sourceAfter = after.find((asset) => asset.id === idBefore);
   expect(sourceAfter, `the asset id ${idBefore} did not survive the reimport - identity is not stable (F06)`);
   expect(sourceAfter!.sha256 !== hashBefore, 'the reimport did not actually change the stored bytes');
-  expectEqual(
-    JSON.stringify(sourceAfter!.roleAssignments),
-    JSON.stringify(rolesBefore),
-    'the reimport lost the role assignment (F07)',
-  );
-
   const derivatives = after.filter((asset) => asset.sourceAssetId === idBefore);
   for (const derivative of derivatives) {
     expectEqual(derivative.sourceAssetId, idBefore, 'a derivative lost its lineage across the reimport');
     expect((derivative.transformRecipe?.steps.length ?? 0) > 0, 'a derivative lost its recipe across the reimport');
   }
+  const roleAssetAfter = derivatives.find((asset) => asset.id === roleAssetBefore!.id);
+  expect(roleAssetAfter, 'the role-bearing sprite did not survive source reimport');
+  expectEqual(JSON.stringify(roleAssetAfter!.roleAssignments), JSON.stringify(rolesBefore), 'the reimport lost the sprite role assignment (F07)');
+  expectEqual(roleAssetAfter!.validation?.sourceSha256, sourceAfter!.sha256, 'the rebuilt sprite was not revalidated against the replacement source');
 
   // The theme now points at the new bytes.
   const theme = readTheme(PRIMARY_GAME);
   const player = theme.assets.find((descriptor) => descriptor.role === rolesBefore[0]);
   expect(player?.spec.kind === 'image', 'the role fell back to generated art after a reimport');
   expect(
-    String(player?.key).includes(sourceAfter!.sha256.slice(0, 12)),
-    'the theme still names the old content hash after a reimport',
+    String(player?.key).includes(roleAssetAfter!.sha256.slice(0, 12)),
+    'the theme still names the old sprite content hash after a reimport',
   );
 
   // And the bytes the game will actually load were replaced too - an
   // existence-only copy check would leave the previous image shipped under
   // the same name.
   const shipped = resolveContained(gameRoot(PRIMARY_GAME), 'public', String(player!.spec.url));
-  expectEqual(sha256Of(shipped), sourceAfter!.sha256, 'the file the game loads still holds the pre-reimport pixels');
+  expectEqual(sha256Of(shipped), roleAssetAfter!.sha256, 'the file the game loads still holds the pre-reimport sprite pixels');
 
   note(`id ${idBefore} kept, role ${rolesBefore.join(',')} kept, ${derivatives.length} derivative(s) relinked, shipped bytes replaced`);
 }
@@ -343,12 +362,14 @@ export async function wbReopen001({ session, note }: JourneyContext): Promise<vo
 interface StoredAsset {
   readonly id: string;
   readonly kind: string;
+  readonly width: number;
   readonly sha256: string;
   readonly relativePath: string;
   readonly roleAssignments: readonly string[];
   readonly sourceAssetId?: string;
   readonly transformRecipe?: { readonly steps: readonly unknown[] };
   readonly stale?: boolean;
+  readonly validation?: { readonly purpose: string; readonly status: string; readonly sourceSha256: string };
 }
 
 export function readAssets(gameId: string): readonly StoredAsset[] {

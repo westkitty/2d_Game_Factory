@@ -383,6 +383,8 @@ const ROUTES: ReadonlyMap<string, Handler> = new Map<string, Handler>([
       const gameId = assertValidGameId(request.headers['x-sw2d-game']);
       const sourceAssetId = assertValidAssetId(request.headers['x-sw2d-source']);
       const displayName = decodeURIComponent(request.headers['x-sw2d-name'] ?? 'derived.png');
+      const purpose = request.headers['x-sw2d-purpose'];
+      if (purpose !== undefined && purpose !== 'sprite') throw new SecurityError(400, `Unknown derived-asset purpose ${JSON.stringify(purpose)}.`);
       let recipe: unknown;
       try {
         recipe = JSON.parse(decodeURIComponent(request.headers['x-sw2d-recipe'] ?? '{"version":1,"steps":[]}'));
@@ -398,6 +400,7 @@ const ROUTES: ReadonlyMap<string, Handler> = new Map<string, Handler>([
         bytes: request.body,
         displayName,
         recipe: recipe as { version: 1; steps: [] },
+        ...(purpose === 'sprite' ? { purpose } : {}),
       });
       return ok({ asset: record, assets: loadAssets(gameId).assets });
     },

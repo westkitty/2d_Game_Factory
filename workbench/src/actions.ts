@@ -82,6 +82,28 @@ export async function openProject(gameId: string): Promise<void> {
   }
 }
 
+/** Opens a project directly onto its real running game, never onto a hidden server. */
+export async function openProjectAndRun(gameId: string): Promise<void> {
+  update({ busy: `Opening ${gameId}…` });
+  try {
+    const state = await api.post<ProjectState>('/projects/open', { gameId });
+    const panels: PanelState = { ...state.project.panels, activeWorkspace: 'preview' };
+    update({
+      current: { ...state, project: { ...state.project, panels } },
+      panels,
+      route: 'workspace',
+      selectedAssetId: state.assets[0]?.id ?? null,
+      seeds: [],
+      busy: null,
+    });
+    savePanels({ activeWorkspace: 'preview' });
+    await startPreview('fast');
+  } catch (error) {
+    update({ busy: null });
+    toast(errorText(error), 'err');
+  }
+}
+
 export function goHome(): void {
   update({ route: 'home', current: null, selectedAssetId: null, seeds: [], busy: null });
   void refreshProjects();

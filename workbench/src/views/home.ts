@@ -10,13 +10,13 @@
 
 import { button, el, maturityBadgeClass, replace, toast } from '../dom.ts';
 import { getState, subscribe, type AppState } from '../state.ts';
-import { goPresets, openProject, refreshProjects } from '../actions.ts';
+import { goPresets, openProject, openProjectAndRun, refreshProjects } from '../actions.ts';
 import { openCreateDialog } from './createDialog.ts';
 import { openImportFirstFlow } from './importFirstFlow.ts';
 import * as api from '../api.ts';
 
 function actionCard(
-  icon: string,
+  marker: string,
   title: string,
   description: string,
   onClick: () => void,
@@ -25,7 +25,7 @@ function actionCard(
   return el(
     'button',
     { class: `action${hero ? ' action--hero' : ''}`, attrs: { type: 'button' }, on: { click: onClick } },
-    el('div', { class: 'action__icon', text: icon }),
+    el('div', { class: 'action__marker', text: marker }),
     el('div', { class: 'action__title', text: title }),
     el('div', { class: 'action__desc', text: description }),
   );
@@ -47,24 +47,30 @@ function projectCard(summary: AppState['projects'][number]): HTMLElement {
   }
 
   return el(
-    'button',
-    { class: 'card', attrs: { type: 'button' }, on: { click: () => void openProject(summary.gameId) } },
-    thumb,
+    'div',
+    { class: 'project-card' },
     el(
-      'div',
-      { class: 'card__head' },
-      el('span', { class: 'card__name truncate', text: summary.displayName }),
-      el('span', { class: maturityBadgeClass(summary.maturity), text: summary.maturity }),
+      'button',
+      { class: 'card', attrs: { type: 'button' }, on: { click: () => void openProject(summary.gameId) } },
+      thumb,
+      el(
+        'div',
+        { class: 'card__head' },
+        el('span', { class: 'card__name truncate', text: summary.displayName }),
+        el('span', { class: maturityBadgeClass(summary.maturity), text: summary.maturity }),
+      ),
+      el(
+        'div',
+        { class: 'card__meta' },
+        el('span', { class: 'mono', text: summary.presetId }),
+        el('span', { text: `${summary.assetCount} asset${summary.assetCount === 1 ? '' : 's'}` }),
+        el('span', { text: summary.lastBuildState === 'packed' ? 'packed' : summary.lastBuildState === 'built' ? 'built' : 'not built' }),
+        !summary.hasWorkbenchMetadata ? el('span', { class: 'badge', text: 'adopt on open' }) : null,
+        summary.provenanceBlocked ? el('span', { class: 'badge badge--danger', text: 'provenance blocks release' }) : null,
+      ),
+      el('span', { class: 'card__edit', text: 'Open editor' }),
     ),
-    el(
-      'div',
-      { class: 'card__meta' },
-      el('span', { class: 'mono', text: summary.presetId }),
-      el('span', { text: `${summary.assetCount} asset${summary.assetCount === 1 ? '' : 's'}` }),
-      el('span', { text: summary.lastBuildState === 'packed' ? 'packed' : summary.lastBuildState === 'built' ? 'built' : 'not built' }),
-      !summary.hasWorkbenchMetadata ? el('span', { class: 'badge', text: 'adopt on open' }) : null,
-      summary.provenanceBlocked ? el('span', { class: 'badge badge--danger', text: 'provenance blocks release' }) : null,
-    ),
+    button('Run game', () => void openProjectAndRun(summary.gameId), { class: 'btn btn--run btn--project', attrs: { 'aria-label': `Run ${summary.displayName}` } }),
   );
 }
 
@@ -93,25 +99,33 @@ export function renderHome(host: HTMLElement): () => void {
       el(
         'div',
         { class: 'home__inner' },
+        el('div', { class: 'home__eyebrow', text: 'Image in. Playable game out.' }),
         el('h1', { class: 'home__title', text: 'Stinky Weasel Game Factory' }),
         el('p', {
           class: 'home__sub',
-          text: 'Give it something you already have - one image, a folder of art, a sprite sheet - and it turns that into a real, playable SW2D game you can refine, preview and package here. Everything runs on this machine: no account, no API key, no upload.',
+          text: 'Supply an image. The factory checks it, creates a game-ready sprite, builds the game, and opens the real result for play. No terminal, account, upload, or mysterious final step.',
         }),
+        el(
+          'div',
+          { class: 'build-track', attrs: { 'aria-label': 'How the factory works' } },
+          ...['Supply image', 'Create + validate sprites', 'Arrange the scene', 'Run the game'].map((label, index) =>
+            el('div', { class: 'build-track__step' }, el('span', { text: String(index + 1).padStart(2, '0') }), el('strong', { text: label })),
+          ),
+        ),
         el(
           'div',
           { class: 'actions' },
           actionCard(
-            '🖼️',
+            'START HERE',
             'Make Something From an Image',
-            'Import one image, see candidate playable directions built from it, and pick one. You get a real game, not a mockup.',
+            'Import one image, choose a playable direction, and let the factory derive validated sprite art before it opens the finished game.',
             () => void openImportFirstFlow(),
             true,
           ),
-          actionCard('🗂️', 'Create From Assets', 'Start a project, then bring in a folder, a sprite sheet or a ZIP of art and map it onto game roles.', () =>
+          actionCard('ASSETS', 'Create From Assets', 'Start a project, then bring in a folder, sprite sheet, or ZIP and map the art onto game roles.', () =>
             openCreateDialog({ mode: 'assets' }),
           ),
-          actionCard('📂', 'Open Existing Project', 'Reopen a game you made here, or adopt one generated by the CLI - your assets, roles and layout come back.', () => {
+          actionCard('PROJECTS', 'Open Existing Project', 'Reopen a game made here, or adopt one generated by the command-line interface (CLI).', () => {
             const { projects } = getState();
             if (projects.length === 0) {
               toast('No projects under games/ yet. Make one first.', 'warn');
@@ -119,7 +133,7 @@ export function renderHome(host: HTMLElement): () => void {
             }
             document.getElementById('recent-projects')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
           }),
-          actionCard('🎛️', 'Browse Presets', 'All 74 genre recipes, with honest maturity, required packs and known limitations.', () => goPresets()),
+          actionCard('RECIPES', 'Browse Presets', 'Browse all 74 genre recipes with their maturity, required systems, and known limitations.', () => goPresets()),
         ),
         el('div', { attrs: { id: 'recent-projects' } }, el('h2', { class: 'section-title', text: 'Your games' }), projectsHost),
         el(

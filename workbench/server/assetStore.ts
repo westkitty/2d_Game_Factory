@@ -16,7 +16,7 @@
 import { createHash } from 'node:crypto';
 import { existsSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
-import type { AssetRecord, AssetsDocument, Provenance, TransformRecipe, WorkbenchAssetRole } from '../shared/types.ts';
+import type { AssetRecord, AssetsDocument, AssetValidation, Provenance, TransformRecipe, WorkbenchAssetRole } from '../shared/types.ts';
 import { applyRecipe } from '../shared/image/recipe.ts';
 import { extractPalette } from '../shared/image/transforms.ts';
 import { decodePng, encodePng, isPng } from './png.ts';
@@ -138,6 +138,46 @@ export interface StoreDerivedInput {
   readonly bytes: Uint8Array;
   readonly displayName: string;
   readonly recipe: TransformRecipe;
+  readonly purpose?: 'sprite';
+}
+
+/**
+ * Validates the actual encoded pixels, dimensions, lineage and replay recipe.
+ * This runs on the host after upload; client-side canvas output is not trusted
+ * merely because it came from the workbench UI.
+ */
+export function validateSprite(
+  bytes: Uint8Array,
+  source: AssetRecord,
+  recipe: TransformRecipe,
+): AssetValidation {
+  const formatPassed = isPng(bytes);
+  let width = 0;
+  let height = 0;
+  let visiblePixels = 0;
+  if (formatPassed) {
+    const raster = decodePng(bytes);
+    width = raster.width;
+    height = raster.height;
+    for (let offset = 3; offset < raster.data.length; offset += 4) {
+      if (raster.data[offset]! > 8) visiblePixels += 1;
+    }
+  }
+
+  const dimensionsPassed = width >= 8 && height >= 8 && width <= 512 && height <= 512 && width / height >= 0.25 && width / height <= 4;
+  const checks: AssetValidation['checks'] = [
+    { id: 'format', label: 'Lossless sprite format', passed: formatPassed, detail: formatPassed ? 'Decoded as a valid PNG.' : 'Sprites must be valid PNG files.' },
+    { id: 'dimensions', label: 'Runtime-safe dimensions', passed: dimensionsPassed, detail: `${width}x${height}; required 8–512 px with a usable aspect ratio.` },
+    { id: 'visible-pixels', label: 'Visible artwork', passed: visiblePixels > 0, detail: `${visiblePixels.toLocaleString('en-US')} visible pixel${visiblePixels === 1 ? '' : 's'}.` },
+    { id: 'source-lineage', label: 'Supplied-image lineage', passed: source.kind === 'source', detail: `Derived against ${source.displayName} (${source.sha256.slice(0, 12)}).` },
+    { id: 'recipe', label: 'Rebuildable recipe', passed: recipe.steps.length > 0, detail: `${recipe.steps.length} recorded transform step${recipe.steps.length === 1 ? '' : 's'}.` },
+  ];
+  return {
+    purpose: 'sprite',
+    status: checks.every((check) => check.passed) ? 'valid' : 'invalid',
+    sourceSha256: source.sha256,
+    checks,
+  };
 }
 
 /**
@@ -158,6 +198,11 @@ export function storeDerived(input: StoreDerivedInput): StoreResult {
   }
 
   const sniffed = sniffImage(input.bytes);
+  const validation = input.purpose === 'sprite' ? validateSprite(input.bytes, source, input.recipe) : undefined;
+  if (validation?.status === 'invalid') {
+    const failures = validation.checks.filter((check) => !check.passed).map((check) => check.detail).join(' ');
+    throw new SecurityError(422, `The derived sprite did not validate. ${failures}`);
+  }
   const hash = sha256Hex(input.bytes);
   const id = mintAssetId('der', `${source.id}:${hash}`, takenIds(document));
   const fileName = storedFileName(id, sniffed.mime);
@@ -182,6 +227,7 @@ export function storeDerived(input: StoreDerivedInput): StoreResult {
     transformRecipe: input.recipe,
     roleAssignments: [],
     provenance: { ...source.provenance, modificationStatus: 'modified' },
+    ...(validation ? { validation } : {}),
     ...(palette && palette.length > 0 ? { palette } : {}),
     ...(source.group !== undefined ? { group: source.group } : {}),
   };
@@ -304,6 +350,7 @@ export function rebuildDerivedOnHost(gameId: string, derivedId: string): AssetRe
     height: sniffed.height,
     byteSize: rebuilt.byteLength,
     sha256: sha256Hex(rebuilt),
+    ...(derived.validation ? { validation: validateSprite(rebuilt, source, derived.transformRecipe) } : {}),
     stale: false,
   };
   saveAssets(gameId, { version: 1, assets: document.assets.map((asset) => (asset.id === derived.id ? updated : asset)) });
