@@ -17,8 +17,21 @@ import { getState } from '../state.ts';
 import { awaitJob, errorText, goPresets, openProject, refreshCurrent } from '../actions.ts';
 import { openCreateDialog } from './createDialog.ts';
 import { ROLE_LABELS, type WorkbenchAssetRole } from '../../shared/types.ts';
-import type { SourceCandidate, SourceProviderInfo, RightsStatus } from '../../server/sources/types.ts';
+import type {
+  PackMatch,
+  RoleCoverageEntry,
+  SourceCandidate,
+  SourceProviderInfo,
+  SpriteRequirementProfile,
+  RightsStatus,
+} from '../../server/sources/types.ts';
 import * as api from '../api.ts';
+
+interface Recommendation {
+  readonly profile: SpriteRequirementProfile;
+  readonly matches: readonly PackMatch[];
+  readonly uncovered: readonly WorkbenchAssetRole[];
+}
 
 const RIGHTS_LABEL: Readonly<Record<RightsStatus, string>> = {
   verified: 'VERIFIED',
@@ -85,6 +98,65 @@ function candidateCard(candidate: SourceCandidate, onAcquire: ((c: SourceCandida
           title: usable ? `Download from ${candidate.acquisitionUrl}` : 'This licence is not on the accepted list.',
         })
       : el('div', { class: 'faint', style: { 'font-size': '11px' }, text: 'Open a project to acquire this pack.' }),
+  );
+}
+
+const COVERAGE_LABEL: Readonly<Record<RoleCoverageEntry['state'], string>> = {
+  covered: '✓',
+  partial: '~',
+  fallback: 'generated',
+  'not-relevant': '·',
+};
+
+function roleCoverageGrid(entries: readonly RoleCoverageEntry[]): HTMLElement {
+  return el(
+    'div',
+    { style: { display: 'grid', 'grid-template-columns': 'repeat(auto-fill, minmax(120px, 1fr))', gap: '3px 10px', 'font-size': '11px', 'margin-top': '6px' } },
+    ...entries.map((entry) =>
+      el(
+        'div',
+        { class: 'row', style: { gap: '5px', justifyContent: 'space-between' } },
+        el('span', { class: entry.importance === 'required' ? '' : 'faint', text: ROLE_LABELS[entry.role] }),
+        el('span', {
+          style: { color: entry.state === 'covered' ? 'var(--accent)' : entry.state === 'partial' ? 'var(--warn)' : 'var(--text-faint)', 'font-family': 'var(--mono)' },
+          text: COVERAGE_LABEL[entry.state],
+        }),
+      ),
+    ),
+  );
+}
+
+function matchCard(match: PackMatch, onAcquire: (c: SourceCandidate) => void): HTMLElement {
+  const c = match.candidate;
+  const usable = !match.blockedReason && rightsUsable(c.rights.status);
+  return el(
+    'div',
+    { class: 'seed', attrs: { 'data-pack-id': c.packId } },
+    el(
+      'div',
+      { class: 'row row--wrap', style: { gap: '6px' } },
+      el('span', { class: RIGHTS_CLASS[c.rights.status], text: RIGHTS_LABEL[c.rights.status] }),
+      el('span', { class: 'badge', text: `${match.score}% fit` }),
+      el('span', { class: 'badge', text: `${match.coveredRoles}/${match.totalRoles} roles` }),
+      c.camera ? el('span', { class: 'badge', text: c.camera }) : null,
+      c.hasAnimationFrames ? el('span', { class: 'badge', text: 'frames' }) : null,
+    ),
+    el('div', { class: 'seed__title', text: c.title }),
+    el('div', { class: 'coverage' }, el('div', { class: 'coverage__fill', style: { width: `${match.score}%` } })),
+    match.blockedReason
+      ? el('div', { class: 'errbox', text: `Blocked: ${match.blockedReason}.` })
+      : el(
+          'div',
+          {},
+          el('div', { class: 'faint', style: { 'font-size': '11px', 'text-transform': 'uppercase', 'letter-spacing': '0.05em' }, text: 'Why this fits' }),
+          el('ul', { style: { margin: '3px 0 0', 'padding-left': '16px', 'font-size': '12px' } }, ...match.reasons.map((reason) => el('li', { text: reason }))),
+          roleCoverageGrid(match.roleCoverage),
+          match.caveats.length > 0
+            ? el('ul', { class: 'faint', style: { margin: '6px 0 0', 'padding-left': '16px', 'font-size': '11px' } }, ...match.caveats.map((caveat) => el('li', { text: caveat })))
+            : null,
+        ),
+    el('div', { class: 'seed__limits' }, `${c.creator} · ${c.rights.licenseName} · ${c.fileCount ?? '?'} PNG files`, el('div', { class: 'mono faint', style: { 'font-size': '10px', 'margin-top': '3px' }, text: c.rights.evidenceUrl })),
+    button(usable ? 'Acquire pack' : 'Unavailable', () => onAcquire(c), { class: usable ? 'btn btn--primary' : 'btn', disabled: !usable }),
   );
 }
 
@@ -229,19 +301,71 @@ export async function openFindFreeSprites(): Promise<void> {
     }
   }
 
-  replace(
-    bodyHost,
-    el('p', { class: 'muted', style: { 'margin-top': '0' } }, project
-      ? `Project open: ${project.project.displayName} (${project.project.presetId}). Pick a coherent pack; its sprites are staged into this project through the normal import.`
-      : 'No project open. Create a game first, then reopen this to acquire packs into it.'),
-    el(
-      'div',
-      { class: 'row row--wrap', style: { gap: '6px', 'margin-bottom': '10px' } },
-      ...providers.map((provider) =>
-        el('span', { class: 'badge', title: provider.homepage, text: `${provider.title} · ${provider.online ? 'reachable' : 'offline'} · ${provider.candidateCount} packs` }),
-      ),
+  const providerStrip = el(
+    'div',
+    { class: 'row row--wrap', style: { gap: '6px', 'margin-bottom': '10px' } },
+    ...providers.map((provider) =>
+      el('span', { class: 'badge', title: provider.homepage, text: `${provider.title} · ${provider.online ? 'reachable' : 'offline'} · ${provider.candidateCount} packs` }),
     ),
-    el('div', { class: 'seeds' }, ...candidates.map((candidate) => candidateCard(candidate, gameId ? acquire : null))),
   );
-  replace(footerHost, el('span', { class: 'faint', text: project ? `Downloads are copied into games/${project.project.gameId}/` : 'No project open' }));
+
+  // Preset-aware: recommend against the open project (or the chosen preset).
+  let recommendation: Recommendation | null = null;
+  const presetIdForQuery = project?.project.presetId ?? null;
+  if (presetIdForQuery) {
+    try {
+      recommendation = await api.get<Recommendation>('/sources/recommend', gameId ? { gameId } : { presetId: presetIdForQuery });
+    } catch {
+      recommendation = null;
+    }
+  }
+
+  function showCatalogue(): void {
+    replace(
+      bodyHost,
+      el('p', { class: 'muted', style: { 'margin-top': '0' } }, 'Every pack in the catalogue. Rights are shown before anything downloads.'),
+      providerStrip,
+      recommendation ? button('← Back to recommendations', () => showRecommendations(), { class: 'btn btn--sm' }) : null,
+      el('div', { class: 'seeds', style: { 'margin-top': '10px' } }, ...candidates.map((candidate) => candidateCard(candidate, gameId ? acquire : null))),
+    );
+  }
+
+  function showRecommendations(): void {
+    if (!recommendation) {
+      showCatalogue();
+      return;
+    }
+    const { profile, matches, uncovered } = recommendation;
+    const usableMatches = matches.filter((match) => !match.blockedReason);
+    const blocked = matches.filter((match) => match.blockedReason);
+
+    replace(
+      bodyHost,
+      el('p', { class: 'muted', style: { 'margin-top': '0' } }, project
+        ? `We know what ${project.project.displayName} needs. Best-fitting coherent packs first - each acquired sprite goes through the normal staged import.`
+        : `Best-fitting packs for a ${profile.presetDisplayName}.`),
+      providerStrip,
+      el(
+        'div',
+        { class: 'infobox' },
+        el('strong', { text: `${profile.presetDisplayName} visual requirements` }),
+        el('div', {
+          style: { 'font-size': '12px', 'margin-top': '3px' },
+          text: `${profile.camera === 'side' ? 'side-view' : profile.camera} camera · ${profile.roles.length} roles${profile.animationUseful ? ' · movement animation useful' : ''}${profile.tileBased ? ' · tile-based' : ''}${profile.derivedFromKit ? '' : ' · derived from controller family'}`,
+        }),
+        uncovered.length > 0
+          ? el('div', { class: 'faint', style: { 'font-size': '11px', 'margin-top': '4px' }, text: `No pack covers: ${uncovered.map((role) => ROLE_LABELS[role]).join(', ')} — these use generated fallback art.` })
+          : null,
+      ),
+      el('div', { class: 'seeds' }, ...usableMatches.map((match) => matchCard(match, gameId ? acquire : () => toast('Open a project to acquire packs.', 'warn')))),
+      blocked.length > 0
+        ? el('details', { style: { 'margin-top': '10px' } }, el('summary', { class: 'faint', text: `${blocked.length} pack(s) excluded by licence/format` }), el('div', { class: 'seeds', style: { 'margin-top': '8px' } }, ...blocked.map((match) => matchCard(match, () => undefined))))
+        : null,
+      el('div', { style: { 'margin-top': '12px' } }, button('Show all packs', () => showCatalogue(), { class: 'btn btn--sm' })),
+    );
+  }
+
+  if (recommendation) showRecommendations();
+  else showCatalogue();
+  replace(footerHost, el('span', { class: 'faint', text: project ? `Downloads are copied into games/${project.project.gameId}/` : 'No project open — create a game to acquire packs' }));
 }

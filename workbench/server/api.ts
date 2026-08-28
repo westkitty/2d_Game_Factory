@@ -45,7 +45,7 @@ import { buildSeeds, seedForPreset } from './seeds.ts';
 import { loadScene, listLevels, newObject, objectClassOptions, saveScene, SceneValidationError, type SceneDocument } from './sceneStore.ts';
 import { buildProject, createProject, packProject, validateProject } from './factoryService.ts';
 import { starterKitDepthFor, starterKitFor } from './starterKits/index.ts';
-import { acquirePack, allCandidates, listProviderInfo, CATALOG_VERIFIED_AT } from './sources/index.ts';
+import { acquirePack, allCandidates, listProviderInfo, recommendForPreset, CATALOG_VERIFIED_AT } from './sources/index.ts';
 import { JobManager } from './jobManager.ts';
 import { applyRebuildResult, currentPreview, listPreviews, nextGeneration, previewModeOf, startFastPreview, startProductionPreview, stopPreview } from './previewManager.ts';
 import { getPreset } from '@sw2d/presets';
@@ -603,6 +603,23 @@ const ROUTES: ReadonlyMap<string, Handler> = new Map<string, Handler>([
   [
     'GET /sources/catalog',
     () => ok({ candidates: allCandidates(), verifiedAt: CATALOG_VERIFIED_AT }),
+  ],
+
+  [
+    // Preset-aware ranked packs. `gameId` (a real project) or `presetId` (a
+    // preset the user is about to create). No search term - the game is the query.
+    'GET /sources/recommend',
+    (request) => {
+      const rawGameId = request.query.get('gameId');
+      let presetId = request.query.get('presetId') ?? undefined;
+      if (rawGameId) presetId = loadProject(assertValidGameId(rawGameId)).presetId;
+      if (!presetId) throw new SecurityError(400, 'Provide gameId or presetId.');
+      try {
+        return ok(recommendForPreset(presetId));
+      } catch {
+        throw new SecurityError(404, `Unknown preset "${presetId}".`);
+      }
+    },
   ],
 
   [

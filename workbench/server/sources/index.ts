@@ -10,11 +10,20 @@ export type {
   AcquisitionResult,
   CameraPerspective,
   NominalTileSize,
+  PackMatch,
+  ProfileRole,
   RightsEvidence,
   RightsStatus,
+  RoleCoverageEntry,
+  RoleCoverageState,
+  RoleImportance,
   SourceCandidate,
   SourceProviderInfo,
+  SpriteRequirementProfile,
 } from './types.ts';
+export { deriveProfile, cameraForControllers } from './requirements.ts';
+export { rankPacks, matchPack, uncoveredRoles } from './matching.ts';
+export { recommendForPreset, type Recommendation } from './recommend.ts';
 export { evaluateRights, acceptableLicenses, rightsAllowShipping, rightsAllowUse, VERIFICATION_FRESHNESS_DAYS } from './rights.ts';
 export { SourceNetworkError, PROVIDER_HOST_ALLOWLIST, providerHosts, isDisallowedAddress, providerGet, providerOnline } from './net.ts';
 export { listProviders, getProvider, allCandidates, findCandidate, listProviderInfo } from './registry.ts';

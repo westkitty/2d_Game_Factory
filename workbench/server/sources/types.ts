@@ -86,6 +86,67 @@ export interface SourceProviderInfo {
   readonly candidateCount: number;
 }
 
+// ---------------------------------------------------------------------------
+// Sprite requirement profile + pack matching (Phase C)
+// ---------------------------------------------------------------------------
+
+export type RoleImportance = 'required' | 'important' | 'optional';
+
+export interface ProfileRole {
+  readonly role: WorkbenchAssetRole;
+  readonly importance: RoleImportance;
+}
+
+/**
+ * What visual artwork a selected game reasonably needs, derived from existing
+ * preset/starter metadata - not a hand-written table per genre. Every field is
+ * a fact already recorded somewhere (controller family, starter-kit useful
+ * roles, known limitations) reshaped into what the matcher wants.
+ */
+export interface SpriteRequirementProfile {
+  readonly presetId: string;
+  readonly presetDisplayName: string;
+  readonly family: string;
+  readonly camera: CameraPerspective;
+  readonly tileBased: boolean;
+  readonly roles: readonly ProfileRole[];
+  /** null when nothing in the metadata implies a preference either way. */
+  readonly pixelArtPreferred: boolean | null;
+  readonly likelyTileSize?: NominalTileSize;
+  readonly animationUseful: boolean;
+  readonly directionalAnimationUseful: boolean;
+  readonly environmentArtNeeded: boolean;
+  readonly backgroundNeeded: boolean;
+  readonly uiArtNeeded: boolean;
+  /** True when the profile fell back to controller-family defaults because no starter kit exists. */
+  readonly derivedFromKit: boolean;
+}
+
+export type RoleCoverageState = 'covered' | 'partial' | 'fallback' | 'not-relevant';
+
+export interface RoleCoverageEntry {
+  readonly role: WorkbenchAssetRole;
+  readonly importance: RoleImportance;
+  readonly state: RoleCoverageState;
+}
+
+export interface PackMatch {
+  readonly candidate: SourceCandidate;
+  /** 0..100, deterministic. */
+  readonly score: number;
+  readonly roleCoverage: readonly RoleCoverageEntry[];
+  readonly coveredRequired: number;
+  readonly totalRequired: number;
+  readonly coveredRoles: number;
+  readonly totalRoles: number;
+  /** Concise, evidence-backed "why this fits" lines. */
+  readonly reasons: readonly string[];
+  /** Honest gaps - always paired with "generated fallback available". */
+  readonly caveats: readonly string[];
+  /** Set when a hard gate failed; the match is reported but not usable. */
+  readonly blockedReason?: string;
+}
+
 /** Result of acquiring a pack into a project's staging area, ready for the canonical import plan. */
 export interface AcquisitionResult {
   readonly providerId: string;
