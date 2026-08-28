@@ -38,3 +38,20 @@ Additional requirement: It also needs to validate and create sprite assets again
 - `npm run validate` passed: 92 files / 1,955 tests, typecheck, starter production build, and offline guard.
 - Required gameplay client passed against the compiled-frame game; text state confirmed the 64px compiled player texture plus movement/jump behavior. Its headless WebGL screenshot remained black, so system Chrome separately confirmed visible gameplay with the compiled sprite and zero console errors.
 - Desktop visual inspection confirmed the compiler layout, controls, frame grid, loop preview, and compile action are visible together without clipping.
+
+## 2026-08-28 — Bugsweep
+
+- Baseline was clean at `ccf9e8e`; the original root gate passed 1,955 tests but did not build the workbench production application.
+- Scanned 698 source/config files (60,211 lines) across the workbench, runtime, packages, starter, demos, proofs, and tooling. No critical defect was confirmed.
+- Major: root `validate` now builds both the workbench and starter production applications, with a regression test protecting that contract.
+- Major: untrusted transform recipes now pass a bounded, operation-specific runtime parser before persistence; malformed arrays, unknown operations, invalid colours, fractional grids, and allocation-shaped values are rejected with 400 responses.
+- Major: sprite validation now catches malformed PNG decodes, checks the source file against its recorded SHA-256 hash, and—for PNG sources—requires the uploaded pixels to exactly match a host-side replay of the recorded recipe.
+- Major: derived assets can no longer point to other derived assets; every derivative is enforced to point directly to an immutable source as rebuild logic requires.
+- Major: grid transforms require whole numbers, while Dex Sprite rejects more than 64 cells and frames outside 8–512px before allocating thumbnails or starting preview timers.
+- Major: PNG decoding now rejects oversized pixel canvases and caps `zlib` output before inflation, preventing small compressed uploads from expanding without bound in the host process.
+- Minor: malformed percent-encoded upload metadata now returns a clear 400 response rather than escaping as an internal server error.
+- Focused regression checks passed: 59 unit checks and live Dex Sprite/security browser journeys.
+- Final `npm run validate` passed: 94 files / 1,963 tests, TypeScript, workbench build, starter build, and offline guard.
+- `npm run qa:matrix` passed: 40/40 distinct generated games entered play, covering all 74 presets.
+- Full `npm run qa:workbench` passed: 16/16 real-browser journeys.
+- Additional runtime gates passed: 14/14 smoke demos and 5/5 proof games.

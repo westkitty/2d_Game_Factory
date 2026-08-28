@@ -573,9 +573,9 @@ export function suggestGrids(width: number, height: number): readonly GridSugges
 }
 
 export function gridCell(raster: Raster, columns: number, rows: number, cell: number): Raster {
-  if (columns <= 0 || rows <= 0) throw new RasterError(`Grid must have positive columns and rows; got ${columns}x${rows}.`);
+  if (!Number.isInteger(columns) || !Number.isInteger(rows) || columns <= 0 || rows <= 0) throw new RasterError(`Grid must have positive whole-number columns and rows; got ${columns}x${rows}.`);
   const count = columns * rows;
-  if (cell < 0 || cell >= count) throw new RasterError(`Cell ${cell} is outside a ${columns}x${rows} grid (${count} cells).`);
+  if (!Number.isInteger(cell) || cell < 0 || cell >= count) throw new RasterError(`Cell ${cell} is outside a ${columns}x${rows} grid (${count} cells).`);
   const frameWidth = Math.floor(raster.width / columns);
   const frameHeight = Math.floor(raster.height / rows);
   if (frameWidth <= 0 || frameHeight <= 0) throw new RasterError(`A ${columns}x${rows} grid does not fit a ${raster.width}x${raster.height} image.`);

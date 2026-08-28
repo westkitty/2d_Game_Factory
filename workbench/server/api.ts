@@ -26,6 +26,7 @@ import {
   setProvenance,
   storeDerived,
 } from './assetStore.ts';
+import { assertTransformRecipe } from './recipeValidation.ts';
 import {
   adoptProject,
   hasWorkbenchMetadata,
@@ -93,6 +94,16 @@ function optionalString(source: Record<string, unknown>, key: string): string | 
   if (value === undefined || value === null) return undefined;
   if (typeof value !== 'string') throw new SecurityError(400, `Invalid "${key}".`);
   return value;
+}
+
+function decodedHeader(request: ApiRequest, key: string, fallback?: string): string | undefined {
+  const raw = request.headers[key] ?? fallback;
+  if (raw === undefined) return undefined;
+  try {
+    return decodeURIComponent(raw);
+  } catch {
+    throw new SecurityError(400, `Malformed percent-encoding in "${key}" header.`);
+  }
 }
 
 function gameIdOf(request: ApiRequest, source?: Record<string, unknown>): string {
@@ -286,8 +297,8 @@ const ROUTES: ReadonlyMap<string, Handler> = new Map<string, Handler>([
     (request) => {
       const batchId = request.headers['x-sw2d-batch'];
       if (!batchId) throw new SecurityError(400, 'Missing x-sw2d-batch header.');
-      const fileName = decodeURIComponent(request.headers['x-sw2d-name'] ?? 'asset');
-      const relativePath = decodeURIComponent(request.headers['x-sw2d-path'] ?? fileName);
+      const fileName = decodedHeader(request, 'x-sw2d-name', 'asset')!;
+      const relativePath = decodedHeader(request, 'x-sw2d-path', fileName)!;
       let hints: ClientAnalysisHints | undefined;
       const rawHints = request.headers['x-sw2d-hints'];
       if (rawHints) {
@@ -382,7 +393,7 @@ const ROUTES: ReadonlyMap<string, Handler> = new Map<string, Handler>([
     (request) => {
       const gameId = assertValidGameId(request.headers['x-sw2d-game']);
       const sourceAssetId = assertValidAssetId(request.headers['x-sw2d-source']);
-      const displayName = decodeURIComponent(request.headers['x-sw2d-name'] ?? 'derived.png');
+      const displayName = decodedHeader(request, 'x-sw2d-name', 'derived.png')!;
       const purpose = request.headers['x-sw2d-purpose'];
       if (purpose !== undefined && purpose !== 'sprite') throw new SecurityError(400, `Unknown derived-asset purpose ${JSON.stringify(purpose)}.`);
       let recipe: unknown;
@@ -391,15 +402,13 @@ const ROUTES: ReadonlyMap<string, Handler> = new Map<string, Handler>([
       } catch {
         throw new SecurityError(400, 'Malformed transform recipe.');
       }
-      if (typeof recipe !== 'object' || recipe === null || (recipe as { version?: unknown }).version !== 1) {
-        throw new SecurityError(400, 'Unsupported transform recipe version.');
-      }
+      const transformRecipe = assertTransformRecipe(recipe);
       const { record } = storeDerived({
         gameId,
         sourceAssetId,
         bytes: request.body,
         displayName,
-        recipe: recipe as { version: 1; steps: [] },
+        recipe: transformRecipe,
         ...(purpose === 'sprite' ? { purpose } : {}),
       });
       return ok({ asset: record, assets: loadAssets(gameId).assets });
@@ -411,7 +420,7 @@ const ROUTES: ReadonlyMap<string, Handler> = new Map<string, Handler>([
     (request) => {
       const gameId = assertValidGameId(request.headers['x-sw2d-game']);
       const assetId = assertValidAssetId(request.headers['x-sw2d-asset']);
-      const displayName = request.headers['x-sw2d-name'] ? decodeURIComponent(request.headers['x-sw2d-name']) : undefined;
+      const displayName = decodedHeader(request, 'x-sw2d-name');
       const result = reimportSource(gameId, assetId, request.body, displayName);
       // Rebuild what the host can (PNG sources); the rest is handed back to
       // the client, which has the decoders the host deliberately does not.

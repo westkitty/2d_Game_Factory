@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { deflateSync } from 'node:zlib';
 import { createRaster, setPixel } from '../shared/image/raster.ts';
 import { PngError, decodePng, encodePng, isPng } from '../server/png.ts';
-import { validateSprite } from '../server/assetStore.ts';
+import { sha256Hex, validateSprite } from '../server/assetStore.ts';
 import type { AssetRecord, TransformRecipe } from '../shared/types.ts';
 
 /** Builds a minimal PNG chunk with a correct CRC, so decode-path tests are not written against hand-typed bytes. */
@@ -147,7 +147,19 @@ describe('PNG codec', () => {
 
   it('refuses truncated pixel data instead of returning a partly-black image', () => {
     const png = buildPng(ihdr(4, 4, 8, 6), [{ type: 'IDAT', data: new Uint8Array(deflateSync(new Uint8Array(10))) }]);
-    expect(() => decodePng(png)).toThrow(/expected at least/);
+    expect(() => decodePng(png)).toThrow(/expected exactly/);
+  });
+
+  it('bounds dimensions and decompressed bytes before allocating pixel buffers', () => {
+    const hugeDimensions = buildPng(ihdr(8192, 8192, 8, 6), [
+      { type: 'IDAT', data: new Uint8Array(deflateSync(new Uint8Array([0]))) },
+    ]);
+    expect(() => decodePng(hugeDimensions)).toThrow(/safe host-decode limit/);
+
+    const excessInflate = buildPng(ihdr(8, 8, 8, 6), [
+      { type: 'IDAT', data: new Uint8Array(deflateSync(new Uint8Array(10_000))) },
+    ]);
+    expect(() => decodePng(excessInflate)).toThrow(/decompression exceeded/);
   });
 });
 
@@ -168,14 +180,51 @@ describe('sprite validation', () => {
   const recipe: TransformRecipe = { version: 1, steps: [{ op: 'trimAlpha', threshold: 8 }] };
 
   it('accepts visible, runtime-sized PNG pixels and records supplied-image lineage', () => {
-    const raster = createRaster(32, 32);
-    setPixel(raster, 12, 12, 80, 170, 240, 255);
+    const sourceRaster = createRaster(32, 32);
+    const raster = createRaster(8, 8);
+    for (let y = 0; y < 8; y++) {
+      for (let x = 0; x < 8; x++) {
+        setPixel(sourceRaster, x + 12, y + 12, 80, 170, 240, 255);
+        setPixel(raster, x, y, 80, 170, 240, 255);
+      }
+    }
 
-    const report = validateSprite(encodePng(raster), source, recipe);
+    const sourceBytes = encodePng(sourceRaster);
+    const report = validateSprite(encodePng(raster), { ...source, sha256: sha256Hex(sourceBytes) }, recipe, sourceBytes);
 
     expect(report.status).toBe('valid');
-    expect(report.sourceSha256).toBe(source.sha256);
+    expect(report.sourceSha256).toBe(sha256Hex(sourceBytes));
     expect(report.checks.every((check) => check.passed)).toBe(true);
+    expect(report.checks.find((check) => check.id === 'pixel-replay')?.passed).toBe(true);
+  });
+
+  it('rejects unrelated pixels that merely claim a supplied-image recipe', () => {
+    const supplied = createRaster(32, 32);
+    const unrelated = createRaster(8, 8);
+    for (let y = 0; y < 8; y++) {
+      for (let x = 0; x < 8; x++) {
+        setPixel(supplied, x + 3, y + 3, 255, 0, 0, 255);
+        setPixel(unrelated, x, y, 0, 0, 255, 255);
+      }
+    }
+
+    const sourceBytes = encodePng(supplied);
+    const report = validateSprite(encodePng(unrelated), { ...source, sha256: sha256Hex(sourceBytes) }, recipe, sourceBytes);
+
+    expect(report.status).toBe('invalid');
+    expect(report.checks.find((check) => check.id === 'pixel-replay')?.passed).toBe(false);
+  });
+
+  it('rejects a source file whose bytes no longer match its recorded hash', () => {
+    const supplied = createRaster(32, 32);
+    for (let y = 0; y < 8; y++) for (let x = 0; x < 8; x++) setPixel(supplied, x, y, 10, 20, 30, 255);
+    const derivative = createRaster(8, 8);
+    for (let y = 0; y < 8; y++) for (let x = 0; x < 8; x++) setPixel(derivative, x, y, 10, 20, 30, 255);
+
+    const report = validateSprite(encodePng(derivative), source, recipe, encodePng(supplied));
+
+    expect(report.status).toBe('invalid');
+    expect(report.checks.find((check) => check.id === 'source-lineage')?.passed).toBe(false);
   });
 
   it('rejects an all-transparent result instead of calling an empty file a sprite', () => {

@@ -151,6 +151,24 @@ export async function wbSheet001({ session, note }: JourneyContext): Promise<voi
   );
   expect(suggestions.includes('4x2'), `no 4x2 grid suggested; offered: ${suggestions.join(', ')}`);
   expect((await session.text('[data-testid="dex-sprite-summary"]')).includes('8 of 8 cells selected'), 'the compiler did not choose the likely 4x2 animation grid by default');
+
+  // An accidental 9x9 entry used to allocate 81 thumbnail canvases before
+  // host validation could object. The editor now fails closed at its own
+  // boundary and lets the user return to a safe suggestion.
+  await session.page.evaluate(() => {
+    for (const label of ['Columns', 'Rows']) {
+      const input = document.querySelector<HTMLInputElement>(`.modal input[aria-label="${label}"]`);
+      if (!input) continue;
+      input.value = '9';
+      input.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+  });
+  await session.page.waitForTimeout(300);
+  expect((await session.text('[data-testid="dex-sprite-summary"]')).includes('at most 64'), 'an oversized frame grid was not rejected before thumbnail allocation');
+  expect(await session.page.locator('[data-testid="dex-sprite-compile"]').isDisabled(), 'compile stayed enabled for an oversized frame grid');
+  await session.clickText('4x2');
+  await session.page.waitForTimeout(300);
+
   expectEqual(await session.count('[data-testid="dex-sprite-preview"]'), 1, 'the animation loop preview is missing');
   await session.clickText('Compile validated frames');
   await session.waitForIdle(90_000);

@@ -26,6 +26,8 @@ export class PngError extends Error {
 }
 
 const SIGNATURE = Uint8Array.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+const MAX_PNG_DIMENSION = 8192;
+const MAX_PNG_PIXELS = 4096 * 4096;
 
 export function isPng(bytes: Uint8Array): boolean {
   if (bytes.length < 8) return false;
@@ -171,21 +173,32 @@ export function decodePng(bytes: Uint8Array): Raster {
   }
 
   if (!header) throw new PngError('Malformed PNG: no IHDR chunk.');
+  const pixelCount = header.width * header.height;
+  if (header.width > MAX_PNG_DIMENSION || header.height > MAX_PNG_DIMENSION || pixelCount > MAX_PNG_PIXELS) {
+    throw new PngError(
+      `PNG dimensions ${header.width}x${header.height} exceed the safe host-decode limit `
+      + `(${MAX_PNG_DIMENSION}px per side, ${MAX_PNG_PIXELS.toLocaleString('en-US')} pixels total). Scale it before importing.`,
+    );
+  }
   if (header.interlace !== 0) throw new PngError('Interlaced (Adam7) PNGs are not supported by the workbench host decoder. Re-export without interlacing.');
   if (header.bitDepth !== 8 && header.bitDepth !== 16) {
     throw new PngError(`Unsupported PNG bit depth ${header.bitDepth}; the workbench host decoder handles 8 and 16 bits per channel.`);
   }
   if (idatParts.length === 0) throw new PngError('Malformed PNG: no IDAT data.');
 
-  const compressed = concat(idatParts);
-  const raw = new Uint8Array(inflateSync(compressed));
-
   const channels = channelsFor(header.colorType);
   const bytesPerSample = header.bitDepth / 8;
   const bytesPerPixel = Math.max(1, Math.round(channels * bytesPerSample));
   const bytesPerRow = header.width * bytesPerPixel;
   const expected = header.height * (bytesPerRow + 1);
-  if (raw.length < expected) throw new PngError(`Malformed PNG: inflated to ${raw.length} bytes, expected at least ${expected}.`);
+  const compressed = concat(idatParts);
+  let raw: Uint8Array;
+  try {
+    raw = new Uint8Array(inflateSync(compressed, { maxOutputLength: expected }));
+  } catch (error) {
+    throw new PngError(`PNG decompression exceeded its ${expected}-byte pixel-data limit or failed: ${error instanceof Error ? error.message : String(error)}`);
+  }
+  if (raw.length !== expected) throw new PngError(`Malformed PNG: inflated to ${raw.length} bytes, expected exactly ${expected}.`);
 
   const samples = unfilter(raw, header.width, header.height, bytesPerPixel, bytesPerRow);
   const rgba = new Uint8ClampedArray(header.width * header.height * 4);

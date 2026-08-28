@@ -133,7 +133,7 @@ export const EMPTY_RECIPE: TransformRecipe = { version: 1, steps: [] };
 export type AssetKindTag = 'source' | 'derived';
 
 export interface AssetValidationCheck {
-  readonly id: 'format' | 'dimensions' | 'visible-pixels' | 'source-lineage' | 'recipe';
+  readonly id: 'format' | 'dimensions' | 'visible-pixels' | 'source-lineage' | 'recipe' | 'pixel-replay';
   readonly label: string;
   readonly passed: boolean;
   readonly detail: string;

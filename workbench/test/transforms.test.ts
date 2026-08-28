@@ -311,6 +311,8 @@ describe('grid slicing', () => {
     const raster = createRaster(8, 4);
     expect(() => gridCell(raster, 2, 1, 5)).toThrow(RasterError);
     expect(() => gridCell(raster, 0, 1, 0)).toThrow(RasterError);
+    expect(() => gridCell(raster, 2.5, 1, 0)).toThrow(/whole-number/);
+    expect(() => gridCell(raster, 2, 1, 0.5)).toThrow(/outside/);
   });
 });
 

@@ -473,9 +473,9 @@ function openGridDialog(rasterOrNull: Raster | null, addStep: (step: TransformSt
     info.textContent = `${columns * rows} cells of ${frameWidth}x${frameHeight}. Extracting cell ${cell + 1}.`;
   }
 
-  const columnsInput = el('input', { attrs: { type: 'number', min: '1', max: '64', value: String(columns) }, on: { input: (event) => { columns = Math.max(1, Number((event.target as HTMLInputElement).value) || 1); paintInfo(); } } });
-  const rowsInput = el('input', { attrs: { type: 'number', min: '1', max: '64', value: String(rows) }, on: { input: (event) => { rows = Math.max(1, Number((event.target as HTMLInputElement).value) || 1); paintInfo(); } } });
-  const cellInput = el('input', { attrs: { type: 'number', min: '1', value: '1' }, on: { input: (event) => { cell = Math.max(0, (Number((event.target as HTMLInputElement).value) || 1) - 1); paintInfo(); } } });
+  const columnsInput = el('input', { attrs: { type: 'number', min: '1', max: '64', step: '1', value: String(columns) }, on: { input: (event) => { columns = Math.max(1, Math.trunc(Number((event.target as HTMLInputElement).value) || 1)); paintInfo(); } } });
+  const rowsInput = el('input', { attrs: { type: 'number', min: '1', max: '64', step: '1', value: String(rows) }, on: { input: (event) => { rows = Math.max(1, Math.trunc(Number((event.target as HTMLInputElement).value) || 1)); paintInfo(); } } });
+  const cellInput = el('input', { attrs: { type: 'number', min: '1', step: '1', value: '1' }, on: { input: (event) => { cell = Math.max(0, Math.trunc(Number((event.target as HTMLInputElement).value) || 1) - 1); paintInfo(); } } });
 
   const close = openModal({
     title: 'Slice as a sprite sheet',
@@ -534,7 +534,8 @@ async function openDexSpriteDialog(
   const preferred = [...suggestions].sort((left, right) => {
     const score = (candidate: (typeof suggestions)[number]): number => {
       const frameAspect = candidate.frameWidth / candidate.frameHeight;
-      return Math.abs(candidate.columns * candidate.rows - 8) + Math.abs(Math.log(frameAspect)) * 6;
+      const unsafe = candidate.columns * candidate.rows > 64 || candidate.frameWidth > 512 || candidate.frameHeight > 512;
+      return (unsafe ? 10_000 : 0) + Math.abs(candidate.columns * candidate.rows - 8) + Math.abs(Math.log(frameAspect)) * 6;
     };
     return score(left) - score(right);
   })[0];
@@ -553,14 +554,25 @@ async function openDexSpriteDialog(
   const cellsHost = el('div', { class: 'dex-sprite__cells', attrs: { 'data-testid': 'dex-sprite-cells' } });
   const summary = el('div', { class: 'faint', attrs: { 'data-testid': 'dex-sprite-summary' } });
   const nameInput = el('input', { attrs: { type: 'text', value: `${defaultName}-dex`, maxlength: '80', 'aria-label': 'Frame set name' } });
-  const columnsInput = el('input', { attrs: { type: 'number', min: '1', max: '64', value: String(columns), 'aria-label': 'Columns' } });
-  const rowsInput = el('input', { attrs: { type: 'number', min: '1', max: '64', value: String(rows), 'aria-label': 'Rows' } });
+  const columnsInput = el('input', { attrs: { type: 'number', min: '1', max: '64', step: '1', value: String(columns), 'aria-label': 'Columns' } });
+  const rowsInput = el('input', { attrs: { type: 'number', min: '1', max: '64', step: '1', value: String(rows), 'aria-label': 'Rows' } });
   const fpsInput = el('input', { attrs: { type: 'number', min: '1', max: '24', value: String(fps), 'aria-label': 'Preview FPS' } });
   const compileButton = button('Compile validated frames', () => void compile(), { class: 'btn btn--primary', attrs: { 'data-testid': 'dex-sprite-compile' } });
 
   function frameFor(cell: number): Raster {
     const sliced = gridCell(raster, columns, rows, cell);
     return stabilize ? alignFrame(sliced, 'bottom-center', 8) : sliced;
+  }
+
+  function gridConfigurationIssue(): string | null {
+    if (!Number.isInteger(columns) || !Number.isInteger(rows) || columns < 1 || rows < 1) return 'Columns and rows must be positive whole numbers.';
+    const total = columns * rows;
+    if (total > 64) return `This grid contains ${total} cells; Dex Sprite compiles at most 64 at once.`;
+    const frameWidth = Math.floor(raster.width / columns);
+    const frameHeight = Math.floor(raster.height / rows);
+    if (frameWidth < 8 || frameHeight < 8) return `Frames would be ${frameWidth}x${frameHeight}px; validated sprites must be at least 8x8px.`;
+    if (frameWidth > 512 || frameHeight > 512) return `Frames would be ${frameWidth}x${frameHeight}px; scale the sheet or add grid divisions so each frame is at most 512px.`;
+    return null;
   }
 
   function stopTimer(): void {
@@ -590,6 +602,17 @@ async function openDexSpriteDialog(
   }
 
   function rebuildCells(resetSelection: boolean): void {
+    stopTimer();
+    const issue = gridConfigurationIssue();
+    if (issue) {
+      selectedCells.clear();
+      summary.textContent = issue;
+      replace(cellsHost, el('div', { class: 'warnbox', text: issue }));
+      preview.width = 1;
+      preview.height = 1;
+      compileButton.disabled = true;
+      return;
+    }
     const total = columns * rows;
     if (resetSelection) {
       selectedCells = new Set<number>();
@@ -623,6 +646,11 @@ async function openDexSpriteDialog(
 
   async function compile(): Promise<void> {
     if (compiling || selectedCells.size === 0) return;
+    const gridIssue = gridConfigurationIssue();
+    if (gridIssue) {
+      toast(gridIssue, 'warn');
+      return;
+    }
     const groupName = nameInput.value.trim().replace(/\.[a-z0-9]+$/i, '').replace(/[^a-z0-9_-]+/gi, '-').replace(/^-+|-+$/g, '');
     if (!groupName) {
       toast('Give the frame set a name.', 'warn');
@@ -716,8 +744,10 @@ async function openDexSpriteDialog(
   });
 
   const changeGrid = (): void => {
-    columns = Math.max(1, Math.min(64, Number(columnsInput.value) || 1));
-    rows = Math.max(1, Math.min(64, Number(rowsInput.value) || 1));
+    columns = Math.max(1, Math.min(64, Math.trunc(Number(columnsInput.value) || 1)));
+    rows = Math.max(1, Math.min(64, Math.trunc(Number(rowsInput.value) || 1)));
+    columnsInput.value = String(columns);
+    rowsInput.value = String(rows);
     rebuildCells(true);
   };
   columnsInput.addEventListener('change', changeGrid);
