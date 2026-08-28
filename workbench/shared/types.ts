@@ -111,6 +111,7 @@ export type TransformStep =
   | { readonly op: 'featherAlpha'; readonly radius: number }
   | { readonly op: 'component'; readonly index: number; readonly alphaThreshold: number }
   | { readonly op: 'gridCell'; readonly columns: number; readonly rows: number; readonly cell: number }
+  | { readonly op: 'alignFrame'; readonly anchor: 'center' | 'bottom-center'; readonly alphaThreshold: number }
   | { readonly op: 'outline'; readonly color: string; readonly thickness: number }
   | { readonly op: 'dropShadow'; readonly offsetX: number; readonly offsetY: number; readonly color: string; readonly blur: number }
   | { readonly op: 'silhouette'; readonly color: string }

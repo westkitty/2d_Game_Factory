@@ -24,6 +24,7 @@ import { sniffImage } from './imageMeta.ts';
 import { SecurityError, extensionForMime, isSupportedImageMime, normalizeFileName } from './security.ts';
 import { readJsonVersioned, writeJsonAtomic } from './atomicJson.ts';
 import { derivedAssetsDir, ensureDir, gameRoot, resolveContained, sourceAssetsDir, sw2dDir } from './paths.ts';
+import { groupKey, parseName } from '../shared/grouping.ts';
 
 const EMPTY_ASSETS: AssetsDocument = { version: 1, assets: [] };
 
@@ -212,6 +213,7 @@ export function storeDerived(input: StoreDerivedInput): StoreResult {
   writeFileSync(resolveContained(dir, fileName), input.bytes);
 
   const palette = isPng(input.bytes) ? extractPalette(decodePng(input.bytes), 6) : undefined;
+  const namedFrame = parseName(input.displayName);
 
   const record: AssetRecord = {
     id,
@@ -229,7 +231,11 @@ export function storeDerived(input: StoreDerivedInput): StoreResult {
     provenance: { ...source.provenance, modificationStatus: 'modified' },
     ...(validation ? { validation } : {}),
     ...(palette && palette.length > 0 ? { palette } : {}),
-    ...(source.group !== undefined ? { group: source.group } : {}),
+    ...(namedFrame.frameIndex !== undefined
+      ? { group: groupKey(input.displayName), frameIndex: namedFrame.frameIndex }
+      : source.group !== undefined
+        ? { group: source.group }
+        : {}),
   };
 
   const next: AssetsDocument = { version: 1, assets: [...document.assets, record] };

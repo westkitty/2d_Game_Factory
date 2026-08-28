@@ -23,4 +23,18 @@ Additional requirement: It also needs to validate and create sprite assets again
 
 ## TODO
 
-- Stage only task files, commit, and push the current branch.
+- None for the requested run/play, supplied-image validation, and Dex Sprite integration scope.
+
+## 2026-08-28 — Dex Sprite integration
+
+- Located the user-owned DexSprite project and installed app on this Mac. The source checkout is mostly iCloud-dataless, while the built app is readable; it exposes no command-line interface, URL scheme, or document-open contract for a reliable round trip.
+- Chose not to embed or launch the opaque standalone app. Its valuable capability is the multi-frame sheet workflow, so that workflow now lives natively in Asset Lab with the factory's local-only, provenance, recipe, validation, and playable-role boundaries intact.
+- Added a visible `Dex Sprite…` compiler with grid suggestions, a better likely-grid default, selectable frame thumbnails, adjustable loop preview speed, transparent-cell skipping, and an explicit compile action.
+- Added deterministic bottom-center frame stabilization as a replayable `alignFrame` recipe operation.
+- Compiled outputs are ordered by tolerant frame naming, grouped in the library, validated host-side as PNG gameplay sprites against the supplied source hash, and retain their full rebuild recipe.
+- The compiler can assign frame 1 to the player role immediately so the existing Run game path shows the supplied art without another mapping step.
+- Focused Dex Sprite browser journey passed: 8/8 visible 64x64 cells compiled, validated, grouped, stabilized, ordered, and frame 1 assigned.
+- Full workbench suite passed: 16/16 real-browser journeys.
+- `npm run validate` passed: 92 files / 1,955 tests, typecheck, starter production build, and offline guard.
+- Required gameplay client passed against the compiled-frame game; text state confirmed the 64px compiled player texture plus movement/jump behavior. Its headless WebGL screenshot remained black, so system Chrome separately confirmed visible gameplay with the compiled sprite and zero console errors.
+- Desktop visual inspection confirmed the compiler layout, controls, frame grid, loop preview, and compile action are visible together without clipping.

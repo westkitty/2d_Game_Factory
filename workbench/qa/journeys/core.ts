@@ -362,6 +362,7 @@ export async function wbReopen001({ session, note }: JourneyContext): Promise<vo
 interface StoredAsset {
   readonly id: string;
   readonly kind: string;
+  readonly displayName: string;
   readonly width: number;
   readonly sha256: string;
   readonly relativePath: string;
@@ -370,6 +371,8 @@ interface StoredAsset {
   readonly transformRecipe?: { readonly steps: readonly unknown[] };
   readonly stale?: boolean;
   readonly validation?: { readonly purpose: string; readonly status: string; readonly sourceSha256: string };
+  readonly group?: string;
+  readonly frameIndex?: number;
 }
 
 export function readAssets(gameId: string): readonly StoredAsset[] {

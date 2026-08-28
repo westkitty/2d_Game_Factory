@@ -125,7 +125,7 @@ export async function wbMulti001({ session, note }: JourneyContext): Promise<voi
 
 // ---------------------------------------------------------------------------
 
-/** Sprite-sheet slicing end to end: suggest a grid, extract a cell, assign it, and see the game use it. */
+/** Dex Sprite end to end: preview a sheet, compile validated frames, group them, and see the game use frame 1. */
 export async function wbSheet001({ session, note }: JourneyContext): Promise<void> {
   await createProjectThroughUi(session, SHEET_GAME, 'Chase Platformer — proof-validated');
 
@@ -141,56 +141,32 @@ export async function wbSheet001({ session, note }: JourneyContext): Promise<voi
   await session.click('.lib-item');
   await session.page.waitForTimeout(1200);
 
-  await session.clickText('Slice sheet…');
-  await session.waitForText('Slice as a sprite sheet');
+  await session.clickText('Dex Sprite…');
+  await session.waitForText('Dex Sprite compiler');
 
   // The 256x128 sheet divides evenly into 4x2 32px cells; the suggestion
   // should be offered rather than the user having to work it out.
   const suggestions = await session.page.evaluate(() =>
     Array.from(document.querySelectorAll('.modal .btn--sm')).map((node) => node.textContent ?? ''),
   );
-  expect(suggestions.some((label) => label.startsWith('4x2')), `no 4x2 grid suggested; offered: ${suggestions.join(', ')}`);
-
-  await session.clickText('4x2 (64px)');
-  await session.page.waitForTimeout(300);
-  await session.page.evaluate(() => {
-    const inputs = Array.from(document.querySelectorAll('.modal input[type=number]')) as HTMLInputElement[];
-    const cell = inputs[2];
-    if (cell) {
-      cell.value = '3';
-      cell.dispatchEvent(new Event('input', { bubbles: true }));
-    }
-  });
-  await session.clickText('Extract cell');
-  await session.page.waitForTimeout(1200);
-
-  const sizeLabel = await session.text('[data-testid="lab-size"]');
-  expect(sizeLabel.includes('64x64'), `expected a 64x64 cell after slicing, toolbar says "${sizeLabel}"`);
-
-  await session.clickText('Save as new asset');
+  expect(suggestions.includes('4x2'), `no 4x2 grid suggested; offered: ${suggestions.join(', ')}`);
+  expect((await session.text('[data-testid="dex-sprite-summary"]')).includes('8 of 8 cells selected'), 'the compiler did not choose the likely 4x2 animation grid by default');
+  expectEqual(await session.count('[data-testid="dex-sprite-preview"]'), 1, 'the animation loop preview is missing');
+  await session.clickText('Compile validated frames');
+  await session.waitForIdle(90_000);
   await session.page.waitForTimeout(3000);
 
-  const assets = readAssets(SHEET_GAME);
-  const derived = assets.find((asset) => asset.kind === 'derived');
-  expect(derived, 'the extracted frame was not saved as a derived asset');
-  expect(
-    derived!.transformRecipe?.steps.some((step) => (step as { op?: string }).op === 'gridCell'),
-    'the derived asset does not record the grid slice in its recipe',
-  );
+  const frames = readAssets(SHEET_GAME).filter((asset) => asset.kind === 'derived' && asset.group?.includes('sheet-4x2-dex'));
+  expectEqual(frames.length, 8, 'the compiler did not create all eight selected frames');
+  expect(frames.every((frame) => frame.width === 64), 'a compiled frame is not the expected 64px grid cell');
+  expect(frames.every((frame) => frame.validation?.status === 'valid'), 'a compiled frame lacks successful host sprite validation');
+  expect(frames.every((frame) => frame.transformRecipe?.steps.some((step) => (step as { op?: string }).op === 'gridCell')), 'a compiled frame lost its grid recipe');
+  expect(frames.every((frame) => frame.transformRecipe?.steps.some((step) => (step as { op?: string }).op === 'alignFrame')), 'a compiled frame lost its stabilization recipe');
+  expectEqual(frames.map((frame) => frame.frameIndex).sort((a, b) => (a ?? 0) - (b ?? 0)).join(','), '1,2,3,4,5,6,7,8', 'compiled frame order was not recorded');
+  const assigned = frames.find((frame) => frame.roleAssignments.includes('player'));
+  expect(assigned?.frameIndex === 1, 'frame 1 was not assigned to the playable player role');
 
-  // Assign the sliced frame to the player role and confirm the theme follows.
-  await session.page.evaluate((assetId) => {
-    document.querySelector<HTMLElement>(`.lib-item[data-asset-id="${assetId as string}"]`)?.click();
-  }, derived!.id);
-  await session.page.waitForTimeout(700);
-  await session.click('.role-row[data-role="player"] [data-action="assign-role"]');
-  await session.page.waitForTimeout(2500);
-
-  const after = readAssets(SHEET_GAME);
-  const assigned = after.find((asset) => asset.id === derived!.id);
-  expect(assigned?.roleAssignments.includes('player'), 'the sliced frame was not assigned to the player role');
-
-  note(`4x2 suggested, cell 4 extracted at 64x64, assigned to player`);
+  note(`Dex Sprite previewed and compiled 8 source-validated 64x64 frames; frame 1 assigned to player`);
 }
 
 // ---------------------------------------------------------------------------
