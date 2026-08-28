@@ -16,6 +16,7 @@ import { SecurityError } from '../security.ts';
 import type { ImportPlan } from '../../shared/types.ts';
 import { findCandidate, getProvider } from './registry.ts';
 import { rightsAllowUse } from './rights.ts';
+import { readVaultBytes, vaultLookup, vaultStore } from './vault.ts';
 import { proposeReskin, type ReskinProposal, type StagedFileLite } from './reskin.ts';
 import { deriveProfile } from './requirements.ts';
 import type { AcquisitionResult } from './types.ts';
@@ -61,17 +62,32 @@ export async function acquirePack(input: AcquireInput): Promise<AcquireOutcome> 
     );
   }
 
-  const downloaded = await provider.download(input.packId, input.net);
-  if (!looksLikeZip(downloaded.bytes)) {
-    throw new SecurityError(502, `"${candidate.title}" did not download as a ZIP archive.`);
+  // Vault first: a pack acquired before is re-used from the local cache and
+  // never re-downloaded. The network is only reached on a genuine miss.
+  const hit = vaultLookup(input.providerId, input.packId);
+  let zipBytes: Uint8Array;
+  let fromVault = false;
+  if (hit) {
+    zipBytes = readVaultBytes(hit.record.sha256);
+    fromVault = true;
+  } else {
+    const downloaded = await provider.download(input.packId, input.net);
+    zipBytes = downloaded.bytes;
+  }
+  if (!looksLikeZip(zipBytes)) {
+    throw new SecurityError(502, `"${candidate.title}" ${fromVault ? 'in the local vault is not' : 'did not download as'} a ZIP archive.`);
   }
 
-  const sha256 = sha256Hex(downloaded.bytes);
+  const sha256 = sha256Hex(zipBytes);
   const batchId = beginBatch(input.gameId);
   try {
-    const staged = stagePack(batchId, downloaded.bytes, `${input.providerId}_${input.packId}.zip`);
+    const staged = stagePack(batchId, zipBytes, `${input.providerId}_${input.packId}.zip`);
     const svgOnly = staged.staged === 0 && staged.svgSkipped > 0;
     const plan = buildPlan(input.gameId, batchId);
+
+    if (!fromVault && !svgOnly && staged.staged > 0) {
+      vaultStore({ candidate, sha256, bytes: zipBytes, fileCount: staged.staged, ...(input.now !== undefined ? { now: input.now } : {}) });
+    }
 
     const result: AcquisitionResult = {
       providerId: input.providerId,
@@ -81,7 +97,8 @@ export async function acquirePack(input: AcquireInput): Promise<AcquireOutcome> 
       ignored: staged.ignored,
       svgOnly,
       sha256,
-      byteSize: downloaded.bytes.byteLength,
+      fromVault,
+      byteSize: zipBytes.byteLength,
       provenance: {
         kind: 'third-party-known',
         originalSource: candidate.sourcePage,

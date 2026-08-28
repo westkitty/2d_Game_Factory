@@ -196,19 +196,40 @@ export async function openFindFreeSprites(): Promise<void> {
     el('div', { class: 'empty', attrs: { 'data-testid': 'ffs-loading' }, text: 'Checking configured providers…' }),
   );
 
+  interface VaultEntry {
+    readonly sha256: string;
+    readonly providerId: string;
+    readonly packId: string;
+    readonly title: string;
+    readonly creator: string;
+    readonly sourcePage: string;
+    readonly byteSize: number;
+    readonly fileCount: number;
+    readonly acquiredAt: string;
+    readonly freshness: RightsStatus;
+    readonly bytesPresent: boolean;
+  }
+
   let providers: readonly SourceProviderInfo[] = [];
   let candidates: readonly SourceCandidate[] = [];
+  let vault: readonly VaultEntry[] = [];
   try {
-    const [p, c] = await Promise.all([
+    const [p, c, v] = await Promise.all([
       api.get<{ providers: readonly SourceProviderInfo[] }>('/sources/providers'),
       api.get<{ candidates: readonly SourceCandidate[] }>('/sources/catalog'),
+      api.get<{ packs: readonly VaultEntry[] }>('/sources/vault').catch(() => ({ packs: [] as readonly VaultEntry[] })),
     ]);
     providers = p.providers;
     candidates = c.candidates;
+    vault = v.packs;
   } catch {
     providers = [];
     candidates = [];
+    vault = [];
   }
+
+  const vaultByPack = new Map(vault.map((entry) => [`${entry.providerId}:${entry.packId}`, entry]));
+  const inVault = (c: SourceCandidate): VaultEntry | undefined => vaultByPack.get(`${c.providerId}:${c.packId}`);
 
   if (providers.length === 0) {
     replace(
@@ -448,13 +469,87 @@ export async function openFindFreeSprites(): Promise<void> {
     }
   }
 
-  const providerStrip = el(
-    'div',
-    { class: 'row row--wrap', style: { gap: '6px', 'margin-bottom': '10px' } },
-    ...providers.map((provider) =>
-      el('span', { class: 'badge', title: provider.homepage, text: `${provider.title} · ${provider.online ? 'reachable' : 'offline'} · ${provider.candidateCount} packs` }),
-    ),
-  );
+  function providerStripEl(): HTMLElement {
+    return el(
+      'div',
+      { class: 'row row--wrap', style: { gap: '6px', 'margin-bottom': '10px' } },
+      ...providers.map((provider) =>
+        el('span', { class: 'badge', title: provider.homepage, text: `${provider.title} · ${provider.online ? 'reachable' : 'offline'} · ${provider.candidateCount} packs` }),
+      ),
+      vault.length > 0
+        ? button(`Local vault · ${vault.length}`, () => showVault(), { class: 'btn btn--sm', title: 'Packs already acquired and verified locally - reused without re-downloading' })
+        : null,
+    );
+  }
+
+  function vaultRowActions(entry: VaultEntry): HTMLElement {
+    return el(
+      'div',
+      { class: 'row', style: { gap: '6px' } },
+      button('Re-verify', () => void reverify(entry.sha256), { class: 'btn btn--sm', title: 'Re-check the recorded licence against the current policy' }),
+      button('Remove', () => void removeVault(entry.sha256), { class: 'btn btn--sm btn--danger', title: 'Delete the cached bytes. Existing games keep their own copies and are unaffected.' }),
+    );
+  }
+
+  async function reverify(sha256: string): Promise<void> {
+    try {
+      const { pack } = await api.post<{ pack: VaultEntry }>('/sources/vault/reverify', { sha256 });
+      vault = vault.map((entry) => (entry.sha256 === sha256 ? pack : entry));
+      vaultByPack.set(`${pack.providerId}:${pack.packId}`, pack);
+      toast(`Re-verified: ${pack.title} is ${pack.freshness}.`, pack.freshness === 'verified' || pack.freshness === 'attribution-required' ? 'ok' : 'warn');
+      showVault();
+    } catch (error) {
+      toast(errorText(error), 'err');
+    }
+  }
+
+  async function removeVault(sha256: string): Promise<void> {
+    try {
+      await api.post('/sources/vault/remove', { sha256 });
+      const gone = vault.find((entry) => entry.sha256 === sha256);
+      vault = vault.filter((entry) => entry.sha256 !== sha256);
+      if (gone) vaultByPack.delete(`${gone.providerId}:${gone.packId}`);
+      toast('Removed from the local vault. No game was affected.', 'ok');
+      showVault();
+    } catch (error) {
+      toast(errorText(error), 'err');
+    }
+  }
+
+  function showVault(): void {
+    replace(
+      bodyHost,
+      el('div', { class: 'row', style: { 'margin-bottom': '8px' } }, button('← Back', () => (recommendation ? showRecommendations() : showCatalogue()), { class: 'btn btn--sm' })),
+      el('h3', { style: { margin: '0 0 4px' }, text: 'Verified local vault' }),
+      el('p', { class: 'muted', style: { 'margin-top': '0', 'font-size': '12px' } }, 'Packs already acquired here, with the licence snapshot taken at acquisition. Re-acquiring one of these is instant and needs no network. This is an authoring cache - deleting an entry never affects a game, which keeps its own local copies.'),
+      vault.length === 0
+        ? el('div', { class: 'empty', text: 'The vault is empty. Acquire a pack and it is cached here.' })
+        : el(
+            'div',
+            { class: 'seeds' },
+            ...vault.map((entry) =>
+              el(
+                'div',
+                { class: 'seed' },
+                el(
+                  'div',
+                  { class: 'row row--wrap', style: { gap: '6px' } },
+                  el('span', { class: RIGHTS_CLASS[entry.freshness], text: RIGHTS_LABEL[entry.freshness] }),
+                  el('span', { class: 'badge', text: `${(entry.byteSize / 1024).toFixed(0)} KB` }),
+                  el('span', { class: 'badge', text: `${entry.fileCount} PNG` }),
+                  entry.bytesPresent ? null : el('span', { class: 'badge badge--danger', text: 'bytes missing' }),
+                ),
+                el('div', { class: 'seed__title', text: entry.title }),
+                el('div', { class: 'seed__loop', text: `${entry.creator} · acquired ${entry.acquiredAt.slice(0, 10)}` }),
+                el('div', { class: 'mono faint', style: { 'font-size': '10px' }, text: `sha256 ${entry.sha256.slice(0, 16)}…` }),
+                el('div', { class: 'mono faint', style: { 'font-size': '10px' }, text: entry.sourcePage }),
+                vaultRowActions(entry),
+              ),
+            ),
+          ),
+    );
+    replace(footerHost, el('span', { class: 'faint', text: `${vault.length} pack(s) cached locally` }));
+  }
 
   // Preset-aware: recommend against the open project (or the chosen preset).
   let recommendation: Recommendation | null = null;
@@ -467,13 +562,24 @@ export async function openFindFreeSprites(): Promise<void> {
     }
   }
 
+  function withVaultNote(candidate: SourceCandidate, card: HTMLElement): HTMLElement {
+    const entry = inVault(candidate);
+    if (!entry) return card;
+    return el(
+      'div',
+      {},
+      card,
+      el('div', { class: 'faint', style: { 'font-size': '11px', 'margin-top': '-6px', 'margin-bottom': '6px' }, text: `In local vault (${entry.freshness}) — acquiring is instant and offline.` }),
+    );
+  }
+
   function showCatalogue(): void {
     replace(
       bodyHost,
       el('p', { class: 'muted', style: { 'margin-top': '0' } }, 'Every pack in the catalogue. Rights are shown before anything downloads.'),
-      providerStrip,
+      providerStripEl(),
       recommendation ? button('← Back to recommendations', () => showRecommendations(), { class: 'btn btn--sm' }) : null,
-      el('div', { class: 'seeds', style: { 'margin-top': '10px' } }, ...candidates.map((candidate) => candidateCard(candidate, gameId ? (c) => void acquire(c, false) : null))),
+      el('div', { class: 'seeds', style: { 'margin-top': '10px' } }, ...candidates.map((candidate) => withVaultNote(candidate, candidateCard(candidate, gameId ? (c) => void acquire(c, false) : null)))),
     );
   }
 
@@ -491,7 +597,7 @@ export async function openFindFreeSprites(): Promise<void> {
       el('p', { class: 'muted', style: { 'margin-top': '0' } }, project
         ? `We know what ${project.project.displayName} needs. Best-fitting coherent packs first - each acquired sprite goes through the normal staged import.`
         : `Best-fitting packs for a ${profile.presetDisplayName}.`),
-      providerStrip,
+      providerStripEl(),
       el(
         'div',
         { class: 'infobox' },

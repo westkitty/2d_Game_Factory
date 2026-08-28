@@ -157,6 +157,8 @@ export interface AcquisitionResult {
   /** True when every usable image in the archive was SVG - the pack is unsuitable for this workflow. */
   readonly svgOnly: boolean;
   readonly sha256: string;
+  /** True when the bytes came from the local vault rather than the network. */
+  readonly fromVault: boolean;
   readonly byteSize: number;
   /** The provenance record the canonical import commit should carry for this pack. */
   readonly provenance: {

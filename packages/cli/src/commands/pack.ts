@@ -7,7 +7,7 @@ import { InvalidSlugError, assertValidSlug } from '../slug.ts';
 import { ensureWorkspaceInstalled } from '../workspace.ts';
 import { computeChecksums, formatSha256Sums } from '../releasePackaging/checksums.ts';
 import { buildReleaseManifest } from '../releasePackaging/releaseManifest.ts';
-import { formatThirdPartyNoticesText, resolveShippedDependencies } from '../releasePackaging/notices.ts';
+import { formatThirdPartyAssetNoticesText, formatThirdPartyNoticesText, resolveShippedDependencies, type ShippedAsset } from '../releasePackaging/notices.ts';
 
 /**
  * `sw2d pack <game-id>` - the release packer (Phase 11 section 5). Builds a
@@ -61,12 +61,22 @@ export async function run(args: readonly string[]): Promise<number> {
   }
   const policy = readJson<ResourcePolicyFile>(path.join(REPO_ROOT, 'resource-policy.json'));
   let resourceRecordCount = 0;
+  let shippedThirdPartyAssets: ShippedAsset[] = [];
   try {
     const manifestData = readJson<unknown>(resourceManifestPath);
     const manifest = validateResourceManifest(`games/${gameId}/resources/RESOURCE_MANIFEST.json`, manifestData, {
       acceptableLicenses: policy.defaults.acceptableLicenses,
     });
     resourceRecordCount = manifest.records.length;
+    shippedThirdPartyAssets = manifest.records
+      .filter((r) => r.sourceKind === 'third-party')
+      .map((r) => ({
+        ...(r.originalSource ? { originalSource: r.originalSource } : {}),
+        license: r.license,
+        attributionRequired: r.attributionRequired,
+        modificationStatus: r.modificationStatus,
+        localPath: r.localPath,
+      }));
     const nonApproved = manifest.records.filter((r) => r.status !== 'approved');
     if (nonApproved.length > 0) {
       console.error(
@@ -125,6 +135,9 @@ export async function run(args: readonly string[]): Promise<number> {
 
   const shippedDependencies = resolveShippedDependencies(REPO_ROOT, Object.keys(gamePackageJson.dependencies ?? {}));
   writeFileSync(path.join(packDir, 'THIRD_PARTY_NOTICES.txt'), formatThirdPartyNoticesText(shippedDependencies), 'utf8');
+  // Human-readable credits for bundled third-party artwork, mechanically
+  // derived from the resource manifest's real provenance.
+  writeFileSync(path.join(packDir, 'THIRD_PARTY_ASSET_NOTICES.txt'), formatThirdPartyAssetNoticesText(shippedThirdPartyAssets), 'utf8');
 
   const releaseManifest = buildReleaseManifest({
     gameId,

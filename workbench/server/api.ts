@@ -45,7 +45,17 @@ import { buildSeeds, seedForPreset } from './seeds.ts';
 import { loadScene, listLevels, newObject, objectClassOptions, saveScene, SceneValidationError, type SceneDocument } from './sceneStore.ts';
 import { buildProject, createProject, packProject, validateProject } from './factoryService.ts';
 import { starterKitDepthFor, starterKitFor } from './starterKits/index.ts';
-import { acquirePack, allCandidates, listProviderInfo, recommendForPreset, CATALOG_VERIFIED_AT } from './sources/index.ts';
+import {
+  acquirePack,
+  allCandidates,
+  listProviderInfo,
+  recommendForPreset,
+  listVault,
+  reverifyVault,
+  removeFromVault,
+  vaultByteTotal,
+  CATALOG_VERIFIED_AT,
+} from './sources/index.ts';
 import { JobManager } from './jobManager.ts';
 import { applyRebuildResult, currentPreview, listPreviews, nextGeneration, previewModeOf, startFastPreview, startProductionPreview, stopPreview } from './previewManager.ts';
 import { getPreset } from '@sw2d/presets';
@@ -664,6 +674,37 @@ const ROUTES: ReadonlyMap<string, Handler> = new Map<string, Handler>([
         return outcome;
       });
       return ok({ jobId });
+    },
+  ],
+
+  [
+    // The verified local vault. Authoring cache only - deleting it cannot
+    // break any game, and no game reads from it.
+    'GET /sources/vault',
+    () => ok({ packs: listVault(), byteTotal: vaultByteTotal() }),
+  ],
+
+  [
+    'POST /sources/vault/reverify',
+    (request) => {
+      const body = bodyObject(request);
+      const sha256 = requiredString(body, 'sha256');
+      if (!/^[a-f0-9]{64}$/.test(sha256)) throw new SecurityError(400, 'Invalid sha256.');
+      try {
+        return ok({ pack: reverifyVault(sha256) });
+      } catch {
+        throw new SecurityError(404, `No vault pack ${sha256}.`);
+      }
+    },
+  ],
+
+  [
+    'POST /sources/vault/remove',
+    (request) => {
+      const body = bodyObject(request);
+      const sha256 = requiredString(body, 'sha256');
+      if (!/^[a-f0-9]{64}$/.test(sha256)) throw new SecurityError(400, 'Invalid sha256.');
+      return ok({ removed: removeFromVault(sha256) });
     },
   ],
 

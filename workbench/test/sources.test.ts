@@ -18,6 +18,14 @@ import { allCandidates, findCandidate, getProvider, listProviders } from '../ser
 import { acquirePack } from '../server/sources/acquire.ts';
 import { gameRoot } from '../server/paths.ts';
 
+import { mkdtempSync, rmSync as _rmSyncVault } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join as _joinVault } from 'node:path';
+import { beforeAll as _beforeAllVault, afterAll as _afterAllVault } from 'vitest';
+const _VAULT_DIR = mkdtempSync(_joinVault(tmpdir(), 'sw2d-vault-src-'));
+_beforeAllVault(() => { process.env.SW2D_VAULT_DIR = _VAULT_DIR; });
+_afterAllVault(() => { delete process.env.SW2D_VAULT_DIR; _rmSyncVault(_VAULT_DIR, { recursive: true, force: true }); });
+
 const AT_VERIFY = Date.parse(`${CATALOG_VERIFIED_AT}T12:00:00Z`);
 const FAR_FUTURE = AT_VERIFY + (VERIFICATION_FRESHNESS_DAYS + 30) * 86_400_000;
 

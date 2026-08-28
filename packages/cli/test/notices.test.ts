@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { REPO_ROOT } from '../src/paths.ts';
-import { formatThirdPartyNoticesText, resolveShippedDependencies } from '../src/releasePackaging/notices.ts';
+import { formatThirdPartyAssetNoticesText, formatThirdPartyNoticesText, resolveShippedDependencies } from '../src/releasePackaging/notices.ts';
 
 /**
  * A generated game's own package.json dependencies - the same set every
@@ -58,5 +58,27 @@ describe('formatThirdPartyNoticesText', () => {
 
   it('says so plainly when nothing is shipped', () => {
     expect(formatThirdPartyNoticesText([])).toContain('No third-party code is shipped');
+  });
+});
+
+describe('formatThirdPartyAssetNoticesText', () => {
+  it('says so plainly when no third-party artwork ships', () => {
+    expect(formatThirdPartyAssetNoticesText([])).toContain('No third-party visual assets');
+  });
+
+  it('groups by source and states licence, attribution and files', () => {
+    const text = formatThirdPartyAssetNoticesText([
+      { originalSource: 'https://kenney.nl/assets/tiny-dungeon', license: 'CC0-1.0', attributionRequired: false, modificationStatus: 'unmodified', localPath: 'public/assets/workbench/wb_a.png' },
+      { originalSource: 'https://kenney.nl/assets/tiny-dungeon', license: 'CC0-1.0', attributionRequired: false, modificationStatus: 'unmodified', localPath: 'public/assets/workbench/wb_b.png' },
+      { originalSource: 'https://example.org/pack', license: 'CC-BY-4.0', attributionRequired: true, modificationStatus: 'modified', localPath: 'public/assets/workbench/wb_c.png' },
+    ]);
+    expect(text).toContain('https://kenney.nl/assets/tiny-dungeon');
+    expect(text).toContain('Licence: CC0-1.0');
+    expect(text).toContain('Attribution: not required');
+    expect(text).toContain('wb_a.png');
+    expect(text).toContain('wb_b.png');
+    expect(text).toContain('https://example.org/pack');
+    expect(text).toContain('Attribution: required');
+    expect(text).toContain('makes no network request');
   });
 });

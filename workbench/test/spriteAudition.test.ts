@@ -14,6 +14,14 @@ import { CATALOG_VERIFIED_AT } from '../server/sources/catalog.ts';
 import { gameRoot } from '../server/paths.ts';
 import type { WorkbenchAssetRole } from '../shared/types.ts';
 
+import { mkdtempSync, rmSync as _rmSyncVault } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join as _joinVault } from 'node:path';
+import { beforeAll as _beforeAllVault, afterAll as _afterAllVault } from 'vitest';
+const _VAULT_DIR = mkdtempSync(_joinVault(tmpdir(), 'sw2d-vault-aud-'));
+_beforeAllVault(() => { process.env.SW2D_VAULT_DIR = _VAULT_DIR; });
+_afterAllVault(() => { delete process.env.SW2D_VAULT_DIR; _rmSyncVault(_VAULT_DIR, { recursive: true, force: true }); });
+
 const AT = Date.parse(`${CATALOG_VERIFIED_AT}T12:00:00Z`);
 const PNG = new Uint8Array(readFileSync(fileURLToPath(new URL('../fixtures/frames/hero_idle_0.png', import.meta.url))));
 
