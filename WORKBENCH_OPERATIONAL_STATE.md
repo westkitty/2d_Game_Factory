@@ -33,7 +33,7 @@ and reverse discovery.
 | Phase A — game-first factory | IMPLEMENTED — home reframed game-first, `Make a Game` primary, `Find Free Sprites` route added, `createDialog` gains `gameplay` mode; `workbench/test/seedsGameFirst.test.ts` locks zero-art path. typecheck PASS, `workbench:build` PASS, `vitest run workbench/test` 143/143 PASS |
 | Phase B — verified free-sprite source foundation | IMPLEMENTED — `workbench/server/sources/*` (narrow allowlisted net, rights vs `resource-policy.json`, curated Kenney CC0 catalogue of 5 packs, acquire→canonical staged import); API `GET /sources/providers`, `GET /sources/catalog`, `POST /sources/acquire`; client `findFreeSprites` browses catalogue with exact rights + acquires into an open project; `stagePack` skips SVG. `workbench/test/sources.test.ts` 22 tests (offline). typecheck PASS, `workbench:build` PASS, `vitest run workbench/test` 165/165 |
 | Phase C — game-aware sprite requirement engine | IMPLEMENTED — `sources/requirements.ts` derives a `SpriteRequirementProfile` from controller family + starter-kit useful roles (controller-family fallback when no kit); `sources/matching.ts` deterministic `rankPacks` with hard gates (rights/raster) + traceable score + "why this fits" + per-role coverage states; API `GET /sources/recommend?gameId=|presetId=`; client shows ranked matches with requirement summary + role-coverage grid, catalogue behind a toggle. `workbench/test/spriteRequirements.test.ts` 12 tests across platformer/top-down/grid/ui-sim. typecheck PASS, build PASS, `vitest run workbench/test` 177/177 |
-| Phase D — asset audition + coherent reskin | PENDING |
+| Phase D — asset audition + coherent reskin | IMPLEMENTED — `GET /import/staged-bytes` (pre-commit bytes, token-gated, staging-id bound) + client `stagedBlobUrl`; `sources/reskin.ts` `proposeReskin` (one representative sprite per role, pure); acquire accepts `reskin`+`reskinForPresetId` and returns a `reskinProposal`; client `audition()` shows staged thumbnails grouped by proposed role at normalized scale with per-candidate accept/reject/change-role, "Preview this look" on fully-covered matches, commit → canonical `/import/commit` (theme rewritten, provenance intact, no shadow runtime). `workbench/test/spriteAudition.test.ts` 5 tests. typecheck PASS, build PASS, `vitest run workbench/test` 182/182 |
 | Phase E — intelligent sprite presentation | PENDING |
 | Phase F — verified local asset vault + provenance receipt | PENDING |
 | Phase G — reverse discovery + polish | PENDING |
@@ -42,7 +42,7 @@ and reverse discovery.
 | Live-provider proof state | DOWNLOAD STAGE PROVEN — Kenney "Tiny Dungeon" fetched through the narrow net path: 98530 bytes, `application/zip`, sha256 `c109438ab06f65fd80f9b2686a4cf9c7c11dc64444b47333ec71d602f8bb5fc7`, 136 PNG / 0 SVG entries, readZip clean. Full stage→render→pack→offline proof deferred to post-Phase-G LIVE SOURCE PROOF |
 | Final bug-sweep state | PENDING |
 | Known genuine blockers | none |
-| Next bounded action | Phase D: asset audition surface + coherent reskin preview |
+| Next bounded action | Phase E: intelligent sprite presentation (frame groups, sheet grids, presentation-only inference) |
 
 Architectural laws in force: gameplay never requires art; one canonical factory; normal game
 format; semantic roles are the contract; static fallback survives animation; source art is

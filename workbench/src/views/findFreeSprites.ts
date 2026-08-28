@@ -126,7 +126,7 @@ function roleCoverageGrid(entries: readonly RoleCoverageEntry[]): HTMLElement {
   );
 }
 
-function matchCard(match: PackMatch, onAcquire: (c: SourceCandidate) => void): HTMLElement {
+function matchCard(match: PackMatch, onAcquire: (c: SourceCandidate) => void, onReskin?: (c: SourceCandidate) => void): HTMLElement {
   const c = match.candidate;
   const usable = !match.blockedReason && rightsUsable(c.rights.status);
   return el(
@@ -156,7 +156,14 @@ function matchCard(match: PackMatch, onAcquire: (c: SourceCandidate) => void): H
             : null,
         ),
     el('div', { class: 'seed__limits' }, `${c.creator} · ${c.rights.licenseName} · ${c.fileCount ?? '?'} PNG files`, el('div', { class: 'mono faint', style: { 'font-size': '10px', 'margin-top': '3px' }, text: c.rights.evidenceUrl })),
-    button(usable ? 'Acquire pack' : 'Unavailable', () => onAcquire(c), { class: usable ? 'btn btn--primary' : 'btn', disabled: !usable }),
+    el(
+      'div',
+      { class: 'row', style: { gap: '6px' } },
+      button(usable ? 'Acquire pack' : 'Unavailable', () => onAcquire(c), { class: usable ? 'btn btn--primary' : 'btn', disabled: !usable }),
+      usable && onReskin && match.totalRequired > 0 && match.coveredRequired === match.totalRequired
+        ? button('Preview this look', () => onReskin(c), { class: 'btn', title: 'Acquire and audition this pack as a coherent visual treatment' })
+        : null,
+    ),
   );
 }
 
@@ -169,7 +176,19 @@ export async function openFindFreeSprites(): Promise<void> {
   const bodyHost = el('div');
   const footerHost = el('div', { class: 'row' });
 
-  const close = openModal({ wide: true, title: 'Find free sprites', body: bodyHost, footer: [footerHost] });
+  /** Object URLs minted for audition thumbnails; revoked when the modal closes. */
+  const auditionUrls: string[] = [];
+
+  const close = openModal({
+    wide: true,
+    title: 'Find free sprites',
+    body: bodyHost,
+    footer: [footerHost],
+    onClose: () => {
+      for (const url of auditionUrls) URL.revokeObjectURL(url);
+      auditionUrls.length = 0;
+    },
+  });
 
   replace(
     bodyHost,
@@ -203,13 +222,25 @@ export async function openFindFreeSprites(): Promise<void> {
 
   const gameId = project?.project.gameId ?? null;
 
-  async function acquire(candidate: SourceCandidate): Promise<void> {
+  interface StagedAuditionFile {
+    readonly stagingId: string;
+    readonly displayName: string;
+    readonly suggestedRoles: readonly WorkbenchAssetRole[];
+    readonly analysis: { readonly width: number; readonly height: number };
+  }
+  interface ReskinProposalLite {
+    readonly assignments: readonly { readonly role: WorkbenchAssetRole; readonly stagingId: string; readonly basis: string }[];
+    readonly fallbackRoles: readonly WorkbenchAssetRole[];
+  }
+
+  async function acquire(candidate: SourceCandidate, asLook: boolean): Promise<void> {
     if (!gameId) return;
     try {
       const { jobId } = await api.post<{ jobId: string }>('/sources/acquire', {
         gameId,
         providerId: candidate.providerId,
         packId: candidate.packId,
+        ...(asLook ? { reskin: true } : {}),
       });
       const job = await awaitJob(jobId, `Acquiring ${candidate.title}`);
       if (job.status !== 'completed') {
@@ -217,7 +248,11 @@ export async function openFindFreeSprites(): Promise<void> {
         return;
       }
       const outcome = job.result as
-        | { result: { batchId: string; staged: number; ignored: number; svgOnly: boolean; provenance: unknown }; plan: { files: readonly { stagingId: string; displayName: string; suggestedRoles: readonly WorkbenchAssetRole[] }[] } }
+        | {
+            result: { batchId: string; staged: number; ignored: number; svgOnly: boolean; provenance: unknown };
+            plan: { files: readonly StagedAuditionFile[]; ignored: readonly { displayName: string; reason: string }[] };
+            reskinProposal?: ReskinProposalLite;
+          }
         | undefined;
       if (!outcome) {
         toast('Acquisition finished but returned nothing.', 'warn');
@@ -232,66 +267,178 @@ export async function openFindFreeSprites(): Promise<void> {
         toast(`"${candidate.title}" produced no usable raster images.`, 'warn');
         return;
       }
-      await reviewPlan(candidate, outcome.result.batchId, outcome.result.provenance, outcome.plan.files);
+      audition(candidate, outcome.result.batchId, outcome.result.provenance, outcome.plan.files, asLook ? outcome.reskinProposal : undefined);
     } catch (error) {
       toast(errorText(error), 'err');
     }
   }
 
-  async function reviewPlan(
+  function auditionThumb(batchId: string, file: StagedAuditionFile): HTMLElement {
+    const image = el('img', {
+      attrs: { alt: file.displayName, loading: 'lazy' },
+      style: { width: '56px', height: '56px', 'object-fit': 'contain', 'image-rendering': 'pixelated', background: 'var(--bg-input)', 'border-radius': '3px' },
+    });
+    void api
+      .stagedBlobUrl(gameId!, batchId, file.stagingId)
+      .then((url) => {
+        auditionUrls.push(url);
+        image.src = url;
+      })
+      .catch(() => { image.alt = 'unreadable'; });
+    return image;
+  }
+
+  function audition(
     candidate: SourceCandidate,
     batchId: string,
     provenance: unknown,
-    files: readonly { stagingId: string; displayName: string; suggestedRoles: readonly WorkbenchAssetRole[] }[],
-  ): Promise<void> {
+    files: readonly StagedAuditionFile[],
+    reskin: ReskinProposalLite | undefined,
+  ): void {
     if (!gameId) return;
-    const selections = new Map<string, WorkbenchAssetRole | ''>();
-    for (const file of files) selections.set(file.stagingId, file.suggestedRoles[0] ?? '');
 
-    const rows = files.slice(0, 200).map((file) =>
-      el(
-        'tr',
-        {},
-        el('td', { text: file.displayName }),
-        el(
-          'td',
-          {},
-          el(
-            'select',
-            { on: { change: (event) => selections.set(file.stagingId, (event.target as HTMLSelectElement).value as WorkbenchAssetRole | '') } },
-            el('option', { text: '— import, no role —', attrs: { value: '' } }),
-            ...(Object.keys(ROLE_LABELS) as WorkbenchAssetRole[]).map((role) =>
-              el('option', { text: ROLE_LABELS[role], attrs: { value: role, selected: (file.suggestedRoles[0] ?? '') === role } }),
-            ),
-          ),
+    // stagingId -> chosen role ('' = import with no role); accepted flag
+    const state = new Map<string, { role: WorkbenchAssetRole | ''; accepted: boolean }>();
+    if (reskin) {
+      const byRole = new Map(reskin.assignments.map((a) => [a.stagingId, a.role]));
+      for (const file of files) {
+        const role = byRole.get(file.stagingId);
+        state.set(file.stagingId, { role: role ?? '', accepted: role !== undefined });
+      }
+    } else {
+      for (const file of files) {
+        const role = file.suggestedRoles[0] ?? '';
+        state.set(file.stagingId, { role, accepted: role !== '' });
+      }
+    }
+
+    const grid = el('div');
+
+    function acceptedCount(): number {
+      return [...state.values()].filter((entry) => entry.accepted).length;
+    }
+
+    function paintFooter(): void {
+      replace(
+        footerHost,
+        button('Cancel', () => { void api.post('/import/discard', { gameId, batchId }).catch(() => undefined); close(); }, { class: 'btn' }),
+        button('Accept all', () => { for (const entry of state.values()) entry.accepted = true; paint(); }, { class: 'btn btn--sm' }),
+        button('Reject all', () => { for (const entry of state.values()) entry.accepted = false; paint(); }, { class: 'btn btn--sm' }),
+        button(`Import ${acceptedCount()} accepted`, () => void commit(), { class: 'btn btn--primary' }),
+      );
+    }
+
+    function tile(file: StagedAuditionFile): HTMLElement {
+      const entry = state.get(file.stagingId)!;
+      const roleSelect = el(
+        'select',
+        {
+          style: { 'font-size': '11px' },
+          on: { change: (event) => { entry.role = (event.target as HTMLSelectElement).value as WorkbenchAssetRole | ''; paint(); } },
+        },
+        el('option', { text: '— no role —', attrs: { value: '', selected: entry.role === '' } }),
+        ...(Object.keys(ROLE_LABELS) as WorkbenchAssetRole[]).map((role) =>
+          el('option', { text: ROLE_LABELS[role], attrs: { value: role, selected: entry.role === role } }),
         ),
-      ),
-    );
+      );
+      return el(
+        'div',
+        {
+          style: {
+            border: `1px solid ${entry.accepted ? 'var(--accent-dim)' : 'var(--border)'}`,
+            'border-radius': 'var(--radius)', padding: '6px', display: 'flex', 'flex-direction': 'column', gap: '4px',
+            opacity: entry.accepted ? '1' : '0.5', background: 'var(--bg-panel)', width: '108px',
+          },
+        },
+        el('div', { style: { display: 'grid', 'place-items': 'center' } }, auditionThumb(batchId, file)),
+        el('div', { class: 'faint truncate', style: { 'font-size': '10px' }, text: `${file.analysis.width}x${file.analysis.height}` }),
+        roleSelect,
+        el(
+          'label',
+          { class: 'row', style: { gap: '4px', 'font-size': '11px' } },
+          el('input', {
+            attrs: { type: 'checkbox', checked: entry.accepted },
+            on: { change: (event) => { entry.accepted = (event.target as HTMLInputElement).checked; paint(); } },
+          }),
+          el('span', { text: 'use' }),
+        ),
+      );
+    }
 
-    replace(
-      bodyHost,
-      el('h3', { style: { margin: '0 0 4px' }, text: `Acquired ${candidate.title}` }),
-      el('p', { class: 'muted', style: { 'margin-top': '0' }, text: `${files.length} raster image(s) staged from ${candidate.creator}. Map any you want onto game roles, then import. Everything goes through the normal staged import - originals are preserved and provenance is recorded.` }),
-      el('div', { style: { 'max-height': '340px', 'overflow-y': 'auto' } }, el('table', { class: 'plan-table' }, el('tbody', {}, ...rows))),
-    );
-    replace(
-      footerHost,
-      button('Cancel', () => { void api.post('/import/discard', { gameId, batchId }).catch(() => undefined); close(); }, { class: 'btn' }),
-      button(`Import ${files.length} sprite${files.length === 1 ? '' : 's'}`, () => void commit(), { class: 'btn btn--primary' }),
-    );
+    function paint(): void {
+      // Group the roleful/accepted files by role; the rest go in "other".
+      const byRole = new Map<string, StagedAuditionFile[]>();
+      const other: StagedAuditionFile[] = [];
+      for (const file of files) {
+        const entry = state.get(file.stagingId)!;
+        if (entry.role) {
+          const bucket = byRole.get(entry.role) ?? [];
+          bucket.push(file);
+          byRole.set(entry.role, bucket);
+        } else if (entry.accepted) {
+          other.push(file);
+        } else {
+          other.push(file);
+        }
+      }
+
+      const roleSections = [...byRole.entries()].map(([role, group]) =>
+        el(
+          'div',
+          { style: { 'margin-bottom': '10px' } },
+          el(
+            'div',
+            { class: 'row', style: { gap: '8px', 'margin-bottom': '4px' } },
+            el('span', { class: 'badge badge--role', text: ROLE_LABELS[role as WorkbenchAssetRole] }),
+            el('span', { class: 'faint', style: { 'font-size': '11px' }, text: `${group.length} candidate${group.length === 1 ? '' : 's'} · ${group.filter((f) => state.get(f.stagingId)!.accepted).length} in use` }),
+          ),
+          el('div', { class: 'row row--wrap', style: { gap: '6px' } }, ...group.map(tile)),
+        ),
+      );
+
+      const missing = (reskin?.fallbackRoles ?? []).filter((role) => !byRole.has(role));
+
+      replace(
+        grid,
+        el('div', { class: 'infobox', style: { 'margin-bottom': '10px' } }, reskin
+          ? `Auditioning "${candidate.title}" as a coherent look. One sprite is proposed per role; missing roles keep generated art. Confirm, adjust, or reject before anything is imported.`
+          : `${files.length} raster image(s) staged from ${candidate.creator}. Everything you accept goes through the normal staged import - originals preserved, provenance recorded as ${candidate.rights.license}.`),
+        missing.length > 0
+          ? el('div', { class: 'faint', style: { 'font-size': '11px', 'margin-bottom': '8px' }, text: `Generated fallback keeps: ${missing.map((role) => ROLE_LABELS[role]).join(', ')}` })
+          : null,
+        ...roleSections,
+        other.length > 0
+          ? el(
+              'details',
+              {},
+              el('summary', { class: 'faint', text: `${other.length} more staged image(s) - assign a role to include one` }),
+              el('div', { class: 'row row--wrap', style: { gap: '6px', 'margin-top': '6px', 'max-height': '260px', 'overflow-y': 'auto' } }, ...other.slice(0, 400).map(tile)),
+            )
+          : null,
+      );
+      paintFooter();
+    }
+
+    replace(bodyHost, el('h3', { style: { margin: '0 0 8px' }, text: reskin ? `Preview: ${candidate.title} as a look` : `Audition: ${candidate.title}` }), grid);
+    paint();
 
     async function commit(): Promise<void> {
+      const accepted = files.filter((file) => state.get(file.stagingId)!.accepted);
+      if (accepted.length === 0) {
+        toast('Nothing accepted - reject the pack or accept at least one sprite.', 'warn');
+        return;
+      }
       try {
         await api.post('/import/commit', {
           gameId,
           batchId,
-          selections: files.map((file) => {
-            const role = selections.get(file.stagingId);
+          selections: accepted.map((file) => {
+            const role = state.get(file.stagingId)!.role;
             return { stagingId: file.stagingId, ...(role ? { role } : {}) };
           }),
           provenance,
         });
-        toast(`Imported ${candidate.title}. Provenance recorded as ${candidate.rights.license}.`, 'ok');
+        toast(`Imported ${accepted.length} sprite(s) from ${candidate.title}. Provenance: ${candidate.rights.license}.`, 'ok');
         close();
         await refreshCurrent();
         await openProject(gameId!);
@@ -326,7 +473,7 @@ export async function openFindFreeSprites(): Promise<void> {
       el('p', { class: 'muted', style: { 'margin-top': '0' } }, 'Every pack in the catalogue. Rights are shown before anything downloads.'),
       providerStrip,
       recommendation ? button('← Back to recommendations', () => showRecommendations(), { class: 'btn btn--sm' }) : null,
-      el('div', { class: 'seeds', style: { 'margin-top': '10px' } }, ...candidates.map((candidate) => candidateCard(candidate, gameId ? acquire : null))),
+      el('div', { class: 'seeds', style: { 'margin-top': '10px' } }, ...candidates.map((candidate) => candidateCard(candidate, gameId ? (c) => void acquire(c, false) : null))),
     );
   }
 
@@ -357,7 +504,7 @@ export async function openFindFreeSprites(): Promise<void> {
           ? el('div', { class: 'faint', style: { 'font-size': '11px', 'margin-top': '4px' }, text: `No pack covers: ${uncovered.map((role) => ROLE_LABELS[role]).join(', ')} — these use generated fallback art.` })
           : null,
       ),
-      el('div', { class: 'seeds' }, ...usableMatches.map((match) => matchCard(match, gameId ? acquire : () => toast('Open a project to acquire packs.', 'warn')))),
+      el('div', { class: 'seeds' }, ...usableMatches.map((match) => matchCard(match, gameId ? (c) => void acquire(c, false) : () => toast('Open a project to acquire packs.', 'warn'), gameId ? (c) => void acquire(c, true) : undefined))),
       blocked.length > 0
         ? el('details', { style: { 'margin-top': '10px' } }, el('summary', { class: 'faint', text: `${blocked.length} pack(s) excluded by licence/format` }), el('div', { class: 'seeds', style: { 'margin-top': '8px' } }, ...blocked.map((match) => matchCard(match, () => undefined))))
         : null,

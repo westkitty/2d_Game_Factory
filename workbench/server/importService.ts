@@ -395,6 +395,33 @@ function groupNameFor(state: { files: StagedRecord[] }, stagingId: string): stri
   return undefined;
 }
 
+/**
+ * Reads one staged file's bytes for the audition surface.
+ *
+ * Pre-commit bytes have no asset id yet, so they cannot go through
+ * `/assets/bytes`. This is the only pre-commit read path and it is as narrow:
+ * the staging id must be a UUID that this batch actually holds, and the file
+ * must still be on disk under that batch's directory.
+ */
+export function readStagedBytes(
+  gameId: string,
+  batchId: string,
+  stagingId: string,
+): { readonly bytes: Uint8Array; readonly mime: string; readonly width: number; readonly height: number } {
+  const state = batchState(batchId);
+  if (state.gameId !== gameId) throw new SecurityError(400, 'That import batch belongs to a different project.');
+  if (!/^[a-f0-9-]{36}$/.test(stagingId)) throw new SecurityError(400, `Invalid staging id ${JSON.stringify(stagingId)}.`);
+  const record = state.files.find((file) => file.stagingId === stagingId);
+  if (!record) throw new SecurityError(404, `Import batch has no staged file "${stagingId}".`);
+  if (!existsSync(record.storedPath)) throw new SecurityError(410, `Staged file "${record.displayName}" is no longer available; re-acquire it.`);
+  return {
+    bytes: new Uint8Array(readFileSync(record.storedPath)),
+    mime: record.analysis.mime,
+    width: record.analysis.width,
+    height: record.analysis.height,
+  };
+}
+
 /** Removes a batch's staged bytes and its in-memory index. Safe to call twice. */
 export function discardBatch(gameId: string, batchId: string): void {
   BATCHES.delete(batchId);

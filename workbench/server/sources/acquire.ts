@@ -16,8 +16,11 @@ import { SecurityError } from '../security.ts';
 import type { ImportPlan } from '../../shared/types.ts';
 import { findCandidate, getProvider } from './registry.ts';
 import { rightsAllowUse } from './rights.ts';
+import { proposeReskin, type ReskinProposal, type StagedFileLite } from './reskin.ts';
+import { deriveProfile } from './requirements.ts';
 import type { AcquisitionResult } from './types.ts';
 import type { ProviderNetOptions } from './provider.ts';
+import { getPreset } from '@sw2d/presets';
 
 export interface AcquireInput {
   readonly gameId: string;
@@ -26,11 +29,15 @@ export interface AcquireInput {
   readonly net?: ProviderNetOptions;
   /** Injectable clock for freshness evaluation in tests. */
   readonly now?: number;
+  /** When set, also compute a one-per-role reskin proposal for this preset. */
+  readonly reskinForPresetId?: string;
 }
 
 export interface AcquireOutcome {
   readonly result: AcquisitionResult;
   readonly plan: ImportPlan;
+  /** Present when `reskinForPresetId` was supplied. */
+  readonly reskinProposal?: ReskinProposal;
 }
 
 /**
@@ -83,7 +90,29 @@ export async function acquirePack(input: AcquireInput): Promise<AcquireOutcome> 
         modificationStatus: 'unmodified',
       },
     };
-    return { result, plan };
+
+    let reskinProposal: ReskinProposal | undefined;
+    if (input.reskinForPresetId && !svgOnly && staged.staged > 0) {
+      try {
+        const profile = deriveProfile(getPreset(input.reskinForPresetId));
+        const lite: StagedFileLite[] = plan.files.map((file) => ({
+          stagingId: file.stagingId,
+          displayName: file.displayName,
+          suggestedRoles: file.suggestedRoles,
+          analysis: {
+            width: file.analysis.width,
+            height: file.analysis.height,
+            hasAlpha: file.analysis.hasAlpha,
+            aspectRatio: file.analysis.aspectRatio,
+          },
+        }));
+        reskinProposal = proposeReskin(profile.roles.map((entry) => entry.role), lite);
+      } catch {
+        reskinProposal = undefined;
+      }
+    }
+
+    return { result, plan, ...(reskinProposal ? { reskinProposal } : {}) };
   } catch (error) {
     // A failed stage must not leave a half-populated batch behind.
     discardBatch(input.gameId, batchId);

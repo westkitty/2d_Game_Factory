@@ -39,7 +39,7 @@ import {
   saveProject,
   summarizeProject,
 } from './projectStore.ts';
-import { buildPlan, beginBatch, clearStaging, commitImport, discardBatch, stageFile, type ClientAnalysisHints } from './importService.ts';
+import { buildPlan, beginBatch, clearStaging, commitImport, discardBatch, readStagedBytes, stageFile, type ClientAnalysisHints } from './importService.ts';
 import { SYNTHESIZABLE_ROLES, writeTheme } from './themeSynthesis.ts';
 import { buildSeeds, seedForPreset } from './seeds.ts';
 import { loadScene, listLevels, newObject, objectClassOptions, saveScene, SceneValidationError, type SceneDocument } from './sceneStore.ts';
@@ -364,6 +364,21 @@ const ROUTES: ReadonlyMap<string, Handler> = new Map<string, Handler>([
     },
   ],
 
+  [
+    // Staged (pre-commit) bytes, for the audition surface. Same token gate as
+    // every /api call; the staging id must be one this batch holds.
+    'GET /import/staged-bytes',
+    (request) => {
+      const gameId = gameIdOf(request);
+      const batchId = request.query.get('batchId');
+      const stagingId = request.query.get('stagingId');
+      if (!batchId || !stagingId) throw new SecurityError(400, 'Missing batchId or stagingId.');
+      const staged = readStagedBytes(gameId, batchId, stagingId);
+      if (!isSupportedImageMime(staged.mime)) throw new SecurityError(400, 'Not a servable image.');
+      return { status: 200, bytes: staged.bytes, contentType: staged.mime, headers: { 'Cache-Control': 'no-store' } };
+    },
+  ],
+
   // --- assets ---------------------------------------------------------------
 
   ['GET /assets', (request) => ok({ assets: loadAssets(gameIdOf(request)).assets })],
@@ -634,12 +649,14 @@ const ROUTES: ReadonlyMap<string, Handler> = new Map<string, Handler>([
       // in code, and the acquisition URL is a provider-owned constant.
       if (!/^[a-z][a-z0-9-]{0,40}$/.test(providerId)) throw new SecurityError(400, `Invalid providerId ${JSON.stringify(providerId)}.`);
       if (!/^[a-z0-9][a-z0-9-]{0,60}$/.test(packId)) throw new SecurityError(400, `Invalid packId ${JSON.stringify(packId)}.`);
+      const reskin = body['reskin'] === true;
+      const reskinForPresetId = reskin ? loadProject(gameId).presetId : undefined;
 
       const jobId = jobs.run('source-acquire', `Acquire "${packId}" from ${providerId}`, true, async (handle) => {
         handle.setStep('Checking recorded rights');
         handle.setProgress(0.1);
         handle.setStep('Downloading pack');
-        const outcome = await acquirePack({ gameId, providerId, packId });
+        const outcome = await acquirePack({ gameId, providerId, packId, ...(reskinForPresetId ? { reskinForPresetId } : {}) });
         handle.log(`Staged ${outcome.result.staged} raster image(s); ignored ${outcome.result.ignored}.`);
         if (outcome.result.svgOnly) handle.log('This pack contained only SVG art and is unsuitable for sprites.');
         handle.setStep('Ready to review');
