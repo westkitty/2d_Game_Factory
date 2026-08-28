@@ -14,7 +14,40 @@ baseline. This file governs the visual workbench and the starter-kit expansion b
 | Active expansion branch | `starter-kits/implement-all` |
 | Current shipped rich kits on active branch | **5 proof-derived + 69 promoted expansion kits = 74 rich kits total** |
 | Expansion scaffolds | **69 / 69 present; 69 / 69 promoted; 0 remain unpromoted** |
-| Current milestone | **P3-K Narrative Exploration closed on promoted replay; all starter-kit expansion batches complete** |
+| Current milestone | **Free-Sprite Intelligence — game-first factory + verified free raster asset sourcing** |
+
+---
+
+## Free-Sprite Intelligence milestone
+
+**Goal.** Make the workbench game-first (an image is optional) and add intelligent, legally
+safe, offline-preserving free raster-asset sourcing: preset-aware pack recommendations,
+rights verification, audition, coherent reskin, a verified local vault, provenance receipts
+and reverse discovery.
+
+| Field | Value |
+|---|---|
+| Milestone name | Free-Sprite Intelligence |
+| BASE SHA | `d222b1eafc8fb972cd300d07f1107f3842349308` |
+| Working branch | `feature/free-sprite-intelligence` |
+| Phase A — game-first factory | IMPLEMENTED — home reframed game-first, `Make a Game` primary, `Find Free Sprites` route added, `createDialog` gains `gameplay` mode; `workbench/test/seedsGameFirst.test.ts` locks zero-art path. typecheck PASS, `workbench:build` PASS, `vitest run workbench/test` 143/143 PASS |
+| Phase B — verified free-sprite source foundation | PENDING |
+| Phase C — game-aware sprite requirement engine | PENDING |
+| Phase D — asset audition + coherent reskin | PENDING |
+| Phase E — intelligent sprite presentation | PENDING |
+| Phase F — verified local asset vault + provenance receipt | PENDING |
+| Phase G — reverse discovery + polish | PENDING |
+| Latest completed phase commit | `pending` |
+| Validation state | baseline: `npm run typecheck` PASS, `npx vitest run workbench/test` 139/139 PASS at BASE |
+| Live-provider proof state | PENDING — external network reachable (kenney.nl 200, opengameart.org 200) |
+| Final bug-sweep state | PENDING |
+| Known genuine blockers | none |
+| Next bounded action | Phase B: narrow authoring-time free-sprite provider foundation (Kenney primary) |
+
+Architectural laws in force: gameplay never requires art; one canonical factory; normal game
+format; semantic roles are the contract; static fallback survives animation; source art is
+non-destructive; rights are data; **no runtime internet**; no generic fetch pipe; no arbitrary
+local path access; free ≠ licensed; **SVG is never a sprite source**.
 
 ---
 
