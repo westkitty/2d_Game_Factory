@@ -40,7 +40,14 @@ export async function wbBoot001({ session, note }: JourneyContext): Promise<void
   const actions = await session.page.evaluate(() =>
     Array.from(document.querySelectorAll('.action__title')).map((node) => node.textContent ?? ''),
   );
-  for (const required of ['Make Something From an Image', 'Create From Assets', 'Open Existing Project', 'Browse Presets']) {
+  for (const required of [
+    'Make a Game',
+    'Use My Sprites',
+    'Find Free Sprites',
+    'Make Something From an Image',
+    'Open Existing Project',
+    'Browse Presets',
+  ]) {
     expect(actions.includes(required), `primary action "${required}" missing; found ${JSON.stringify(actions)}`);
   }
 
@@ -49,19 +56,20 @@ export async function wbBoot001({ session, note }: JourneyContext): Promise<void
   expect(!body.includes('SW2D FOUNDATION'), 'the Phase 1 foundation slice is showing at the root route');
   expect(!body.toLowerCase().includes('phase 1 vertical slice'), 'Phase 1 vertical-slice wording is showing at the root route');
 
-  // The hero action is the largest and first, not buried.
-  const heroIsFirst = await session.page.evaluate(() => {
+  // Game creation is first-class: the hero action makes a game, and an image
+  // is one route among peers, not a precondition.
+  const heroTitle = await session.page.evaluate(() => {
     const first = document.querySelector('.actions > *');
-    return first?.classList.contains('action--hero') ?? false;
+    return first?.classList.contains('action--hero') ? first.querySelector('.action__title')?.textContent ?? '' : '';
   });
-  expect(heroIsFirst, '"Make Something From an Image" is not the first, highest-salience action');
+  expect(heroTitle === 'Make a Game', `the first, highest-salience action is "${heroTitle}", not "Make a Game"`);
 
   const track = await session.text('.build-track');
-  for (const step of ['Supply image', 'Create + validate sprites', 'Arrange the scene', 'Run the game']) {
+  for (const step of ['Pick a game type', 'Create - playable now', 'Add art if you want', 'Run and pack offline']) {
     expect(track.includes(step), `home build track is missing "${step}"`);
   }
 
-  note(`four primary actions present; ${actions.length} total`);
+  note(`six primary actions present, game-first; ${actions.length} total`);
 }
 
 // ---------------------------------------------------------------------------
@@ -76,7 +84,7 @@ export async function wbImage001({ session, note }: JourneyContext): Promise<voi
   resetProject(PRIMARY_GAME);
   await session.open();
 
-  await session.click('.action--hero');
+  await session.clickContaining('Make Something From an Image', '.actions');
   await session.waitFor('.dropzone');
   await session.setFiles('.modal input[type=file]', [fixture('weasel.png')]);
   await session.waitForText('What is this image?');
@@ -169,7 +177,7 @@ export async function wbImage001({ session, note }: JourneyContext): Promise<voi
 
 export async function wbSeed001({ session, note }: JourneyContext): Promise<void> {
   await session.open();
-  await session.click('.action--hero');
+  await session.clickContaining('Make Something From an Image', '.actions');
   await session.waitFor('.dropzone');
   await session.setFiles('.modal input[type=file]', [fixture('palace.png')]);
   await session.waitForText('What is this image?');

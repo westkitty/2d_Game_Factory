@@ -18,7 +18,7 @@ const SHEET_GAME = 'qa-sheet-game';
 async function createProjectThroughUi(session: WorkbenchSession, gameId: string, presetName: string): Promise<void> {
   resetProject(gameId);
   await session.open();
-  await session.clickContaining('Create From Assets', '.actions');
+  await session.clickContaining('Use My Sprites', '.actions');
   await session.waitForText('Create a project');
   await session.fill('.modal input[type=text]', gameId);
   await session.page.selectOption('.modal select', { label: presetName });

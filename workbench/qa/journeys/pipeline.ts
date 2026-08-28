@@ -21,7 +21,7 @@ const BATCH_GAME = 'qa-batch-game';
 async function createProjectThroughUi(session: WorkbenchSession, gameId: string, presetLabel: string): Promise<void> {
   resetProject(gameId);
   await session.open();
-  await session.clickContaining('Create From Assets', '.actions');
+  await session.clickContaining('Use My Sprites', '.actions');
   await session.waitForText('Create a project');
   await session.fill('.modal input[type=text]', gameId);
   await session.page.selectOption('.modal select', { label: presetLabel });
@@ -411,7 +411,7 @@ export async function wbResponsive001({ session, note }: JourneyContext): Promis
 
     // The primary actions stay reachable.
     const actions = await session.count('.action');
-    expectEqual(actions, 4, `${viewport.label}: expected 4 primary actions, saw ${actions}`);
+    expectEqual(actions, 6, `${viewport.label}: expected 6 primary actions, saw ${actions}`);
 
     await session.openProject(PRIMARY_GAME);
 
