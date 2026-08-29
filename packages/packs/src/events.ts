@@ -34,6 +34,14 @@ declare module '@sw2d/contracts' {
     'weapons:ammoChanged': { readonly ownerId: string; readonly ammo: number };
     'encounters:phaseChanged': { readonly encounterId: string; readonly phaseId: string | null; readonly phaseIndex: number };
     'encounters:completed': { readonly encounterId: string };
+    'runs:started': { readonly runId: string; readonly seed: number; readonly attempt: number };
+    'runs:ended': { readonly runId: string; readonly outcome: 'victory' | 'defeat' | 'abandoned'; readonly durationMs: number; readonly stats: unknown };
+    'runs:reset': { readonly runId: string; readonly attempt: number; readonly seed: number; readonly failures: readonly unknown[] };
+    'runs:currencyChanged': { readonly transientCurrency: number; readonly delta: number };
+    'runs:upgradePurchased': { readonly upgradeId: string; readonly kind: 'transient' | 'permanent' };
+    'runs:killRecorded': { readonly kills: number };
+    'runs:roomCleared': { readonly roomsCleared: number };
+    'runs:waveCleared': { readonly wavesCleared: number };
   }
 }
 

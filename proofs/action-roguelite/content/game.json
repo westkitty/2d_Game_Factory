@@ -1,0 +1,44 @@
+{
+  "id": "proof-action-roguelite",
+  "displayName": "Proof Action Roguelite",
+  "version": "0.1.0",
+  "schemaVersion": 1,
+  "viewport": {
+    "width": 960,
+    "height": 540
+  },
+  "bindings": {},
+  "systemPacks": [
+    {
+      "packId": "sw2d.combat",
+      "config": {}
+    },
+    {
+      "packId": "sw2d.progression",
+      "config": {
+        "persist": true
+      }
+    },
+    {
+      "packId": "sw2d.generation",
+      "config": {}
+    },
+    {
+      "packId": "sw2d.items",
+      "config": {}
+    },
+    {
+      "packId": "sw2d.runs",
+      "config": {
+        "defaultRunId": "action-roguelite-run"
+      }
+    },
+    {
+      "packId": "game.action-roguelite-shell",
+      "config": {}
+    }
+  ],
+  "defaultSettings": {
+    "masterVolume": 0.7
+  }
+}

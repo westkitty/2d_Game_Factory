@@ -62,11 +62,11 @@ export const TOP_DOWN_ACTION_PRESETS: readonly PresetDefinition[] = [
     displayName: 'Survivor-Like',
     family: 'top-down-action',
     controllerFamilies: ['top-down'],
-    requiredSystemPacks: [pack(PACK_IDS.combat), pack(PACK_IDS.ai), pack(PACK_IDS.progression), pack(PACK_IDS.weapons), pack(PACK_IDS.encounters)],
+    requiredSystemPacks: [pack(PACK_IDS.combat), pack(PACK_IDS.ai), pack(PACK_IDS.progression), pack(PACK_IDS.weapons), pack(PACK_IDS.encounters), pack(PACK_IDS.runs)],
     optionalSystemPacks: [pack(PACK_IDS.arcade), pack(PACK_IDS.world)],
     requiredContentRoles: ['tuning'],
     validationProfile: VALIDATION_PROFILES.topDown,
-    knownLimitations: ['Endless difficulty scaling / meta-progression between runs is not a reusable system; the encounter capability (sw2d.encounters, Phase 4) drives finite waves.'],
+    knownLimitations: ['Phase 13: run lifecycle and meta-progression are candidate capabilities via sw2d.runs and sw2d.progression; sw2d.encounters drives survival wave encounters.'],
   }),
 
   definePreset({
@@ -90,13 +90,14 @@ export const TOP_DOWN_ACTION_PRESETS: readonly PresetDefinition[] = [
     displayName: 'Action Roguelite',
     family: 'top-down-action',
     controllerFamilies: ['top-down'],
-    requiredSystemPacks: [pack(PACK_IDS.combat), pack(PACK_IDS.progression), pack(PACK_IDS.generation)],
+    requiredSystemPacks: [pack(PACK_IDS.combat), pack(PACK_IDS.progression), pack(PACK_IDS.generation), pack(PACK_IDS.items), pack(PACK_IDS.runs)],
     optionalSystemPacks: [pack(PACK_IDS.ai), pack(PACK_IDS.world), pack(PACK_IDS.worldEntities)],
     requiredContentRoles: ['tuning', 'levels', 'generation'],
     validationProfile: VALIDATION_PROFILES.topDown,
     // Phase 7 (ADR-0024): deterministic seeded room graph via sw2d.generation.
+    // Phase 13: run lifecycle, permadeath/run reset, transient currency/upgrades, and seed progression via sw2d.runs; meta-progression backed by sw2d.progression.
     knownLimitations: [
-      'Run-based meta-progression/permadeath state is not yet a reusable capability beyond sw2d.progression.',
+      'Phase 13: sw2d.runs provides run lifecycle, permadeath/run reset, transient currency/upgrades, and seed progression, while meta-progression is backed by sw2d.progression.',
     ],
   }),
 

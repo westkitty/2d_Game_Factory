@@ -109,5 +109,87 @@ describe('progressionPack', () => {
       });
       expect(result.valid).toBe(false);
     });
+
+    it('accepts persist: true in config', () => {
+      const result = validateBySchemaId(PROGRESSION_CONFIG_SCHEMA_ID, 'test-config', {
+        persist: true,
+      });
+      expect(result.valid).toBe(true);
+    });
+  });
+
+  describe('SaveStore persistence (Phase 13 requirement)', () => {
+    class FakeSaveStore {
+      readonly namespace = 'test';
+      readonly store = new Map<string, unknown>();
+      load<T extends { schemaVersion: number }>(slot: string, options: { currentVersion: number; createDefault: () => T }) {
+        const stored = this.store.get(slot) as T | undefined;
+        if (stored && stored.schemaVersion === options.currentVersion) {
+          return { value: stored, outcome: 'loaded' as const };
+        }
+        return { value: options.createDefault(), outcome: 'default' as const };
+      }
+      save<T>(slot: string, value: T): void {
+        this.store.set(slot, value);
+      }
+      clear(slot: string): void {
+        this.store.delete(slot);
+      }
+    }
+
+    it('default persist false does not save to SaveStore', () => {
+      const saves = new FakeSaveStore();
+      const context = { ...createFakeGameContext(), saves: saves as any };
+      progressionPack.install(context, { startingCurrency: 10 });
+      const progression = context.capabilities.require<ProgressionService>('progression.state');
+      progression.addCurrency(50);
+      expect(saves.store.has('progression')).toBe(false);
+    });
+
+    it('persist true saves currency, xp, unlocks, and item counts to SaveStore', () => {
+      const saves = new FakeSaveStore();
+      const context = { ...createFakeGameContext(), saves: saves as any };
+      progressionPack.install(context, { startingCurrency: 10, persist: true });
+      const progression = context.capabilities.require<ProgressionService>('progression.state');
+
+      progression.addCurrency(25);
+      progression.addXp(100);
+      progression.unlock('meta-damage-boost');
+      progression.addItem('meta-gem', 3);
+
+      expect(saves.store.has('progression')).toBe(true);
+      const saved = saves.store.get('progression') as any;
+      expect(saved.currency).toBe(35);
+      expect(saved.xp).toBe(100);
+      expect(saved.unlockedFlags).toEqual(['meta-damage-boost']);
+      expect(saved.itemCounts).toEqual({ 'meta-gem': 3 });
+    });
+
+    it('persist true reloads saved state on subsequent install', () => {
+      const saves = new FakeSaveStore();
+      const context1 = { ...createFakeGameContext(), saves: saves as any };
+      const inst1 = progressionPack.install(context1, { persist: true });
+      const prog1 = context1.capabilities.require<ProgressionService>('progression.state');
+      prog1.addCurrency(150);
+      prog1.unlock('perk-dash');
+      inst1.dispose();
+
+      const context2 = { ...createFakeGameContext(), saves: saves as any };
+      progressionPack.install(context2, { persist: true });
+      const prog2 = context2.capabilities.require<ProgressionService>('progression.state');
+
+      expect(prog2.currency()).toBe(150);
+      expect(prog2.isUnlocked('perk-dash')).toBe(true);
+    });
+
+    it('handles version mismatch by falling back to default', () => {
+      const saves = new FakeSaveStore();
+      saves.store.set('progression', { schemaVersion: 999, currency: 9999 });
+      const context = { ...createFakeGameContext(), saves: saves as any };
+      progressionPack.install(context, { startingCurrency: 5, persist: true });
+      const progression = context.capabilities.require<ProgressionService>('progression.state');
+
+      expect(progression.currency()).toBe(5);
+    });
   });
 });

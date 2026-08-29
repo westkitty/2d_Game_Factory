@@ -36,6 +36,7 @@ export const PACK_IDS = {
   racing: 'sw2d.racing',
   aiPerception: 'sw2d.ai-perception',
   climbing: 'sw2d.climbing',
+  runs: 'sw2d.runs',
 } as const;
 
 export const CAPABILITY_IDS = {
@@ -74,4 +75,6 @@ export const CAPABILITY_IDS = {
   aiPursuit: 'ai.pursuit',
   /** Capability program Phase 12: platformer climbing, wall-slide, wall-jump & ledge-hang. */
   climbing: 'movement.climbing',
+  /** Capability program Phase 13: run lifecycle & roguelite meta-progression. */
+  runs: 'progression.runs',
 } as const;

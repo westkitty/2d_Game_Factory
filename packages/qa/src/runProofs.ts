@@ -66,6 +66,9 @@ const PROOF_SPEC_MODULES: Readonly<Record<string, string>> = {
   // Phase 12 - platformer climbing, wall-slide, wall-jump & ledge-hang
   'precision-platformer': 'precisionPlatformer',
   'climbing-game': 'climbingGame',
+  // Phase 13 - run lifecycle & roguelite meta-progression
+  'action-roguelite': 'actionRoguelite',
+  'survivor-like': 'survivorLike',
 };
 
 function proofTargets(): Target[] {

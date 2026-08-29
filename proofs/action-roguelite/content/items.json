@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "items": [
+    {
+      "id": "starter-dagger",
+      "displayName": "Starter Dagger",
+      "category": "weapon",
+      "stackable": false,
+      "consumable": false
+    },
+    {
+      "id": "health-potion",
+      "displayName": "Health Potion",
+      "category": "consumable",
+      "stackable": true,
+      "consumable": true,
+      "quantityPerGrant": 1,
+      "effects": [{ "kind": "combat.heal", "amount": 25 }]
+    },
+    {
+      "id": "dungeon-key",
+      "displayName": "Dungeon Key",
+      "category": "key",
+      "stackable": true,
+      "consumable": true
+    }
+  ]
+}

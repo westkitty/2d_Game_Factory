@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "encounters": [
+    {
+      "id": "arena-waves",
+      "phases": [
+        {
+          "id": "wave-1",
+          "spawns": [
+            {
+              "archetype": "goblin",
+              "count": 5,
+              "at": {
+                "kind": "point",
+                "x": 200,
+                "y": 200
+              }
+            }
+          ],
+          "completeWhen": {
+            "kind": "spawns-cleared"
+          }
+        }
+      ]
+    }
+  ]
+}

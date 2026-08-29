@@ -1,0 +1,8 @@
+{
+  "schemaVersion": 1,
+  "player": {
+    "moveSpeed": 240,
+    "jumpVelocity": 430,
+    "gravity": 1100
+  }
+}

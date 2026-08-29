@@ -1,0 +1,59 @@
+{
+  "schemaVersion": 1,
+  "runs": [
+    {
+      "id": "survivor-run",
+      "displayName": "Survivor Run",
+      "seedPolicy": {
+        "kind": "increment-attempt",
+        "baseSeed": 777,
+        "step": 11
+      },
+      "startingTransientCurrency": 0,
+      "victoryCondition": {
+        "kind": "explicit"
+      },
+      "defeatCondition": {
+        "kind": "combat-death"
+      },
+      "carryoverRules": {
+        "retainMetaCurrency": true,
+        "retainPermanentUnlocks": true,
+        "retainStatsAcrossAttempts": true
+      },
+      "rewardRules": {
+        "onVictory": {
+          "metaCurrency": 50,
+          "xp": 250,
+          "unlockFlags": [
+            "survivor-veteran"
+          ]
+        },
+        "onDefeat": {
+          "metaCurrency": 10,
+          "xp": 25
+        }
+      },
+      "resumable": false,
+      "resetScopes": [
+        "transient-currency",
+        "transient-upgrades"
+      ],
+      "upgrades": [
+        {
+          "id": "transient-bullet-speed",
+          "displayName": "+20% Bullet Speed",
+          "cost": 10,
+          "kind": "transient"
+        },
+        {
+          "id": "perm-damage-meta",
+          "displayName": "+10% Base Damage",
+          "cost": 30,
+          "kind": "permanent",
+          "effectRef": "meta-damage-boost"
+        }
+      ]
+    }
+  ]
+}

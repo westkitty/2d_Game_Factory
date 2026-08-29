@@ -36,6 +36,7 @@ export const CONTENT_DOCUMENTS: Readonly<Record<string, ContentDocumentRegistryE
   races: { schemaName: 'race-catalog' },
   perception: { schemaName: 'perception-catalog' },
   climbing: { schemaName: 'climbing-config' },
+  runs: { schemaName: 'runs' },
 };
 
 export type ContentDocumentName = keyof typeof CONTENT_DOCUMENTS;

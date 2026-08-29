@@ -1,0 +1,233 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:sw2d:schema:content-runs:v1",
+  "title": "RunsDocument",
+  "description": "Mirrors @sw2d/contracts RunsDocument (runs.ts). Content document name 'runs'.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "runs"],
+  "properties": {
+    "schemaVersion": { "type": "integer", "minimum": 1 },
+    "runs": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/runDefinition" }
+    }
+  },
+  "definitions": {
+    "runDefinition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "seedPolicy"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "displayName": { "type": "string" },
+        "seedPolicy": { "$ref": "#/definitions/seedPolicy" },
+        "startingTransientCurrency": { "type": "integer", "minimum": 0 },
+        "startingItems": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["itemId", "quantity"],
+            "properties": {
+              "itemId": { "type": "string", "minLength": 1 },
+              "quantity": { "type": "integer", "minimum": 1 }
+            }
+          }
+        },
+        "startingResources": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["resourceId", "quantity"],
+            "properties": {
+              "resourceId": { "type": "string", "minLength": 1 },
+              "quantity": { "type": "integer", "minimum": 1 }
+            }
+          }
+        },
+        "startingFlags": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["flagId", "value"],
+            "properties": {
+              "flagId": { "type": "string", "minLength": 1 },
+              "value": { "type": "boolean" }
+            }
+          }
+        },
+        "victoryCondition": { "$ref": "#/definitions/runCondition" },
+        "defeatCondition": { "$ref": "#/definitions/runCondition" },
+        "carryoverRules": { "$ref": "#/definitions/carryoverRules" },
+        "rewardRules": { "$ref": "#/definitions/rewardRules" },
+        "resumable": { "type": "boolean" },
+        "resetScopes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "transient-currency",
+              "transient-upgrades",
+              "transient-items",
+              "transient-resources",
+              "world-flags",
+              "encounters"
+            ]
+          }
+        },
+        "upgrades": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/upgradeDefinition" }
+        }
+      }
+    },
+    "seedPolicy": {
+      "type": "object",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind"],
+          "properties": {
+            "kind": { "const": "fixed" },
+            "seed": { "type": "integer" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind"],
+          "properties": {
+            "kind": { "const": "increment-attempt" },
+            "baseSeed": { "type": "integer" },
+            "step": { "type": "integer" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind"],
+          "properties": {
+            "kind": { "const": "run-counter-derived" },
+            "baseSeed": { "type": "integer" }
+          }
+        }
+      ]
+    },
+    "runCondition": {
+      "type": "object",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind"],
+          "properties": {
+            "kind": { "const": "explicit" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind"],
+          "properties": {
+            "kind": { "const": "combat-death" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind"],
+          "properties": {
+            "kind": { "const": "combat-victory" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind"],
+          "properties": {
+            "kind": { "const": "encounter-clear" },
+            "encounterId": { "type": "string" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "flagId"],
+          "properties": {
+            "kind": { "const": "world-flag" },
+            "flagId": { "type": "string", "minLength": 1 },
+            "value": { "type": "boolean" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "flagId"],
+          "properties": {
+            "kind": { "const": "objective-flag" },
+            "flagId": { "type": "string", "minLength": 1 },
+            "value": { "type": "boolean" }
+          }
+        }
+      ]
+    },
+    "carryoverRules": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "retainMetaCurrency": { "type": "boolean" },
+        "retainPermanentUnlocks": { "type": "boolean" },
+        "retainCanonicalItems": { "type": "boolean" },
+        "retainStatsAcrossAttempts": { "type": "boolean" }
+      }
+    },
+    "rewardRules": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "onVictory": { "$ref": "#/definitions/rewardPayload" },
+        "onDefeat": { "$ref": "#/definitions/rewardPayload" }
+      }
+    },
+    "rewardPayload": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "metaCurrency": { "type": "integer", "minimum": 0 },
+        "xp": { "type": "integer", "minimum": 0 },
+        "unlockFlags": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["itemId", "quantity"],
+            "properties": {
+              "itemId": { "type": "string", "minLength": 1 },
+              "quantity": { "type": "integer", "minimum": 1 }
+            }
+          }
+        }
+      }
+    },
+    "upgradeDefinition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "displayName", "cost", "kind"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "displayName": { "type": "string" },
+        "cost": { "type": "integer", "minimum": 0 },
+        "kind": { "enum": ["transient", "permanent"] },
+        "effectRef": { "type": "string" }
+      }
+    }
+  }
+}

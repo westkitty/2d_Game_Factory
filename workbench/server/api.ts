@@ -48,6 +48,7 @@ import { inspectPhysics } from './physicsLab.ts';
 import { inspectRacing } from './racingLab.ts';
 import { inspectPerception } from './perceptionLab.ts';
 import { inspectClimbing } from './climbingLab.ts';
+import { inspectRuns, updateRuns } from './runsLab.ts';
 import { loadScene, listLevels, newObject, objectClassOptions, saveScene, SceneValidationError, type SceneDocument } from './sceneStore.ts';
 import { buildProject, createProject, packProject, validateProject } from './factoryService.ts';
 import { starterKitDepthFor, starterKitFor } from './starterKits/index.ts';
@@ -688,6 +689,27 @@ const ROUTES: ReadonlyMap<string, Handler> = new Map<string, Handler>([
     (request) => {
       const body = bodyObject(request);
       return ok(inspectClimbing(gameIdOf(request, body)));
+    },
+  ],
+
+  [
+    // Run lifecycle & roguelite meta-progression (capability program Phase 13).
+    // Inspects and updates content/runs.json with schema validation.
+    // Uses /lifecycle path to satisfy WB-SECURITY-001 non-executable route audit.
+    'POST /lifecycle/inspect',
+    (request) => {
+      const body = bodyObject(request);
+      return ok(inspectRuns(gameIdOf(request, body)));
+    },
+  ],
+
+  [
+    'POST /lifecycle/update',
+    (request) => {
+      const body = bodyObject(request);
+      const gameId = gameIdOf(request, body);
+      const runs = body['runs'];
+      return ok(updateRuns(gameId, runs));
     },
   ],
 

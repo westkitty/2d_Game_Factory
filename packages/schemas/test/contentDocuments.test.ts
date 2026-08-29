@@ -25,7 +25,37 @@ describe('validateContentBundleData', () => {
   });
 
   it('knows which schema is expected before validating anything', () => {
-    expect(Object.keys(CONTENT_DOCUMENTS)).toEqual(['tuning', 'items', 'weapons', 'encounters', 'puzzles', 'generation', 'world-graph', 'vehicles', 'races', 'perception', 'climbing']);
+    expect(Object.keys(CONTENT_DOCUMENTS)).toEqual([
+      'tuning',
+      'items',
+      'weapons',
+      'encounters',
+      'puzzles',
+      'generation',
+      'world-graph',
+      'vehicles',
+      'races',
+      'perception',
+      'climbing',
+      'runs',
+    ]);
+  });
+
+  it('validates a valid runs document', () => {
+    const runsDoc = {
+      schemaVersion: 1,
+      runs: [
+        {
+          id: 'test-run',
+          seedPolicy: { kind: 'increment-attempt', baseSeed: 42, step: 1 },
+          startingTransientCurrency: 10,
+          resumable: false,
+          resetScopes: ['transient-currency', 'transient-upgrades'],
+        },
+      ],
+    };
+    const result = validateContentBundleData({ runs: runsDoc });
+    expect(result.runs?.valid).toBe(true);
   });
 
   it('rejects an unregistered document name - the "invalid content document" case', () => {

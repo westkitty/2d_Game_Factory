@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 1,
+  "runs": [
+    {
+      "id": "action-roguelite-run",
+      "displayName": "Action Roguelite Run",
+      "seedPolicy": {
+        "kind": "increment-attempt",
+        "baseSeed": 1337,
+        "step": 42
+      },
+      "startingTransientCurrency": 10,
+      "startingItems": [
+        {
+          "itemId": "starter-dagger",
+          "quantity": 1
+        }
+      ],
+      "victoryCondition": {
+        "kind": "explicit"
+      },
+      "defeatCondition": {
+        "kind": "combat-death"
+      },
+      "carryoverRules": {
+        "retainMetaCurrency": true,
+        "retainPermanentUnlocks": true,
+        "retainCanonicalItems": false,
+        "retainStatsAcrossAttempts": true
+      },
+      "rewardRules": {
+        "onVictory": {
+          "metaCurrency": 100,
+          "xp": 500,
+          "unlockFlags": [
+            "conquered-depths"
+          ]
+        },
+        "onDefeat": {
+          "metaCurrency": 15,
+          "xp": 50
+        }
+      },
+      "resumable": true,
+      "resetScopes": [
+        "transient-currency",
+        "transient-upgrades",
+        "transient-items"
+      ],
+      "upgrades": [
+        {
+          "id": "transient-attack-buff",
+          "displayName": "+5 Damage Boost (Run)",
+          "cost": 15,
+          "kind": "transient"
+        },
+        {
+          "id": "perm-health-meta",
+          "displayName": "+20 Max Health (Permanent)",
+          "cost": 25,
+          "kind": "permanent",
+          "effectRef": "meta-health-boost"
+        }
+      ]
+    }
+  ]
+}

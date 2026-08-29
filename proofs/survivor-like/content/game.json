@@ -1,0 +1,40 @@
+{
+  "id": "proof-survivor-like",
+  "displayName": "Proof Survivor Like",
+  "version": "0.1.0",
+  "schemaVersion": 1,
+  "viewport": {
+    "width": 960,
+    "height": 540
+  },
+  "bindings": {},
+  "systemPacks": [
+    {
+      "packId": "sw2d.combat",
+      "config": {}
+    },
+    {
+      "packId": "sw2d.encounters",
+      "config": {}
+    },
+    {
+      "packId": "sw2d.progression",
+      "config": {
+        "persist": true
+      }
+    },
+    {
+      "packId": "sw2d.runs",
+      "config": {
+        "defaultRunId": "survivor-run"
+      }
+    },
+    {
+      "packId": "game.survivor-shell",
+      "config": {}
+    }
+  ],
+  "defaultSettings": {
+    "masterVolume": 0.7
+  }
+}

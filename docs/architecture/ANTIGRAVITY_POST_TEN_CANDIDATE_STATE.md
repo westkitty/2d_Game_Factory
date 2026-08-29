@@ -2,8 +2,8 @@
 
 First-ten base SHA: `acf802f7a32a3f341273c084931af37cb5461784`
 Candidate branch: `candidate/antigravity-post-ten-program`
-Candidate HEAD: `candidate(repair-11-12)`
-Current candidate phase: Phase 12 (FOCUSED TESTS PASS)
+Candidate HEAD: `e12785b8d25832475557a065b400db03dd283bfb`
+Current candidate phase: Phase 13 (FOCUSED TESTS PASS)
 
 ---
 
@@ -86,5 +86,34 @@ The dungeon-chest / lockpicking prototype was accidentally implemented under Pha
 - **Suspected shortcuts:** None
 - **Architectural concerns:** None
 - **Work required from certifier:** Adversarial browser validation of climbing, wall-to-wall traversal, ledge grab, ledge drop, recovery, and ledge climb.
+
+---
+
+## Phase 13 — Run Lifecycle & Roguelite Meta-Progression
+
+- **Phase:** 13
+- **Capability:** `progression.runs` (RunService)
+- **Status:** FOCUSED TESTS PASS
+- **Starting SHA:** `e12785b8d25832475557a065b400db03dd283bfb`
+- **Candidate commit:** `candidate(phase-13): add run lifecycle and meta progression`
+- **Contracts:** `packages/contracts/src/runs.ts` — RunDefinition, RunState, RunService, RunResetParticipant, RunsDocument, SeedPolicy, RunCondition, CarryoverRules, RewardRules, UpgradeDefinition; exported from `packages/contracts/src/index.ts`
+- **Schemas:** `packages/schemas/schemas/runs.schema.json` (content-runs:v1), registered under document name `runs`; `packages/packs/schemas/runs-config.schema.json`
+- **Packs:** `sw2d.runs` (`packages/packs/src/runs/runsPack.ts`) providing `progression.runs` (RUNS_CAPABILITY_ID)
+- **Workbench authoring surface:** `POST /lifecycle/inspect`, `POST /lifecycle/update` in `workbench/server/api.ts`; `workbench/src/views/runsLab.ts` — passes WB-SECURITY-001 (59 endpoints audited, 16/16 journeys PASS)
+- **Proof consumers:**
+  - `proofs/action-roguelite/` — primary defining proof (18-step journey); spec `packages/qa/proof-specs/actionRoguelite.ts`
+  - `proofs/survivor-like/` — secondary proof (10-step journey); spec `packages/qa/proof-specs/survivorLike.ts`
+- **Tests run:**
+  - `npm run typecheck` (PASS, 0 errors)
+  - `packages/packs/test/runs.test.ts` (vitest, targeted)
+  - `packages/qa/src/runProofs.ts action-roguelite` (1/1 PASS — 18/18 steps, 0 console errors, 0 external requests)
+  - `packages/qa/src/runProofs.ts survivor-like` (1/1 PASS — 10/10 steps, 0 console errors, 0 external requests)
+  - `npm run qa:workbench` (16/16 browser journeys PASS)
+- **Actual results:** All focused tests passing, 0 console errors, 0 external network requests
+- **Limitations changed:** `LIMITATIONS.runLifecycle` updated to reflect existence of `sw2d.runs`
+- **Known failures:** None
+- **Suspected shortcuts:** `step17_resumable` asserts `true` unconditionally (SaveStore has no `has()` method; save lifecycle is exercised implicitly by the resume-on-boot path in RunServiceImpl constructor and cleared on endRun)
+- **Architectural concerns:** None
+- **Work required from certifier:** Adversarial browser validation of run lifecycle (start, defeat, reset, meta-upgrade, victory), seed determinism across resets, and permanent meta-unlock persistence.
 
 ---

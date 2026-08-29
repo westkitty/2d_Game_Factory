@@ -1,0 +1,11 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:sw2d:schema:pack-runs-config:v1",
+  "title": "RunsPackConfig",
+  "description": "Mirrors @sw2d/packs' RunsConfig. Both fields optional; omitted uses default run.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "defaultRunId": { "type": "string", "minLength": 1 }
+  }
+}
