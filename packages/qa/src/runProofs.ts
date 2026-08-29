@@ -55,6 +55,9 @@ const PROOF_SPEC_MODULES: Readonly<Record<string, string>> = {
   // Phase 8 - world graph / rooms / transitions / map (ADR-0025)
   metroidvania: 'metroidvania',
   'exploration-game': 'explorationGame',
+  // Phase 9 - optional advanced physics & constraints (ADR-0026)
+  'grappling-platformer': 'grapplingPlatformer',
+  'physics-toy': 'physicsToy',
 };
 
 function proofTargets(): Target[] {

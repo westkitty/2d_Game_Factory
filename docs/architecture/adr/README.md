@@ -29,3 +29,4 @@ One short record per decision that constrains later work. No ADR for trivia.
 | [0023](0023-data-driven-puzzle-rules.md) | Standard puzzle rules are a bounded data-driven capability | Capability program 6 |
 | [0024](0024-deterministic-procedural-generation.md) | Deterministic procedural generation: one bounded capability that emits NormalizedLevel | Capability program 7 |
 | [0025](0025-world-graph-rooms-transitions-map.md) | World graph, room transitions and map: one capability that composes with world.state | Capability program 8 |
+| [0026](0026-optional-advanced-physics-and-constraints.md) | Advanced physics is an opt-in Matter profile with a renderer-neutral service | Capability program 9 |

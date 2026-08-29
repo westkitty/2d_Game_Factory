@@ -102,7 +102,6 @@ describe('input-mode honesty', () => {
 
 describe('required knownLimitations (MASTER_PROJECT.md section 12)', () => {
   const cases: ReadonlyArray<{ id: string; pattern: RegExp }> = [
-    { id: 'grappling-platformer', pattern: /rope\/constraint\/grappling physics/ },
     { id: 'twin-stick-shooter', pattern: /spatial\/analog aim/ },
     { id: 'stealth-game', pattern: /vision cones, awareness geometry, noise propagation and hiding are not implemented/ },
     { id: 'heist-game', pattern: /vision cones, awareness geometry, noise propagation and hiding are not implemented/ },
@@ -120,8 +119,6 @@ describe('required knownLimitations (MASTER_PROJECT.md section 12)', () => {
     { id: 'falling-block-puzzle', pattern: /No reusable falling-piece\/line-clear board engine/ },
     { id: 'breakout', pattern: /No reusable ball\/paddle collision-and-bounce system/ },
     { id: 'pong', pattern: /No reusable ball\/paddle collision-and-bounce system/ },
-    { id: 'physics-puzzle', pattern: /Optional advanced rigid-body\/constraint physics has not been implemented/ },
-    { id: 'pinball-lite', pattern: /Optional advanced rigid-body\/constraint physics has not been implemented/ },
     { id: 'rhythm-action', pattern: /No deterministic music-beat\/audio-synchronization system/ },
     { id: 'reaction-timing', pattern: /no specialized reaction-test flow is implemented/ },
     { id: 'tower-defense', pattern: /keyboard grid cursor/ },
@@ -150,7 +147,6 @@ describe('required knownLimitations (MASTER_PROJECT.md section 12)', () => {
     { id: 'escape-room', pattern: /No content-authored escape-room puzzle grammar/ },
     { id: 'microgame-collection', pattern: /No microgame scheduler\/rotation\/meta-framework/ },
     { id: 'local-party-game', pattern: /No multi-player\/local multi-device input routing/ },
-    { id: 'physics-toy', pattern: /Optional advanced rigid-body\/constraint physics has not been implemented/ },
     { id: 'dress-up-character-toy', pattern: /No wardrobe\/attachment system is built on the drag/ },
     { id: 'sandbox-playground', pattern: /No generalized authoring\/editing sandbox/ },
     { id: 'drawing-game', pattern: /No canvas-stroke\/drawing capture is built on the spatial pointer/ },

@@ -19,4 +19,11 @@ export interface GameDefinition {
   readonly defaultSettings?: Partial<Omit<GameSettings, 'schemaVersion'>>;
   /** Logical canvas size. Scaling to the viewport is the runtime's job. */
   readonly viewport: { readonly width: number; readonly height: number };
+  /**
+   * Physics backend (capability program Phase 9). 'arcade' (default) is the
+   * factory baseline; 'matter' additionally enables Phaser's Matter world for
+   * games that need rigid bodies / constraints / grapple. Never changes an
+   * existing game silently - it is opt-in per game.
+   */
+  readonly physicsProfile?: 'arcade' | 'matter';
 }

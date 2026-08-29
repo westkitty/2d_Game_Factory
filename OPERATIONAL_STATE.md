@@ -774,6 +774,30 @@ adjudicated individually in the Phase 12 acceptance document):
 
 ## Revision history
 
+### Revision 24 - 2026-08-29 (Sonnet 5) - Capability program Phase 9
+
+**Optional advanced physics & constraints (ADR-0026).** Ninth phase of the ten-phase program.
+Full detail in [`docs/architecture/CAPABILITY_PROGRAM_STATE.md`](docs/architecture/CAPABILITY_PROGRAM_STATE.md).
+
+- **New capability (runtime service, no pack).** `GameDefinition.physicsProfile` -
+  `'arcade'` (default, existing games untouched) or opt-in `'matter'`. Renderer-neutral
+  `AdvancedPhysicsService` + `GrappleService` contracts in `@sw2d/contracts`; Matter-backed
+  `createAdvancedPhysics(scene)` and `createGrappleService(physics, def)` in
+  `@sw2d/runtime/game-support` (Phaser bridges belong there - `@sw2d/packs` is renderer-free
+  by contract). `createGame` + `PlayScene` enable a Matter world only for `'matter'`. Generated
+  pointer/platform/ui-simulation shells create a demo Matter body when opted in. Workbench gains
+  `POST /api/physics/inspect` + a panel. No new dependency (Phaser's Matter is bundled).
+- **Proofs.** New `proofs/grappling-platformer/` (player is a Matter body; a real distance
+  constraint to an anchor; the swing is Matter solving it; detach / re-attach / reel; no
+  constraint or body leak on restart) and `proofs/physics-toy/` (rigid bodies + collision + a
+  spring + a Phase-1 spatial-pointer shake; fresh counts on restart). `qa:proof` 19/19 -> 21/21.
+- **Limitations.** `LIMITATIONS.grapplingPhysics` and `LIMITATIONS.advancedPhysics` removed
+  (both constants deleted) from `grappling-platformer`, `physics-toy`, `physics-puzzle` (keeps
+  `puzzleConfigIsCode`), `pinball-lite` (keeps a narrow full-table limitation). Maturity split
+  unchanged (5/7/62).
+- **Validation:** typecheck PASS; `npm test` 2505/2505; builds + `check:offline` PASS; `qa:proof`
+  21/21; `qa:matrix` 44/44; `qa:starter-kits` all 14; `qa:workbench` 16/16; `release:verify` 6/6.
+
 ### Revision 23 - 2026-08-29 (Sonnet 5) - Capability program Phase 8
 
 **World graph / rooms / transitions / map (ADR-0025).** Eighth phase of the ten-phase program.

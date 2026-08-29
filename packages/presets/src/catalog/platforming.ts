@@ -133,7 +133,10 @@ export const PLATFORMING_PRESETS: readonly PresetDefinition[] = [
     optionalSystemPacks: [pack(PACK_IDS.arcade)],
     requiredContentRoles: ['tuning', 'levels'],
     validationProfile: VALIDATION_PROFILES.platform,
-    knownLimitations: [LIMITATIONS.grapplingPhysics],
+    // Phase 9 (ADR-0026): the Matter backend (physicsProfile) + the reusable
+    // AdvancedPhysicsService / GrappleService give a real physical grapple.
+    physicsProfile: 'matter',
+    knownLimitations: [],
   }),
 
   definePreset({

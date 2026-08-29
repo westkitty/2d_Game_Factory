@@ -11,6 +11,8 @@ export interface GameManifestInput {
   readonly displayName: string;
   readonly systemPackIds: readonly string[];
   readonly shellPackId: string;
+  /** Capability program Phase 9: when 'matter', the game opts into the Matter backend. */
+  readonly physicsProfile?: 'matter';
 }
 
 /** content/game.json - a GameDefinition. Only the recipe's *required* packs are enabled by default, plus the generated shell pack. */
@@ -29,6 +31,7 @@ export function generateGameManifest(input: GameManifestInput): Record<string, u
     // `config: {}` (see starter/content/game.json).
     systemPacks: [...input.systemPackIds.map((packId) => ({ packId, config: {} })), { packId: input.shellPackId, config: {} }],
     defaultSettings: { masterVolume: 0.7 },
+    ...(input.physicsProfile ? { physicsProfile: input.physicsProfile } : {}),
   };
 }
 

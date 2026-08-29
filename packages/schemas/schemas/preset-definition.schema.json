@@ -60,6 +60,7 @@
     "knownLimitations": {
       "type": "array",
       "items": { "type": "string" }
-    }
+    },
+    "physicsProfile": { "enum": ["matter"] }
   }
 }

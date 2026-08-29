@@ -212,7 +212,17 @@ export async function createGame(options: CreateGameOptions): Promise<GameRuntim
       mode: Phaser.Scale.FIT,
       autoCenter: Phaser.Scale.CENTER_BOTH,
     },
-    physics: { default: 'arcade', arcade: { gravity: { x: 0, y: 0 }, debug: false } },
+    // Arcade is always the default backend (existing games are untouched).
+    // A game that sets physicsProfile: 'matter' (capability program Phase 9)
+    // additionally gets a Matter world for rigid bodies / constraints / grapple.
+    physics:
+      definition.physicsProfile === 'matter'
+        ? {
+            default: 'arcade',
+            arcade: { gravity: { x: 0, y: 0 }, debug: false },
+            matter: { gravity: { x: 0, y: 1 }, enableSleeping: false, debug: false },
+          }
+        : { default: 'arcade', arcade: { gravity: { x: 0, y: 0 }, debug: false } },
     // Phaser's own keyboard capture is disabled: the semantic input layer is the
     // single reader of physical input, so nothing can consume a key twice.
     input: { keyboard: false },

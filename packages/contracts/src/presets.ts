@@ -36,6 +36,8 @@ export interface PresetDefinition {
   readonly defaultConfig: Readonly<Record<string, unknown>>;
   /** Content documents a generated game must supply, e.g. 'levels', 'tuning'. */
   readonly requiredContentRoles: readonly string[];
+  /** Capability program Phase 9: when 'matter', the generated game.json opts into the Matter backend. */
+  readonly physicsProfile?: 'matter';
   readonly supportedInputModes: readonly InputMode[];
   readonly defaultBindings?: ActionBindings;
   readonly starterScene: string;

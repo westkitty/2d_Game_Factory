@@ -97,7 +97,10 @@ export const PUZZLE_ARCADE_PRESETS: readonly PresetDefinition[] = [
     requiredContentRoles: ['tuning'],
     supportedInputModes: POINTER_INPUT_MODES,
     validationProfile: VALIDATION_PROFILES.puzzleArcade,
-    knownLimitations: [LIMITATIONS.puzzleConfigIsCode, LIMITATIONS.advancedPhysics],
+    // Phase 9 (ADR-0026): the Matter backend + reusable AdvancedPhysicsService
+    // drive motion; the puzzle's own success condition stays in sw2d.puzzle.
+    physicsProfile: 'matter',
+    knownLimitations: [LIMITATIONS.puzzleConfigIsCode],
   }),
 
   definePreset({
@@ -141,6 +144,11 @@ export const PUZZLE_ARCADE_PRESETS: readonly PresetDefinition[] = [
     requiredSystemPacks: [pack(PACK_IDS.arcade)],
     requiredContentRoles: ['tuning'],
     validationProfile: VALIDATION_PROFILES.puzzleArcade,
-    knownLimitations: [LIMITATIONS.advancedPhysics],
+    // Phase 9 (ADR-0026): the Matter backend + reusable AdvancedPhysicsService
+    // give the ball real rigid-body motion and collision.
+    physicsProfile: 'matter',
+    knownLimitations: [
+      'A full pinball table (flippers, bumpers, scoring lanes) is game-specific code on top of the Matter ball + static collision the shell provides.',
+    ],
   }),
 ];

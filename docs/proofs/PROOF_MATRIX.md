@@ -3,7 +3,7 @@
 Phase 10's five deep, end-to-end proof games - the tier above Phase 8's smoke bar - plus the
 capability-completion program's per-phase proof consumers. Each row is backed by a frozen
 `proofs/<id>/PROOF_CONTRACT.md`, a real generated composition, and a committed real-browser proof
-spec run through `npm run qa:proof`. Mechanically, `npm run qa:proof` is **19/19** as of this
+spec run through `npm run qa:proof`. Mechanically, `npm run qa:proof` is **21/21** as of this
 revision.
 
 ## Capability program — Phase 1: reusable spatial pointer & interaction (ADR-0018)
@@ -67,6 +67,13 @@ folded into a capability phase.
 |---|---|---|---|---|---|
 | `proofs/metroidvania/` (new) | `metroidvania` | `sw2d.world-graph` (`WorldGraphService`) - three nodes each naming its own Tiled level; `createRoomTransitionRuntime` (tear down one room, build the next at the destination entrance); `createWorldMapOverlay`; a bounded `flag` traversal condition; opt-in persistence | Renders the current room's ground + door sprites; a door INTERACT is forwarded as `requestTransition`; a lever INTERACT sets `treasury-unlocked` on `world.state` | Start in Hub; Hub→East; locked East→Treasury rejected (`condition-failed`); pull the lever → flag set, `canTraverse` true; East→Treasury; return to East, flag still set; open map (3 areas, current marked); `roomDoorSprites` bounded (no leak); restart → persistence restores the graph (`currentNode`, discovered) | PASS |
 | `proofs/exploration-game/` (new) | `exploration-game` | Same service, simpler: three areas in a loop, no gating; discovery / visited state; the map; a persistent `world.state` flag; the room transition bridge | Top-down movement; door INTERACT → transition; `SECONDARY_ACTION` toggles the map | Start in Plaza (`town-visited` flag set); walk the full loop plaza→garden→library→garden→plaza and repeat; end: all 3 discovered + visited, flag still set through every transition, `roomDoorSprites` never exceeds 2 (no accumulation); map shows 3 areas + ≥2 known routes; restart → back to Plaza (no persistence configured) | PASS |
+
+## Capability program — Phase 9: optional advanced physics & constraints (ADR-0026)
+
+| Proof | Preset | Reusable capability exercised | Game-specific mechanics | Browser journey | Status |
+|---|---|---|---|---|---|
+| `proofs/grappling-platformer/` (new) | `grappling-platformer` | `physicsProfile: 'matter'`; `createAdvancedPhysics` (Matter-backed `AdvancedPhysicsService`); `createGrappleService` (a near-rigid distance constraint player↔anchor); named collision categories | The player is a Matter body moved by impulses; SECONDARY_ACTION toggles the grapple; INTERACT/CANCEL reel the rope. No scripted swing | Start (`physicsEnabled`, `constraintCount 0`, 2 eligible anchors); move under an anchor; attach → `constraintCount 1`, `grappleAttached`; the anchor distance stays near the rope length while the player's position changes (a real pendulum, not free fall); detach → `constraintCount 0`; re-attach; reel in → rope shortens; restart → no constraint survives, body count back to a fresh service's | PASS |
+| `proofs/physics-toy/` (new) | `physics-toy` | Same `AdvancedPhysicsService`; `createSpring`; Phase-1 `context.interaction` + `context.spatialPointer` | Three rigid balls + a box fall onto a static floor between two walls and a ceiling; a spring links two balls; a click on the centre target shakes every dynamic body | Start (`bodyCount ≥ 7`, `constraintCount 1`); the balls fall and settle above the floor (collision holds); the spring keeps the two linked balls within a bounded distance; a spatial-pointer click (`hoveredId === 'shaker'`) shakes them upward; they settle again bounded, spring intact; restart restores the fresh body/constraint counts and clears the shake count | PASS |
 
 ## Phase 10 deep proofs
 

@@ -45,6 +45,8 @@ export { createEncounterRuntime, type EncounterRuntime, type EncounterRuntimeOpt
 export { resolveSceneLevel, type ResolvedSceneLevel } from './game-support/generatedLevel.ts';
 export { createRoomTransitionRuntime, type RoomTransitionRuntime, type RoomTransitionHooks } from './game-support/roomTransition.ts';
 export { createWorldMapOverlay, type WorldMapOverlay } from './game-support/worldMapOverlay.ts';
+export { createAdvancedPhysics } from './game-support/advancedPhysics.ts';
+export { createGrappleService } from './game-support/grappleService.ts';
 
 export { LocalStorageDriver, MemoryStorageDriver } from './persistence/LocalStorageDriver.ts';
 export { SaveStoreImpl } from './persistence/SaveStoreImpl.ts';

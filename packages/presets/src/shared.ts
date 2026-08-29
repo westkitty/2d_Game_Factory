@@ -61,7 +61,6 @@ export const POINTER_INPUT_MODES: readonly InputMode[] = ['keyboard', 'pointer',
 
 /** Recorded, reused verbatim wherever more than one recipe shares the same real gap. Keeps wording from drifting across recipes that share a limitation. */
 export const LIMITATIONS = {
-  grapplingPhysics: 'No advanced rope/constraint/grappling physics exists yet.',
   spatialAim:
     'Independent spatial/analog aim is not wired into this starter. The digital AIM_* axis (ADR-0016) is the aim path; the spatial pointer (ADR-0018) can supply an optional aim fallback but the generated top-down shell does not consume it.',
   stealthAi:
@@ -80,7 +79,6 @@ export const LIMITATIONS = {
   vehicleIntentOnly:
     'The vehicle controller supplies steering/throttle/brake intent only; no reusable vehicle-physics/drift/handling system exists.',
   raceOrchestration: 'Lap/checkpoint/time-trial race orchestration is not a dedicated reusable system yet.',
-  advancedPhysics: 'Optional advanced rigid-body/constraint physics has not been implemented.',
   ballPaddleSystem: 'No reusable ball/paddle collision-and-bounce system exists yet.',
   // Phase 7C additions - same "two or more recipes" bar as Phase 7B's four.
   customerEconomy:
@@ -100,6 +98,8 @@ export interface PresetSpec {
   readonly supportedInputModes?: readonly InputMode[];
   readonly validationProfile: ValidationProfileId;
   readonly knownLimitations?: readonly string[];
+  /** Capability program Phase 9: 'matter' opts the generated game into the Matter backend. */
+  readonly physicsProfile?: 'matter';
   /** Defaults to 'recipe'. Only set to 'smoke-validated' once a real, committed browser smoke test passes (Phase 8's twelve demos) - never hand-waved. */
   readonly maturity?: PresetMaturity;
 }
@@ -124,5 +124,6 @@ export function definePreset(spec: PresetSpec): PresetDefinition {
     starterScene: SCENE_KEYS.play,
     validationProfile: spec.validationProfile,
     knownLimitations: spec.knownLimitations ?? [],
+    ...(spec.physicsProfile ? { physicsProfile: spec.physicsProfile } : {}),
   };
 }

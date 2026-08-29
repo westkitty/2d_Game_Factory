@@ -28,13 +28,13 @@ Git/validation/architecture checkpoint, not a new chat.
 | 6 | Data-Driven Puzzle Rules | `feature/capability-06-data-puzzles` | PASS |
 | 7 | Procedural Generation | `feature/capability-07-procedural-generation` | PASS |
 | 8 | World Graph / Rooms / Transitions / Map | `feature/capability-08-world-graph` | PASS |
-| 9 | Advanced 2D Physics & Constraints | `feature/capability-09-advanced-physics` | NOT STARTED |
+| 9 | Advanced 2D Physics & Constraints | `feature/capability-09-advanced-physics` | PASS |
 | 10 | Vehicle Handling & Racing | `feature/capability-10-vehicle-racing` | NOT STARTED |
 
 Program starting `main`: `0af24cd6c2646cae84fb4be559b68c2477e63d0b`
 (the Start/Confirm prerequisite; verified present before Phase 1).
 
-Current phase: **9 — Advanced 2D Physics & Constraints** (NOT STARTED). Phases 1–8 integrated to `origin/main`.
+Current phase: **10 — Vehicle Handling & Racing** (NOT STARTED). Phases 1–9 integrated to `origin/main`.
 
 ---
 
@@ -633,5 +633,78 @@ None.
 
 ### Next phase
 
-Phase 9 — Advanced 2D Physics & Constraints. Branch
-`feature/capability-09-advanced-physics` from the integrated `main`.
+Phase 9 done, see below.
+
+---
+
+## Phase 9 — Advanced 2D Physics & Constraints — PASS
+
+- **Starting SHA:** `0b896303933318ea89ec73c32085ae3b3bb463f2` (Phase 8 on `main`)
+- **Feature branch:** `feature/capability-09-advanced-physics`
+- **Phase commit SHA:** this commit — `feat: add optional advanced physics and constraints` on `main`
+- **Main integration SHA:** same commit, fast-forwarded onto `main`
+
+### Implementation summary
+
+- `packages/contracts/src/advancedPhysics.ts` (new): renderer-neutral
+  `AdvancedPhysicsService` (opaque body/constraint handles, plain body
+  definitions, named `CollisionCategory`, distance/spring/pin/world constraints)
+  and `GrappleService`. `PHYSICS_ADVANCED_CAPABILITY_ID = 'physics.advanced'`.
+- `GameDefinition.physicsProfile` / `PresetDefinition.physicsProfile`
+  (`'arcade'` default, opt-in `'matter'`); `game-definition` + `preset-definition`
+  schemas updated. `createGame` adds a Matter world only for `'matter'`;
+  `PlayScene`'s own scene config names the Matter system so Phaser injects
+  `scene.matter`.
+- `packages/runtime/src/game-support/advancedPhysics.ts` (new):
+  `createAdvancedPhysics(scene)` - Matter-backed, owns every body/constraint,
+  maps logical handles, `dispose()` removes all of it, inert without Matter.
+- `packages/runtime/src/game-support/grappleService.ts` (new):
+  `createGrappleService` - a near-rigid distance constraint player↔anchor;
+  range/eligibility validation, safe anchor-removal detach, bounded reeling.
+- No `@sw2d/packs` pack (renderer-free by contract); the service is a runtime
+  `game-support` factory, per the ADR-0020 precedent.
+- Generator writes `physicsProfile` into `content/game.json`; `pointer` /
+  `platform` / `ui-simulation` shell templates create a demo Matter body when
+  the profile is `'matter'`.
+- Workbench: `POST /api/physics/inspect` + an inspector panel (backend +
+  gravity).
+- ADR-0026.
+
+### Proof consumers
+
+- **`proofs/grappling-platformer/`** (new) — the player is a Matter body;
+  attach creates a real distance constraint; the swing keeps the player near a
+  fixed distance from the anchor while its position changes; detach; re-attach;
+  reel shortens the rope; restart leaves no constraint and no extra bodies.
+- **`proofs/physics-toy/`** (new) — several rigid bodies falling and colliding
+  on a static floor; one spring; a Phase-1 spatial-pointer click shakes the
+  field; restart restores fresh counts.
+- `npm run qa:proof` 19/19 → **21/21**.
+
+### Limitation changes
+
+- `LIMITATIONS.grapplingPhysics` and `LIMITATIONS.advancedPhysics` **removed**
+  (both constants deleted). Removed from `grappling-platformer`, `physics-toy`,
+  `physics-puzzle` (keeps `puzzleConfigIsCode`), `pinball-lite` (keeps a narrow
+  "full table is game-specific code" limitation). Maturity split unchanged
+  (5/7/62). No new pack (advanced physics is a runtime service).
+
+### Validation completed
+
+- `npm run typecheck` — PASS
+- `npm test` — 2505/2505 PASS (was 2496 at Phase 8; +9)
+- `npm run validate` (build + `check:offline`) — PASS
+- `npm run qa:proof` — 21/21 PASS
+- `npm run qa:matrix` — 44/44 PASS
+- `npm run qa:starter-kits` — all 14 sub-suites PASS
+- `npm run qa:workbench` — 16/16 PASS (workbench changed)
+- `npm run release:verify` — 6/6 PASS
+
+### Unresolved blockers
+
+None.
+
+### Next phase
+
+Phase 10 — Vehicle Handling & Racing. Branch
+`feature/capability-10-vehicle-racing` from the integrated `main`.

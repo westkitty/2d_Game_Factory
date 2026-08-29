@@ -37,7 +37,15 @@ export class PlayScene extends Phaser.Scene {
     packConfigValidator?: PackConfigValidator,
     packConfig?: Readonly<Record<string, unknown>>,
   ) {
-    super(SCENE_KEYS.play);
+    // A game that opted into physicsProfile: 'matter' (capability program
+    // Phase 9) needs the Matter scene plugin injected as `this.matter` - Phaser
+    // does that only for a scene whose own config names the system. Arcade
+    // stays available too (it is the game config's default).
+    super(
+      context.definition.physicsProfile === 'matter'
+        ? { key: SCENE_KEYS.play, physics: { matter: { gravity: { x: 0, y: 1 }, enableSleeping: false } } }
+        : SCENE_KEYS.play,
+    );
     this.#context = context;
     this.#packs = packs;
     this.#spatialPointer = spatialPointer;

@@ -61,7 +61,13 @@ export function buildGameFiles(gameId: string, preset: PresetDefinition): Map<st
   files.set(
     'content/game.json',
     JSON.stringify(
-      generateGameManifest({ gameId, displayName, systemPackIds: requiredPackIds, shellPackId: shellPack }),
+      generateGameManifest({
+        gameId,
+        displayName,
+        systemPackIds: requiredPackIds,
+        shellPackId: shellPack,
+        ...(preset.physicsProfile ? { physicsProfile: preset.physicsProfile } : {}),
+      }),
       null,
       2,
     ) + '\n',

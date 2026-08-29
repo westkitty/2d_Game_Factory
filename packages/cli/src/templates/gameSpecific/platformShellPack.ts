@@ -1,9 +1,10 @@
 import Phaser from 'phaser';
-import type { InstalledSystemPack, PuzzleRulesService, WorldGraphService } from '@sw2d/contracts';
+import type { AdvancedPhysicsService, InstalledSystemPack, PuzzleRulesService, WorldGraphService } from '@sw2d/contracts';
 import { PUZZLE_RULES_CAPABILITY_ID, WORLD_GRAPH_CAPABILITY_ID } from '@sw2d/contracts';
 import {
   bindCollectiblePickups,
   bindStarterWeapon,
+  createAdvancedPhysics,
   createRoomTransitionRuntime,
   createWorldMapOverlay,
   platformController,
@@ -101,6 +102,19 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     // switch/goal ruleset and solved-detection are content/puzzles.json, not
     // code here.
     const puzzle = context.capabilities.get<PuzzleRulesService>(PUZZLE_RULES_CAPABILITY_ID);
+    // Optional advanced physics (capability program Phase 9). Inert unless
+    // content/game.json sets physicsProfile: 'matter'. Then a demo crate rests
+    // on a static Matter floor - the reusable Matter-backed service, no raw
+    // Matter here. A grappling game replaces this block with a grapple service.
+    const advPhysics: AdvancedPhysicsService | null =
+      context.definition.physicsProfile === 'matter' ? createAdvancedPhysics(scene) : null;
+    const advBody = advPhysics?.enabled
+      ? (() => {
+          const { width: vw, height: vh } = context.definition.viewport;
+          advPhysics.createBody({ id: 'mfloor', x: vw * 0.5, y: vh - 12, shape: { kind: 'rect', width: vw, height: 24 }, static: true, category: 'terrain' });
+          return advPhysics.createBody({ id: 'crate', x: vw * 0.5, y: 80, shape: { kind: 'rect', width: 32, height: 32 }, restitution: 0.2, category: 'prop' });
+        })()
+      : null;
     // World graph / rooms / transitions / map (capability program Phase 8).
     // Inert unless sw2d.world-graph is installed. Then: reaching the right edge
     // takes the first traversable connection from the current node (the bridge
@@ -138,6 +152,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       ...(worldGraph
         ? { worldGraph: { current: worldGraph.currentNode().id, ...worldGraph.mapState(), mapOpen: worldMap?.isOpen ?? false, transitions: rooms?.transitions ?? 0 } }
         : {}),
+      ...(advPhysics ? { physics: { enabled: advPhysics.enabled, bodyCount: advPhysics.bodyCount, crate: advBody ? advPhysics.bodyState(advBody) : null } } : {}),
     }));
 
     let disposed = false;
@@ -186,6 +201,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         weapon.dispose();
         rooms?.dispose();
         worldMap?.dispose();
+        advPhysics?.dispose();
         // A restart's batched stop+start can already have torn down this
         // scene's physics world by the time this runs - see
         // placeholderMoverPack.ts's own comment for the full story. Each

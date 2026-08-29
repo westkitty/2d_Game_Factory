@@ -38,6 +38,7 @@
         "width": { "type": "integer", "exclusiveMinimum": 0 },
         "height": { "type": "integer", "exclusiveMinimum": 0 }
       }
-    }
+    },
+    "physicsProfile": { "enum": ["arcade", "matter"] }
   }
 }

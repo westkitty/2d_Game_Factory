@@ -49,7 +49,10 @@ export const PARTY_TOY_WEIRD_PRESETS: readonly PresetDefinition[] = [
     requiredContentRoles: ['tuning'],
     supportedInputModes: POINTER_INPUT_MODES,
     validationProfile: VALIDATION_PROFILES.partyToyWeird,
-    knownLimitations: [LIMITATIONS.advancedPhysics],
+    // Phase 9 (ADR-0026): the Matter backend + reusable AdvancedPhysicsService
+    // (rigid bodies, collision, springs) drive the generated pointer shell.
+    physicsProfile: 'matter',
+    knownLimitations: [],
   }),
 
   definePreset({

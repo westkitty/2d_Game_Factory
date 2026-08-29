@@ -1,5 +1,5 @@
-import type { InstalledSystemPack } from '@sw2d/contracts';
-import { mutedStyle, uiSimulationController, type SceneContext, type ScenePackDefinition } from '@sw2d/runtime';
+import type { AdvancedPhysicsService, InstalledSystemPack } from '@sw2d/contracts';
+import { createAdvancedPhysics, mutedStyle, uiSimulationController, type SceneContext, type ScenePackDefinition } from '@sw2d/runtime';
 
 /**
  * Generated starter shell: ui-simulation controller family.
@@ -26,6 +26,18 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     let selectionIndex = 0;
     let confirmed = false;
 
+    // Optional advanced physics (capability program Phase 9). Inert unless
+    // content/game.json sets physicsProfile: 'matter'. Then a ball drops onto a
+    // static floor through the reusable Matter-backed service; CONFIRM nudges
+    // it. A full pinball table is game-specific code built on this.
+    const physics: AdvancedPhysicsService | null = context.definition.physicsProfile === 'matter' ? createAdvancedPhysics(scene) : null;
+    const ball = physics?.enabled
+      ? (() => {
+          physics.createBody({ id: 'table-floor', x: width * 0.5, y: height - 20, shape: { kind: 'rect', width, height: 24 }, static: true, category: 'terrain' });
+          return physics.createBody({ id: 'ball', x: width * 0.5, y: 60, shape: { kind: 'circle', radius: 12 }, restitution: 0.7, category: 'prop' });
+        })()
+      : null;
+
     const label = scene.add
       .text(width * 0.5, height * 0.5, '', mutedStyle(20))
       .setOrigin(0.5)
@@ -37,7 +49,11 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     }
     render();
 
-    const debugHandle = context.debug.contribute('game.ui-simulation-shell', () => ({ selectionIndex, confirmed }));
+    const debugHandle = context.debug.contribute('game.ui-simulation-shell', () => ({
+      selectionIndex,
+      confirmed,
+      ...(physics ? { physics: { enabled: physics.enabled, bodyCount: physics.bodyCount, ball: ball ? physics.bodyState(ball) : null } } : {}),
+    }));
 
     let disposed = false;
 
@@ -59,6 +75,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
           confirmed = true;
           context.audio.playCue('ui.confirm');
           render();
+          if (physics && ball) physics.applyImpulse(ball, 0, -140);
         }
       },
 
@@ -66,6 +83,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         if (disposed) return;
         disposed = true;
         debugHandle.dispose();
+        physics?.dispose();
         try {
           label.destroy();
         } catch {

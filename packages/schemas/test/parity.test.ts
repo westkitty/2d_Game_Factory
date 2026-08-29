@@ -79,6 +79,7 @@ describe('schema/type parity', () => {
       starterScene: 'PlayScene',
       validationProfile: 'default',
       knownLimitations: [],
+      physicsProfile: 'matter',
     };
     expect(propertyKeys('preset-definition')).toEqual(Object.keys(fixture).sort());
     expect(validateDocument('preset-definition', 'parity-fixture', fixture).valid).toBe(true);
@@ -94,6 +95,7 @@ describe('schema/type parity', () => {
       systemPacks: [{ packId: 'demo.pack' }],
       defaultSettings: { masterVolume: 0.7 },
       viewport: { width: 960, height: 540 },
+      physicsProfile: 'matter',
     };
     expect(propertyKeys('game-definition')).toEqual(Object.keys(fixture).sort());
     expect(validateDocument('game-definition', 'parity-fixture', fixture).valid).toBe(true);

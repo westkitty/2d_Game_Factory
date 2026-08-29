@@ -1,5 +1,5 @@
-import type { InstalledSystemPack } from '@sw2d/contracts';
-import type { SceneContext, ScenePackDefinition } from '@sw2d/runtime';
+import type { AdvancedPhysicsService, InstalledSystemPack } from '@sw2d/contracts';
+import { createAdvancedPhysics, type SceneContext, type ScenePackDefinition } from '@sw2d/runtime';
 
 /**
  * Generated starter shell: pointer controller family.
@@ -36,6 +36,18 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     let highlighted = false;
     let hovered = false;
 
+    // Optional advanced physics (capability program Phase 9). Inert unless
+    // content/game.json sets physicsProfile: 'matter'. Then a demo rigid body
+    // rests on a static floor and a click nudges it, all through the reusable
+    // Matter-backed service - no raw Matter here.
+    const physics: AdvancedPhysicsService | null = context.definition.physicsProfile === 'matter' ? createAdvancedPhysics(scene) : null;
+    const demoBody = physics?.enabled
+      ? (() => {
+          physics.createBody({ id: 'floor', x: width * 0.5, y: height - 24, shape: { kind: 'rect', width, height: 32 }, static: true, category: 'terrain' });
+          return physics.createBody({ id: 'ball', x: width * 0.5, y: 80, shape: { kind: 'circle', radius: 20 }, restitution: 0.6, category: 'prop' });
+        })()
+      : null;
+
     const handle = context.interaction.register({
       id: 'target',
       shape: { kind: 'circle', x: centre.x, y: centre.y, radius: centre.radius },
@@ -52,6 +64,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         highlighted = !highlighted;
         target.setTint(highlighted ? 0xffe14d : hovered ? 0xbfe1ff : 0xffffff);
         context.audio.playCue('ui.confirm');
+        if (physics && demoBody) physics.applyImpulse(demoBody, 0, -180);
       },
     });
 
@@ -62,6 +75,15 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       hoveredId: context.interaction.hoveredId,
       pointerWorldX: Math.round(context.spatialPointer.state.worldX),
       pointerWorldY: Math.round(context.spatialPointer.state.worldY),
+      ...(physics
+        ? {
+            physics: {
+              enabled: physics.enabled,
+              bodyCount: physics.bodyCount,
+              ball: demoBody ? physics.bodyState(demoBody) : null,
+            },
+          }
+        : {}),
     }));
 
     let disposed = false;
@@ -78,6 +100,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         disposed = true;
         debugHandle.dispose();
         handle.dispose();
+        physics?.dispose();
         try {
           target.destroy();
         } catch {
