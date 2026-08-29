@@ -64,11 +64,11 @@ export const LIMITATIONS = {
   spatialAim:
     'Independent spatial/analog aim is not wired into this starter. The digital AIM_* axis (ADR-0016) is the aim path; the spatial pointer (ADR-0018) can supply an optional aim fallback but the generated top-down shell does not consume it.',
   stealthAi:
-    'The reusable AI perception capability (sw2d.ai-perception) exists; this starter does not wire full vision cones/noise into its shell yet. Patrol/chase navigation can use sw2d.navigation.',
+    'AI state exists, but full vision cones, awareness geometry, noise propagation and hiding are not implemented in this starter (reusable sw2d.ai-perception exists). Patrol/chase navigation can use sw2d.navigation (Phase 5).',
   weaponsProjectiles:
     'The reusable weapon/projectile capability (sw2d.weapons, ADR-0020) exists; this starter\'s shell does not wire it yet.',
   climbingMechanics:
-    'Wall-slide, wall-jump and ledge-grab movement mechanics are not yet implemented as reusable capabilities (MASTER_PROJECT.md section 9.2); vertical movement must be authored as game-specific code, the same pattern starter/src/game-specific/ demonstrates.',
+    'Wall-slide, wall-jump and ledge-grab movement mechanics are not yet implemented as reusable capabilities in this starter (reusable sw2d.climbing exists); vertical movement must be authored as game-specific code, the same pattern starter/src/game-specific/ demonstrates.',
   puzzleConfigIsCode:
     "Standard puzzle kinds (sokoban, switch/sequence) are now content-authorable through the sw2d.puzzle-rules capability and content/puzzles.json (ADR-0023). This recipe's board rules are not one of those built-in kinds, so it still uses the code seam: sw2d.puzzle declares configSource: 'code' (ADR-0017) and a generated game supplies createInitialState/isSolved from src/game-specific/packConfig.ts (shipped with a working placeholder to replace) - the pack really installs, but this puzzle's own rules stay game-specific TypeScript, not content.",
   chasePressure:

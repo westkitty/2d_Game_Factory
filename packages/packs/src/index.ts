@@ -86,3 +86,4 @@ export { worldGraphPack, WORLD_GRAPH_SAVE_SLOT, type WorldGraphConfig, type Worl
 export { vehiclesPack, type VehicleService } from './vehicles/vehiclesPack.ts';
 export { racingPack, RACING_SAVE_SLOT, type RacingConfig, type RaceService } from './racing/racingPack.ts';
 export { aiPerceptionPack, PerceptionServiceImpl, PursuitServiceImpl } from './aiPerception/aiPerceptionPack.ts';
+export { climbingPack, ClimbingServiceImpl, DEFAULT_CLIMBING_CONFIG } from './climbing/climbingPack.ts';

@@ -63,6 +63,8 @@ const PROOF_SPEC_MODULES: Readonly<Record<string, string>> = {
   'time-trial-racer': 'timeTrialRacer',
   // Phase 11 - AI perception, awareness & pursuit
   'stealth-game': 'stealthGame',
+  // Phase 12 - platformer climbing, wall-slide, wall-jump & ledge-hang
+  'precision-platformer': 'precisionPlatformer',
 };
 
 function proofTargets(): Target[] {

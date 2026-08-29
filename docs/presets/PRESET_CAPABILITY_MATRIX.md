@@ -157,8 +157,10 @@ pack/controller selections were actually exercised through, and
 | world-graph | `sw2d.world-graph` | `world.graph` | 2 | 2 |
 | vehicles | `sw2d.vehicles` | `vehicle.motion` | 5 | 5 |
 | racing | `sw2d.racing` | `race.state` | 3 | 4 |
+| ai-perception | `sw2d.ai-perception` | `ai.perception` | 0 | 3 |
+| climbing | `sw2d.climbing` | `movement.climbing` | 0 | 2 |
 
-**All nineteen current packs have at least one preset consumer.** `sw2d.items` (capability
+**All twenty-one current packs have at least one preset consumer.** `sw2d.items` (capability
 program Phase 2) is required by `collectathon-platformer`, whose generated starter consumes
 the reusable item/effect service through the shared platform shell. `sw2d.puzzle-rules`
 (capability program Phase 6) is required by `sokoban` and `puzzle-platformer`, whose

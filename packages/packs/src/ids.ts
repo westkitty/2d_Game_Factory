@@ -35,6 +35,7 @@ export const PACK_IDS = {
   vehicles: 'sw2d.vehicles',
   racing: 'sw2d.racing',
   aiPerception: 'sw2d.ai-perception',
+  climbing: 'sw2d.climbing',
 } as const;
 
 export const CAPABILITY_IDS = {
@@ -71,4 +72,6 @@ export const CAPABILITY_IDS = {
   aiPerception: 'ai.perception',
   /** Capability program Phase 11: pursuit pressure calculation and state. */
   aiPursuit: 'ai.pursuit',
+  /** Capability program Phase 12: platformer climbing, wall-slide, wall-jump & ledge-hang. */
+  climbing: 'movement.climbing',
 } as const;

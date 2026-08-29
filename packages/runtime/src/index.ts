@@ -53,6 +53,12 @@ export {
   type PerceptionRuntimeOptions,
   type PerceptionRuntimeEntityTransform,
 } from './game-support/perceptionRuntime.ts';
+export {
+  createClimbingRuntime,
+  type ClimbingRuntime,
+  type ClimbingRuntimeOptions,
+  type LedgePoint,
+} from './game-support/climbingRuntime.ts';
 
 export { LocalStorageDriver, MemoryStorageDriver } from './persistence/LocalStorageDriver.ts';
 export { SaveStoreImpl } from './persistence/SaveStoreImpl.ts';

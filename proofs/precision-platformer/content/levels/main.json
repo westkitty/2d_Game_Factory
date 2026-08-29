@@ -1,0 +1,97 @@
+{
+  "type": "map",
+  "orientation": "orthogonal",
+  "infinite": false,
+  "width": 30,
+  "height": 17,
+  "tilewidth": 32,
+  "tileheight": 32,
+  "layers": [
+    {
+      "type": "tilelayer",
+      "name": "Background",
+      "width": 30,
+      "height": 17
+    },
+    {
+      "type": "objectgroup",
+      "name": "Solids",
+      "objects": [
+        {
+          "id": 1,
+          "class": "Solid",
+          "name": "Ground",
+          "x": 0,
+          "y": 500,
+          "width": 420,
+          "height": 40
+        },
+        {
+          "id": 2,
+          "class": "Solid",
+          "name": "LeftWall",
+          "x": 200,
+          "y": 200,
+          "width": 40,
+          "height": 300
+        },
+        {
+          "id": 3,
+          "class": "Solid",
+          "name": "RightWall",
+          "x": 380,
+          "y": 320,
+          "width": 40,
+          "height": 180
+        },
+        {
+          "id": 4,
+          "class": "Solid",
+          "name": "TopPlatform",
+          "x": 380,
+          "y": 320,
+          "width": 500,
+          "height": 40
+        }
+      ]
+    },
+    {
+      "type": "objectgroup",
+      "name": "Entities",
+      "objects": [
+        {
+          "id": 5,
+          "class": "PlayerSpawn",
+          "name": "Start",
+          "x": 270,
+          "y": 440,
+          "width": 0,
+          "height": 0,
+          "properties": [
+            {
+              "name": "facing",
+              "type": "string",
+              "value": "right"
+            }
+          ]
+        },
+        {
+          "id": 6,
+          "class": "Exit",
+          "name": "Level Exit",
+          "x": 750,
+          "y": 270,
+          "width": 24,
+          "height": 48,
+          "properties": [
+            {
+              "name": "exitId",
+              "type": "string",
+              "value": "exit-1"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

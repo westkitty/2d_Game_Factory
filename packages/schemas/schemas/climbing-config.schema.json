@@ -1,0 +1,31 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:sw2d:schema:content-climbing-config:v1",
+  "title": "ClimbingConfig",
+  "description": "Mirrors @sw2d/contracts ClimbingConfig (climbing.ts). Content document name 'climbing'.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "wallSlideMaxSpeed",
+    "wallFriction",
+    "wallJumpVelocityX",
+    "wallJumpVelocityY",
+    "wallStickMs",
+    "ledgeGrabToleranceX",
+    "ledgeGrabToleranceY",
+    "ladderClimbSpeed"
+  ],
+  "properties": {
+    "schemaVersion": { "type": "integer", "minimum": 1 },
+    "wallSlideMaxSpeed": { "type": "number", "exclusiveMinimum": 0 },
+    "wallFriction": { "type": "number", "minimum": 0 },
+    "wallJumpVelocityX": { "type": "number", "exclusiveMinimum": 0 },
+    "wallJumpVelocityY": { "type": "number", "exclusiveMinimum": 0 },
+    "wallStickMs": { "type": "number", "minimum": 0 },
+    "ledgeGrabToleranceX": { "type": "number", "minimum": 0 },
+    "ledgeGrabToleranceY": { "type": "number", "minimum": 0 },
+    "ladderClimbSpeed": { "type": "number", "exclusiveMinimum": 0 },
+    "enableLedgeClimb": { "type": "boolean" }
+  }
+}

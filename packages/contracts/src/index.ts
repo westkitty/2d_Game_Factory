@@ -9,6 +9,7 @@ export * from './accessibility.ts';
 export * from './actions.ts';
 export * from './advancedPhysics.ts';
 export * from './audio.ts';
+export * from './climbing.ts';
 export * from './content.ts';
 export * from './context.ts';
 export * from './controllers.ts';

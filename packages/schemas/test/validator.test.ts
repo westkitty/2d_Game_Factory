@@ -99,6 +99,23 @@ describe('validateDocument - located, readable failures', () => {
     expect(result.errors[0]).toMatchObject({ instancePath: '/masterVolume' });
   });
 
+  it('validates a correct climbing-config document', () => {
+    const validClimbing = {
+      schemaVersion: 1,
+      wallSlideMaxSpeed: 80,
+      wallFriction: 0.2,
+      wallJumpVelocityX: 200,
+      wallJumpVelocityY: 260,
+      wallStickMs: 150,
+      ledgeGrabToleranceX: 16,
+      ledgeGrabToleranceY: 16,
+      ladderClimbSpeed: 100,
+      enableLedgeClimb: true,
+    };
+    const result = validateDocument('climbing-config', 'climbing.json', validClimbing);
+    expect(result.valid).toBe(true);
+  });
+
   it('meets the quality bar: /player/jumpVelocity must be number, not "invalid configuration"', () => {
     const result = validateDocument('tuning', 'tuning.json', jumpVelocityWrongType);
     expect(result.valid).toBe(false);

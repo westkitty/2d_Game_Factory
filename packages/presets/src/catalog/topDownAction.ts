@@ -110,6 +110,7 @@ export const TOP_DOWN_ACTION_PRESETS: readonly PresetDefinition[] = [
     optionalSystemPacks: [pack(PACK_IDS.worldEntities), pack(PACK_IDS.navigation), pack(PACK_IDS.aiPerception)],
     requiredContentRoles: ['tuning', 'levels'],
     validationProfile: VALIDATION_PROFILES.topDown,
+    knownLimitations: [LIMITATIONS.stealthAi],
   }),
 
   definePreset({

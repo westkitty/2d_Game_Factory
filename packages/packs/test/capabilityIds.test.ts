@@ -21,6 +21,7 @@ import {
   strategyPack,
   worldPack,
   aiPerceptionPack,
+  climbingPack,
 } from '../src/index.ts';
 
 /**
@@ -55,6 +56,7 @@ const ALL_PACKS = [
   vehiclesPack,
   racingPack,
   aiPerceptionPack,
+  climbingPack,
 ];
 
 /** `<family>.<service>`: lowercase segments, at least two, dash-separated words allowed after the first. */
