@@ -1,4 +1,40 @@
 {
   "schemaVersion": 1,
-  "items": []
+  "items": [
+    {
+      "id": "silver_key",
+      "displayName": "Silver Key",
+      "category": "keys",
+      "stackable": true,
+      "consumable": true
+    },
+    {
+      "id": "gold_coin",
+      "displayName": "Gold Coin",
+      "category": "currency",
+      "stackable": true,
+      "consumable": false
+    },
+    {
+      "id": "health_potion",
+      "displayName": "Health Potion",
+      "category": "consumables",
+      "stackable": true,
+      "consumable": true
+    },
+    {
+      "id": "ancient_relic",
+      "displayName": "Ancient Relic",
+      "category": "treasures",
+      "stackable": false,
+      "consumable": false
+    },
+    {
+      "id": "master_sword",
+      "displayName": "Master Sword",
+      "category": "weapons",
+      "stackable": false,
+      "consumable": false
+    }
+  ]
 }

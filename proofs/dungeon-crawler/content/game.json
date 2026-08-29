@@ -22,6 +22,14 @@
       "config": {}
     },
     {
+      "packId": "sw2d.items",
+      "config": {}
+    },
+    {
+      "packId": "sw2d.dungeon-chests",
+      "config": {}
+    },
+    {
       "packId": "sw2d.generation",
       "config": {}
     },

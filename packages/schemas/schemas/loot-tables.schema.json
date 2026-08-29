@@ -1,0 +1,58 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:sw2d:schema:content-loot-tables:v1",
+  "title": "LootTablesDocument",
+  "description": "Mirrors @sw2d/contracts LootTablesDocument (chests.ts). Defines loot tables with two-stage rarity weights and entries.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "tables"],
+  "properties": {
+    "schemaVersion": { "type": "integer", "minimum": 1 },
+    "tables": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/lootTableDefinition" }
+    }
+  },
+  "definitions": {
+    "lootTableDefinition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "rarityWeights", "entries"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "rolls": { "type": "integer", "minimum": 1 },
+        "rarityWeights": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["common", "uncommon", "rare", "epic", "legendary"],
+          "properties": {
+            "common": { "type": "number", "minimum": 0 },
+            "uncommon": { "type": "number", "minimum": 0 },
+            "rare": { "type": "number", "minimum": 0 },
+            "epic": { "type": "number", "minimum": 0 },
+            "legendary": { "type": "number", "minimum": 0 }
+          }
+        },
+        "entries": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/lootItemDrop" }
+        }
+      }
+    },
+    "lootItemDrop": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["itemId", "rarity", "weight"],
+      "properties": {
+        "itemId": { "type": "string", "minLength": 1 },
+        "rarity": {
+          "type": "string",
+          "enum": ["common", "uncommon", "rare", "epic", "legendary"]
+        },
+        "weight": { "type": "number", "exclusiveMinimum": 0 },
+        "minQuantity": { "type": "integer", "minimum": 1 },
+        "maxQuantity": { "type": "integer", "minimum": 1 }
+      }
+    }
+  }
+}

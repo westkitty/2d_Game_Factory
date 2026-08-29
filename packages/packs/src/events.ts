@@ -34,6 +34,16 @@ declare module '@sw2d/contracts' {
     'weapons:ammoChanged': { readonly ownerId: string; readonly ammo: number };
     'encounters:phaseChanged': { readonly encounterId: string; readonly phaseId: string | null; readonly phaseIndex: number };
     'encounters:completed': { readonly encounterId: string };
+    'loot:chestOpened': {
+      readonly instanceId: string;
+      readonly chestTypeId: string;
+      readonly drops: readonly { readonly itemId: string; readonly quantity: number }[];
+    };
+    'loot:trapTriggered': {
+      readonly instanceId: string;
+      readonly chestTypeId: string;
+      readonly effectId: string;
+    };
   }
 }
 

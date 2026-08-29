@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "chestTypes": [
+    {
+      "id": "chest-wooden",
+      "name": "Wooden Chest",
+      "tier": "wooden",
+      "lootTableId": "table-wooden"
+    },
+    {
+      "id": "chest-silver",
+      "name": "Silver Chest",
+      "tier": "silver",
+      "lootTableId": "table-silver",
+      "lock": {
+        "kind": "key",
+        "itemId": "silver_key",
+        "consumeKey": true
+      }
+    },
+    {
+      "id": "chest-gold",
+      "name": "Gold Chest",
+      "tier": "gold",
+      "lootTableId": "table-gold",
+      "lock": {
+        "kind": "pick",
+        "difficulty": "expert"
+      }
+    },
+    {
+      "id": "chest-trap",
+      "name": "Mimic Chest",
+      "tier": "wooden",
+      "lootTableId": "table-wooden",
+      "trap": {
+        "effectId": "mimic_ambush"
+      }
+    }
+  ]
+}

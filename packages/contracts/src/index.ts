@@ -37,3 +37,4 @@ export * from './ui.ts';
 export * from './vehicles.ts';
 export * from './weapons.ts';
 export * from './worldGraph.ts';
+export * from './chests.ts';

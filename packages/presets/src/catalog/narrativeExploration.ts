@@ -28,7 +28,7 @@ export const NARRATIVE_EXPLORATION_PRESETS: readonly PresetDefinition[] = [
     family: 'narrative-exploration',
     controllerFamilies: ['top-down'],
     requiredSystemPacks: [pack(PACK_IDS.world), pack(PACK_IDS.worldEntities), pack(PACK_IDS.worldGraph)],
-    optionalSystemPacks: [pack(PACK_IDS.narrative)],
+    optionalSystemPacks: [pack(PACK_IDS.narrative), pack(PACK_IDS.items), pack(PACK_IDS.dungeonChests)],
     requiredContentRoles: ['tuning', 'levels', 'world-graph'],
     validationProfile: VALIDATION_PROFILES.narrativeExploration,
     // Phase 8 (ADR-0025): areas, discovery/visited state, transitions and the map

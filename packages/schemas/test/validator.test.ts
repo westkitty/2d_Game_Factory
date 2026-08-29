@@ -116,6 +116,68 @@ describe('validateDocument - located, readable failures', () => {
     expect(result.valid).toBe(true);
   });
 
+  it('validates a valid loot-tables document and rejects invalid entries', () => {
+    const validTables = {
+      schemaVersion: 1,
+      tables: [
+        {
+          id: 'table-wooden',
+          rolls: 1,
+          rarityWeights: { common: 100, uncommon: 0, rare: 0, epic: 0, legendary: 0 },
+          entries: [
+            { itemId: 'coin', rarity: 'common', weight: 100, minQuantity: 1, maxQuantity: 3 },
+          ],
+        },
+      ],
+    };
+    expect(validateDocument('loot-tables', 'loot-tables.json', validTables).valid).toBe(true);
+
+    const invalidTable = {
+      schemaVersion: 1,
+      tables: [{ id: 'table-bad', rarityWeights: {}, entries: [] }],
+    };
+    expect(validateDocument('loot-tables', 'loot-tables.json', invalidTable).valid).toBe(false);
+  });
+
+  it('validates a valid chest-types document with key and pick locks', () => {
+    const validChests = {
+      schemaVersion: 1,
+      chestTypes: [
+        { id: 'chest-wooden', name: 'Wooden Chest', tier: 'wooden', lootTableId: 'table-wooden' },
+        {
+          id: 'chest-silver',
+          name: 'Silver Chest',
+          tier: 'silver',
+          lootTableId: 'table-silver',
+          lock: { kind: 'key', itemId: 'silver_key', consumeKey: true },
+        },
+        {
+          id: 'chest-gold',
+          name: 'Gold Chest',
+          tier: 'gold',
+          lootTableId: 'table-gold',
+          lock: { kind: 'pick', difficulty: 'expert' },
+        },
+        {
+          id: 'chest-trap',
+          name: 'Mimic Chest',
+          tier: 'wooden',
+          lootTableId: 'table-wooden',
+          trap: { effectId: 'mimic_bite' },
+        },
+      ],
+    };
+    expect(validateDocument('chest-types', 'chest-types.json', validChests).valid).toBe(true);
+
+    const invalidChest = {
+      schemaVersion: 1,
+      chestTypes: [
+        { id: 'chest-bad', name: 'Bad Chest', tier: 'wooden', lootTableId: 'table-wooden', lock: { kind: 'invalid' } },
+      ],
+    };
+    expect(validateDocument('chest-types', 'chest-types.json', invalidChest).valid).toBe(false);
+  });
+
   it('meets the quality bar: /player/jumpVelocity must be number, not "invalid configuration"', () => {
     const result = validateDocument('tuning', 'tuning.json', jumpVelocityWrongType);
     expect(result.valid).toBe(false);
