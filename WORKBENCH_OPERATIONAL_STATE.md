@@ -20,6 +20,7 @@
 | Shipped rich kits | **5 proof-derived + 69 expanded = 74 total** |
 | Expansion scaffolds | **69 / 69 implemented, registered, and mechanically required by regression test** |
 | Current milestone | **Free-Sprite Intelligence reconciled with current `main` (frame-group animation preserved); rights-freshness model corrected** |
+| Merge gate (`repair/free-sprite-main-reconciliation` → `main`) | **PASS** — all revalidation gates green on the reconciled + rights-repaired HEAD; both systems proven together; no confirmed in-scope defect remains |
 
 ---
 
@@ -51,9 +52,54 @@ discovery — layered on top of, not instead of, the accepted frame-group animat
 | Phase F — verified local asset vault + provenance receipt | `feature` `d1f32db` — `workbench/server/sources/vault.ts` (SHA-256 pack cache at `workbench/.sw2d-vault/`, gitignored, `SW2D_VAULT_DIR`-overridable; acquisition licence snapshot never rewritten; freshness recomputed on read; reverify/remove; authoring-only). `pack` writes `THIRD_PARTY_ASSET_NOTICES.txt`. `workbench/test/vault.test.ts`. |
 | Phase G — reverse discovery + polish | `feature` `85d1b68` — `sources/reverse.ts` `whatCanIMakeWith`; `GET /sources/reverse`; client "What can I make with this?"; offline banner; `docs/workbench/FREE_SPRITE_SOURCING.md`. `workbench/test/reverseDiscovery.test.ts`. |
 | Feature bug-sweep | `feature` `616a679` — 6 passes; net.ts body-stall timeout, IPv6 link-local widening, svg-only batch self-clean, vault byte integrity, `/sources/recommend` 404/regex, audition tile cap. |
-| Reconciliation commit | *(this section is finalized below after revalidation)* |
-| Rights-freshness repair | *(see "Rights-freshness repair" below)* |
-| Frame-animation preservation | *(see "Frame-group animation preservation" below)* |
+| Reconciliation merge commit | `9fc1a61` — `git merge --no-ff origin/feature/free-sprite-intelligence` onto `origin/main`. Only two content conflicts (`WORKBENCH_OPERATIONAL_STATE.md`, `package.json`); `package.json` auto-merged keeping **both** sides (main's Node-22.12 `--experimental-strip-types` script hardening + `qa:workbench` batch-fixture/build prelude, and the feature's `workbench:build` step in `validate`). Every other file auto-merged: main's animation stack + revalidation fixes + 69-kit merge, and the feature's `workbench/server/sources/*`, game-first UI, Dex Sprite compiler, and QA journey alignment, all present. typecheck PASS, `workbench:build` PASS, `npm test` 2039/2039 on the raw merge. |
+| Rights-freshness repair commit | `b9aa4bb` — see "Rights-freshness repair" below. `npm test` 2054/2054. |
+| Certification commit | this commit. |
+
+### Frame-group animation preservation (current `main` accepted work)
+
+The reconciled HEAD retains the full accepted frame-group animation stack from `main`:
+`packages/contracts/src/content.ts` (`RoleAnimationDescriptor` / `AnimationFrameDescriptor`),
+`packages/contracts/src/theme.ts` (`ThemeManifest.animations`),
+`packages/runtime/src/content/roleAnimations.ts` (`queueRoleAnimationFrames` /
+`registerRoleAnimations` / `bindRoleAnimations`), `BootScene`/`SceneContext` wiring,
+`packages/schemas/schemas/theme-manifest.schema.json` animation parity, animation-aware
+`workbench/server/themeSynthesis.ts`, dimension/order safety, and derived-frame lineage
+ordering. Proven on the reconciled HEAD by
+`node --experimental-strip-types tools/scripts/qa-frame-group-animation.ts`:
+**PASS — 4 local frames synthesized, 4 rendered frame textures observed,
+`animation=wb/default/player/animation/walk`, no console errors / external requests, lockfile
+unchanged.** The feature's `spritePresentation.ts` is read-only authoring *suggestion* text and
+does not touch this runtime path; static-role fallback is unchanged.
+
+### Rights-freshness repair (`b9aa4bb`)
+
+The independently-found hole: a stale catalogue candidate could flow
+`stale evidence → acquisition → provenance loses freshness → approved resource → pack`
+because `rightsAllowUse()` admitted `stale-verification` and the acquisition provenance kept
+only the licence string.
+
+- Rights are split by context (`rights.ts`): `rightsAllowExistingUse` (an already-acquired
+  snapshot stays usable in an existing project — staleness never retroactively breaks a built
+  game; unsupported/unknown still hard-block), `rightsAllowNewAcquisition` (a *new* acquisition
+  needs currently-fresh authoritative evidence — `stale-verification` is refused), and the
+  unchanged `rightsAllowShipping`. `rightsAllowUse` kept as a deprecated alias of the
+  existing-use meaning.
+- `acquire.ts` gate uses `rightsAllowNewAcquisition` (before the vault lookup, so a cached
+  pack is gated too) with a stale-specific 422 naming the review date + evidence URL. No
+  provenance is produced for a stale candidate.
+- `matching.ts` gate blocks stale candidates (matching precedes a new acquisition); reverse
+  discovery inherits it; the client marks them non-acquirable.
+- `vault.ts`: `vaultStore` records `lastVerifiedAt` = the provider's authoritative review date
+  carried on the candidate (`CATALOG_VERIFIED_AT`), never the download time.
+  `reverifyVault` no longer manufactures a fresh timestamp — it re-derives rights from the
+  *current catalogue candidate* (catching a licence change / removed pack) and returns a typed
+  outcome (`catalogue-refreshed` / `still-stale` / `catalogue-changed` / `pack-removed`). A
+  stale catalogue review stays stale, with UI text telling the user a human must re-check the
+  provider statement and bump the catalogue's verification date. No local action can fake
+  freshness. This is honest blocking over a live scraper (deliberately not built).
+- Regression: `workbench/test/rightsFreshness.test.ts` + updated `vault.test.ts` /
+  `sources.test.ts` (all offline, injected fetch stubs).
 
 ### Architectural laws in force (Free-Sprite)
 
@@ -62,6 +108,52 @@ contract; **static fallback survives animation**; source art is non-destructive;
 data; **no runtime internet**; no generic fetch pipe; no arbitrary local path access;
 free ≠ licensed; **SVG is never a sprite source**. Frame-group animation is presentation
 metadata, not gameplay state, and its static-role fallback is never weakened.
+
+### Revalidation on the reconciled HEAD
+
+Runner: this project Mac, Node 26.7.0, npm 11.19.0, system Chrome. Executed on the merged +
+rights-repaired tree (not trusting either branch's prior numbers):
+
+| Gate | Result |
+|---|---|
+| `npm run typecheck` | PASS |
+| `npm run workbench:build` | PASS |
+| `npm test` | **2054 / 2054** (105 files) |
+| `npm run validate` | PASS (typecheck + tests + workbench build + starter build + `check:offline`) |
+| `npm run qa:workbench` | **16 / 16** (WB-BOOT-001 "six primary actions, game-first"; WB-SHEET-001 Dex Sprite 8 frames; WB-SECURITY-001 51 endpoints) |
+| `tools/scripts/qa-frame-group-animation.ts` | **PASS** (see above) |
+| `npm run qa:smoke` | **14 / 14** |
+| `npm run qa:proof` | **5 / 5** |
+| `npm run release:verify` | **PASS** — 6 / 6 controller-shell families, deterministic pack, real Chrome, 0 console errors, 0 external requests |
+| `npm run qa:matrix` | **40 / 40** generated games entered play |
+| `npm run qa:responsive` | **19 / 19** surfaces |
+| LIVE Kenney end-to-end | **COMPLETE** — "Pixel Platformer" fetched live (260 312 bytes, sha256 `d01a196dbe3cc964e00d83ba3b987df62f332dc9260c9f941b4fbcc9047130f4`), 8 PNG / 244 ignored → canonical staged import → 3 roles → theme same-origin `assets/workbench/*.png` → `RESOURCE_MANIFEST.json` 3 `third-party` `CC0-1.0` `approved` → `sw2d validate` PASS incl. browser smoke → `sw2d pack` PASS (offline guard, checksums, `THIRD_PARTY_ASSET_NOTICES.txt` correct) → 0 remote sprite/kenney URLs in packed code → **deleting the workbench vault left the packed game's offline guard green**. Scratch game removed. |
+
+### Targeted final bug sweep (reconciliation scope)
+
+Four passes over the merge-touched files, the animation surfaces, the source/provider/rights/
+vault/acquisition/import-commit/resource-manifest/packaging code and the sourcing UI.
+
+- **Pass 1 — cross-lineage regression.** No behaviour silently lost: animation contracts +
+  runtime registration (frame-group-anim QA PASS), Node-22.12 script hardening (merged
+  `package.json` verified against both parents), game-first UI (WB-BOOT-001), source routes
+  (WB-SECURITY-001 51 endpoints), local import (WB-IMAGE/MULTI/REIMPORT), Dex Sprite
+  (WB-SHEET-001), 69 kits + starter tests (`npm test`). `package.json` merge cross-checked
+  against `origin/main` and `origin/feature` — both parents' improvements retained.
+- **Pass 2 — rights / trust.** The stale→approved path is closed (Phase 2). The
+  `rightsAllowNewAcquisition` gate runs *before* the vault lookup, so a cached stale pack is
+  refused too. Unknown → `pending` manifest → pack refuses (WB-PROVENANCE-001). Generic-fetch /
+  redirect-allowlist / private-address defences from the feature are intact and tested.
+- **Pass 3 — offline / packaging.** Live proof: 0 remote sprite URLs in packed code; vault
+  deletion leaves the packed game's offline guard green; `THIRD_PARTY_ASSET_NOTICES.txt`
+  matches the shipped files. `release:verify` deterministic pack PASS.
+- **Pass 4 — UX / failure state.** Stale verification has a truthful STALE badge, a disabled
+  "Rights stale" button with a specific tooltip, and an honest re-verify outcome message.
+  Blocked acquisition explains the reason. Provider-offline shows a banner + "your game is
+  unaffected"; the vault re-serves cached packs.
+
+Confirmed in-scope defects found: **0** (the one pre-identified rights defect was repaired in
+`b9aa4bb`). No repair needed in this pass.
 
 ---
 
