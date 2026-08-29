@@ -703,7 +703,8 @@ const ROUTES: ReadonlyMap<string, Handler> = new Map<string, Handler>([
       const sha256 = requiredString(body, 'sha256');
       if (!/^[a-f0-9]{64}$/.test(sha256)) throw new SecurityError(400, 'Invalid sha256.');
       try {
-        return ok({ pack: reverifyVault(sha256) });
+        const outcome = reverifyVault(sha256);
+        return ok({ pack: outcome.entry, result: outcome.result, detail: outcome.detail });
       } catch {
         throw new SecurityError(404, `No vault pack ${sha256}.`);
       }

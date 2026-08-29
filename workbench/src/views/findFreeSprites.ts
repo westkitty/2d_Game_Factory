@@ -52,8 +52,9 @@ const RIGHTS_CLASS: Readonly<Record<RightsStatus, string>> = {
   unknown: 'badge badge--danger',
 };
 
-function rightsUsable(status: RightsStatus): boolean {
-  return status === 'verified' || status === 'attribution-required' || status === 'stale-verification';
+/** Acquirable *now*: a new acquisition needs currently-fresh evidence, so stale is not acquirable. */
+function rightsAcquirable(status: RightsStatus): boolean {
+  return status === 'verified' || status === 'attribution-required';
 }
 
 const MATCH_LEVEL_CLASS: Readonly<Record<string, string>> = {
@@ -68,7 +69,7 @@ function candidateCard(candidate: SourceCandidate, onAcquire: ((c: SourceCandida
     .sort((a, b) => (b[1] ?? 0) - (a[1] ?? 0))
     .map(([role]) => role as WorkbenchAssetRole);
 
-  const usable = rightsUsable(candidate.rights.status);
+  const usable = rightsAcquirable(candidate.rights.status);
 
   return el(
     'div',
@@ -104,10 +105,14 @@ function candidateCard(candidate: SourceCandidate, onAcquire: ((c: SourceCandida
       'div',
       { class: 'row', style: { gap: '6px' } },
       onAcquire
-        ? button(usable ? 'Acquire pack' : 'Blocked by licence', () => onAcquire(candidate), {
+        ? button(usable ? 'Acquire pack' : candidate.rights.status === 'stale-verification' ? 'Rights stale' : 'Blocked by licence', () => onAcquire(candidate), {
             class: usable ? 'btn btn--primary' : 'btn',
             disabled: !usable,
-            title: usable ? `Download from ${candidate.acquisitionUrl}` : 'This licence is not on the accepted list.',
+            title: usable
+              ? `Download from ${candidate.acquisitionUrl}`
+              : candidate.rights.status === 'stale-verification'
+                ? 'Rights verification is stale. The catalogue evidence must be re-reviewed before this pack can be acquired.'
+                : 'This licence is not on the accepted list.',
           })
         : el('div', { class: 'faint', style: { 'font-size': '11px' }, text: 'Open a project to acquire this pack.' }),
       onReverse ? button('What can I make with this?', () => onReverse(candidate), { class: 'btn btn--sm btn--ghost' }) : null,
@@ -142,7 +147,7 @@ function roleCoverageGrid(entries: readonly RoleCoverageEntry[]): HTMLElement {
 
 function matchCard(match: PackMatch, onAcquire: (c: SourceCandidate) => void, onReskin?: (c: SourceCandidate) => void, onReverse?: (c: SourceCandidate) => void): HTMLElement {
   const c = match.candidate;
-  const usable = !match.blockedReason && rightsUsable(c.rights.status);
+  const usable = !match.blockedReason && rightsAcquirable(c.rights.status);
   return el(
     'div',
     { class: 'seed', attrs: { 'data-pack-id': c.packId } },
@@ -525,17 +530,18 @@ export async function openFindFreeSprites(): Promise<void> {
     return el(
       'div',
       { class: 'row', style: { gap: '6px' } },
-      button('Re-verify', () => void reverify(entry.sha256), { class: 'btn btn--sm', title: 'Re-check the recorded licence against the current policy' }),
+      button('Re-verify', () => void reverify(entry.sha256), { class: 'btn btn--sm', title: 'Re-derive rights from the current catalogue review. Does not invent a fresh date; a stale catalogue review must be refreshed by a human.' }),
       button('Remove', () => void removeVault(entry.sha256), { class: 'btn btn--sm btn--danger', title: 'Delete the cached bytes. Existing games keep their own copies and are unaffected.' }),
     );
   }
 
   async function reverify(sha256: string): Promise<void> {
     try {
-      const { pack } = await api.post<{ pack: VaultEntry }>('/sources/vault/reverify', { sha256 });
+      const { pack, result, detail } = await api.post<{ pack: VaultEntry; result: string; detail: string }>('/sources/vault/reverify', { sha256 });
       vault = vault.map((entry) => (entry.sha256 === sha256 ? pack : entry));
       vaultByPack.set(`${pack.providerId}:${pack.packId}`, pack);
-      toast(`Re-verified: ${pack.title} is ${pack.freshness}.`, pack.freshness === 'verified' || pack.freshness === 'attribution-required' ? 'ok' : 'warn');
+      const fresh = pack.freshness === 'verified' || pack.freshness === 'attribution-required';
+      toast(detail || `Re-verified: ${pack.title} is ${pack.freshness}.`, result === 'still-stale' || result === 'pack-removed' || !fresh ? 'warn' : 'ok');
       showVault();
     } catch (error) {
       toast(errorText(error), 'err');

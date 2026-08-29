@@ -129,11 +129,32 @@ describe('vault freshness', () => {
     expect(listVault(STALE)[0]!.freshness).toBe('stale-verification');
   });
 
-  it('re-verify refreshes the timestamp so a stale entry becomes verified again', () => {
+  it('stores the provider review date, not the download time, as lastVerifiedAt', () => {
+    // now = AT + 5 days, but the catalogue review date is CATALOG_VERIFIED_AT.
+    vaultStore({ candidate: candidate(), sha256: 'a'.repeat(64), bytes: ZIP, fileCount: 2, now: AT + 5 * 86_400_000 });
+    const entry = listVault(AT)[0]!;
+    expect(entry.lastVerifiedAt).toBe(candidate().rights.verifiedAt);
+    expect(Date.parse(entry.acquiredAt)).toBe(AT + 5 * 86_400_000);
+  });
+
+  it('re-verify never manufactures freshness: a stale catalogue review stays stale', () => {
     vaultStore({ candidate: candidate(), sha256: 'a'.repeat(64), bytes: ZIP, fileCount: 2, now: AT });
     expect(listVault(STALE)[0]!.freshness).toBe('stale-verification');
-    const re = reverifyVault('a'.repeat(64), STALE);
-    expect(re.freshness).toBe('verified');
+    const outcome = reverifyVault('a'.repeat(64), STALE);
+    expect(outcome.result).toBe('still-stale');
+    expect(outcome.entry.freshness).toBe('stale-verification');
+    // The stored verification date is the catalogue review date - NOT "now".
+    expect(outcome.entry.lastVerifiedAt).not.toBe(new Date(STALE).toISOString());
+    expect(outcome.entry.lastVerifiedAt).toBe(candidate(STALE).rights.verifiedAt);
+    // And it is still stale on the next list, i.e. nothing was silently refreshed.
+    expect(listVault(STALE)[0]!.freshness).toBe('stale-verification');
+  });
+
+  it('re-verify reports the entry fresh when the catalogue review is genuinely current', () => {
+    vaultStore({ candidate: candidate(), sha256: 'a'.repeat(64), bytes: ZIP, fileCount: 2, now: AT });
+    const outcome = reverifyVault('a'.repeat(64), AT);
+    expect(outcome.result).toBe('catalogue-refreshed');
+    expect(outcome.entry.freshness).toBe('verified');
   });
 });
 

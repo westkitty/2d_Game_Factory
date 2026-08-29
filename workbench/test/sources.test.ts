@@ -334,16 +334,16 @@ describe('acquisition feeds the canonical staged import', () => {
     expect(result.svgOnly).toBe(true);
   });
 
-  it('refuses to acquire a pack whose recorded rights are unusable', async () => {
+  it('refuses to newly acquire a pack whose rights verification is stale', async () => {
     await expect(
       acquirePack({
         gameId: GAME,
         providerId: 'kenney',
         packId: 'tiny-dungeon',
-        now: FAR_FUTURE + 10 * 365 * 86_400_000, // decades stale -> still "stale", usable; assert the happy guard path instead
+        now: FAR_FUTURE, // catalogue review is older than the freshness window -> stale
         net: { fetchImpl: zipFetch(makeStoredZip([{ name: 'p/x.png', bytes: PNG_1x1 }])), lookupImpl: async () => [{ address: '203.0.113.10' }] },
       }),
-    ).resolves.toBeDefined();
+    ).rejects.toThrow(/stale/i);
     await expect(
       acquirePack({ gameId: GAME, providerId: 'kenney', packId: 'no-such-pack' }),
     ).rejects.toThrow(/no pack/);

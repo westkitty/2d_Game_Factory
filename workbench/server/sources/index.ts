@@ -38,8 +38,17 @@ export {
   VAULT_ROOT,
   type VaultPackRecord,
   type VaultEntryView,
+  type ReverifyOutcome,
 } from './vault.ts';
-export { evaluateRights, acceptableLicenses, rightsAllowShipping, rightsAllowUse, VERIFICATION_FRESHNESS_DAYS } from './rights.ts';
+export {
+  evaluateRights,
+  acceptableLicenses,
+  rightsAllowShipping,
+  rightsAllowExistingUse,
+  rightsAllowNewAcquisition,
+  rightsAllowUse,
+  VERIFICATION_FRESHNESS_DAYS,
+} from './rights.ts';
 export { SourceNetworkError, PROVIDER_HOST_ALLOWLIST, providerHosts, isDisallowedAddress, providerGet, providerOnline } from './net.ts';
 export { listProviders, getProvider, allCandidates, findCandidate, listProviderInfo } from './registry.ts';
 export { acquirePack, type AcquireInput, type AcquireOutcome } from './acquire.ts';

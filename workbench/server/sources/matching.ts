@@ -15,7 +15,7 @@
 
 import type { WorkbenchAssetRole } from '../../shared/types.ts';
 import { ROLE_LABELS } from '../../shared/types.ts';
-import { rightsAllowUse } from './rights.ts';
+import { rightsAllowNewAcquisition } from './rights.ts';
 import type {
   PackMatch,
   ProfileRole,
@@ -46,12 +46,18 @@ function shortLicense(license: string): string {
   return license.replace(/-1\.0$/, '').replace(/-4\.0$/, '');
 }
 
-/** Hard gates. Returns a reason string when the candidate must not be offered as usable. */
+/**
+ * Hard gates. Returns a reason string when the candidate must not be offered
+ * as acquirable. Matching is a precursor to a *new* acquisition, so
+ * `stale-verification` blocks here too - it is not just a badge.
+ */
 function gate(candidate: SourceCandidate): string | undefined {
-  if (!rightsAllowUse(candidate.rights)) {
+  if (!rightsAllowNewAcquisition(candidate.rights)) {
     return candidate.rights.status === 'unsupported-license'
       ? `licence ${candidate.rights.license} is not on the accepted list`
-      : `rights are ${candidate.rights.status}`;
+      : candidate.rights.status === 'stale-verification'
+        ? 'rights verification is stale - refresh the catalogue evidence before acquiring'
+        : `rights are ${candidate.rights.status}`;
   }
   if (!candidate.rasterFormats.includes('png')) return 'no usable PNG raster content';
   return undefined;

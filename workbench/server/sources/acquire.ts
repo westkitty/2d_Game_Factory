@@ -15,7 +15,7 @@ import { looksLikeZip } from '../zip.ts';
 import { SecurityError } from '../security.ts';
 import type { ImportPlan } from '../../shared/types.ts';
 import { findCandidate, getProvider } from './registry.ts';
-import { rightsAllowUse } from './rights.ts';
+import { rightsAllowNewAcquisition } from './rights.ts';
 import { readVaultBytes, vaultLookup, vaultStore } from './vault.ts';
 import { proposeReskin, type ReskinProposal, type StagedFileLite } from './reskin.ts';
 import { deriveProfile } from './requirements.ts';
@@ -55,13 +55,17 @@ export async function acquirePack(input: AcquireInput): Promise<AcquireOutcome> 
   const candidate = findCandidate(input.providerId, input.packId, input.now);
   if (!candidate) throw new SecurityError(404, `Provider "${input.providerId}" has no pack "${input.packId}".`);
 
-  if (!rightsAllowUse(candidate.rights)) {
-    throw new SecurityError(
-      422,
+  // A NEW acquisition needs currently-fresh authoritative rights evidence.
+  // `stale-verification` is refused here even though it is fine for an asset
+  // that was already acquired while its evidence was fresh.
+  if (!rightsAllowNewAcquisition(candidate.rights)) {
+    const message =
       candidate.rights.status === 'unsupported-license'
         ? `"${candidate.title}" is under ${candidate.rights.license}, which is not on the accepted-licence list. It cannot be used.`
-        : `"${candidate.title}" has ${candidate.rights.status} rights and cannot be used until that is resolved.`,
-    );
+        : candidate.rights.status === 'stale-verification'
+          ? `"${candidate.title}" cannot be acquired: its rights verification is stale (last authoritative review ${candidate.rights.verifiedAt}). Refresh the catalogue's verification date after re-checking ${candidate.rights.evidenceUrl}.`
+          : `"${candidate.title}" has ${candidate.rights.status} rights and cannot be acquired until that is resolved.`;
+    throw new SecurityError(422, message);
   }
 
   // Vault first: a pack acquired before is re-used from the local cache and
