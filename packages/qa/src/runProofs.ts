@@ -33,6 +33,9 @@ const PROOF_SPEC_MODULES: Readonly<Record<string, string>> = {
   'tower-defense': 'towerDefense',
   sokoban: 'sokoban',
   'idle-incremental': 'idleIncremental',
+  // Phase 1 - reusable spatial interaction (ADR-0018)
+  'gallery-shooter': 'galleryShooter',
+  'point-and-click': 'pointAndClick',
 };
 
 function proofTargets(): Target[] {

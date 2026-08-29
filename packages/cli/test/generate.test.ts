@@ -248,3 +248,31 @@ describe('generated games ship explicit start controls', () => {
     expect(findUnresolvedTokens(buildGameFiles('token-check', preset))).toEqual([]);
   });
 });
+
+/**
+ * Capability program Phase 1 (ADR-0018): a newly generated pointer-family game
+ * consumes the reusable spatial interaction capability - not just a string
+ * constant, the real generated shell. End-to-end behaviour is proven in a real
+ * browser by proofs/gallery-shooter/ and proofs/point-and-click/.
+ */
+describe('generated pointer games consume the spatial interaction capability', () => {
+  const pointerPreset = PRESETS.find((candidate) => candidate.controllerFamilies[0] === 'pointer')!;
+
+  it('the generated pointer shell wires context.interaction and context.spatialPointer', () => {
+    const shell = buildGameFiles('spatial-probe', pointerPreset).get('src/game-specific/shellPack.ts')!;
+    expect(shell).toContain('context.interaction.register(');
+    expect(shell).toContain('context.spatialPointer.state');
+    expect(shell).toContain('onHoverEnter');
+    expect(shell).toContain('onClick');
+    // It does not reimplement hit-testing or read raw pointer coordinates off ActionInput.
+    expect(shell).not.toContain("input.value('");
+  });
+
+  it('every pointer-family preset still generates a resolvable shell with no unresolved tokens', () => {
+    for (const candidate of PRESETS.filter((p) => p.controllerFamilies[0] === 'pointer')) {
+      const files = buildGameFiles('spatial-probe', candidate);
+      expect(files.get('src/game-specific/shellPack.ts')).toContain('export const GAME_SPECIFIC_PACK');
+      expect(findUnresolvedTokens(files)).toEqual([]);
+    }
+  });
+});

@@ -1,0 +1,128 @@
+# Capability Completion Program — durable state
+
+Resumable ledger for the ten-phase reusable-capability program. If this
+conversation is compacted or interrupted, resume from this file plus `git log`,
+not from chat memory.
+
+## Program goal
+
+Deeply implement the first ten reusable factory capability systems, in order,
+replacing known-limitation warnings with production-grade reusable architecture
+(reusable contracts/runtime/packs/content), each proven by **≥2 substantially
+different generated-game consumers** through the repo's existing proof standard,
+each integrated to `origin/main` before the next.
+
+Controlling spec: the user's ten-phase program prompt (this session). Execution
+model: one continuous session, sequential gated phases — a phase boundary is a
+Git/validation/architecture checkpoint, not a new chat.
+
+## Phases
+
+| # | Capability | Branch | Status |
+|---|---|---|---|
+| 1 | Spatial Pointer & Interaction | `feature/capability-01-spatial-interaction` | PASS |
+| 2 | Data-Driven Items / Effects / Pickups | `feature/capability-02-items-effects` | NOT STARTED |
+| 3 | Weapons & Projectiles | `feature/capability-03-weapons-projectiles` | NOT STARTED |
+| 4 | Combat / Encounter Orchestration | `feature/capability-04-combat-orchestration` | NOT STARTED |
+| 5 | Navigation & Pathfinding | `feature/capability-05-navigation` | NOT STARTED |
+| 6 | Data-Driven Puzzle Rules | `feature/capability-06-data-puzzles` | NOT STARTED |
+| 7 | Procedural Generation | `feature/capability-07-procedural-generation` | NOT STARTED |
+| 8 | World Graph / Rooms / Transitions / Map | `feature/capability-08-world-graph` | NOT STARTED |
+| 9 | Advanced 2D Physics & Constraints | `feature/capability-09-advanced-physics` | NOT STARTED |
+| 10 | Vehicle Handling & Racing | `feature/capability-10-vehicle-racing` | NOT STARTED |
+
+Program starting `main`: `0af24cd6c2646cae84fb4be559b68c2477e63d0b`
+(the Start/Confirm prerequisite; verified present before Phase 1).
+
+Current phase: **2 — Data-Driven Items / Effects / Pickups** (NOT STARTED).
+
+---
+
+## Phase 1 — Spatial Pointer & Interaction — PASS
+
+- **Starting SHA:** `0af24cd6c2646cae84fb4be559b68c2477e63d0b`
+- **Feature branch:** `feature/capability-01-spatial-interaction`
+- **Phase commit SHA:** this commit — `feat: add reusable spatial interaction` on `main` (see `git log`)
+- **Main integration SHA:** same commit, fast-forwarded onto `main` (linear; no merge commit)
+
+### Implementation summary
+
+- `packages/contracts/src/spatial.ts` (new, renderer-neutral): `SpatialPointerState` /
+  `SpatialPointerInput`; `HitShape` (`rect | circle | polygon`) + pure `hitTestPoint`;
+  `AimVector` + pure `aimFromPointer`; `InteractionService` / `InteractionTargetOptions` /
+  `InteractionTargetHandle` contracts. Exported from `contracts/src/index.ts`.
+- `packages/runtime/src/input/SpatialPointerHost.ts` (new): single owner of world-space
+  pointer state. DOM `pointer*` listeners write raw values; `update()` advances edges +
+  drag tracking once per frame from the existing PRE_STEP handler, next to
+  `ActionInputHost.update()`. Press+release in one frame is latched. Listeners removed on
+  dispose (restart-safe).
+- `packages/runtime/src/game-support/interactionService.ts` (new): `InteractionServiceImpl`
+  (renderer-neutral; consumes `SpatialPointerInput` + hit shapes) with hover enter/leave,
+  press/release/click, drag start/move/end with **origin-target capture**, drop-zone
+  resolution, priority ordering (priority desc, then registration recency), `targetCount`
+  diagnostics. `phaserBoundsShape(obj)` maps a live game object's bounds to a rect provider.
+- Wiring: `createGame` constructs the host (screen→world via play-camera `getWorldPoint`,
+  client→canvas via canvas rect), adds it to `rootBag`, advances it in PRE_STEP, clears it on
+  tab-hide, and passes it to `PlayScene`. `SceneContext` gains `spatialPointer` +
+  `interaction`; `createSceneContext` builds the interaction service, ticks it from the
+  scene's UPDATE event, and disposes it with `sceneDisposables`. `GameContext` unchanged
+  (world resolution needs a scene camera — ADR-0018).
+- Generation: `packages/cli/src/templates/gameSpecific/pointerShellPack.ts` rewritten to
+  consume `context.interaction` + `context.spatialPointer` (hover + click on a world-space
+  target). Every newly generated `pointer`-primary game now demonstrates the capability. No
+  other template edited.
+- ADR-0018 added (spatial pointer is a scene service, not part of `ActionInput`).
+
+### Proof consumers
+
+- **`proofs/gallery-shooter/`** (new) — world-space click targeting: the target under the
+  cursor takes the hit; an empty-space click hits nothing. Frozen `PROOF_CONTRACT.md` +
+  `packages/qa/proof-specs/galleryShooter.ts`, real `PointerEvent`s.
+- **`proofs/point-and-click/`** (new) — hover enter/leave, click, full drag→drop with
+  pointer capture + drop-zone resolution. Frozen contract + `pointAndClick.ts` spec.
+- **`proofs/twin-stick-shooter/`** (upgraded, regression consumer) — pointer aim is an
+  optional source via `aimFromPointer` when no digital `AIM_*` is held; digital aim proven
+  still independent and authoritative.
+- Wired into `npm run qa:proof` (now 7/7). Both new proof games also carry their generated
+  `tests/content.test.ts` in the main vitest suite.
+
+### Limitation changes
+
+- `gallery-shooter`: removed the spatial-pointer-targeting limitation (starter now consumes
+  the capability). Keeps `weaponsProjectiles`.
+- `rail-shooter`: removed the spatial-pointer-targeting limitation. Keeps `weaponsProjectiles`
+  + rail-camera gap.
+- `point-and-click`: replaced the spatial-pointer limitation with the (already-true)
+  branching-dialogue-renderer limitation.
+- `drawing-game`, `dress-up-character-toy`, `escape-room`: narrowed — the spatial
+  pointer/drag capability now exists; each keeps only its remaining specific gap
+  (canvas-stroke capture / wardrobe-attachment system / escape-room puzzle grammar).
+- `LIMITATIONS.spatialPointerTargeting` constant deleted (unused). `LIMITATIONS.spatialAim`
+  reworded (no longer claims spatial pointer is deferred).
+- `packages/presets/test/honesty.test.ts` `cases` array + `POINTER_INPUT_MODES` doc updated
+  to match. Preset `maturity` labels left unchanged (formal `proof-validated` promotion of
+  the two new proof presets, with its 5/7/62 catalog-count bookkeeping, is deferred to a
+  dedicated catalog pass — the proofs exist and pass regardless).
+- `tower-defense` / `simple-rts` (grid-primary shell) spatial-placement limitations left
+  intact — their generated starter does not consume the capability; removed by their own
+  later phase.
+
+### Validation completed
+
+- `npm run typecheck` — PASS
+- `npm test` — 2114/2114 PASS (was 2078; +36)
+- `npm run workbench:build`, `npm run build`, `npm run check:offline` — PASS
+- `npm run qa:proof` — 7/7 PASS (incl. new `gallery-shooter`, `point-and-click`, upgraded
+  `twin-stick-shooter`)
+- `npm run qa:matrix` — 40/40 PASS (generated games entered play; no runtime-boundary regression)
+- `npm run qa:starter-kits` — all 14 sub-suites PASS (exit 0)
+- `npm run release:verify` — 6/6 controller-shell families PASS (pack + offline + real Chrome)
+
+### Unresolved blockers
+
+None.
+
+### Next phase
+
+Phase 2 — Data-Driven Items / Effects / Pickups. Branch
+`feature/capability-02-items-effects` from the integrated `main`.

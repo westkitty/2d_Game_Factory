@@ -27,6 +27,9 @@ interface ShellSnap {
   readonly projectilesLive: number;
   readonly projectilesSpawned: number;
   readonly projectilesExpired: number;
+  readonly pointerAimActive: boolean;
+  readonly lastAimX: number;
+  readonly lastAimY: number;
   readonly enemies: Readonly<Record<string, EnemyState>>;
 }
 
@@ -59,6 +62,27 @@ export async function run(harness: Harness): Promise<SmokeOutcome> {
   await harness.keyTap('Space');
   await harness.stepFrames(10);
   const spawnState = await state(harness);
+
+  // 1b. Phase 1 (ADR-0018): with no digital AIM_* held, the mouse position is
+  // an optional aim source. Moving the pointer up and to the right of the
+  // player yields aimX > 0, aimY < 0 - without firing, and without touching the
+  // digital axis the rest of this spec relies on.
+  await harness.page.evaluate(() => {
+    const canvas = (window as unknown as { __SW2D__: { phaser: { canvas: HTMLCanvasElement } } }).__SW2D__.phaser.canvas;
+    const r = canvas.getBoundingClientRect();
+    canvas.dispatchEvent(
+      new PointerEvent('pointermove', {
+        clientX: r.left + (900 / canvas.width) * r.width,
+        clientY: r.top + (80 / canvas.height) * r.height,
+        bubbles: true,
+        pointerType: 'mouse',
+      }),
+    );
+  });
+  await harness.stepFrames(3);
+  const pointerAiming = await state(harness);
+  evidence.pointerAiming = pointerAiming;
+  const pointerAimOk = pointerAiming.pointerAimActive === true && pointerAiming.lastAimX > 0 && pointerAiming.lastAimY < 0;
 
   // 2. Movement (down then back up) held simultaneously with independent aim (right) -
   // proves aim is not derived from movement by construction, not by inspection.
@@ -150,6 +174,7 @@ export async function run(harness: Harness): Promise<SmokeOutcome> {
     Object.values(afterRestart.enemies).every((e) => e.alive && e.health === 20);
 
   const passed =
+    pointerAimOk &&
     movementOk &&
     wave1Ok &&
     projectileFiredOk &&
@@ -163,6 +188,7 @@ export async function run(harness: Harness): Promise<SmokeOutcome> {
     passed,
     details: {
       ...evidence,
+      pointerAimOk,
       movementOk,
       wave1Ok,
       projectileFiredOk,

@@ -59,7 +59,10 @@ export const NARRATIVE_EXPLORATION_PRESETS: readonly PresetDefinition[] = [
     requiredContentRoles: ['tuning', 'levels', 'dialogue'],
     supportedInputModes: POINTER_INPUT_MODES,
     validationProfile: VALIDATION_PROFILES.narrativeExploration,
-    knownLimitations: ['Spatial pointer position, hover targets, and world-coordinate click targeting remain unimplemented.'],
+    // Spatial pointer position, hover targets and world-coordinate click/drag
+    // targeting are implemented and consumed by the pointer shell (capability
+    // program Phase 1, ADR-0018; proof: proofs/point-and-click/).
+    knownLimitations: ['Narrative state exists, but no full content-authored branching dialogue renderer/portrait presentation system exists.'],
   }),
 
   definePreset({
@@ -114,7 +117,7 @@ export const NARRATIVE_EXPLORATION_PRESETS: readonly PresetDefinition[] = [
     validationProfile: VALIDATION_PROFILES.narrativeExploration,
     knownLimitations: [
       LIMITATIONS.puzzleConfigIsCode,
-      'No content-authored escape-room puzzle grammar exists; spatial pointer remains limited.',
+      'No content-authored escape-room puzzle grammar exists yet.',
     ],
   }),
 ];

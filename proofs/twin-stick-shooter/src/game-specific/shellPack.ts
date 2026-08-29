@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import type { InstalledSystemPack, NormalizedLevel, NormalizedLevelObject } from '@sw2d/contracts';
+import { aimFromPointer, type InstalledSystemPack, type NormalizedLevel, type NormalizedLevelObject } from '@sw2d/contracts';
 import { ProjectilePool, topDownController, type SceneContext, type ScenePackDefinition } from '@sw2d/runtime';
 import { CAPABILITY_IDS, type ArcadeService, type CombatService, type EntityRegistry } from '@sw2d/packs';
 
@@ -101,6 +101,11 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     });
 
     let nowMs = 0;
+    // Phase 1 (ADR-0018): pointer aim is an optional source, never a
+    // replacement for the digital AIM_* axis.
+    let pointerAimActive = false;
+    let lastAimX = 0;
+    let lastAimY = 0;
 
     function activateWave(target: 1 | 2): void {
       for (const record of enemies.values()) {
@@ -155,6 +160,9 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       projectilesLive: pool.liveCount,
       projectilesSpawned: pool.spawnedTotal,
       projectilesExpired: pool.expiredTotal,
+      pointerAimActive,
+      lastAimX,
+      lastAimY,
       enemies: Object.fromEntries(
         [...enemies.values()].map((record) => [
           record.id,
@@ -174,8 +182,28 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         const intent = topDownController.read(context.input);
         player.setVelocity(intent.moveX * tuning.moveSpeed, intent.moveY * tuning.moveSpeed);
 
-        if (intent.primaryPressed && intent.aimMagnitude > 0) {
-          const projectile = pool.spawn(player.x, player.y, intent.aimX * PROJECTILE_SPEED, intent.aimY * PROJECTILE_SPEED);
+        // Digital aim wins whenever it is pressed. Only when it is not does the
+        // pointer position (if a mouse/touch pointer has ever been used) supply
+        // an aim vector - independent digital aim is never overridden.
+        let aimX = intent.aimX;
+        let aimY = intent.aimY;
+        let aimMagnitude = intent.aimMagnitude;
+        pointerAimActive = false;
+        if (aimMagnitude === 0 && context.spatialPointer.state.active) {
+          const [px, py] = context.spatialPointer.worldPoint();
+          const derived = aimFromPointer(player.x, player.y, px, py);
+          aimX = derived.aimX;
+          aimY = derived.aimY;
+          aimMagnitude = derived.aimMagnitude;
+          pointerAimActive = derived.aimMagnitude > 0;
+        }
+        if (aimMagnitude > 0) {
+          lastAimX = Math.round(aimX * 100) / 100;
+          lastAimY = Math.round(aimY * 100) / 100;
+        }
+
+        if (intent.primaryPressed && aimMagnitude > 0) {
+          const projectile = pool.spawn(player.x, player.y, aimX * PROJECTILE_SPEED, aimY * PROJECTILE_SPEED);
           scene.physics.add.overlap(projectile, enemyGroup, (_proj, enemyObj) => {
             const sprite = enemyObj as Phaser.Physics.Arcade.Sprite;
             const enemyId = spriteToEnemyId.get(sprite);

@@ -39,6 +39,7 @@ Generated via `npm run sw2d -- new proof-twin-stick-shooter --preset twin-stick-
 ## Defining journey (automated, real-browser, deterministic frame stepping)
 
 1. Start the run (`Space`), scene reaches `sw2d.play`.
+1b. (Phase 1, ADR-0018) With no digital `AIM_*` held, move the mouse up and to the right of the player. `pointerAimActive` becomes true and `lastAimX > 0`, `lastAimY < 0` — the pointer position is an *optional* aim source, resolved through `aimFromPointer`, and it does not fire or touch the digital axis.
 2. Move (hold `MOVE_DOWN` then back `MOVE_UP`) while independently aiming right (`AIM_RIGHT`/`Numpad6` held throughout, unaffected by the movement keys) — proves aim independence by construction, matching the existing smoke spec's proven pattern.
 3. Fire (`PRIMARY_ACTION`) at a wave-1 enemy positioned in the aim direction; projectile spawns and travels.
 4. Projectile hits the enemy; enemy health drops. Fire again (after the projectile lifetime/travel) to land a second hit and kill it (enemy health 20, projectile damage 10 — two hits required, a real multi-hit kill, not a one-shot).
@@ -56,4 +57,4 @@ Generated via `npm run sw2d -- new proof-twin-stick-shooter --preset twin-stick-
 - Real wave completion (wave 1) is reached, driven by real per-enemy `CombatService` health, not a hard-coded flag.
 - Start / take-or-deal-damage / complete-a-wave / pause / restart journey passes.
 - Restart genuinely reinstalls the scene (verified via zeroed projectile pool counters, not just a score reset).
-- No spatial/analog aim claimed — aim is the existing four-direction digital axis (ADR-0016); no world-space mouse targeting.
+- Digital `AIM_*` remains the authoritative, independent aim axis (ADR-0016): a purely-aimed shot is still proven by holding perpendicular movement and aim keys simultaneously. Phase 1 adds *only* an optional fallback — when no digital aim is pressed, the spatial pointer (ADR-0018) supplies an aim vector via `aimFromPointer`. Step 1b proves the fallback engages; steps 2–5 prove digital aim still overrides it and is unaffected.

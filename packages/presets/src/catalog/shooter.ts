@@ -83,7 +83,10 @@ export const SHOOTER_PRESETS: readonly PresetDefinition[] = [
     requiredContentRoles: ['tuning'],
     supportedInputModes: POINTER_INPUT_MODES,
     validationProfile: VALIDATION_PROFILES.shooter,
-    knownLimitations: [LIMITATIONS.spatialPointerTargeting, LIMITATIONS.weaponsProjectiles],
+    // Spatial pointer/world-space click targeting is implemented and consumed
+    // by this preset's starter (capability program Phase 1, ADR-0018; proof:
+    // proofs/gallery-shooter/). Weapons/projectiles remain a later phase.
+    knownLimitations: [LIMITATIONS.weaponsProjectiles],
   }),
 
   definePreset({
@@ -109,8 +112,9 @@ export const SHOOTER_PRESETS: readonly PresetDefinition[] = [
     supportedInputModes: POINTER_INPUT_MODES,
     validationProfile: VALIDATION_PROFILES.shooter,
     knownLimitations: [
-      LIMITATIONS.spatialPointerTargeting,
       LIMITATIONS.weaponsProjectiles,
+      // Spatial pointer/world-space targeting is implemented and consumed by the
+      // pointer shell (capability program Phase 1, ADR-0018).
       'Fixed-path/rail camera movement is not yet a reusable capability.',
     ],
   }),

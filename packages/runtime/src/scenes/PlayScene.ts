@@ -4,6 +4,7 @@ import {
   SCENE_KEYS,
   type GameContext,
   type PackConfigValidator,
+  type SpatialPointerInput,
   type UiCopy,
 } from '@sw2d/contracts';
 import { DisposableBagImpl } from '../core/DisposableBagImpl.ts';
@@ -25,18 +26,21 @@ export class PlayScene extends Phaser.Scene {
   readonly #packConfigValidator: PackConfigValidator | undefined;
   /** Code-supplied config for `configSource: 'code'` packs - see CreateGameOptions.packConfig. */
   readonly #packConfig: Readonly<Record<string, unknown>> | undefined;
+  readonly #spatialPointer: SpatialPointerInput;
   #bag = new DisposableBagImpl('play-scene');
   #host: SystemHostImpl<SceneContext> | null = null;
 
   constructor(
     context: GameContext,
     packs: readonly ScenePackDefinition[],
+    spatialPointer: SpatialPointerInput,
     packConfigValidator?: PackConfigValidator,
     packConfig?: Readonly<Record<string, unknown>>,
   ) {
     super(SCENE_KEYS.play);
     this.#context = context;
     this.#packs = packs;
+    this.#spatialPointer = spatialPointer;
     this.#packConfigValidator = packConfigValidator;
     this.#packConfig = packConfig;
   }
@@ -62,7 +66,7 @@ export class PlayScene extends Phaser.Scene {
 
     this.add.text(12, 10, copy.playHint, mutedStyle(13)).setScrollFactor(0).setDepth(1000);
 
-    const sceneContext = createSceneContext(this.#context, this, this.#bag);
+    const sceneContext = createSceneContext(this.#context, this, this.#bag, this.#spatialPointer);
     const host = new SystemHostImpl<SceneContext>(sceneContext, this.#packs, this.#packConfigValidator, this.#packConfig);
     this.#host = host;
     this.#bag.add(host);

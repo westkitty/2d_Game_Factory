@@ -1,9 +1,25 @@
 # Proof Matrix
 
-Phase 10's five deep, end-to-end proof games - the tier above Phase 8's smoke bar. Each row is
-backed by a frozen `proofs/<id>/PROOF_CONTRACT.md`, a real generated composition, and a committed
-real-browser proof spec run through `npm run qa:proof`. Mechanically, `npm run qa:proof` is
-5/5 as of this revision.
+Phase 10's five deep, end-to-end proof games - the tier above Phase 8's smoke bar - plus the
+capability-completion program's per-phase proof consumers. Each row is backed by a frozen
+`proofs/<id>/PROOF_CONTRACT.md`, a real generated composition, and a committed real-browser proof
+spec run through `npm run qa:proof`. Mechanically, `npm run qa:proof` is **7/7** as of this
+revision.
+
+## Capability program — Phase 1: reusable spatial pointer & interaction (ADR-0018)
+
+| Proof | Preset | Reusable capability exercised | Game-specific mechanics | Browser journey | Status |
+|---|---|---|---|---|---|
+| `proofs/gallery-shooter/` | `gallery-shooter` | `SceneContext.spatialPointer` (world cursor), `SceneContext.interaction` (circle targets + priority), `hitTestPoint`, `sw2d.combat` | Three circular targets + one lowest-priority full-viewport background target; `onClick` kills the target under the cursor; a background click counts a miss | Start; hover selects `target-a`; click at its world point kills it; click empty space (miss, no target selected); click `target-c` (still resolved by world point); restart reinstalls | PASS |
+| `proofs/point-and-click/` | `point-and-click` | `SceneContext.interaction` (hover enter/leave, click, drag→drop, pointer capture), `phaserBoundsShape` (live bounds), drop-zone resolution | A lever (hover state + click-to-pull) and a key dragged onto a chest drop-zone | Start; hover enter/leave on the lever; click pulls it; drag the key (captured while the pointer leaves its bounds) onto the chest; drop sets `keyInChest`; restart reinstalls | PASS |
+| `proofs/twin-stick-shooter/` (upgraded) | `twin-stick-shooter` | `aimFromPointer` as an **optional** aim source | Existing wave/projectile proof + step 1b: with no digital `AIM_*` held, the mouse position yields `aimX>0, aimY<0` without firing; steps 2-5 prove digital aim still overrides and is independent | PASS |
+
+The two new proof games' presets are left at `maturity: 'recipe'` for now — the frozen proofs
+exist and pass `qa:proof`, but the formal `proof-validated` promotion (and its 5/7/62 catalog
+count bookkeeping in `honesty.test.ts` / `OPERATIONAL_STATE.md`) is a dedicated catalog pass, not
+folded into a capability phase.
+
+## Phase 10 deep proofs
 
 See [`PHASE10_PROOF_HANDOFF.md`](../architecture/PHASE10_PROOF_HANDOFF.md) for the phase-level
 narrative (shared-architecture repair, deferred triggers, known limitations) this matrix does not

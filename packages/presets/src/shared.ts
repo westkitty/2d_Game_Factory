@@ -51,9 +51,11 @@ export const BASE_INPUT_MODES: readonly InputMode[] = ['keyboard', 'touch'];
 /**
  * For recipes whose controller family is `pointer`. `pointer` here means the
  * mouse/pointer *device* (InputMode) is usable, honestly limited to the
- * press-style actions `pointerActionController` actually exposes - not a
- * claim of spatial/cursor targeting, which the recipe's own knownLimitations
- * must state (see LIMITATIONS.spatialPointerTargeting).
+ * press-style actions `pointerActionController` actually exposes. The reusable
+ * spatial interaction capability (world cursor, hover, drag - ADR-0018) exists
+ * as of the capability program's Phase 1, and the generated `pointer` shell
+ * consumes it; a recipe with a *further* spatial gap (drawing strokes,
+ * wardrobe attachment, ...) still states that in its knownLimitations.
  */
 export const POINTER_INPUT_MODES: readonly InputMode[] = ['keyboard', 'pointer', 'touch'];
 
@@ -61,11 +63,10 @@ export const POINTER_INPUT_MODES: readonly InputMode[] = ['keyboard', 'pointer',
 export const LIMITATIONS = {
   grapplingPhysics: 'No advanced rope/constraint/grappling physics exists yet.',
   spatialAim:
-    'Independent spatial/analog aim is not yet a proven controller capability. Current pointer controller is press-style only; spatial pointer remains deferred.',
+    'Independent spatial/analog aim is not wired into this starter. The digital AIM_* axis (ADR-0016) is the aim path; the spatial pointer (ADR-0018) can supply an optional aim fallback but the generated top-down shell does not consume it.',
   stealthAi:
     'AI state exists, but full vision cones, awareness geometry, noise propagation, hiding, and patrol navigation are not implemented.',
   weaponsProjectiles: 'Combat core exists, but full projectile/weapon systems are not yet implemented.',
-  spatialPointerTargeting: 'Spatial pointer targeting is not yet implemented.',
   bossOrchestration:
     'AI/combat state foundations exist, but reusable boss-phase orchestration is not yet a production system.',
   proceduralGeneration:

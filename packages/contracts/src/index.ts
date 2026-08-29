@@ -21,6 +21,7 @@ export * from './persistence.ts';
 export * from './presets.ts';
 export * from './resources.ts';
 export * from './scenes.ts';
+export * from './spatial.ts';
 export * from './systems.ts';
 export * from './theme.ts';
 export * from './ui.ts';

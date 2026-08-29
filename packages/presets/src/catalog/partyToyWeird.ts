@@ -74,7 +74,7 @@ export const PARTY_TOY_WEIRD_PRESETS: readonly PresetDefinition[] = [
     requiredContentRoles: ['tuning', 'characters'],
     supportedInputModes: POINTER_INPUT_MODES,
     validationProfile: VALIDATION_PROFILES.partyToyWeird,
-    knownLimitations: ['No spatial drag/drop wardrobe/attachment system exists.'],
+    knownLimitations: ['No wardrobe/attachment system is built on the drag/drop capability (ADR-0018) yet.'],
   }),
 
   definePreset({
@@ -100,7 +100,7 @@ export const PARTY_TOY_WEIRD_PRESETS: readonly PresetDefinition[] = [
     requiredContentRoles: ['tuning'],
     supportedInputModes: POINTER_INPUT_MODES,
     validationProfile: VALIDATION_PROFILES.partyToyWeird,
-    knownLimitations: ['No spatial pointer drawing/canvas-stroke input service exists.'],
+    knownLimitations: ['No canvas-stroke/drawing capture is built on the spatial pointer service (ADR-0018) yet.'],
   }),
 
   definePreset({

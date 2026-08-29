@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import {
+  SCENE_KEYS,
   type ContentBundle,
   type ContentSource,
   type DebugSnapshot,
@@ -17,6 +18,7 @@ import { DebugStateImpl } from '../debug/DebugStateImpl.ts';
 import { ActionInputHost } from '../input/ActionInputHost.ts';
 import { KeyboardAdapter } from '../input/KeyboardAdapter.ts';
 import { PointerAdapter } from '../input/PointerAdapter.ts';
+import { SpatialPointerHost } from '../input/SpatialPointerHost.ts';
 import { mergeBindings } from '../input/defaultBindings.ts';
 import { LocalStorageDriver } from '../persistence/LocalStorageDriver.ts';
 import { SaveStoreImpl } from '../persistence/SaveStoreImpl.ts';
@@ -165,13 +167,40 @@ export async function createGame(options: CreateGameOptions): Promise<GameRuntim
     }
   }
 
+  // Spatial pointer: world-space cursor position, hover, drag - the layer
+  // ActionInput deliberately does not carry (ADR-0018). Constructed before the
+  // scenes so PlayScene can receive it; its coordinate closures read `game`
+  // lazily, only ever at event/frame time, so the forward reference is safe.
+  const parentElement =
+    typeof options.parent === 'string'
+      ? document.querySelector<HTMLElement>(options.parent) ?? document.body
+      : options.parent;
+  const toCanvasSpace = (clientX: number, clientY: number): readonly [number, number] => {
+    const canvas = game?.canvas;
+    if (!canvas) return [clientX, clientY];
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = rect.width === 0 ? 1 : canvas.width / rect.width;
+    const scaleY = rect.height === 0 ? 1 : canvas.height / rect.height;
+    return [(clientX - rect.left) * scaleX, (clientY - rect.top) * scaleY];
+  };
+  const resolveWorld = (screenX: number, screenY: number): readonly [number, number] | null => {
+    if (!game) return null;
+    const scene = game.scene.getScene(SCENE_KEYS.play);
+    if (!scene || !game.scene.isActive(SCENE_KEYS.play)) return null;
+    const camera = scene.cameras?.main;
+    if (!camera) return null;
+    const point = camera.getWorldPoint(screenX, screenY);
+    return [point.x, point.y];
+  };
+  const spatialPointer = rootBag.add(new SpatialPointerHost(parentElement, resolveWorld, toCanvasSpace));
+
   const boot = new BootScene(context);
   const title = new TitleScene(context);
-  const play = new PlayScene(context, options.packs ?? [], options.packConfigValidator, options.packConfig);
+  const play = new PlayScene(context, options.packs ?? [], spatialPointer, options.packConfigValidator, options.packConfig);
   const pause = new PauseScene(context);
   playScene = play;
 
-  const game = new Phaser.Game({
+  const game: Phaser.Game = new Phaser.Game({
     type: Phaser.AUTO,
     parent: options.parent,
     width: definition.viewport.width,
@@ -209,8 +238,12 @@ export async function createGame(options: CreateGameOptions): Promise<GameRuntim
   input.addAdapter(new PointerAdapter(input, options.controlsRoot ?? document.body));
 
   // One input advance per game step, before any scene update. Two scenes reading
-  // `justPressed` in the same frame therefore always agree.
-  const advanceInput = (): void => input.update();
+  // `justPressed` in the same frame therefore always agree. The spatial pointer
+  // advances in the same place, for the same single-owner reason (ADR-0018).
+  const advanceInput = (): void => {
+    input.update();
+    spatialPointer.update();
+  };
   game.events.on(Phaser.Core.Events.PRE_STEP, advanceInput);
   rootBag.addFn(() => game.events.off(Phaser.Core.Events.PRE_STEP, advanceInput));
 
@@ -266,6 +299,7 @@ export async function createGame(options: CreateGameOptions): Promise<GameRuntim
   const onVisibilityChange = (): void => {
     if (document.visibilityState !== 'hidden') return;
     input.clear();
+    spatialPointer.clear();
     router.setPaused(true);
   };
   document.addEventListener('visibilitychange', onVisibilityChange);

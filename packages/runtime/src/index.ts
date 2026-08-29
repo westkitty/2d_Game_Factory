@@ -17,6 +17,8 @@ export { resolveInstallOrder, SystemPackResolutionError } from './core/resolveIn
 export { ActionInputHost } from './input/ActionInputHost.ts';
 export { KeyboardAdapter } from './input/KeyboardAdapter.ts';
 export { PointerAdapter } from './input/PointerAdapter.ts';
+export { SpatialPointerHost, DRAG_THRESHOLD_PX } from './input/SpatialPointerHost.ts';
+export type { WorldResolver, CanvasSpaceResolver } from './input/SpatialPointerHost.ts';
 export { DEFAULT_BINDINGS, mergeBindings } from './input/defaultBindings.ts';
 
 export {
@@ -35,6 +37,7 @@ export {
  * three or more real consumers - see projectilePool.ts's own note.
  */
 export { ProjectilePool, type ProjectileOptions } from './game-support/projectilePool.ts';
+export { InteractionServiceImpl, phaserBoundsShape } from './game-support/interactionService.ts';
 
 export { LocalStorageDriver, MemoryStorageDriver } from './persistence/LocalStorageDriver.ts';
 export { SaveStoreImpl } from './persistence/SaveStoreImpl.ts';

@@ -774,6 +774,33 @@ adjudicated individually in the Phase 12 acceptance document):
 
 ## Revision history
 
+### Revision 16 - 2026-08-28 (Sonnet 5) - Capability program Phase 1
+
+**Reusable spatial pointer & interaction (ADR-0018).** First phase of the ten-phase
+capability-completion program. Durable, resumable program state — goal, all ten phases, per-phase
+status, SHAs, proof consumers, validation, limitation changes — lives in
+[`docs/architecture/CAPABILITY_PROGRAM_STATE.md`](docs/architecture/CAPABILITY_PROGRAM_STATE.md);
+that ledger is authoritative for the program and is not duplicated here.
+
+- **New capability.** `@sw2d/contracts/spatial.ts` (renderer-neutral: `SpatialPointerState`,
+  `HitShape` rect/circle/polygon + `hitTestPoint`, `aimFromPointer`, `InteractionService`);
+  `@sw2d/runtime` `SpatialPointerHost` (single frame owner, advanced in the existing PRE_STEP
+  handler) and `InteractionServiceImpl` (`game-support/`; hover, click, drag→drop, pointer
+  capture, priority). Exposed on `SceneContext` (`spatialPointer`, `interaction`); `GameContext`
+  unchanged. Every generated `pointer`-primary game consumes it (rewritten
+  `pointerShellPack.ts` template).
+- **Proofs.** New `proofs/gallery-shooter/` (world-space click targeting) and
+  `proofs/point-and-click/` (hover/click/drag-drop); `proofs/twin-stick-shooter/` upgraded to
+  use pointer aim as an optional source. `npm run qa:proof` 5/5 → 7/7.
+- **Limitations.** Spatial-pointer limitation removed from `gallery-shooter`, `rail-shooter`;
+  narrowed on `point-and-click`, `drawing-game`, `dress-up-character-toy`, `escape-room`.
+  Grid-primary placement presets (`tower-defense`, `simple-rts`) untouched. Preset `maturity`
+  labels unchanged (5/7/62 split preserved); formal `proof-validated` promotion of the two new
+  proof presets is a deferred, dedicated catalog pass.
+- **Validation:** typecheck PASS; `npm test` 2114/2114; workbench/starter build + `check:offline`
+  PASS; `qa:proof` 7/7; `qa:matrix` 40/40; `release:verify` 6/6; `qa:starter-kits` all 14
+  sub-suites PASS. This revision is the Phase 1 commit itself.
+
 ### Revision 15 - 2026-08-28 (Sonnet 5)
 
 **Start / Confirm UX repair - the title screen no longer leaves a player at an opaque
