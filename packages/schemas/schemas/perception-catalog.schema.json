@@ -1,0 +1,66 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:sw2d:schema:content-perception-catalog:v1",
+  "title": "PerceptionCatalog",
+  "description": "Mirrors @sw2d/contracts PerceptionCatalog (perception.ts). Content document name 'perception'. Bounded sensor and pursuit definitions.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "sensors"],
+  "properties": {
+    "schemaVersion": { "type": "integer", "minimum": 1 },
+    "sensors": { "type": "array", "items": { "$ref": "#/definitions/sensor" } },
+    "pursuits": { "type": "array", "items": { "$ref": "#/definitions/pursuit" } }
+  },
+  "definitions": {
+    "sensor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "visionRange",
+        "fieldOfViewDegrees",
+        "awarenessGainPerSecond",
+        "awarenessDecayPerSecond",
+        "memoryMs",
+        "hearingRange",
+        "hearingMultiplier",
+        "updateIntervalMs"
+      ],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "visionRange": { "type": "number", "exclusiveMinimum": 0 },
+        "fieldOfViewDegrees": { "type": "number", "exclusiveMinimum": 0, "maximum": 360 },
+        "targetTags": { "type": "array", "items": { "type": "string" } },
+        "targetTeams": { "type": "array", "items": { "type": "string" } },
+        "awarenessGainPerSecond": { "type": "number", "minimum": 0 },
+        "awarenessDecayPerSecond": { "type": "number", "minimum": 0 },
+        "memoryMs": { "type": "number", "minimum": 0 },
+        "hearingRange": { "type": "number", "minimum": 0 },
+        "hearingMultiplier": { "type": "number", "minimum": 0 },
+        "updateIntervalMs": { "type": "number", "exclusiveMinimum": 0 },
+        "visibilityMultiplierDefault": { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    },
+    "pursuit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "pursuerId",
+        "targetId",
+        "safeDistance",
+        "dangerDistance",
+        "captureDistance",
+        "graceMs"
+      ],
+      "properties": {
+        "pursuerId": { "type": "string", "minLength": 1 },
+        "targetId": { "type": "string", "minLength": 1 },
+        "safeDistance": { "type": "number", "exclusiveMinimum": 0 },
+        "dangerDistance": { "type": "number", "minimum": 0 },
+        "captureDistance": { "type": "number", "minimum": 0 },
+        "graceMs": { "type": "number", "minimum": 0 },
+        "usePathDistance": { "type": "boolean" }
+      }
+    }
+  }
+}

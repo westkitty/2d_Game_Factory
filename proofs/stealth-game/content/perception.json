@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "sensors": [
+    {
+      "id": "guard-sensor",
+      "visionRange": 160,
+      "fieldOfViewDegrees": 90,
+      "awarenessGainPerSecond": 2.0,
+      "awarenessDecayPerSecond": 0.5,
+      "memoryMs": 2000,
+      "hearingRange": 350,
+      "hearingMultiplier": 1.0,
+      "updateIntervalMs": 16
+    }
+  ],
+  "pursuits": [
+    {
+      "pursuerId": "guard-1",
+      "targetId": "player",
+      "safeDistance": 250,
+      "dangerDistance": 100,
+      "captureDistance": 30,
+      "graceMs": 500
+    }
+  ]
+}

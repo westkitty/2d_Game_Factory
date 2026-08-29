@@ -34,6 +34,7 @@ export const PACK_IDS = {
   worldGraph: 'sw2d.world-graph',
   vehicles: 'sw2d.vehicles',
   racing: 'sw2d.racing',
+  aiPerception: 'sw2d.ai-perception',
 } as const;
 
 export const CAPABILITY_IDS = {
@@ -66,4 +67,8 @@ export const CAPABILITY_IDS = {
   vehicles: 'vehicle.motion',
   /** Capability program Phase 10: race / checkpoint / lap state, separate from vehicle motion. */
   racing: 'race.state',
+  /** Capability program Phase 11: AI perception, vision cones, noise events, awareness. */
+  aiPerception: 'ai.perception',
+  /** Capability program Phase 11: pursuit pressure calculation and state. */
+  aiPursuit: 'ai.pursuit',
 } as const;

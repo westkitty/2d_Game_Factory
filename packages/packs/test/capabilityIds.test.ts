@@ -20,6 +20,7 @@ import {
   simulationPack,
   strategyPack,
   worldPack,
+  aiPerceptionPack,
 } from '../src/index.ts';
 
 /**
@@ -53,6 +54,7 @@ const ALL_PACKS = [
   worldGraphPack,
   vehiclesPack,
   racingPack,
+  aiPerceptionPack,
 ];
 
 /** `<family>.<service>`: lowercase segments, at least two, dash-separated words allowed after the first. */
@@ -85,8 +87,10 @@ describe('capability id governance', () => {
   it('every pack provides exactly the capability id declared for it in ids.ts', () => {
     const declared = new Set<string>(Object.values(CAPABILITY_IDS));
     for (const pack of ALL_PACKS) {
-      expect(pack.provides.length, `${pack.id} provides`).toBe(1);
-      expect(declared.has(pack.provides[0]!), `${pack.id} provides "${pack.provides[0]}"`).toBe(true);
+      expect(pack.provides.length, `${pack.id} provides`).toBeGreaterThanOrEqual(1);
+      for (const p of pack.provides) {
+        expect(declared.has(p), `${pack.id} provides "${p}"`).toBe(true);
+      }
     }
   });
 

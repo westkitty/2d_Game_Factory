@@ -61,6 +61,8 @@ const PROOF_SPEC_MODULES: Readonly<Record<string, string>> = {
   // Phase 10 - vehicle handling & racing (ADR-0027)
   'top-down-racer': 'topDownRacer',
   'time-trial-racer': 'timeTrialRacer',
+  // Phase 11 - AI perception, awareness & pursuit
+  'stealth-game': 'stealthGame',
 };
 
 function proofTargets(): Target[] {
@@ -105,7 +107,9 @@ async function main(): Promise<number> {
     return 1;
   }
 
-  const targets = proofTargets();
+  const filter = process.argv[2];
+  const allTargets = proofTargets();
+  const targets = filter ? allTargets.filter((t) => t.id.includes(filter)) : allTargets;
   const results: { id: string; ok: boolean; detail: string }[] = [];
   for (const target of targets) {
     process.stdout.write(`Running proof ${target.id}...\n`);

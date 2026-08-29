@@ -107,10 +107,9 @@ export const TOP_DOWN_ACTION_PRESETS: readonly PresetDefinition[] = [
     family: 'top-down-action',
     controllerFamilies: ['top-down'],
     requiredSystemPacks: [pack(PACK_IDS.ai), pack(PACK_IDS.combat), pack(PACK_IDS.world)],
-    optionalSystemPacks: [pack(PACK_IDS.worldEntities), pack(PACK_IDS.navigation)],
+    optionalSystemPacks: [pack(PACK_IDS.worldEntities), pack(PACK_IDS.navigation), pack(PACK_IDS.aiPerception)],
     requiredContentRoles: ['tuning', 'levels'],
     validationProfile: VALIDATION_PROFILES.topDown,
-    knownLimitations: [LIMITATIONS.stealthAi],
   }),
 
   definePreset({
@@ -119,7 +118,7 @@ export const TOP_DOWN_ACTION_PRESETS: readonly PresetDefinition[] = [
     family: 'top-down-action',
     controllerFamilies: ['top-down'],
     requiredSystemPacks: [pack(PACK_IDS.ai), pack(PACK_IDS.combat), pack(PACK_IDS.world)],
-    optionalSystemPacks: [pack(PACK_IDS.worldEntities), pack(PACK_IDS.progression), pack(PACK_IDS.navigation)],
+    optionalSystemPacks: [pack(PACK_IDS.worldEntities), pack(PACK_IDS.progression), pack(PACK_IDS.navigation), pack(PACK_IDS.aiPerception)],
     requiredContentRoles: ['tuning', 'levels'],
     validationProfile: VALIDATION_PROFILES.topDown,
     knownLimitations: [LIMITATIONS.stealthAi],

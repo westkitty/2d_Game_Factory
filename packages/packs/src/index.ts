@@ -85,3 +85,4 @@ export { generationPack, type GenerationService } from './generation/generationP
 export { worldGraphPack, WORLD_GRAPH_SAVE_SLOT, type WorldGraphConfig, type WorldGraphService } from './worldGraph/worldGraphPack.ts';
 export { vehiclesPack, type VehicleService } from './vehicles/vehiclesPack.ts';
 export { racingPack, RACING_SAVE_SLOT, type RacingConfig, type RaceService } from './racing/racingPack.ts';
+export { aiPerceptionPack, PerceptionServiceImpl, PursuitServiceImpl } from './aiPerception/aiPerceptionPack.ts';

@@ -36,6 +36,36 @@ describe('validateDocument - valid documents pass', () => {
     });
     expect(result.valid).toBe(true);
   });
+
+  it('accepts a well-formed PerceptionCatalog', () => {
+    const result = validateDocument('perception-catalog', 'perception.json', {
+      schemaVersion: 1,
+      sensors: [
+        {
+          id: 'guard-vision',
+          visionRange: 150,
+          fieldOfViewDegrees: 90,
+          awarenessGainPerSecond: 2.0,
+          awarenessDecayPerSecond: 0.5,
+          memoryMs: 3000,
+          hearingRange: 200,
+          hearingMultiplier: 1.0,
+          updateIntervalMs: 50,
+        },
+      ],
+      pursuits: [
+        {
+          pursuerId: 'guard-1',
+          targetId: 'player',
+          safeDistance: 300,
+          dangerDistance: 150,
+          captureDistance: 30,
+          graceMs: 1000,
+        },
+      ],
+    });
+    expect(result.valid).toBe(true);
+  });
 });
 
 describe('validateDocument - located, readable failures', () => {

@@ -38,7 +38,7 @@ export const PLATFORMING_PRESETS: readonly PresetDefinition[] = [
     family: 'platforming',
     controllerFamilies: ['platform'],
     requiredSystemPacks: [pack(PACK_IDS.world), pack(PACK_IDS.worldEntities)],
-    optionalSystemPacks: [pack(PACK_IDS.combat), pack(PACK_IDS.arcade)],
+    optionalSystemPacks: [pack(PACK_IDS.combat), pack(PACK_IDS.arcade), pack(PACK_IDS.aiPerception)],
     requiredContentRoles: ['tuning', 'levels'],
     validationProfile: VALIDATION_PROFILES.platform,
     knownLimitations: [LIMITATIONS.chasePressure],

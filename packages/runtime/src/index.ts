@@ -47,6 +47,12 @@ export { createRoomTransitionRuntime, type RoomTransitionRuntime, type RoomTrans
 export { createWorldMapOverlay, type WorldMapOverlay } from './game-support/worldMapOverlay.ts';
 export { createAdvancedPhysics } from './game-support/advancedPhysics.ts';
 export { createGrappleService } from './game-support/grappleService.ts';
+export {
+  createPerceptionRuntime,
+  type PerceptionRuntime,
+  type PerceptionRuntimeOptions,
+  type PerceptionRuntimeEntityTransform,
+} from './game-support/perceptionRuntime.ts';
 
 export { LocalStorageDriver, MemoryStorageDriver } from './persistence/LocalStorageDriver.ts';
 export { SaveStoreImpl } from './persistence/SaveStoreImpl.ts';
