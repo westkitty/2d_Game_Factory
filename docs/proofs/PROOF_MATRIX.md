@@ -3,7 +3,7 @@
 Phase 10's five deep, end-to-end proof games - the tier above Phase 8's smoke bar - plus the
 capability-completion program's per-phase proof consumers. Each row is backed by a frozen
 `proofs/<id>/PROOF_CONTRACT.md`, a real generated composition, and a committed real-browser proof
-spec run through `npm run qa:proof`. Mechanically, `npm run qa:proof` is **9/9** as of this
+spec run through `npm run qa:proof`. Mechanically, `npm run qa:proof` is **10/10** as of this
 revision.
 
 ## Capability program — Phase 1: reusable spatial pointer & interaction (ADR-0018)
@@ -25,6 +25,13 @@ folded into a capability phase.
 |---|---|---|---|---|---|
 | `proofs/collectathon-platformer/` | `collectathon-platformer` | `sw2d.items` (`ItemsService`) from validated `content/items.json`; `bindCollectiblePickups` (shared platform shell, **no game-specific pickup code**); `arcade.score` + `chain`(`arcade.score` + `world.flag`) effects | Enriched item catalog (coin/gem/star) and level (5 Collectibles, one with an unknown itemId); shell debug reads score + world flag back from the real services | Start (sw2d.items installed, 4 bound pickups); walk right collecting all; inventory `{coin-1:2, gem-1:1, star-1:1}`, score 135, `gotStar` flag set, unknown itemId skipped; restart reinstalls (fresh services, pickups back, inventory cleared) | PASS |
 | `proofs/top-down-adventure/` | `top-down-adventure` | Same `sw2d.items` service, different preset/effects: `world.flag` (map key), `progression.currency` (gold), `progression.xp` via a real `consume()` (ration) | Content overlay enables `sw2d.items` + `sw2d.progression`; top-down shell binds pickups + consumes a ration on INTERACT | Start; sweep pickups → `hasMapKey`, currency 20, ration ×2; INTERACT twice → ration consumed, xp 3 → 6; restart clears (this preset's items config does not persist) | PASS |
+
+## Capability program — Phase 3: weapons & projectiles (ADR-0020)
+
+| Proof | Preset | Reusable capability exercised | Game-specific mechanics | Browser journey | Status |
+|---|---|---|---|---|---|
+| `proofs/twin-stick-shooter/` (upgraded) | `twin-stick-shooter` | `sw2d.weapons` (`WeaponsService`) from `content/weapons.json` + shared `createProjectileRuntime` replace the former raw `ProjectilePool` + hand-wired overlap; damage via `combat.health`; enemy death as a `combat:entityDied` reaction | Existing wave/aim/pause/restart journey, now fired through the reusable weapon model | Movement independent from aim; optional pointer aim (ADR-0018); two 10-damage hits per 20-hp enemy clear wave 1; projectile lifecycle `spawned = live + expired`; restart reinstalls a fresh weapon+runtime | PASS |
+| `proofs/run-and-gun/` (new) | `run-and-gun` | Same weapon model + projectile runtime on a **platform** shell; two `Enemy` turret targets; per-projectile overlap → `combat.damage`; `hitsResolved` counter | Level ground row + two turrets; the platform shell's `bindStarterWeapon` swapped for a full `createProjectileRuntime` wired to the enemy group | Start (sw2d.weapons installed, `sidearm` equipped); close distance, face right, fire (220ms cooldown gates rate); both turrets die after 2 hits each (`hitsResolved >= 4`); pause freezes the field; restart reinstalls | PASS |
 
 ## Phase 10 deep proofs
 

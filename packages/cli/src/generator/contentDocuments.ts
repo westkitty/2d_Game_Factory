@@ -61,6 +61,30 @@ export function generateItemCatalog(hasItemsRole: boolean): Record<string, unkno
   };
 }
 
+/**
+ * content/weapons.json - a WeaponCatalog (capability program Phase 3). Always
+ * emitted (like content/items.json); a preset that installs `sw2d.weapons`
+ * gets a one-weapon starter catalog so its generated shell equips and fires a
+ * real projectile through the reusable runtime, others get an empty catalog.
+ */
+export function generateWeaponCatalog(hasWeaponsPack: boolean): Record<string, unknown> {
+  if (!hasWeaponsPack) return { schemaVersion: 1, weapons: [] };
+  return {
+    schemaVersion: 1,
+    weapons: [
+      {
+        id: 'sidearm',
+        displayName: 'Sidearm',
+        team: 'player',
+        cooldownMs: 220,
+        fireMode: 'single',
+        muzzleOffset: 18,
+        projectile: { assetRole: 'pickup', speed: 460, lifetimeMs: 1200, size: 8, damage: 10 },
+      },
+    ],
+  };
+}
+
 /** content/tuning.json - the one content document @sw2d/schemas validates for every game today. */
 export function generateTuning(): Record<string, unknown> {
   return {

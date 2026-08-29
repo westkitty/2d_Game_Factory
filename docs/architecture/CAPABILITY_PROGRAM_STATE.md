@@ -22,7 +22,7 @@ Git/validation/architecture checkpoint, not a new chat.
 |---|---|---|---|
 | 1 | Spatial Pointer & Interaction | `feature/capability-01-spatial-interaction` | PASS |
 | 2 | Data-Driven Items / Effects / Pickups | `feature/capability-02-items-effects` | PASS |
-| 3 | Weapons & Projectiles | `feature/capability-03-weapons-projectiles` | NOT STARTED |
+| 3 | Weapons & Projectiles | `feature/capability-03-weapons-projectiles` | PASS |
 | 4 | Combat / Encounter Orchestration | `feature/capability-04-combat-orchestration` | NOT STARTED |
 | 5 | Navigation & Pathfinding | `feature/capability-05-navigation` | NOT STARTED |
 | 6 | Data-Driven Puzzle Rules | `feature/capability-06-data-puzzles` | NOT STARTED |
@@ -34,7 +34,7 @@ Git/validation/architecture checkpoint, not a new chat.
 Program starting `main`: `0af24cd6c2646cae84fb4be559b68c2477e63d0b`
 (the Start/Confirm prerequisite; verified present before Phase 1).
 
-Current phase: **3 — Weapons & Projectiles** (NOT STARTED).
+Current phase: **4 — Combat / Encounter Orchestration** (NOT STARTED).
 
 ---
 
@@ -197,5 +197,78 @@ None.
 
 ### Next phase
 
-Phase 3 — Weapons & Projectiles. Branch `feature/capability-03-weapons-projectiles`
-from the integrated `main`.
+Phase 3 done, see below.
+
+---
+
+## Phase 3 — Weapons & Projectiles — PASS
+
+- **Starting SHA:** `251b998e7b9797687065caf099ad3b477f131973` (Phase 2 on `main`)
+- **Feature branch:** `feature/capability-03-weapons-projectiles`
+- **Phase commit SHA:** this commit — `feat: add reusable weapons and projectiles` on `main` (see `git log`)
+- **Main integration SHA:** same commit, fast-forwarded onto `main`
+
+### Implementation summary
+
+- `packages/contracts/src/weapons.ts` (new): `WeaponDefinition` / `WeaponCatalog`,
+  `ProjectileSpec`, `FireMode` (`single`/`auto`/`burst`), `FireRequest` /
+  `ProjectileSpawn` / `FireResult`, `WeaponsService`, `CombatDamageSink`,
+  `WEAPONS_CAPABILITY_ID`.
+- `packages/schemas` — `weapon-catalog` schema (content document `weapons`;
+  `onHitEffects` `$ref` the Phase 2 effect union); `items-config` pattern reused
+  for nothing new here.
+- `packages/packs/src/weapons/weaponsPack.ts` (new): `sw2d.weapons` →
+  `combat.weapons`, `dependencies: ['combat.health']`. `WeaponsServiceImpl` —
+  per-owner cooldown/ammo/reload, deterministic spread fan, burst queue drained
+  by `update()` / `drainPendingSpawns()`. No Phaser.
+- `packages/runtime/src/game-support/projectileRuntime.ts` (new):
+  `createProjectileRuntime` — renders spawns, **per-projectile** overlap (an
+  Arcade Group zeroes a moving sprite's velocity, so no projectile group),
+  damage via `CombatDamageSink`, on-hit effects via `sw2d.items`, pierce/bounce,
+  leak counters (`spawned = live + expired`).
+- `packages/runtime/src/game-support/starterWeapon.ts` (new): `bindStarterWeapon`
+  — capability-guarded; equips the first catalog weapon and fires through the
+  bridge. Wired into the shared `platform` + `top-down` shell templates.
+- Generator: `content/weapons.json` always emitted (starter `sidearm` for a
+  preset that installs `sw2d.weapons`, empty otherwise); `content.ts` / `main.ts`
+  templates updated.
+- ADR-0020.
+
+### Proof consumers
+
+- **`proofs/twin-stick-shooter/`** (upgraded) — raw `ProjectilePool` + hand-wired
+  overlap replaced by `sw2d.weapons` + `createProjectileRuntime`; damage through
+  `combat.health`; enemy death a `combat:entityDied` reaction.
+- **`proofs/run-and-gun/`** (new, cross-controller) — the same model + bridge on a
+  platform shell; two `Enemy` turret targets; `hitsResolved` counter; weapon
+  cooldown gates fire rate.
+- `npm run qa:proof` 9/9 → **10/10**.
+
+### Limitation changes
+
+- `weaponsProjectiles` removed from `twin-stick-shooter`, `run-and-gun`,
+  `horizontal-shmup`, `vertical-shmup`, `bullet-hell`, `action-adventure`,
+  `arena-combat`, `survivor-like` — each narrowed to its real remaining gap
+  (encounter orchestration / bullet-pattern choreography → Phase 4; melee).
+- `gallery-shooter`, `rail-shooter`, `asteroids-shooter` keep a narrowed
+  `LIMITATIONS.weaponsProjectiles` (capability exists; their pointer/vehicle shell
+  does not wire it yet). Maturity split unchanged (5/7/62).
+
+### Validation completed
+
+- `npm run typecheck` — PASS
+- `npm test` — 2154/2154 PASS (was 2139; +15)
+- `npm run workbench:build`, `npm run build`, `npm run check:offline` — PASS
+- `npm run qa:proof` — 10/10 PASS
+- `npm run qa:matrix` — 41/41 PASS (matrix auto-grew by one signature: a weapon preset now has a unique required-pack set)
+- `npm run qa:starter-kits` — all 14 sub-suites PASS
+- `npm run release:verify` — 6/6 PASS
+
+### Unresolved blockers
+
+None.
+
+### Next phase
+
+Phase 4 — Combat / Encounter Orchestration. Branch
+`feature/capability-04-combat-orchestration` from the integrated `main`.

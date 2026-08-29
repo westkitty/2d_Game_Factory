@@ -77,3 +77,4 @@ export {
 } from './strategy/strategyPack.ts';
 
 export { itemsPack, ITEMS_SAVE_SLOT, UnknownItemError, type ItemsService } from './items/itemsPack.ts';
+export { weaponsPack, UnknownWeaponError, type WeaponsService } from './weapons/weaponsPack.ts';

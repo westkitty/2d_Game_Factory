@@ -23,3 +23,4 @@ One short record per decision that constrains later work. No ADR for trivia.
 | [0017](0017-pack-config-source-json-or-code.md) | A pack declares whether its config is JSON or code | 9 |
 | [0018](0018-spatial-pointer-input-ownership.md) | Spatial pointer is a scene service, not part of ActionInput | Capability program 1 |
 | [0019](0019-data-driven-items-and-effects.md) | Data-driven items: one pack, one bounded effect union | Capability program 2 |
+| [0020](0020-weapons-model-in-a-pack-projectiles-in-the-runtime.md) | Weapon model is a pack; projectiles are a runtime bridge | Capability program 3 |

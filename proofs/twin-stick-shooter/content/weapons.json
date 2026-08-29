@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "weapons": [
+    {
+      "id": "blaster",
+      "displayName": "Blaster",
+      "team": "player",
+      "cooldownMs": 150,
+      "fireMode": "single",
+      "muzzleOffset": 16,
+      "projectile": { "assetRole": "pickup", "speed": 420, "lifetimeMs": 1500, "size": 8, "damage": 10 }
+    }
+  ]
+}

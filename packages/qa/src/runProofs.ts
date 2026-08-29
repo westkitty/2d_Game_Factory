@@ -39,6 +39,8 @@ const PROOF_SPEC_MODULES: Readonly<Record<string, string>> = {
   // Phase 2 - data-driven items / effects / pickups (ADR-0019)
   'collectathon-platformer': 'collectathonPlatformer',
   'top-down-adventure': 'topDownAdventure',
+  // Phase 3 - weapons & projectiles (ADR-0020)
+  'run-and-gun': 'runAndGun',
 };
 
 function proofTargets(): Target[] {

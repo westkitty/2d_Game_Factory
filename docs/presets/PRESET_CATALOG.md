@@ -166,22 +166,22 @@ do yet. See each recipe's `knownLimitations` in source for the complete list.
 | `grappling-platformer` | No advanced rope/constraint/grappling physics exists yet. |
 | `collectathon-platformer` | (none stated) |
 | `top-down-adventure` | (none stated) |
-| `action-adventure` | Combat core exists, but full projectile/weapon systems are not yet implemented. |
+| `action-adventure` | Melee/knockback combat and reusable encounter orchestration are not yet implemented. |
 | `twin-stick-shooter` | Independent spatial/analog aim is not wired into this starter. The digital AIM_* axis (ADR-0016) is the aim path; the spatial pointer (ADR-0018) can supply an optional aim fallback but the generated top-down shell does not consume it. |
-| `survivor-like` | Combat core exists, but full projectile/weapon systems are not yet implemented. |
+| `survivor-like` | Wave-spawning orchestration is not yet a reusable capability. |
 | `dungeon-crawler` | No procedural level/segment generation exists yet; only hand-authored Tiled levels (Phase 6) are supported. |
 | `action-roguelite` | No procedural level/segment generation exists yet; only hand-authored Tiled levels (Phase 6) are supported. |
 | `stealth-game` | AI state exists, but full vision cones, awareness geometry, noise propagation, hiding, and patrol navigation are not implemented. |
 | `heist-game` | AI state exists, but full vision cones, awareness geometry, noise propagation, hiding, and patrol navigation are not implemented. |
-| `arena-combat` | Combat core exists, but full projectile/weapon systems are not yet implemented. |
+| `arena-combat` | Wave/encounter orchestration is not yet a reusable capability (Phase 4). |
 | `boss-rush` | AI/combat state foundations exist, but reusable boss-phase orchestration is not yet a production system. |
-| `horizontal-shmup` | Combat core exists, but full projectile/weapon systems are not yet implemented. |
-| `vertical-shmup` | Combat core exists, but full projectile/weapon systems are not yet implemented. |
-| `bullet-hell` | Combat core exists, but full projectile/weapon systems are not yet implemented. |
-| `asteroids-shooter` | Combat core exists, but full projectile/weapon systems are not yet implemented. |
-| `gallery-shooter` | Combat core exists, but full projectile/weapon systems are not yet implemented. |
-| `run-and-gun` | Combat core exists, but full projectile/weapon systems are not yet implemented. |
-| `rail-shooter` | Combat core exists, but full projectile/weapon systems are not yet implemented. / Fixed-path/rail camera movement is not yet a reusable capability. |
+| `horizontal-shmup` | Enemy formations and bullet-pattern choreography are not yet a reusable capability (Phase 4). |
+| `vertical-shmup` | Enemy formations and bullet-pattern choreography are not yet a reusable capability (Phase 4). |
+| `bullet-hell` | Dense bullet-pattern choreography and boss-phase orchestration are not yet a reusable capability. |
+| `asteroids-shooter` | The reusable weapon/projectile capability (sw2d.weapons, ADR-0020) exists; this starter's shell does not wire it yet. / vehicleController supplies arcade steering/throttle intent only, not rotational-inertia physics. |
+| `gallery-shooter` | The reusable weapon/projectile capability (sw2d.weapons, ADR-0020) exists; this starter's shell does not wire it yet. |
+| `run-and-gun` | Enemy encounter orchestration is not yet a reusable capability (Phase 4). |
+| `rail-shooter` | The reusable weapon/projectile capability (sw2d.weapons, ADR-0020) exists; this starter's shell does not wire it yet. / Fixed-path/rail camera movement is not yet a reusable capability. |
 | `top-down-racer` | The vehicle controller supplies steering/throttle/brake intent only; no reusable vehicle-physics/drift/handling system exists. |
 | `kart-racer` | The vehicle controller supplies steering/throttle/brake intent only; no reusable vehicle-physics/drift/handling system exists. |
 | `time-trial-racer` | The vehicle controller supplies steering/throttle/brake intent only; no reusable vehicle-physics/drift/handling system exists. |

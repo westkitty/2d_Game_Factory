@@ -11,7 +11,7 @@ Generated via `npm run sw2d -- new proof-twin-stick-shooter --preset twin-stick-
 ## Reusable capabilities exercised
 
 - `topDownController.read()` — `moveX`/`moveY` (movement) and `aimX`/`aimY`/`aimMagnitude` (independent digital aim, ADR-0016) read simultaneously from the same intent. Aim is never derived from movement or last-move-direction.
-- `@sw2d/runtime`'s shared `ProjectilePool` (`packages/runtime/src/game-support/projectilePool.ts`) — the only projectile implementation used; no proof-local copy.
+- **Phase 3:** `sw2d.weapons` (`WeaponsService`) + `createProjectileRuntime` (`@sw2d/runtime/game-support`) replace the former raw `ProjectilePool` + hand-wired overlap. The `blaster` weapon comes from validated `content/weapons.json`; projectile-vs-enemy damage is resolved through `combat.health`, and enemy death is a `combat:entityDied` reaction.
 - `sw2d.combat` (`CombatService`) — player and every enemy registered with finite health; damage/heal/invulnerability drive both projectile-vs-enemy and enemy-vs-player contact damage.
 - `sw2d.world-entities` (`EntityRegistry`) — enemies are declared as `Enemy` Tiled objects in `content/levels/main.json` and dispatched through the existing Tiled pipeline, the same pattern Proof A uses. No new Tiled class families beyond this one.
 - `sw2d.arcade` (`ArcadeService`) — `addScore` on each enemy kill.

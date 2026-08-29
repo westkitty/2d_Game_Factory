@@ -23,11 +23,11 @@ export const SHOOTER_PRESETS: readonly PresetDefinition[] = [
     displayName: 'Horizontal Shmup',
     family: 'shooter',
     controllerFamilies: ['top-down'],
-    requiredSystemPacks: [pack(PACK_IDS.combat)],
+    requiredSystemPacks: [pack(PACK_IDS.combat), pack(PACK_IDS.weapons)],
     optionalSystemPacks: [pack(PACK_IDS.arcade)],
     requiredContentRoles: ['tuning'],
     validationProfile: VALIDATION_PROFILES.shooter,
-    knownLimitations: [LIMITATIONS.weaponsProjectiles],
+    knownLimitations: ['Enemy formations and bullet-pattern choreography are not yet a reusable capability (Phase 4).'],
   }),
 
   definePreset({
@@ -35,11 +35,11 @@ export const SHOOTER_PRESETS: readonly PresetDefinition[] = [
     displayName: 'Vertical Shmup',
     family: 'shooter',
     controllerFamilies: ['top-down'],
-    requiredSystemPacks: [pack(PACK_IDS.combat)],
+    requiredSystemPacks: [pack(PACK_IDS.combat), pack(PACK_IDS.weapons)],
     optionalSystemPacks: [pack(PACK_IDS.arcade)],
     requiredContentRoles: ['tuning'],
     validationProfile: VALIDATION_PROFILES.shooter,
-    knownLimitations: [LIMITATIONS.weaponsProjectiles],
+    knownLimitations: ['Enemy formations and bullet-pattern choreography are not yet a reusable capability (Phase 4).'],
   }),
 
   definePreset({
@@ -48,13 +48,14 @@ export const SHOOTER_PRESETS: readonly PresetDefinition[] = [
     displayName: 'Bullet Hell',
     family: 'shooter',
     controllerFamilies: ['top-down'],
-    requiredSystemPacks: [pack(PACK_IDS.combat)],
+    requiredSystemPacks: [pack(PACK_IDS.combat), pack(PACK_IDS.weapons)],
     optionalSystemPacks: [pack(PACK_IDS.arcade)],
     requiredContentRoles: ['tuning'],
     validationProfile: VALIDATION_PROFILES.shooter,
+    // Weapons/projectiles are reusable now (Phase 3); dense pattern choreography
+    // and boss phases are Phase 4.
     knownLimitations: [
-      LIMITATIONS.weaponsProjectiles,
-      'Dense bullet-pattern choreography and per-bullet pooling are not yet a reusable capability.',
+      'Dense bullet-pattern choreography and boss-phase orchestration are not yet a reusable capability.',
     ],
   }),
 
@@ -94,11 +95,13 @@ export const SHOOTER_PRESETS: readonly PresetDefinition[] = [
     displayName: 'Run and Gun',
     family: 'shooter',
     controllerFamilies: ['platform'],
-    requiredSystemPacks: [pack(PACK_IDS.combat), pack(PACK_IDS.world), pack(PACK_IDS.worldEntities)],
+    requiredSystemPacks: [pack(PACK_IDS.combat), pack(PACK_IDS.world), pack(PACK_IDS.worldEntities), pack(PACK_IDS.weapons)],
     optionalSystemPacks: [pack(PACK_IDS.arcade)],
     requiredContentRoles: ['tuning', 'levels'],
     validationProfile: VALIDATION_PROFILES.shooter,
-    knownLimitations: [LIMITATIONS.weaponsProjectiles],
+    // Reusable weapons/projectiles consumed by the platform shell (Phase 3;
+    // proof: proofs/run-and-gun/). Encounter orchestration is Phase 4.
+    knownLimitations: ['Enemy encounter orchestration is not yet a reusable capability (Phase 4).'],
   }),
 
   definePreset({

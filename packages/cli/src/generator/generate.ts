@@ -6,6 +6,7 @@ import { shellFileFor, shellPackId } from './controllerTemplates.ts';
 import {
   generateGameManifest,
   generateItemCatalog,
+  generateWeaponCatalog,
   generateResourceManifest,
   generateTiledLevel,
   generateTheme,
@@ -67,6 +68,10 @@ export function buildGameFiles(gameId: string, preset: PresetDefinition): Map<st
   files.set(
     'content/items.json',
     JSON.stringify(generateItemCatalog(preset.requiredContentRoles.includes('items')), null, 2) + '\n',
+  );
+  files.set(
+    'content/weapons.json',
+    JSON.stringify(generateWeaponCatalog(requiredPackIds.includes('sw2d.weapons')), null, 2) + '\n',
   );
   files.set('resources/RESOURCE_MANIFEST.json', JSON.stringify(generateResourceManifest(gameId), null, 2) + '\n');
 

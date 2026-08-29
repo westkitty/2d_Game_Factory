@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "weapons": [
+    {
+      "id": "sidearm",
+      "displayName": "Sidearm",
+      "team": "player",
+      "cooldownMs": 220,
+      "fireMode": "single",
+      "muzzleOffset": 18,
+      "projectile": {
+        "assetRole": "pickup",
+        "speed": 460,
+        "lifetimeMs": 1200,
+        "size": 8,
+        "damage": 10
+      }
+    }
+  ]
+}

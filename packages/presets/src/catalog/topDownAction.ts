@@ -36,11 +36,13 @@ export const TOP_DOWN_ACTION_PRESETS: readonly PresetDefinition[] = [
     displayName: 'Action Adventure',
     family: 'top-down-action',
     controllerFamilies: ['top-down'],
-    requiredSystemPacks: [pack(PACK_IDS.world), pack(PACK_IDS.worldEntities), pack(PACK_IDS.combat)],
+    requiredSystemPacks: [pack(PACK_IDS.world), pack(PACK_IDS.worldEntities), pack(PACK_IDS.combat), pack(PACK_IDS.weapons)],
     optionalSystemPacks: [pack(PACK_IDS.ai), pack(PACK_IDS.progression)],
     requiredContentRoles: ['tuning', 'levels'],
     validationProfile: VALIDATION_PROFILES.topDown,
-    knownLimitations: [LIMITATIONS.weaponsProjectiles],
+    // Weapons/projectiles are reusable now (Phase 3); melee/knockback and
+    // encounter orchestration are not.
+    knownLimitations: ['Melee/knockback combat and reusable encounter orchestration are not yet implemented.'],
   }),
 
   definePreset({
@@ -49,11 +51,11 @@ export const TOP_DOWN_ACTION_PRESETS: readonly PresetDefinition[] = [
     displayName: 'Twin-Stick Shooter',
     family: 'top-down-action',
     controllerFamilies: ['top-down'],
-    requiredSystemPacks: [pack(PACK_IDS.combat)],
+    requiredSystemPacks: [pack(PACK_IDS.combat), pack(PACK_IDS.weapons)],
     optionalSystemPacks: [pack(PACK_IDS.world), pack(PACK_IDS.worldEntities), pack(PACK_IDS.arcade)],
     requiredContentRoles: ['tuning', 'levels'],
     validationProfile: VALIDATION_PROFILES.topDown,
-    knownLimitations: [LIMITATIONS.spatialAim, LIMITATIONS.weaponsProjectiles],
+    knownLimitations: [LIMITATIONS.spatialAim],
   }),
 
   definePreset({
@@ -61,11 +63,11 @@ export const TOP_DOWN_ACTION_PRESETS: readonly PresetDefinition[] = [
     displayName: 'Survivor-Like',
     family: 'top-down-action',
     controllerFamilies: ['top-down'],
-    requiredSystemPacks: [pack(PACK_IDS.combat), pack(PACK_IDS.ai), pack(PACK_IDS.progression)],
+    requiredSystemPacks: [pack(PACK_IDS.combat), pack(PACK_IDS.ai), pack(PACK_IDS.progression), pack(PACK_IDS.weapons)],
     optionalSystemPacks: [pack(PACK_IDS.arcade), pack(PACK_IDS.world)],
     requiredContentRoles: ['tuning'],
     validationProfile: VALIDATION_PROFILES.topDown,
-    knownLimitations: [LIMITATIONS.weaponsProjectiles, 'Wave-spawning orchestration is not yet a reusable capability.'],
+    knownLimitations: ['Wave-spawning orchestration is not yet a reusable capability.'],
   }),
 
   definePreset({
@@ -125,11 +127,11 @@ export const TOP_DOWN_ACTION_PRESETS: readonly PresetDefinition[] = [
     displayName: 'Arena Combat',
     family: 'top-down-action',
     controllerFamilies: ['top-down'],
-    requiredSystemPacks: [pack(PACK_IDS.combat)],
+    requiredSystemPacks: [pack(PACK_IDS.combat), pack(PACK_IDS.weapons)],
     optionalSystemPacks: [pack(PACK_IDS.ai), pack(PACK_IDS.arcade)],
     requiredContentRoles: ['tuning', 'levels'],
     validationProfile: VALIDATION_PROFILES.topDown,
-    knownLimitations: [LIMITATIONS.weaponsProjectiles],
+    knownLimitations: ['Wave/encounter orchestration is not yet a reusable capability (Phase 4).'],
   }),
 
   definePreset({

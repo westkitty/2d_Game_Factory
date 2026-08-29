@@ -1,16 +1,24 @@
 import Phaser from 'phaser';
-import { aimFromPointer, type InstalledSystemPack, type NormalizedLevel, type NormalizedLevelObject } from '@sw2d/contracts';
-import { ProjectilePool, topDownController, type SceneContext, type ScenePackDefinition } from '@sw2d/runtime';
+import {
+  aimFromPointer,
+  WEAPONS_CAPABILITY_ID,
+  type InstalledSystemPack,
+  type NormalizedLevel,
+  type NormalizedLevelObject,
+  type WeaponsService,
+} from '@sw2d/contracts';
+import { createProjectileRuntime, topDownController, type SceneContext, type ScenePackDefinition } from '@sw2d/runtime';
 import { CAPABILITY_IDS, type ArcadeService, type CombatService, type EntityRegistry } from '@sw2d/packs';
 
 /**
- * Proof B - twin-stick-shooter (Phase 10 deep proof, see ../PROOF_CONTRACT.md).
- *
- * Enemies are stationary turret-archetype contact hazards, not a chase AI -
- * this preset declares no `sw2d.ai` pack, and building one here would be
- * exactly the speculative shared-capability creation Phase 9 forbids. Wave
- * sequencing (which enemies are live) is bounded game-specific policy, the
- * same way Proof A's coyote/buffer/double-jump timers are.
+ * Proof - twin-stick-shooter. Phase 3 upgrade: the raw ProjectilePool +
+ * hand-wired overlap are replaced by the reusable `sw2d.weapons` model
+ * (`content/weapons.json` -> `WeaponsService`) and the shared
+ * `createProjectileRuntime` bridge, which resolves hits through
+ * `combat.health`. Movement stays independent from aim; digital AIM_* stays
+ * authoritative with the spatial pointer as an optional fallback (ADR-0018).
+ * Enemy death is an ordinary `combat:entityDied` reaction, not projectile
+ * bookkeeping.
  */
 
 const LEVEL_DOCUMENT = 'levels/main';
@@ -18,8 +26,6 @@ const TUNING_DOCUMENT = 'tuning';
 const PLAYER_ID = 'player';
 const PLAYER_MAX_HEALTH = 30;
 const PLAYER_CONTACT_DAMAGE = 10;
-const PROJECTILE_DAMAGE = 10;
-const PROJECTILE_SPEED = 420;
 const HIT_INVULN_MS = 500;
 
 interface PlayerTuning {
@@ -42,7 +48,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
   id: 'game.top-down-shell',
   version: '0.1.0',
   provides: [],
-  dependencies: [CAPABILITY_IDS.combat, CAPABILITY_IDS.entities, CAPABILITY_IDS.arcade],
+  dependencies: [CAPABILITY_IDS.combat, CAPABILITY_IDS.entities, CAPABILITY_IDS.arcade, CAPABILITY_IDS.weapons],
 
   install(context: SceneContext): InstalledSystemPack {
     const scene = context.scene;
@@ -51,6 +57,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     const combat = context.capabilities.require<CombatService>(CAPABILITY_IDS.combat);
     const registry = context.capabilities.require<EntityRegistry<SceneContext>>(CAPABILITY_IDS.entities);
     const arcade = context.capabilities.require<ArcadeService>(CAPABILITY_IDS.arcade);
+    const weapons = context.capabilities.require<WeaponsService>(WEAPONS_CAPABILITY_ID);
     const { width, height } = context.definition.viewport;
 
     const spawn = level?.objects.find((object) => object.class === 'PlayerSpawn');
@@ -58,9 +65,10 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     player.setCollideWorldBounds(true);
     player.body.setAllowGravity(false);
     combat.register(PLAYER_ID, PLAYER_MAX_HEALTH);
+    weapons.equip(PLAYER_ID, weapons.definitionIds()[0]!);
 
     const enemies = new Map<string, EnemyRecord>();
-    const spriteToEnemyId = new Map<Phaser.Physics.Arcade.Sprite, string>();
+    const spriteToEnemyId = new Map<Phaser.GameObjects.GameObject, string>();
     const enemyGroup = scene.physics.add.group();
     let wave: 1 | 2 = 1;
     let wave1Cleared = false;
@@ -91,18 +99,21 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       registry.dispatch(object, context);
     }
 
-    const pool = new ProjectilePool({
+    const projectiles = createProjectileRuntime({
       scene,
-      textureKey: context.assets.resolve('pickup'),
-      displaySize: 8,
-      lifetimeMs: 1500,
+      weapons,
+      combat,
       worldWidth: width,
       worldHeight: height,
+      resolveTexture: () => context.assets.resolve('pickup'),
+      targetGroups: [enemyGroup],
+      resolveTarget: (obj) => {
+        const id = spriteToEnemyId.get(obj);
+        return id && enemies.get(id)?.alive ? { entityId: id, team: 'enemy' } : null;
+      },
     });
 
     let nowMs = 0;
-    // Phase 1 (ADR-0018): pointer aim is an optional source, never a
-    // replacement for the digital AIM_* axis.
     let pointerAimActive = false;
     let lastAimX = 0;
     let lastAimY = 0;
@@ -117,35 +128,34 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
 
     function checkWaveCompletion(): void {
       if (wave === 1 && !wave1Cleared) {
-        const done = [...enemies.values()].filter((e) => e.wave === 1).every((e) => !e.alive);
-        if (done) {
+        if ([...enemies.values()].filter((e) => e.wave === 1).every((e) => !e.alive)) {
           wave1Cleared = true;
           wave = 2;
           activateWave(2);
         }
       } else if (wave === 2 && !wave2Cleared) {
-        const done = [...enemies.values()].filter((e) => e.wave === 2).every((e) => !e.alive);
-        if (done) wave2Cleared = true;
+        if ([...enemies.values()].filter((e) => e.wave === 2).every((e) => !e.alive)) wave2Cleared = true;
       }
     }
 
-    function killEnemy(record: EnemyRecord): void {
+    const onDeath = context.events.on('combat:entityDied', ({ entityId }) => {
+      const record = enemies.get(entityId);
+      if (!record || !record.alive) return;
       record.alive = false;
       arcade.addScore(10);
       combat.remove(record.id);
       spriteToEnemyId.delete(record.sprite);
       enemyGroup.remove(record.sprite, true, true);
       checkWaveCompletion();
-    }
+    });
 
     scene.physics.add.overlap(player, enemyGroup, (_playerObj, enemyObj) => {
-      const sprite = enemyObj as Phaser.Physics.Arcade.Sprite;
-      const enemyId = spriteToEnemyId.get(sprite);
+      const enemyId = spriteToEnemyId.get(enemyObj as Phaser.GameObjects.GameObject);
       const record = enemyId ? enemies.get(enemyId) : undefined;
       if (!record || !record.alive) return;
       const before = combat.get(PLAYER_ID).current;
       const after = combat.damage(PLAYER_ID, PLAYER_CONTACT_DAMAGE, nowMs);
-      if (after.current === before) return; // still invulnerable from a previous hit
+      if (after.current === before) return;
       if (after.current > 0) combat.setInvulnerableFor(PLAYER_ID, HIT_INVULN_MS, nowMs);
     });
 
@@ -157,9 +167,10 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       wave1Cleared,
       wave2Cleared,
       score: arcade.score(),
-      projectilesLive: pool.liveCount,
-      projectilesSpawned: pool.spawnedTotal,
-      projectilesExpired: pool.expiredTotal,
+      projectilesLive: projectiles.liveCount,
+      projectilesSpawned: projectiles.spawnedTotal,
+      projectilesExpired: projectiles.expiredTotal,
+      weaponId: weapons.ownerState(PLAYER_ID).weaponId,
       pointerAimActive,
       lastAimX,
       lastAimY,
@@ -182,9 +193,6 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         const intent = topDownController.read(context.input);
         player.setVelocity(intent.moveX * tuning.moveSpeed, intent.moveY * tuning.moveSpeed);
 
-        // Digital aim wins whenever it is pressed. Only when it is not does the
-        // pointer position (if a mouse/touch pointer has ever been used) supply
-        // an aim vector - independent digital aim is never overridden.
         let aimX = intent.aimX;
         let aimY = intent.aimY;
         let aimMagnitude = intent.aimMagnitude;
@@ -203,26 +211,17 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         }
 
         if (intent.primaryPressed && aimMagnitude > 0) {
-          const projectile = pool.spawn(player.x, player.y, aimX * PROJECTILE_SPEED, aimY * PROJECTILE_SPEED);
-          scene.physics.add.overlap(projectile, enemyGroup, (_proj, enemyObj) => {
-            const sprite = enemyObj as Phaser.Physics.Arcade.Sprite;
-            const enemyId = spriteToEnemyId.get(sprite);
-            const record = enemyId ? enemies.get(enemyId) : undefined;
-            if (!record || !record.alive) return;
-            pool.remove(projectile);
-            const result = combat.damage(record.id, PROJECTILE_DAMAGE, nowMs);
-            if (result.current <= 0) killEnemy(record);
-          });
+          projectiles.fire({ ownerId: PLAYER_ID, originX: player.x, originY: player.y, dirX: aimX, dirY: aimY, nowMs });
         }
-
-        pool.update(deltaMs);
+        projectiles.update(deltaMs, nowMs);
       },
 
       dispose(): void {
         if (disposed) return;
         disposed = true;
         debugHandle.dispose();
-        pool.dispose();
+        onDeath.dispose();
+        projectiles.dispose();
         combat.remove(PLAYER_ID);
         for (const record of enemies.values()) {
           if (combat.has(record.id)) combat.remove(record.id);

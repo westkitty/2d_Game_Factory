@@ -66,7 +66,8 @@ export const LIMITATIONS = {
     'Independent spatial/analog aim is not wired into this starter. The digital AIM_* axis (ADR-0016) is the aim path; the spatial pointer (ADR-0018) can supply an optional aim fallback but the generated top-down shell does not consume it.',
   stealthAi:
     'AI state exists, but full vision cones, awareness geometry, noise propagation, hiding, and patrol navigation are not implemented.',
-  weaponsProjectiles: 'Combat core exists, but full projectile/weapon systems are not yet implemented.',
+  weaponsProjectiles:
+    'The reusable weapon/projectile capability (sw2d.weapons, ADR-0020) exists; this starter\'s shell does not wire it yet.',
   bossOrchestration:
     'AI/combat state foundations exist, but reusable boss-phase orchestration is not yet a production system.',
   proceduralGeneration:

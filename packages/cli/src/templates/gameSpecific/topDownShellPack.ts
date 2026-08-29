@@ -1,5 +1,5 @@
 import type { InstalledSystemPack, NormalizedLevel } from '@sw2d/contracts';
-import { bindCollectiblePickups, topDownController, type SceneContext, type ScenePackDefinition } from '@sw2d/runtime';
+import { bindCollectiblePickups, bindStarterWeapon, topDownController, type SceneContext, type ScenePackDefinition } from '@sw2d/runtime';
 
 /**
  * Generated starter shell: top-down controller family.
@@ -60,6 +60,11 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     // Data-driven item pickups (capability program Phase 2). Inert unless the
     // game installs sw2d.items - see platformShellPack.ts's note.
     const pickups = bindCollectiblePickups(context, player, level);
+    // Weapons (capability program Phase 3). Inert unless sw2d.weapons is installed.
+    const weapon = bindStarterWeapon(context);
+    let nowMs = 0;
+    let facingX = 1;
+    let facingY = 0;
 
     const debugHandle = context.debug.contribute('game.top-down-shell', () => ({
       x: Math.round(player.x),
@@ -68,6 +73,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       vy: Math.round(player.body.velocity.y),
       items: pickups.inventory(),
       pickupsRemaining: pickups.remaining(),
+      weapon: weapon.snapshot(),
     }));
 
     let disposed = false;
@@ -75,11 +81,21 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     return {
       id: GAME_SPECIFIC_PACK.id,
 
-      update(): void {
+      update(deltaMs: number): void {
         if (disposed) return;
+        nowMs += deltaMs;
         const intent = topDownController.read(context.input);
         player.setVelocityX(intent.moveX * tuning.moveSpeed);
         player.setVelocityY(intent.moveY * tuning.moveSpeed);
+        if (intent.aimMagnitude > 0) {
+          facingX = intent.aimX;
+          facingY = intent.aimY;
+        } else if (intent.moveMagnitude > 0) {
+          facingX = intent.moveX;
+          facingY = intent.moveY;
+        }
+        weapon.update(deltaMs, nowMs);
+        if (intent.primaryPressed) weapon.fire(nowMs, facingX, facingY, { x: player.x, y: player.y });
       },
 
       dispose(): void {
@@ -87,6 +103,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         disposed = true;
         debugHandle.dispose();
         pickups.dispose();
+        weapon.dispose();
         try {
           player.destroy();
         } catch {

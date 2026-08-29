@@ -27,6 +27,7 @@ interface ContentDocumentRegistryEntry {
 export const CONTENT_DOCUMENTS: Readonly<Record<string, ContentDocumentRegistryEntry>> = {
   tuning: { schemaName: 'tuning' },
   items: { schemaName: 'item-catalog' },
+  weapons: { schemaName: 'weapon-catalog' },
 };
 
 export type ContentDocumentName = keyof typeof CONTENT_DOCUMENTS;

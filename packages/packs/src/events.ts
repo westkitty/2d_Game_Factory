@@ -30,6 +30,8 @@ declare module '@sw2d/contracts' {
     'strategy:turnChanged': { readonly team: string; readonly turnNumber: number };
     'items:countChanged': { readonly itemId: string; readonly count: number; readonly delta: number };
     'items:consumed': { readonly itemId: string; readonly count: number };
+    'weapons:fired': { readonly ownerId: string; readonly weaponId: string; readonly shots: number };
+    'weapons:ammoChanged': { readonly ownerId: string; readonly ammo: number };
   }
 }
 

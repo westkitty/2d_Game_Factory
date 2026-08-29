@@ -35,26 +35,26 @@ pack/controller selections were actually exercised through, and
 | id | required packs | optional packs | controller(s) | input modes | validation profile |
 |---|---|---|---|---|---|
 | `top-down-adventure` | world, world-entities | narrative, progression | top-down | keyboard, touch | top-down-action-recipe |
-| `action-adventure` | world, world-entities, combat | ai, progression | top-down | keyboard, touch | top-down-action-recipe |
-| `twin-stick-shooter` | combat | world, world-entities, arcade | top-down | keyboard, touch | top-down-action-recipe |
-| `survivor-like` | combat, ai, progression | arcade, world | top-down | keyboard, touch | top-down-action-recipe |
+| `action-adventure` | world, world-entities, combat | ai, progression, weapons | top-down | keyboard, touch | top-down-action-recipe |
+| `twin-stick-shooter` | combat | world, world-entities, arcade, weapons | top-down | keyboard, touch | top-down-action-recipe |
+| `survivor-like` | combat, ai, progression | arcade, world, weapons | top-down | keyboard, touch | top-down-action-recipe |
 | `dungeon-crawler` | world, world-entities, combat | ai, progression | top-down | keyboard, touch | top-down-action-recipe |
 | `action-roguelite` | combat, progression | ai, world, world-entities | top-down | keyboard, touch | top-down-action-recipe |
 | `stealth-game` | ai, combat, world | world-entities | top-down | keyboard, touch | top-down-action-recipe |
 | `heist-game` | ai, combat, world | world-entities, progression | top-down | keyboard, touch | top-down-action-recipe |
-| `arena-combat` | combat | ai, arcade | top-down | keyboard, touch | top-down-action-recipe |
+| `arena-combat` | combat | ai, arcade, weapons | top-down | keyboard, touch | top-down-action-recipe |
 | `boss-rush` | combat, ai | arcade | top-down | keyboard, touch | top-down-action-recipe |
 
 ## Shooter (Phase 7A)
 
 | id | required packs | optional packs | controller(s) | input modes | validation profile |
 |---|---|---|---|---|---|
-| `horizontal-shmup` | combat | arcade | top-down | keyboard, touch | shooter-recipe |
-| `vertical-shmup` | combat | arcade | top-down | keyboard, touch | shooter-recipe |
-| `bullet-hell` | combat | arcade | top-down | keyboard, touch | shooter-recipe |
+| `horizontal-shmup` | combat | arcade, weapons | top-down | keyboard, touch | shooter-recipe |
+| `vertical-shmup` | combat | arcade, weapons | top-down | keyboard, touch | shooter-recipe |
+| `bullet-hell` | combat | arcade, weapons | top-down | keyboard, touch | shooter-recipe |
 | `asteroids-shooter` | combat | arcade | vehicle | keyboard, touch | shooter-recipe |
 | `gallery-shooter` | combat | arcade | pointer | keyboard, pointer, touch | shooter-recipe |
-| `run-and-gun` | combat, world, world-entities | arcade | platform | keyboard, touch | shooter-recipe |
+| `run-and-gun` | combat, world, world-entities | arcade, weapons | platform | keyboard, touch | shooter-recipe |
 | `rail-shooter` | combat | arcade | pointer | keyboard, pointer, touch | shooter-recipe |
 
 ## Vehicle / movement (Phase 7B)
@@ -149,8 +149,9 @@ pack/controller selections were actually exercised through, and
 | narrative | `sw2d.narrative` | `narrative.state` | 4 | 8 |
 | strategy | `sw2d.strategy` | `strategy.turns` | 4 | 4 |
 | items | `sw2d.items` | `items.state` | 1 | 1 |
+| weapons | `sw2d.weapons` | `combat.weapons` | 7 | 7 |
 
-**All eleven current packs have at least one preset consumer.** `sw2d.items` (capability
+**All twelve current packs have at least one preset consumer.** `sw2d.items` (capability
 program Phase 2) is required by `collectathon-platformer`, whose generated starter consumes
 the reusable item/effect service through the shared platform shell.
 

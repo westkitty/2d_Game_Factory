@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import type { InstalledSystemPack, NormalizedLevel } from '@sw2d/contracts';
-import { bindCollectiblePickups, platformController, type SceneContext, type ScenePackDefinition } from '@sw2d/runtime';
+import { bindCollectiblePickups, bindStarterWeapon, platformController, type SceneContext, type ScenePackDefinition } from '@sw2d/runtime';
 
 /**
  * Generated starter shell: platform controller family.
@@ -80,6 +80,10 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     // catalog entry grants that item and applies its effects through the
     // reusable service - no per-pickup code here.
     const pickups = bindCollectiblePickups(context, player, level);
+    // Weapons (capability program Phase 3). Inert unless sw2d.weapons is installed.
+    const weapon = bindStarterWeapon(context);
+    let nowMs = 0;
+    let facing = 1;
 
     const debugHandle = context.debug.contribute('game.platform-shell', () => ({
       x: Math.round(player.x),
@@ -89,6 +93,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       onGround: player.body.blocked.down,
       items: pickups.inventory(),
       pickupsRemaining: pickups.remaining(),
+      weapon: weapon.snapshot(),
     }));
 
     let disposed = false;
@@ -96,11 +101,17 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     return {
       id: GAME_SPECIFIC_PACK.id,
 
-      update(): void {
+      update(deltaMs: number): void {
         if (disposed) return;
+        nowMs += deltaMs;
         const intent = platformController.read(context.input);
         player.setVelocityX(intent.moveAxis * tuning.moveSpeed);
-        if (intent.moveAxis !== 0) player.setFlipX(intent.moveAxis < 0);
+        if (intent.moveAxis !== 0) {
+          player.setFlipX(intent.moveAxis < 0);
+          facing = intent.moveAxis < 0 ? -1 : 1;
+        }
+        weapon.update(deltaMs, nowMs);
+        if (intent.primaryPressed) weapon.fire(nowMs, facing, 0, { x: player.x, y: player.y });
         if (intent.jumpPressed && player.body.blocked.down) {
           player.setVelocityY(-tuning.jumpVelocity);
           context.audio.playCue('ui.confirm');
@@ -112,6 +123,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         disposed = true;
         debugHandle.dispose();
         pickups.dispose();
+        weapon.dispose();
         // A restart's batched stop+start can already have torn down this
         // scene's physics world by the time this runs - see
         // placeholderMoverPack.ts's own comment for the full story. Each

@@ -26,3 +26,4 @@ export * from './spatial.ts';
 export * from './systems.ts';
 export * from './theme.ts';
 export * from './ui.ts';
+export * from './weapons.ts';

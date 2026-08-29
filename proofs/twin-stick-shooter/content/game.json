@@ -22,6 +22,10 @@
       "config": {}
     },
     {
+      "packId": "sw2d.weapons",
+      "config": {}
+    },
+    {
       "packId": "game.top-down-shell",
       "config": {}
     }

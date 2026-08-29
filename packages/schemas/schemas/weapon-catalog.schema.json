@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:sw2d:schema:content-weapon-catalog:v1",
+  "title": "WeaponCatalog",
+  "description": "Mirrors @sw2d/contracts WeaponCatalog (weapons.ts). Validated as a ContentBundle.data document (document name 'weapons'). onHitEffects reuse the bounded effect union from the item-catalog schema.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "weapons"],
+  "properties": {
+    "schemaVersion": { "type": "integer", "minimum": 1 },
+    "weapons": { "type": "array", "items": { "$ref": "#/definitions/weapon" } }
+  },
+  "definitions": {
+    "weapon": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "displayName", "projectile", "cooldownMs", "fireMode", "team"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "displayName": { "type": "string", "minLength": 1 },
+        "team": { "type": "string", "minLength": 1 },
+        "cooldownMs": { "type": "number", "exclusiveMinimum": 0 },
+        "fireMode": { "enum": ["single", "auto", "burst"] },
+        "burstCount": { "type": "integer", "minimum": 1 },
+        "burstDelayMs": { "type": "number", "exclusiveMinimum": 0 },
+        "pelletCount": { "type": "integer", "minimum": 1 },
+        "spreadDeg": { "type": "number", "minimum": 0, "maximum": 360 },
+        "muzzleOffset": { "type": "number", "minimum": 0 },
+        "magazine": { "type": "integer", "minimum": 1 },
+        "reloadMs": { "type": "number", "minimum": 0 },
+        "projectile": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["speed", "lifetimeMs", "damage"],
+          "properties": {
+            "assetRole": { "type": "string", "minLength": 1 },
+            "speed": { "type": "number", "exclusiveMinimum": 0 },
+            "lifetimeMs": { "type": "number", "exclusiveMinimum": 0 },
+            "size": { "type": "number", "exclusiveMinimum": 0 },
+            "pierce": { "type": "integer", "minimum": 0 },
+            "bounce": { "type": "integer", "minimum": 0 },
+            "damage": { "type": "number", "minimum": 0 },
+            "onHitEffects": {
+              "type": "array",
+              "items": { "$ref": "urn:sw2d:schema:content-item-catalog:v1#/definitions/effect" }
+            }
+          }
+        }
+      }
+    }
+  }
+}

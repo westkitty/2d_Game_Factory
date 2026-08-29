@@ -774,6 +774,29 @@ adjudicated individually in the Phase 12 acceptance document):
 
 ## Revision history
 
+### Revision 18 - 2026-08-29 (Sonnet 5) - Capability program Phase 3
+
+**Weapons & projectiles (ADR-0020).** Third phase of the ten-phase program. Full detail in the
+durable ledger [`docs/architecture/CAPABILITY_PROGRAM_STATE.md`](docs/architecture/CAPABILITY_PROGRAM_STATE.md).
+
+- **New capability.** `sw2d.weapons` pack -> `combat.weapons` (renderer-neutral `WeaponsService`:
+  cooldown, `single`/`auto`/`burst` fire modes, burst timing, pellet spread, muzzle offset, ammo
+  and reload; deterministic `ProjectileSpawn` output). `content/weapons.json` validated by the new
+  `weapon-catalog` schema (reuses the Phase 2 effect union for `onHitEffects`). Renderer-coupled
+  half: `createProjectileRuntime` (`@sw2d/runtime/game-support`) - renders spawns, per-projectile
+  overlap, damage via `combat.health`, pierce/bounce, on-hit effects via `sw2d.items`. Twelve
+  packs now.
+- **Generation.** `content/weapons.json` always emitted; `content.ts` / `main.ts` templates load
+  it; the shared `platform` + `top-down` shells wire `bindStarterWeapon` capability-guarded.
+- **Proofs.** `proofs/twin-stick-shooter/` upgraded (raw pool -> reusable model+bridge);
+  `proofs/run-and-gun/` new (platform). `qa:proof` 9/9 -> 10/10.
+- **Limitations.** `weaponsProjectiles` removed from 8 top-down/platform-shell presets (each
+  narrowed to its real remaining gap - Phase 4 orchestration, melee); `gallery-shooter`,
+  `rail-shooter`, `asteroids-shooter` keep a narrowed version. Maturity split unchanged (5/7/62).
+- **Validation:** typecheck PASS; `npm test` 2154/2154; builds + `check:offline` PASS; `qa:proof`
+  10/10; `qa:matrix` / `qa:starter-kits` / `release:verify` - see the ledger for results at phase
+  close.
+
 ### Revision 17 - 2026-08-28 (Sonnet 5) - Capability program Phase 2
 
 **Data-driven items / effects / pickups (ADR-0019).** Second phase of the ten-phase program.
