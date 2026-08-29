@@ -28,6 +28,7 @@ export const PACK_IDS = {
   items: 'sw2d.items',
   weapons: 'sw2d.weapons',
   encounters: 'sw2d.encounters',
+  navigation: 'sw2d.navigation',
 } as const;
 
 export const CAPABILITY_IDS = {
@@ -48,4 +49,6 @@ export const CAPABILITY_IDS = {
   weapons: 'combat.weapons',
   /** Capability program Phase 4: waves / phases / bullet patterns / boss phases. */
   encounters: 'combat.encounters',
+  /** Capability program Phase 5: deterministic grid pathfinding + reachable range. */
+  navigation: 'world.navigation',
 } as const;

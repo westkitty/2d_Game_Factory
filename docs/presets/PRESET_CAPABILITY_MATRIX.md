@@ -40,8 +40,8 @@ pack/controller selections were actually exercised through, and
 | `survivor-like` | combat, ai, progression | arcade, world, weapons, encounters | top-down | keyboard, touch | top-down-action-recipe |
 | `dungeon-crawler` | world, world-entities, combat | ai, progression | top-down | keyboard, touch | top-down-action-recipe |
 | `action-roguelite` | combat, progression | ai, world, world-entities | top-down | keyboard, touch | top-down-action-recipe |
-| `stealth-game` | ai, combat, world | world-entities | top-down | keyboard, touch | top-down-action-recipe |
-| `heist-game` | ai, combat, world | world-entities, progression | top-down | keyboard, touch | top-down-action-recipe |
+| `stealth-game` | ai, combat, world | world-entities | top-down, navigation | keyboard, touch | top-down-action-recipe |
+| `heist-game` | ai, combat, world | world-entities, progression | top-down, navigation | keyboard, touch | top-down-action-recipe |
 | `arena-combat` | combat | ai, arcade, weapons | top-down | keyboard, touch | top-down-action-recipe |
 | `boss-rush` | combat, ai | arcade, encounters | top-down | keyboard, touch | top-down-action-recipe |
 
@@ -86,11 +86,11 @@ pack/controller selections were actually exercised through, and
 
 | id | required packs | optional packs | controller(s) | input modes | validation profile |
 |---|---|---|---|---|---|
-| `tower-defense` | world, world-entities, progression, combat | ai | grid, pointer | keyboard, pointer, touch | strategy-defense-recipe |
-| `lane-defense` | world, world-entities, progression | combat | grid, pointer | keyboard, pointer, touch | strategy-defense-recipe |
+| `tower-defense` | world, world-entities, progression, combat | ai, navigation | grid, pointer | keyboard, pointer, touch | strategy-defense-recipe |
+| `lane-defense` | world, world-entities, progression | combat | grid, pointer, navigation | keyboard, pointer, touch | strategy-defense-recipe |
 | `auto-battler` | strategy, combat, ai | progression | ui-simulation | keyboard, touch | strategy-defense-recipe |
-| `simple-rts` | strategy, combat | ai, world, world-entities | top-down | keyboard, touch | strategy-defense-recipe |
-| `turn-based-tactics` | strategy, combat | ai, world, world-entities | grid, ui-simulation | keyboard, touch | strategy-defense-recipe |
+| `simple-rts` | strategy, combat | ai, world, world-entities | top-down, navigation | keyboard, touch | strategy-defense-recipe |
+| `turn-based-tactics` | strategy, combat | ai, world, world-entities, navigation | grid, ui-simulation | keyboard, touch | strategy-defense-recipe |
 | `base-defense` | world, world-entities, combat | ai, progression | top-down, encounters | keyboard, touch | strategy-defense-recipe |
 | `territory-control` | world, world-entities, strategy, combat | ai | top-down | keyboard, touch | strategy-defense-recipe |
 
@@ -103,7 +103,7 @@ pack/controller selections were actually exercised through, and
 | `tycoon-lite` | simulation, progression | arcade | ui-simulation | keyboard, touch | simulation-management-recipe |
 | `farming-lite` | simulation, world | progression | ui-simulation | keyboard, touch | simulation-management-recipe |
 | `pet-creature` | simulation, progression | world | ui-simulation | keyboard, touch | simulation-management-recipe |
-| `colony-lite` | simulation, world | progression | ui-simulation | keyboard, touch | simulation-management-recipe |
+| `colony-lite` | simulation, world | progression | ui-simulation, navigation | keyboard, touch | simulation-management-recipe |
 | `restaurant` | simulation, progression | arcade | ui-simulation | keyboard, touch | simulation-management-recipe |
 | `aquarium-terrarium` | simulation | progression | ui-simulation | keyboard, touch | simulation-management-recipe |
 
@@ -151,8 +151,9 @@ pack/controller selections were actually exercised through, and
 | items | `sw2d.items` | `items.state` | 1 | 1 |
 | weapons | `sw2d.weapons` | `combat.weapons` | 7 | 7 |
 | encounters | `sw2d.encounters` | `combat.encounters` | 4 | 5 |
+| navigation | `sw2d.navigation` | `world.navigation` | 2 | 8 |
 
-**All thirteen current packs have at least one preset consumer.** `sw2d.items` (capability
+**All fourteen current packs have at least one preset consumer.** `sw2d.items` (capability
 program Phase 2) is required by `collectathon-platformer`, whose generated starter consumes
 the reusable item/effect service through the shared platform shell.
 

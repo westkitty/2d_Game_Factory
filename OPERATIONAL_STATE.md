@@ -774,6 +774,27 @@ adjudicated individually in the Phase 12 acceptance document):
 
 ## Revision history
 
+### Revision 20 - 2026-08-29 (Sonnet 5) - Capability program Phase 5
+
+**Navigation & pathfinding (ADR-0022).** Fifth phase of the ten-phase program. Full detail in
+[`docs/architecture/CAPABILITY_PROGRAM_STATE.md`](docs/architecture/CAPABILITY_PROGRAM_STATE.md).
+
+- **New capability.** `sw2d.navigation` pack -> `world.navigation` - deterministic project-owned
+  A* + Dijkstra reachable-range flood, renderer-neutral, no new dependency. `NavGrid`:
+  `findPath` (stable tie-breaking, diagonal + corner-cutting options), `reachable(from, budget)`,
+  dynamic `setWalkable` / `setCost`, `defineGridFromSolids`. `createRouteFollower` /
+  `advanceAlongPath` (pure) in `@sw2d/contracts`. No content doc / schema (grids derive from
+  level data); `main.ts` template gains `navigationPack`. Fourteen packs now.
+- **Proofs.** New `proofs/turn-based-tactics/` (deterministic reachable movement range + route
+  following) and `proofs/lane-defense/` (continuous route-following + dynamic re-path, a
+  route-destroying blocker rejected). `qa:proof` 12/12 -> 14/14.
+- **Limitations.** Pathfinding limitations removed/narrowed on `tower-defense`,
+  `turn-based-tactics`, `lane-defense`, `simple-rts`, `colony-lite`; `LIMITATIONS.stealthAi`
+  narrowed (patrol navigation now covered). `tower-defense` proof keeps its hand-authored route
+  (nav retrofit deferred). Maturity split unchanged (5/7/62).
+- **Validation:** typecheck PASS; `npm test` 2198/2198; builds + `check:offline` PASS; `qa:proof`
+  14/14; `qa:matrix` / `qa:starter-kits` / `release:verify` - see the ledger.
+
 ### Revision 19 - 2026-08-29 (Sonnet 5) - Capability program Phase 4
 
 **Combat / encounter orchestration (ADR-0021).** Fourth phase of the ten-phase program. Full

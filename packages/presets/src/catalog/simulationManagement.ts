@@ -98,11 +98,11 @@ export const SIMULATION_MANAGEMENT_PRESETS: readonly PresetDefinition[] = [
     family: 'simulation-management',
     controllerFamilies: ['ui-simulation'],
     requiredSystemPacks: [pack(PACK_IDS.simulation), pack(PACK_IDS.world)],
-    optionalSystemPacks: [pack(PACK_IDS.progression)],
+    optionalSystemPacks: [pack(PACK_IDS.progression), pack(PACK_IDS.navigation)],
     requiredContentRoles: ['tuning'],
     validationProfile: VALIDATION_PROFILES.simulationManagement,
     knownLimitations: [
-      'No colonist needs, assignment AI, pathfinding, construction placement, or colony simulation exists.',
+      'Colonist pathfinding is reusable (sw2d.navigation, optional); needs, assignment AI, construction placement and colony simulation are not.',
     ],
   }),
 

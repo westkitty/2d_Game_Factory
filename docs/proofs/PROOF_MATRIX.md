@@ -3,7 +3,7 @@
 Phase 10's five deep, end-to-end proof games - the tier above Phase 8's smoke bar - plus the
 capability-completion program's per-phase proof consumers. Each row is backed by a frozen
 `proofs/<id>/PROOF_CONTRACT.md`, a real generated composition, and a committed real-browser proof
-spec run through `npm run qa:proof`. Mechanically, `npm run qa:proof` is **12/12** as of this
+spec run through `npm run qa:proof`. Mechanically, `npm run qa:proof` is **14/14** as of this
 revision.
 
 ## Capability program — Phase 1: reusable spatial pointer & interaction (ADR-0018)
@@ -39,6 +39,13 @@ folded into a capability phase.
 |---|---|---|---|---|---|
 | `proofs/bullet-hell/` (new) | `bullet-hell` | `sw2d.encounters` (`EncounterService`) from `content/encounters.json` - a capped ring + spiral emitter and a spawn wave; `expandFirePattern`; `createEncounterRuntime` firing through Phase 3's projectile runtime; `combat.health` for both sides | Player auto-aims a sidearm at the nearest drone; enemy bullets damage the player, player bullets kill the drones | Start (`phaseId: spread`); hold fire ~2.5s; `bulletsFired === 144` exactly (deterministic), `projectilesLive` bounded, drones killed, player damaged; `encounterComplete` at elapsed 2600ms; restart resets the runtime | PASS |
 | `proofs/boss-rush/` (new) | `boss-rush` | `sw2d.encounters` with `bossEntityId` - three phases with distinct emitter patterns (aimed → aimed fan → ring), `entity-health-below` transitions, `onEnterInvulnMs` windows, an `onEnterFlag`; `createEncounterRuntime` applies invuln + flag from the definition | Shell spawns the boss sprite + registers it in combat; player holds fire straight up | Start (`phase-1`, boss at 100%); fire; boss < 66% → `phase-2` + `bossInvulnerable` (health frozen during the window); < 33% → `phase-3` + `finalPhase` flag; < 3% → `encounterComplete`; restart returns to `phase-1` | PASS |
+
+## Capability program — Phase 5: navigation & pathfinding (ADR-0022)
+
+| Proof | Preset | Reusable capability exercised | Game-specific mechanics | Browser journey | Status |
+|---|---|---|---|---|---|
+| `proofs/turn-based-tactics/` (new) | `turn-based-tactics` | `sw2d.navigation` - `NavGrid.reachable(unitCell, budget)` for the deterministic movement range; `NavGrid.findPath` via `createRouteFollower` for the route | A 10×8 battlefield with wall cells; a selectable unit + a grid cursor | Start (`reachableCount === 28`, identical across reads); confirm a cell inside the reachable set -> unit follows the route (`lastPathCost 2`, `lastPathLen 3`); confirm a cell past the budget -> rejected; restart resets | PASS |
+| `proofs/lane-defense/` (new) | `lane-defense` | `sw2d.navigation` - three enemies each with a `RouteFollower` to the base; `setWalkable` + re-request on blocker placement; a route-destroying placement is rolled back | 12×3 grid, grid cursor places blockers | Start (3 enemies routing); a mid-lane blocker re-paths all three (`enemiesRepathed >= 3`, none rejected); a placement that would fully wall the column is rejected; all three still reach the base; restart resets | PASS |
 
 ## Phase 10 deep proofs
 

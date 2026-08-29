@@ -44,6 +44,9 @@ const PROOF_SPEC_MODULES: Readonly<Record<string, string>> = {
   // Phase 4 - combat / encounter orchestration (ADR-0021)
   'bullet-hell': 'bulletHell',
   'boss-rush': 'bossRush',
+  // Phase 5 - navigation & pathfinding (ADR-0022)
+  'turn-based-tactics': 'turnBasedTactics',
+  'lane-defense': 'laneDefense',
 };
 
 function proofTargets(): Target[] {

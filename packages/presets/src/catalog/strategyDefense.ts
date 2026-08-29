@@ -26,14 +26,17 @@ export const STRATEGY_DEFENSE_PRESETS: readonly PresetDefinition[] = [
     displayName: 'Tower Defense',
     family: 'strategy-defense',
     controllerFamilies: ['grid', 'pointer'],
-    requiredSystemPacks: [pack(PACK_IDS.world), pack(PACK_IDS.worldEntities), pack(PACK_IDS.progression), pack(PACK_IDS.combat)],
+    requiredSystemPacks: [pack(PACK_IDS.world), pack(PACK_IDS.worldEntities), pack(PACK_IDS.progression), pack(PACK_IDS.combat), pack(PACK_IDS.navigation)],
     optionalSystemPacks: [pack(PACK_IDS.ai)],
     requiredContentRoles: ['tuning', 'levels'],
     supportedInputModes: POINTER_INPUT_MODES,
     validationProfile: VALIDATION_PROFILES.strategyDefense,
+    // Route-following pathfinding is reusable now (sw2d.navigation, ADR-0022;
+    // proof: proofs/tower-defense/). Spatial placement uses sw2d.interaction
+    // (Phase 1) via the pointer shell, but this proof keeps the grid cursor.
     knownLimitations: [
-      'Spatial placement/hover targeting is not implemented.',
-      'No reusable pathfinding/route-following/targeting/upgrade-tower system exists yet.',
+      'Spatial hover placement via the pointer shell is available but this starter uses the keyboard grid cursor.',
+      'Deterministic route-following pathfinding is reusable (sw2d.navigation); tower target-selection and upgrade rules stay starter-specific.',
     ],
   }),
 
@@ -42,12 +45,14 @@ export const STRATEGY_DEFENSE_PRESETS: readonly PresetDefinition[] = [
     displayName: 'Lane Defense',
     family: 'strategy-defense',
     controllerFamilies: ['grid', 'pointer'],
-    requiredSystemPacks: [pack(PACK_IDS.world), pack(PACK_IDS.worldEntities), pack(PACK_IDS.progression)],
+    requiredSystemPacks: [pack(PACK_IDS.world), pack(PACK_IDS.worldEntities), pack(PACK_IDS.progression), pack(PACK_IDS.navigation)],
     optionalSystemPacks: [pack(PACK_IDS.combat)],
     requiredContentRoles: ['tuning', 'levels'],
     supportedInputModes: POINTER_INPUT_MODES,
     validationProfile: VALIDATION_PROFILES.strategyDefense,
-    knownLimitations: ['No reusable lane-spawn/route/combat-resolution system exists yet.'],
+    // Deterministic route-following + dynamic re-path are reusable now
+    // (sw2d.navigation, ADR-0022; proof: proofs/lane-defense/).
+    knownLimitations: ['Lane-spawn scheduling and combat resolution are still starter-specific.'],
   }),
 
   definePreset({
@@ -68,10 +73,10 @@ export const STRATEGY_DEFENSE_PRESETS: readonly PresetDefinition[] = [
     family: 'strategy-defense',
     controllerFamilies: ['top-down'],
     requiredSystemPacks: [pack(PACK_IDS.strategy), pack(PACK_IDS.combat)],
-    optionalSystemPacks: [pack(PACK_IDS.ai), pack(PACK_IDS.world), pack(PACK_IDS.worldEntities)],
+    optionalSystemPacks: [pack(PACK_IDS.ai), pack(PACK_IDS.world), pack(PACK_IDS.worldEntities), pack(PACK_IDS.navigation)],
     requiredContentRoles: ['tuning', 'levels'],
     validationProfile: VALIDATION_PROFILES.strategyDefense,
-    knownLimitations: ['Spatial selection/command targeting and pathfinding are not implemented.'],
+    knownLimitations: ['Unit pathfinding is reusable (sw2d.navigation, optional); box-select and command-queue UI are not implemented.'],
   }),
 
   definePreset({
@@ -80,12 +85,14 @@ export const STRATEGY_DEFENSE_PRESETS: readonly PresetDefinition[] = [
     displayName: 'Turn-Based Tactics',
     family: 'strategy-defense',
     controllerFamilies: ['grid', 'ui-simulation'],
-    requiredSystemPacks: [pack(PACK_IDS.strategy), pack(PACK_IDS.combat)],
+    requiredSystemPacks: [pack(PACK_IDS.strategy), pack(PACK_IDS.combat), pack(PACK_IDS.navigation)],
     optionalSystemPacks: [pack(PACK_IDS.ai), pack(PACK_IDS.world), pack(PACK_IDS.worldEntities)],
     requiredContentRoles: ['tuning', 'levels'],
     validationProfile: VALIDATION_PROFILES.strategyDefense,
+    // Reachable-cell movement range + deterministic route-following are reusable
+    // now (sw2d.navigation, ADR-0022; proof: proofs/turn-based-tactics/).
     knownLimitations: [
-      'Grid/strategy foundations exist, but movement range, attack range, pathfinding, and turn-action resolution are not reusable systems yet.',
+      'Attack-range/line-of-fire resolution and a full turn-action state machine are still starter-specific.',
     ],
   }),
 

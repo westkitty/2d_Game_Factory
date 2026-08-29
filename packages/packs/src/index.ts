@@ -79,3 +79,4 @@ export {
 export { itemsPack, ITEMS_SAVE_SLOT, UnknownItemError, type ItemsService } from './items/itemsPack.ts';
 export { weaponsPack, UnknownWeaponError, type WeaponsService } from './weapons/weaponsPack.ts';
 export { encountersPack, UnknownEncounterError, type EncounterService } from './encounters/encountersPack.ts';
+export { navigationPack, type NavService, type NavGrid } from './navigation/navigationPack.ts';

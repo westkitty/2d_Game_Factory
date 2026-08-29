@@ -24,7 +24,7 @@ Git/validation/architecture checkpoint, not a new chat.
 | 2 | Data-Driven Items / Effects / Pickups | `feature/capability-02-items-effects` | PASS |
 | 3 | Weapons & Projectiles | `feature/capability-03-weapons-projectiles` | PASS |
 | 4 | Combat / Encounter Orchestration | `feature/capability-04-combat-orchestration` | PASS |
-| 5 | Navigation & Pathfinding | `feature/capability-05-navigation` | NOT STARTED |
+| 5 | Navigation & Pathfinding | `feature/capability-05-navigation` | PASS |
 | 6 | Data-Driven Puzzle Rules | `feature/capability-06-data-puzzles` | NOT STARTED |
 | 7 | Procedural Generation | `feature/capability-07-procedural-generation` | NOT STARTED |
 | 8 | World Graph / Rooms / Transitions / Map | `feature/capability-08-world-graph` | NOT STARTED |
@@ -34,7 +34,7 @@ Git/validation/architecture checkpoint, not a new chat.
 Program starting `main`: `0af24cd6c2646cae84fb4be559b68c2477e63d0b`
 (the Start/Confirm prerequisite; verified present before Phase 1).
 
-Current phase: **5 — Navigation & Pathfinding** (NOT STARTED).
+Current phase: **6 — Data-Driven Puzzle Rules** (NOT STARTED).
 
 ---
 
@@ -338,5 +338,66 @@ emitters cover both proofs) — noted, not a blocker.
 
 ### Next phase
 
-Phase 5 — Navigation & Pathfinding. Branch `feature/capability-05-navigation`
+Phase 5 done, see below.
+
+---
+
+## Phase 5 — Navigation & Pathfinding — PASS
+
+- **Starting SHA:** `c21f9ad09190cbd88e58edfcdb6c73f1f23c76a2` (Phase 4 on `main`)
+- **Feature branch:** `feature/capability-05-navigation`
+- **Phase commit SHA:** this commit — `feat: add reusable navigation and pathfinding` on `main`
+- **Main integration SHA:** same commit, fast-forwarded onto `main`
+
+### Implementation summary
+
+- `packages/contracts/src/navigation.ts` (new): `NavGridSpec` / `NavGrid` /
+  `NavPath` / `ReachableCell` / `NavQueryOptions` / `NavService` /
+  `NAV_CAPABILITY_ID`; pure `advanceAlongPath` + stateful `createRouteFollower`.
+- `packages/packs/src/navigation/navigationPack.ts` (new): `sw2d.navigation` →
+  `world.navigation`, `dependencies: []`. Project-owned deterministic A*
+  (stable tie-break: f, h, seq; diagonal + corner-cutting options) + Dijkstra
+  reachable flood; dynamic `setWalkable`/`setCost`; `defineGridFromSolids`.
+  Renderer-neutral, no new dependency.
+- `main.ts` template gains `navigationPack`. No content document / schema
+  (grids derive from level data or game config at install time).
+- ADR-0022.
+
+### Proof consumers
+
+- **`proofs/turn-based-tactics/`** (new) — `NavGrid.reachable` deterministic
+  movement range (28 cells, identical across reads) + `RouteFollower` movement;
+  an out-of-budget cell is rejected.
+- **`proofs/lane-defense/`** (new) — three enemies each following a
+  `RouteFollower` route to the base; a placed blocker re-paths every living
+  enemy; a placement that would strand an enemy is rejected; no route is ever
+  permanently invalidated.
+- `npm run qa:proof` 12/12 → **14/14**.
+
+### Limitation changes
+
+- Pathfinding limitations removed/narrowed on `tower-defense`,
+  `turn-based-tactics`, `lane-defense`, `simple-rts`, `colony-lite`;
+  `LIMITATIONS.stealthAi` narrowed (patrol navigation now covered by
+  `sw2d.navigation`, added optional to stealth/heist). `tower-defense`'s own
+  proof keeps its hand-authored route (nav retrofit deferred). Maturity 5/7/62.
+
+### Validation completed
+
+- `npm run typecheck` — PASS
+- `npm test` — 2198/2198 PASS (was 2176; +22)
+- `npm run workbench:build`, `npm run build`, `npm run check:offline` — PASS
+- `npm run qa:proof` — 14/14 PASS
+- `npm run qa:matrix` — 42/42 PASS
+- `npm run qa:starter-kits` — all 14 sub-suites PASS
+- `npm run release:verify` — 6/6 PASS
+
+### Unresolved blockers
+
+None. `tower-defense` proof's nav retrofit intentionally deferred (its
+hand-authored route proof stays valid; `lane-defense` covers the intent).
+
+### Next phase
+
+Phase 6 — Data-Driven Puzzle Rules. Branch `feature/capability-06-data-puzzles`
 from the integrated `main`.
