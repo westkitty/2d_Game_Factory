@@ -2,30 +2,41 @@
 
 First-ten base SHA: `acf802f7a32a3f341273c084931af37cb5461784`
 Candidate branch: `candidate/antigravity-post-ten-program`
-Candidate HEAD: `69d957d27d9d6426f2e79480acac6eedfd3a3f76`
-Current candidate phase: Phase 14 (FOCUSED TESTS PASS)
+Candidate HEAD: `4055e5ec4842882b34f1396b6166104051c9113b`
+Current candidate phase: Phase 14 (FOCUSED TESTS PASS) — Phase 15 next, per `POST_TEN_PROGRAM_SPEC.md`
 
 ---
 
-### Next phase: not specified anywhere in this repository
+### Phase 15 blocker: resolved by the external program authority
 
-Phase 14 is the last phase with a recoverable specification. Searched for a Phase 15+ spec and
-found none:
+**Amended.** The evidence-based stop recorded below was correct when it was written and is
+preserved as history, not deleted.
+
+At the Phase-14 boundary no Phase-15 specification existed in the repository. The external
+program authority subsequently supplied the authoritative Phase-15-through-36 continuation.
+That continuation is now persisted in
+[`POST_TEN_PROGRAM_SPEC.md`](POST_TEN_PROGRAM_SPEC.md). **Phase 15 is next.**
+
+Read `POST_TEN_PROGRAM_SPEC.md` after any context compaction; it is deliberately complete so
+the roadmap never has to be re-supplied.
+
+#### Historical record — the original stop, kept verbatim
+
+At the Phase-14 boundary, Phase 14 was the last phase with a recoverable specification.
+Searched for a Phase 15+ spec and found none:
 
 - `git grep 'Phase 1[5-7]' -- '*.md'` across **every remote branch** — no hits.
 - `MASTER_PROJECT.md`, `PROJECT_BIBLE.md`, `README.md`, `OPERATIONAL_STATE.md`,
-  `WORKBENCH_OPERATIONAL_STATE.md` — none enumerate post-ten phases.
-- This file is the only post-ten program document; it records phases retrospectively and has
-  never carried a forward plan. The "Phase 11-36" phrase in the note below is a single
+  `WORKBENCH_OPERATIONAL_STATE.md` — none enumerated post-ten phases.
+- This file was the only post-ten program document; it recorded phases retrospectively and
+  never carried a forward plan. The "Phase 11-36" phrase in the note below was a single
   unelaborated mention, not a phase list.
 - `CAPABILITY_PROGRAM_STATE.md`'s closing "Remaining limitations" paragraph is a set of gaps,
   **not** an ordered phase sequence: Phase 13 (run lifecycle) came from late in that paragraph
   and Phase 14 (strategy orders) is not in it at all.
 
-Work stopped at the durable Phase 14 boundary rather than inventing a Phase 15. Whoever assigns
-Phase 15 should write its specification down here (or in a dedicated roadmap document) first.
-`CAPABILITY_PROGRAM_STATE.md`'s remaining-limitations paragraph is the best available menu of
-candidates.
+Work stopped at the durable Phase 14 boundary rather than inventing a Phase 15. That judgement
+stands on its evidence; the specification simply did not exist in-repo yet, and now it does.
 
 ---
 
