@@ -6,6 +6,10 @@ export interface DebugSnapshotLike {
   readonly runIndex: number;
   readonly paused: boolean;
   readonly installedPacks: readonly string[];
+  /** Live capability ids. Phase 15's leak check reads this to prove one hub, not two. */
+  readonly capabilities: readonly string[];
+  /** Live listener/adapter counts, keyed by name. The restart-leak surface. */
+  readonly listeners: Readonly<Record<string, number>>;
   readonly extra: Readonly<Record<string, unknown>>;
 }
 

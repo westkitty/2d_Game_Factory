@@ -71,6 +71,9 @@ const PROOF_SPEC_MODULES: Readonly<Record<string, string>> = {
   'survivor-like': 'survivorLike',
   // Phase 14 - strategy orders & tactical actions
   'simple-rts': 'simpleRts',
+  // Phase 15 - local multiplayer & gamepad routing
+  'local-party-game': 'localPartyGame',
+  pong: 'pong',
 };
 
 function proofTargets(): Target[] {

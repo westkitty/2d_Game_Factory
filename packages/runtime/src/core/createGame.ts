@@ -8,9 +8,12 @@ import {
   type GameContext,
   type GameDefinition,
   type GameExtension,
+  type GamepadSource,
   type PackConfigValidator,
+  type PlayerRosterDocument,
   type StorageDriver,
 } from '@sw2d/contracts';
+import { PLAYER_INPUT_CAPABILITY_ID, validatePlayerRosterDocument } from '@sw2d/contracts';
 import { AccessibilityStateImpl } from '../accessibility/AccessibilityStateImpl.ts';
 import { WebAudioBus } from '../audio/WebAudioBus.ts';
 import { AssetCatalogImpl } from '../content/AssetCatalogImpl.ts';
@@ -20,6 +23,8 @@ import { KeyboardAdapter } from '../input/KeyboardAdapter.ts';
 import { PointerAdapter } from '../input/PointerAdapter.ts';
 import { SpatialPointerHost } from '../input/SpatialPointerHost.ts';
 import { mergeBindings } from '../input/defaultBindings.ts';
+import { PlayerInputHub } from '../input/PlayerInputHub.ts';
+import { browserGamepadSource } from '../input/GamepadAdapter.ts';
 import { LocalStorageDriver } from '../persistence/LocalStorageDriver.ts';
 import { SaveStoreImpl } from '../persistence/SaveStoreImpl.ts';
 import { SettingsStoreImpl } from '../persistence/SettingsStoreImpl.ts';
@@ -74,6 +79,12 @@ export interface CreateGameOptions {
   readonly packConfig?: Readonly<Record<string, unknown>>;
   /** Game-specific extensions. The only sanctioned way to add unique mechanics. */
   readonly extensions?: readonly GameExtension[];
+  /**
+   * Override where gamepad snapshots come from (Phase 15). Defaults to a
+   * `navigator.getGamepads()` reader. Automated QA injects a scripted source so a
+   * disconnect can be exercised without unplugging hardware.
+   */
+  readonly gamepadSource?: GamepadSource;
   /** Enables development-only diagnostics. Defaults to import.meta.env.DEV. */
   readonly debug?: boolean;
   /** Override persistence (tests, or an environment with no localStorage). */
@@ -111,6 +122,32 @@ export async function createGame(options: CreateGameOptions): Promise<GameRuntim
 
   const content: ContentBundle = await options.content.load();
   const assets = new AssetCatalogImpl(content.assets);
+
+  /**
+   * Local-multiplayer routing (Phase 15) is opt-in by authored content: a game
+   * gets a `PlayerInputHub`, and the `input.players` capability, only when it
+   * ships `content/players.json`. Every other game keeps exactly the
+   * single-`ActionInput` behaviour it had before this phase - no lobby, no
+   * per-player channels, no extra adapters.
+   */
+  const rosterDoc = content.data['players']?.value as PlayerRosterDocument | undefined;
+  let players: PlayerInputHub | null = null;
+  if (rosterDoc) {
+    validatePlayerRosterDocument(rosterDoc);
+    players = rootBag.add(
+      new PlayerInputHub(
+        {
+          minPlayers: rosterDoc.minPlayers,
+          maxPlayers: rosterDoc.maxPlayers,
+          requireReady: rosterDoc.requireReady ?? false,
+          ...(rosterDoc.playerIds ? { playerIds: rosterDoc.playerIds } : {}),
+          ...(rosterDoc.deadzone ? { deadzone: rosterDoc.deadzone } : {}),
+        },
+        { gamepadSource: options.gamepadSource ?? browserGamepadSource() },
+      ),
+    );
+    capabilities.provide(PLAYER_INPUT_CAPABILITY_ID, players);
+  }
 
   let playScene: PlayScene | null = null;
 
@@ -249,10 +286,14 @@ export async function createGame(options: CreateGameOptions): Promise<GameRuntim
 
   // One input advance per game step, before any scene update. Two scenes reading
   // `justPressed` in the same frame therefore always agree. The spatial pointer
-  // advances in the same place, for the same single-owner reason (ADR-0018).
+  // advances in the same place, for the same single-owner reason (ADR-0018), and
+  // so does the optional local-multiplayer hub (Phase 15) - a per-player channel
+  // that advanced on its own schedule would reintroduce exactly the disagreement
+  // this single-owner rule exists to prevent.
   const advanceInput = (): void => {
     input.update();
     spatialPointer.update();
+    players?.update();
   };
   game.events.on(Phaser.Core.Events.PRE_STEP, advanceInput);
   rootBag.addFn(() => game.events.off(Phaser.Core.Events.PRE_STEP, advanceInput));
@@ -310,6 +351,7 @@ export async function createGame(options: CreateGameOptions): Promise<GameRuntim
     if (document.visibilityState !== 'hidden') return;
     input.clear();
     spatialPointer.clear();
+    players?.clear();
     router.setPaused(true);
   };
   document.addEventListener('visibilitychange', onVisibilityChange);

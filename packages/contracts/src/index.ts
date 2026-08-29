@@ -25,6 +25,7 @@ export * from './level.ts';
 export * from './navigation.ts';
 export * from './perception.ts';
 export * from './persistence.ts';
+export * from './playerInput.ts';
 export * from './presets.ts';
 export * from './racing.ts';
 export * from './puzzles.ts';

@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "minPlayers": 2,
+  "maxPlayers": 4,
+  "requireReady": true,
+  "playerIds": ["red", "blue", "green", "gold"],
+  "deadzone": {
+    "stick": 0.25,
+    "trigger": 0.1
+  }
+}

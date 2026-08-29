@@ -1,0 +1,7 @@
+{
+  "schemaVersion": 1,
+  "minPlayers": 2,
+  "maxPlayers": 2,
+  "requireReady": false,
+  "playerIds": ["left", "right"]
+}

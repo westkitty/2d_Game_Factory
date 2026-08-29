@@ -20,6 +20,15 @@ export { PointerAdapter } from './input/PointerAdapter.ts';
 export { SpatialPointerHost, DRAG_THRESHOLD_PX } from './input/SpatialPointerHost.ts';
 export type { WorldResolver, CanvasSpaceResolver } from './input/SpatialPointerHost.ts';
 export { DEFAULT_BINDINGS, mergeBindings } from './input/defaultBindings.ts';
+export { GamepadAdapter, browserGamepadSource } from './input/GamepadAdapter.ts';
+export { PlayerInputHub } from './input/PlayerInputHub.ts';
+export {
+  DEFAULT_KEYBOARD_PROFILES,
+  KEYBOARD_PROFILE_LEFT,
+  KEYBOARD_PROFILE_RIGHT,
+  mergeKeyboardProfiles,
+  keyboardProfileConflicts,
+} from './input/keyboardProfiles.ts';
 
 export {
   platformController,

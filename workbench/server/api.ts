@@ -50,6 +50,7 @@ import { inspectPerception } from './perceptionLab.ts';
 import { inspectClimbing } from './climbingLab.ts';
 import { inspectRuns, updateRuns } from './runsLab.ts';
 import { inspectStrategyActions } from './strategyActionsLab.ts';
+import { inspectPlayers, updatePlayers } from './playersLab.ts';
 import { loadScene, listLevels, newObject, objectClassOptions, saveScene, SceneValidationError, type SceneDocument } from './sceneStore.ts';
 import { buildProject, createProject, packProject, validateProject } from './factoryService.ts';
 import { starterKitDepthFor, starterKitFor } from './starterKits/index.ts';
@@ -723,6 +724,26 @@ const ROUTES: ReadonlyMap<string, Handler> = new Map<string, Handler>([
     (request) => {
       const body = bodyObject(request);
       return ok(inspectStrategyActions(gameIdOf(request, body)));
+    },
+  ],
+
+  [
+    // Local multiplayer roster (post-ten program Phase 15). Inspects and updates
+    // content/players.json with schema + semantic validation. Uses the /roster
+    // path to stay inside the WB-SECURITY-001 non-executable route audit.
+    'POST /roster/inspect',
+    (request) => {
+      const body = bodyObject(request);
+      return ok(inspectPlayers(gameIdOf(request, body)));
+    },
+  ],
+
+  [
+    'POST /roster/update',
+    (request) => {
+      const body = bodyObject(request);
+      const gameId = gameIdOf(request, body);
+      return ok(updatePlayers(gameId, body['roster']));
     },
   ],
 

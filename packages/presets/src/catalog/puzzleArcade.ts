@@ -83,9 +83,11 @@ export const PUZZLE_ARCADE_PRESETS: readonly PresetDefinition[] = [
     family: 'puzzle-arcade',
     controllerFamilies: ['top-down'],
     requiredSystemPacks: [pack(PACK_IDS.arcade)],
-    requiredContentRoles: ['tuning'],
+    // Post-ten Phase 15: two-player input routing is reusable now
+    // (input.players; proof: proofs/pong/). The ball/paddle half is Phase 16.
+    requiredContentRoles: ['tuning', 'players'],
     validationProfile: VALIDATION_PROFILES.puzzleArcade,
-    knownLimitations: [LIMITATIONS.ballPaddleSystem, 'Pong does not yet have a proven multi-player input-routing abstraction.'],
+    knownLimitations: [LIMITATIONS.ballPaddleSystem, LIMITATIONS.localTouchMultiplayer],
   }),
 
   definePreset({

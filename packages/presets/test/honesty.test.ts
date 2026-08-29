@@ -142,7 +142,7 @@ describe('required knownLimitations (MASTER_PROJECT.md section 12)', () => {
     { id: 'museum-exhibit', pattern: /No dedicated exhibit\/codex presentation framework/ },
     { id: 'escape-room', pattern: /No content-authored escape-room puzzle grammar/ },
     { id: 'microgame-collection', pattern: /No microgame scheduler\/rotation\/meta-framework/ },
-    { id: 'local-party-game', pattern: /No multi-player\/local multi-device input routing/ },
+    { id: 'local-party-game', pattern: /Same-device multi-touch multiplayer is NOT implemented/ },
     { id: 'dress-up-character-toy', pattern: /No wardrobe\/attachment system is built on the drag/ },
     { id: 'sandbox-playground', pattern: /No generalized authoring\/editing sandbox/ },
     { id: 'drawing-game', pattern: /No canvas-stroke\/drawing capture is built on the spatial pointer/ },

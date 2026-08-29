@@ -31,12 +31,17 @@ export const PARTY_TOY_WEIRD_PRESETS: readonly PresetDefinition[] = [
     id: 'local-party-game',
     displayName: 'Local Party Game',
     family: 'party-toy-weird',
-    controllerFamilies: ['ui-simulation'],
+    // 'top-down' as well as 'ui-simulation': the join screen is menu intent, but
+    // once a round starts each seated player drives a body around, which is the
+    // top-down controller's job (post-ten Phase 15; proof: proofs/local-party-game/).
+    controllerFamilies: ['ui-simulation', 'top-down'],
     requiredSystemPacks: [pack(PACK_IDS.arcade)],
     optionalSystemPacks: [pack(PACK_IDS.combat)],
-    requiredContentRoles: ['tuning'],
+    // 'players' is content/players.json - authoring it is what opts a generated
+    // game into the input.players routing capability.
+    requiredContentRoles: ['tuning', 'players'],
     validationProfile: VALIDATION_PROFILES.partyToyWeird,
-    knownLimitations: ['No multi-player/local multi-device input routing exists.'],
+    knownLimitations: [LIMITATIONS.localTouchMultiplayer],
   }),
 
   definePreset({

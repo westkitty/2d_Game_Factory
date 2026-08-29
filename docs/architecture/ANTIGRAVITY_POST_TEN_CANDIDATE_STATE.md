@@ -3,7 +3,7 @@
 First-ten base SHA: `acf802f7a32a3f341273c084931af37cb5461784`
 Candidate branch: `candidate/antigravity-post-ten-program`
 Candidate HEAD: `4055e5ec4842882b34f1396b6166104051c9113b`
-Current candidate phase: Phase 14 (FOCUSED TESTS PASS) — Phase 15 next, per `POST_TEN_PROGRAM_SPEC.md`
+Current candidate phase: Phase 15 (FOCUSED TESTS PASS) — Phase 16 next, per `POST_TEN_PROGRAM_SPEC.md`
 
 ---
 
@@ -411,3 +411,167 @@ None.
 - Decide whether `front`, `interact`, `guard`, and region/direction targets should get proof coverage or
   be trimmed from the contract.
 - Decide the `usesRemaining()` `Infinity` serialisation question.
+
+## Phase 15 — Local Multiplayer & Gamepad Routing
+
+- **Phase:** 15
+- **Capability:** `input.players` (`PlayerInputService`)
+- **Status:** FOCUSED TESTS PASS
+- **Starting SHA:** `0e84376` (`docs(program): persist post-ten phases 15-36 specification`)
+- **ADR:** `docs/architecture/adr/0029-player-identity-is-a-routing-dimension.md` (new; indexed)
+
+### Core decision
+
+Player identity is a **routing dimension over the existing `ActionInput`**, not a second vocabulary.
+There is no `P1_MOVE_LEFT`. Each seated player owns an ordinary `ActionInputHost` — the same
+certified edge machine a single-player game uses — with its own adapters bound to its own device, so
+**isolation is a property of ownership rather than of filtering**: player two's channel has no
+adapter listening for player one's keys. That is why the proof can assert player two's *entire*
+value snapshot is zero rather than that one action was suppressed.
+
+### Contracts
+
+`packages/contracts/src/playerInput.ts`, exported from `index.ts`:
+`PLAYER_INPUT_CAPABILITY_ID`, `PlayerId`, `DeviceAssignment` (`keyboard-profile` | `gamepad-index`),
+`deviceKey`/`sameDevice`, `KeyboardProfile`, `PlayerSlot`, `PlayerJoinState`, `PlayerJoinRejection`,
+`PlayerJoinResult`, `GamepadDeadzoneConfig`, `PlayerRosterConfig`, `PlayerRosterDocument`,
+`DEFAULT_GAMEPAD_DEADZONE`, `validatePlayerRosterDocument`/`InvalidPlayerRosterError`,
+`GamepadSnapshot`, `GamepadSource`, `GamepadBinding(s)`, `GamepadStick`,
+`STANDARD_GAMEPAD_BINDINGS`, `STANDARD_GAMEPAD_STICKS`, `applyDeadzone`, `applyRadialDeadzone`,
+`PlayerInputService`.
+
+### Schemas
+
+- `packages/schemas/schemas/player-roster.schema.json` (`urn:sw2d:schema:content-players:v1`),
+  registered as schema name `player-roster` and content document name `players`.
+- Global validation not weakened: `additionalProperties: false`, followed by the contract's semantic
+  gate (`minPlayers <= maxPlayers`, `playerIds` length/uniqueness, deadzone range).
+
+### Runtime
+
+- `packages/runtime/src/input/PlayerInputHub.ts` — the service.
+- `packages/runtime/src/input/GamepadAdapter.ts` — one pad to one channel, plus `browserGamepadSource()`.
+- `packages/runtime/src/input/keyboardProfiles.ts` — `DEFAULT_KEYBOARD_PROFILES` (two profiles that
+  share **no** physical key, asserted by `keyboardProfileConflicts`), `mergeKeyboardProfiles`.
+- `packages/runtime/src/core/createGame.ts` — builds the hub **only** when `content/players.json`
+  exists, provides `input.players`, advances it in the existing single-owner `PRE_STEP` hook, and
+  clears it on visibility loss. New optional `gamepadSource` option for QA injection.
+- `packages/runtime/package.json` — new `./input-profiles` subpath (Phaser-free), mirroring the
+  existing `./composition` subpath and for the same reason.
+- `packages/runtime/src/input/KeyboardAdapter.ts` — resolves its blur target defensively instead of
+  assuming a global `window`. No browser behaviour change; it makes a channel constructible in a
+  non-DOM context.
+
+### Presets changed
+
+- `local-party-game`: controller families now `ui-simulation` + `top-down`; content role `players`
+  added; limitation replaced with the new shared `LIMITATIONS.localTouchMultiplayer`.
+- `pong`: content role `players` added; the "no proven multi-player input-routing abstraction"
+  limitation replaced with `LIMITATIONS.localTouchMultiplayer` (the ball/paddle limitation stays —
+  that is Phase 16).
+- `packages/presets/src/shared.ts`: new shared `LIMITATIONS.localTouchMultiplayer`.
+- Maturity deliberately **not** promoted, matching the Phases 11-14 precedent.
+
+### Workbench authoring surface
+
+- `workbench/server/playersLab.ts` — inspect + update `content/players.json` (schema then semantic
+  validation, atomic write, path containment). Routes `POST /roster/inspect`, `POST /roster/update`
+  (the `/roster` path keeps them inside the WB-SECURITY-001 audit).
+- `workbench/src/views/playersLab.ts`, mounted in `inspector.ts`.
+- Scope held deliberately small: counts, ready policy, slot ids, deadzone. **Not** a
+  controller-remapping application — per-action rebinding belongs to the existing binding surface.
+- `workbench/test/playersLab.test.ts` guards the one duplication (the server restates the default
+  profile ids rather than importing the renderer package).
+
+### Proof consumers
+
+- **`proofs/local-party-game/` (new)** — primary defining proof, 13 named steps; spec
+  `packages/qa/proof-specs/localPartyGame.ts`; frozen contract in the proof directory.
+- **`proofs/pong/` (new)** — the Phase 15 **input foundation only**: two isolated paddle channels,
+  7 named steps. No ball, no bounce, no score — Phase 16 consumes this shell rather than replacing it.
+- Both inject a scripted `GamepadSource` through the new `createGame` option, which is the seam the
+  contract defines for exactly this purpose.
+
+### Tests added
+
+- `packages/contracts/test/playerInput.test.ts` (18 tests) — including the five required deadzone
+  cases (inside, exact boundary, above boundary, full positive, full negative) plus radial deadzone.
+- `packages/runtime/test/playerInputHub.test.ts` (32 tests) — profiles, roster, join/leave/ready,
+  exclusive ownership, reassignment, keyboard isolation, edge advancement, clear, dispose,
+  adapter-count leak probe, gamepad mapping/deadzone/edges/disconnect/reconnect/reindex, and the
+  single-player-unaffected case.
+- `packages/schemas/test/contentDocuments.test.ts` (2 new tests).
+- `proofs/local-party-game/tests/content.test.ts` and `proofs/pong/tests/content.test.ts` (7 each).
+- `workbench/test/playersLab.test.ts` (1 drift test).
+
+### Tests run — actual results
+
+- `npm run typecheck` — **PASS**, 0 errors
+- `npx vitest run` — **PASS, 160 files / 2802 tests** (was 155 / 2735 before Phase 15)
+- `npm run validate` — **PASS** (typecheck, tests, workbench build, starter build, offline check:
+  "no external request construct found")
+- `npm run qa:workbench` — **PASS, 16/16**; WB-SECURITY-001 now audits **62** endpoints (was 60)
+- `npm run qa:proof` (tranche gate, full suite) — **PASS, 31/31**, including `local-party-game` 13/13
+  and `pong` 7/7, 0 console errors, 0 external requests
+
+### Proof-quality evidence
+
+No unconditional acceptance step exists in either spec. Three sabotages were applied, observed and
+reverted (`grep SABOTAGE` clean afterwards):
+
+| Sabotage | Result |
+| --- | --- |
+| exclusive device ownership removed from `PlayerInputHub` | party steps 3 and 11 FAIL |
+| gamepad disconnect no longer clears held actions | party step 10 FAIL, step 9 PASS |
+| every channel given every profile's bindings (cross-talk) | party steps 4-5 FAIL; pong steps 3 and 7 FAIL |
+
+### Limitations changed
+
+`LIMITATIONS.localTouchMultiplayer` (new, shared by `local-party-game` and `pong`) replaces both
+"No multi-player/local multi-device input routing exists" and "Pong does not yet have a proven
+multi-player input-routing abstraction".
+
+### Known failures
+
+None.
+
+### Known shortcuts / characteristics a certifier should look at
+
+1. **Same-device multi-touch multiplayer was not built.** This is stated in the limitation text and
+   is the honest scope: the supported shape is one touch-controlled player plus keyboard/gamepad
+   players. `DeviceAssignment` has no `touch` variant.
+2. **Per-player channels run alongside the global `ActionInput`, not instead of it.** A key bound in
+   both a profile and `DEFAULT_BINDINGS` drives both (e.g. `KeyA` is `MOVE_LEFT` globally and on
+   profile A). Harmless because the meaning is identical, and deliberate because system actions
+   (`PAUSE`) must stay global — but a certifier should confirm no generated shell reads the global
+   channel for per-player gameplay.
+3. **Gamepad `poll()` reads the source once per channel per frame.** With four pads seated that is
+   four `getGamepads()` calls per frame. Correct and cheap in practice; a shared per-frame snapshot
+   cache is the obvious optimisation if profiling ever asks for it.
+4. **Device assignments do not persist across sessions**, per the specification. Players rejoin.
+   `deadzone` is authored content, not a user setting; wiring it to the settings store was not done.
+5. **`PlayerInputHub.adapterCount` is a class getter, not part of `PlayerInputService`.** Both proof
+   shells read it defensively (`-1` when absent) rather than widening the renderer-neutral contract
+   for a debug probe. A certifier may prefer it promoted or removed.
+6. **The proofs' scripted `GamepadSource` lives in the proof `main.ts`**, reading
+   `window.__SW2D_TEST_PADS__`. It falls through to the real `navigator.getGamepads()` reader when
+   unset, so a human opening the page uses real hardware — but it is test-control code shipped in a
+   proof build.
+
+### Architectural concerns
+
+- The hub is created by `createGame` from content rather than being a system pack, because it must
+  advance inside the single-owner `PRE_STEP` hook that packs cannot reach. That is the right owner,
+  but it does mean `input.players` appears in the capability registry without a pack id in
+  `content/game.json` — a difference from every other capability worth a certifier's attention, and
+  the reason `proofs/*/tests/content.test.ts` asserts the document is what grants it.
+- Nothing prevents a game from seating a player and then reading the global input for that player's
+  movement. The architecture makes the right thing easy; it does not make the wrong thing impossible.
+
+### Work required from a later certifier
+
+- Adversarial browser validation of both journeys, especially the disconnect/reconnect transition
+  and the restart leak check.
+- Real-hardware validation with two physical gamepads (the automated proof uses the scripted seam).
+- Decide whether `adapterCount` belongs on the public service.
+- Decide whether touch multiplayer is in scope for a later phase or stays a permanent limitation.

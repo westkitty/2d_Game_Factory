@@ -39,7 +39,36 @@ describe('validateContentBundleData', () => {
       'climbing',
       'runs',
       'strategy-actions',
+      'players',
     ]);
+  });
+
+  it('validates a valid players roster document', () => {
+    const doc = {
+      schemaVersion: 1,
+      minPlayers: 2,
+      maxPlayers: 4,
+      requireReady: true,
+      playerIds: ['red', 'blue', 'green', 'gold'],
+      deadzone: { stick: 0.25, trigger: 0.1 },
+    };
+    const result = validateContentBundleData({ players: doc });
+    expect(result['players']?.valid).toBe(true);
+    expect(result['players']?.schemaId).toBe('urn:sw2d:schema:content-players:v1');
+  });
+
+  it('rejects a malformed players roster document', () => {
+    // Non-integer count, out-of-range deadzone, and an unknown field are all
+    // schema failures - the semantic min<=max rule is a separate contract gate.
+    expect(() => validateContentBundleData({ players: { schemaVersion: 1, minPlayers: 1.5, maxPlayers: 2 } })).toThrow();
+    expect(() =>
+      validateContentBundleData({
+        players: { schemaVersion: 1, minPlayers: 1, maxPlayers: 2, deadzone: { stick: 1, trigger: 0.1 } },
+      }),
+    ).toThrow();
+    expect(() =>
+      validateContentBundleData({ players: { schemaVersion: 1, minPlayers: 1, maxPlayers: 2, whoops: true } }),
+    ).toThrow();
   });
 
   it('validates a valid strategy-actions document', () => {

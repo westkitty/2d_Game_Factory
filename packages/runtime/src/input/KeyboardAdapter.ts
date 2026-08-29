@@ -11,6 +11,7 @@ export class KeyboardAdapter implements InputDeviceAdapter {
   readonly sourceId = 'keyboard' as const;
   readonly #sink: ActionSink;
   readonly #target: EventTarget;
+  readonly #blurTarget: EventTarget;
   #codeToActions = new Map<string, ActionId[]>();
   #held = new Set<string>();
   #disposed = false;
@@ -42,12 +43,17 @@ export class KeyboardAdapter implements InputDeviceAdapter {
     for (const action of ACTION_IDS) this.#sink.setActionValue(action, 0, this.sourceId);
   };
 
-  constructor(sink: ActionSink, target: EventTarget = window) {
+  constructor(sink: ActionSink, target: EventTarget = globalThis.window ?? new EventTarget()) {
     this.#sink = sink;
     this.#target = target;
+    // Focus loss is a window-level fact, but the adapter must also work against an
+    // injected target with no window at all (a unit test, or a per-player channel
+    // constructed before the game has one). Falling back to the target keeps the
+    // listener count symmetric with dispose in both cases.
+    this.#blurTarget = globalThis.window ?? target;
     this.#target.addEventListener('keydown', this.#onKeyDown);
     this.#target.addEventListener('keyup', this.#onKeyUp);
-    window.addEventListener('blur', this.#onBlur);
+    this.#blurTarget.addEventListener('blur', this.#onBlur);
   }
 
   #isActionStillHeld(action: ActionId): boolean {
@@ -74,7 +80,7 @@ export class KeyboardAdapter implements InputDeviceAdapter {
     this.#disposed = true;
     this.#target.removeEventListener('keydown', this.#onKeyDown);
     this.#target.removeEventListener('keyup', this.#onKeyUp);
-    window.removeEventListener('blur', this.#onBlur);
+    this.#blurTarget.removeEventListener('blur', this.#onBlur);
     this.#onBlur();
     this.#codeToActions.clear();
   }

@@ -85,6 +85,11 @@ export const LIMITATIONS = {
   // Capability program Phase 14 addition. Order issue/queue/cancel/lifecycle is
   // reusable (sw2d.strategy-actions); what stays starter-specific is the *input*
   // surface that turns a drag rectangle into a set of actor ids.
+  // Post-ten Phase 15 addition. Local player routing is reusable
+  // (sw2d runtime PlayerInputHub, input.players); what stays honest to record is
+  // that same-device multi-touch multiplayer was not built.
+  localTouchMultiplayer:
+    'Local multiplayer input routing is reusable (input.players): each player gets an isolated semantic ActionInput driven by its own keyboard profile or gamepad. Same-device multi-touch multiplayer is NOT implemented - one touch-controlled player plus keyboard/gamepad players is the supported shape.',
   rtsSelectionUi:
     'Unit orders (move, attack, attack-move, hold, stop, queued and replacement commands) are reusable through sw2d.strategy-actions (strategy.orders); box-select drag input and a command-card UI are still starter-specific.',
 } as const;
