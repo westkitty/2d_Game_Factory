@@ -27,3 +27,4 @@ One short record per decision that constrains later work. No ADR for trivia.
 | [0021](0021-encounter-orchestration-model-and-runtime.md) | Encounter orchestration: bounded data model + runtime bridge | Capability program 4 |
 | [0022](0022-navigation-grid-capability.md) | Navigation is a pure grid capability, separate from AI state | Capability program 5 |
 | [0023](0023-data-driven-puzzle-rules.md) | Standard puzzle rules are a bounded data-driven capability | Capability program 6 |
+| [0024](0024-deterministic-procedural-generation.md) | Deterministic procedural generation: one bounded capability that emits NormalizedLevel | Capability program 7 |

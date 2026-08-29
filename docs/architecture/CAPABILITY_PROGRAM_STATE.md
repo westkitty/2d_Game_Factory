@@ -26,7 +26,7 @@ Git/validation/architecture checkpoint, not a new chat.
 | 4 | Combat / Encounter Orchestration | `feature/capability-04-combat-orchestration` | PASS |
 | 5 | Navigation & Pathfinding | `feature/capability-05-navigation` | PASS |
 | 6 | Data-Driven Puzzle Rules | `feature/capability-06-data-puzzles` | PASS |
-| 7 | Procedural Generation | `feature/capability-07-procedural-generation` | NOT STARTED |
+| 7 | Procedural Generation | `feature/capability-07-procedural-generation` | PASS |
 | 8 | World Graph / Rooms / Transitions / Map | `feature/capability-08-world-graph` | NOT STARTED |
 | 9 | Advanced 2D Physics & Constraints | `feature/capability-09-advanced-physics` | NOT STARTED |
 | 10 | Vehicle Handling & Racing | `feature/capability-10-vehicle-racing` | NOT STARTED |
@@ -34,7 +34,7 @@ Git/validation/architecture checkpoint, not a new chat.
 Program starting `main`: `0af24cd6c2646cae84fb4be559b68c2477e63d0b`
 (the Start/Confirm prerequisite; verified present before Phase 1).
 
-Current phase: **7 — Procedural Generation** (NOT STARTED). Phases 1–6 integrated to `origin/main`.
+Current phase: **8 — World Graph / Rooms / Transitions / Map** (NOT STARTED). Phases 1–7 integrated to `origin/main`.
 
 ---
 
@@ -476,5 +476,85 @@ narrowed `puzzleConfigIsCode`; not a blocker.
 
 ### Next phase
 
-Phase 7 — Procedural Generation. Branch `feature/capability-07-procedural-generation`
-from the integrated `main`.
+Phase 7 done, see below.
+
+---
+
+## Phase 7 — Deterministic Procedural Generation — PASS
+
+- **Starting SHA:** `7d3ba5cf8cdec1a7c8f4c107f0a345c3930f9672` (Phase 6 on `main`)
+- **Feature branch:** `feature/capability-07-procedural-generation`
+- **Phase commit SHA:** this commit — `feat: add deterministic procedural generation` on `main`
+- **Main integration SHA:** same commit, fast-forwarded onto `main`
+
+### Implementation summary
+
+- `packages/contracts/src/generation.ts` (new): `createRng` (mulberry32, no
+  `Math.random`), `normalizeSeed`; three bounded generator families
+  (`segment-chain`, `room-graph`, `road-chain`) expanded by pure functions to a
+  `NormalizedLevel`; `GenerationResult` = `{ output, manifest, validation }`;
+  `runGenerator` / `validateGenerationResult`. `GENERATION_CAPABILITY_ID =
+  'world.generation'`.
+- `packages/packs/src/generation/generationPack.ts` (new): `sw2d.generation` →
+  `world.generation`, `dependencies: []`. Reads `content/generation.json`;
+  per-generator sub-seed derivation; `generate(id, { seed?, size?, difficulty? })`.
+- `packages/schemas/schemas/generation.schema.json` (new,
+  `urn:sw2d:schema:content-generation:v1`); wired into `validator.ts` +
+  `CONTENT_DOCUMENTS` as document `generation`.
+- `packages/runtime/src/game-support/generatedLevel.ts` (new):
+  `resolveSceneLevel(context)` - prefer a validated generated level, else the
+  authored one; falls back on generation failure.
+- Generator: `generateGenerationDoc` + always-emit `content/generation.json`;
+  `content.ts` / `main.ts` templates load `generationPack`. `platform` /
+  `top-down` / `vehicle` shell templates consume `resolveSceneLevel` (top-down
+  and vehicle now also build wall colliders from `solids`).
+- Workbench: `POST /api/generation/preview` (`workbench/server/generationLab.ts`)
+  + an inspector-pane panel (`workbench/src/views/generationLab.ts`) - pick
+  generator, set seed / size / difficulty, regenerate, copy seed, read manifest.
+- ADR-0024.
+
+### Proof consumers
+
+- **`proofs/endless-runner/`** (new) — `segment-chain`: same seed reproduces the
+  exact template sequence in-run (`INTERACT`) and across a real scene reinstall;
+  a different seed diverges but stays valid; the player traverses generated
+  ground.
+- **`proofs/dungeon-crawler/`** (new) — `room-graph`: a connected graph with a
+  start node, an exit, valid edges and start→exit reachability (BFS on the
+  manifest graph); same reproducibility guarantees; the player moves through
+  generated rooms against generated wall collision.
+- `npm run qa:proof` 15/15 → **17/17**.
+
+### Limitation changes
+
+- `LIMITATIONS.proceduralGeneration` **removed** (constant deleted). Removed
+  from `endless-runner`, `auto-runner`, `dungeon-crawler`, `action-roguelite`,
+  `endless-driving` (all now require `sw2d.generation` and consume it via the
+  generated shell). `action-roguelite` keeps its permadeath/meta-progression
+  limitation; `endless-driving` keeps `vehicleIntentOnly`; `dungeon-crawler`
+  gains a narrow true limitation (Enemy objects placed but not yet wired to
+  combat/AI). Honesty case `endless-driving → /No procedural level.../` removed.
+  Maturity split unchanged (5/7/62). Sixteen packs now have a preset consumer.
+
+### Validation completed
+
+- `npm run typecheck` — PASS
+- `npm test` — 2404/2404 PASS (was 2295 at Phase 6; +109)
+- `npm run validate` (build + `check:offline`) — PASS
+- `npm run qa:proof` — 17/17 PASS
+- `npm run qa:matrix` — 43/43 PASS
+- `npm run qa:starter-kits` — all 14 sub-suites PASS
+- `npm run qa:workbench` — 16/16 PASS (workbench changed)
+- `npm run release:verify` — 6/6 PASS
+
+### Unresolved blockers
+
+None. `lane-defense` (a Phase 5 proof) showed one timing-borderline
+`advanceOk` flake on the first `qa:proof` run and passed on re-run; not a
+Phase 7 regression (navigation untouched) — flagged for the final
+certification lifecycle sweep.
+
+### Next phase
+
+Phase 8 — World Graph / Rooms / Transitions / Map. Branch
+`feature/capability-08-world-graph` from the integrated `main`.

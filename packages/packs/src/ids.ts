@@ -30,6 +30,7 @@ export const PACK_IDS = {
   encounters: 'sw2d.encounters',
   navigation: 'sw2d.navigation',
   puzzleRules: 'sw2d.puzzle-rules',
+  generation: 'sw2d.generation',
 } as const;
 
 export const CAPABILITY_IDS = {
@@ -54,4 +55,6 @@ export const CAPABILITY_IDS = {
   navigation: 'world.navigation',
   /** Capability program Phase 6: bounded data-driven puzzle rules (sits alongside puzzle.state). */
   puzzleRules: 'puzzle.rules',
+  /** Capability program Phase 7: deterministic seeded procedural generation of normalized worlds. */
+  generation: 'world.generation',
 } as const;

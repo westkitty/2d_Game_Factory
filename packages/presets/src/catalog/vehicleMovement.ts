@@ -60,11 +60,13 @@ export const VEHICLE_MOVEMENT_PRESETS: readonly PresetDefinition[] = [
     displayName: 'Endless Driving',
     family: 'vehicle-movement',
     controllerFamilies: ['vehicle'],
-    requiredSystemPacks: [pack(PACK_IDS.arcade)],
+    requiredSystemPacks: [pack(PACK_IDS.arcade), pack(PACK_IDS.generation)],
     optionalSystemPacks: [pack(PACK_IDS.world), pack(PACK_IDS.worldEntities)],
-    requiredContentRoles: ['tuning'],
+    requiredContentRoles: ['tuning', 'generation'],
     validationProfile: VALIDATION_PROFILES.vehicleMovement,
-    knownLimitations: [LIMITATIONS.vehicleIntentOnly, LIMITATIONS.proceduralGeneration],
+    // Phase 7 (ADR-0024): the road is a deterministic seeded road-segment chain
+    // via sw2d.generation. Vehicle handling stays intent-only until Phase 10.
+    knownLimitations: [LIMITATIONS.vehicleIntentOnly],
   }),
 
   definePreset({

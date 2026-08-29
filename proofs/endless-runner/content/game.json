@@ -1,0 +1,28 @@
+{
+  "id": "proof-endless-runner",
+  "displayName": "Proof Endless Runner",
+  "version": "0.1.0",
+  "schemaVersion": 1,
+  "viewport": {
+    "width": 960,
+    "height": 540
+  },
+  "bindings": {},
+  "systemPacks": [
+    {
+      "packId": "sw2d.arcade",
+      "config": {}
+    },
+    {
+      "packId": "sw2d.generation",
+      "config": {}
+    },
+    {
+      "packId": "game.platform-shell",
+      "config": {}
+    }
+  ],
+  "defaultSettings": {
+    "masterVolume": 0.7
+  }
+}

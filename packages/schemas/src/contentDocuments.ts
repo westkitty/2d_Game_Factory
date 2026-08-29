@@ -30,6 +30,7 @@ export const CONTENT_DOCUMENTS: Readonly<Record<string, ContentDocumentRegistryE
   weapons: { schemaName: 'weapon-catalog' },
   encounters: { schemaName: 'encounter-catalog' },
   puzzles: { schemaName: 'puzzle-rules' },
+  generation: { schemaName: 'generation' },
 };
 
 export type ContentDocumentName = keyof typeof CONTENT_DOCUMENTS;

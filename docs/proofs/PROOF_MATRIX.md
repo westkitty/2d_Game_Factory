@@ -3,7 +3,7 @@
 Phase 10's five deep, end-to-end proof games - the tier above Phase 8's smoke bar - plus the
 capability-completion program's per-phase proof consumers. Each row is backed by a frozen
 `proofs/<id>/PROOF_CONTRACT.md`, a real generated composition, and a committed real-browser proof
-spec run through `npm run qa:proof`. Mechanically, `npm run qa:proof` is **15/15** as of this
+spec run through `npm run qa:proof`. Mechanically, `npm run qa:proof` is **17/17** as of this
 revision.
 
 ## Capability program — Phase 1: reusable spatial pointer & interaction (ADR-0018)
@@ -53,6 +53,13 @@ folded into a capability phase.
 |---|---|---|---|---|---|
 | `proofs/sokoban/` (revised) | `sokoban` | `sw2d.puzzle-rules` (`PuzzleRulesService`) driven by a `sokoban` definition in validated `content/puzzles.json` - the **entire** ruleset (walls, box, goal, legal-move/legal-push resolution, solved-detection, undo history, reset); `gridController` | Rendering only: sprites positioned from `puzzle.snapshot()`; `rejectedMoves` counted when a `move` op leaves `moves` unchanged. No board table, no move resolver, no code-config seam (`packConfig.ts` is `{}`) | Start; ordinary move; legal push; invalid push (snapshot byte-for-byte unchanged, `moves` frozen, `rejectedMoves` up); reposition + second push onto the goal (solved); undo (exact prior state); reset (exact initial, `moves` 0); replay to solve again | PASS |
 | `proofs/puzzle-platformer/` (new) | `puzzle-platformer` | Same `sw2d.puzzle-rules` service, `switch-sequence` kind: switch set, the `a`→`d` link, and the "press order must end `a,b,c`" completion rule all in `content/puzzles.json` | Platform shell walks the player; three `Interactable` level zones are the switches; INTERACT toggles the overlapped switch, CANCEL undoes, SECONDARY_ACTION resets. No completion logic in the shell | Start; press B (out of order, not solved); press A → decoy D also switches on via the link (not solved); press B then C → press order ends `a,b,c` → solved; undo (not solved); reset (press order + on-set cleared); re-solve in order | PASS |
+
+## Capability program — Phase 7: deterministic procedural generation (ADR-0024)
+
+| Proof | Preset | Reusable capability exercised | Game-specific mechanics | Browser journey | Status |
+|---|---|---|---|---|---|
+| `proofs/endless-runner/` (new) | `endless-runner` | `sw2d.generation` (`GenerationService`) `segment-chain` generator from `content/generation.json`; project-owned seeded PRNG; output is a `NormalizedLevel` rendered exactly like a Tiled level | Renders the generated ground; `INTERACT` re-runs the same seed and records `regenMatchesInitial`; `SECONDARY_ACTION` re-runs a different seed and records `altDiffers` + `altValid`. No generation logic in the shell | Start (`valid`, `spawnPlaced`, `segmentCount === 10`, first template `start-flat`); hold Right → `progressedX > 200`; `INTERACT` → `regenMatchesInitial === true`; `SECONDARY_ACTION` → `altDiffers === true` && `altValid === true`; restart → `chosenTemplates` byte-identical to the reference sequence | PASS |
+| `proofs/dungeon-crawler/` (new) | `dungeon-crawler` | Same `sw2d.generation` service, `room-graph` generator: matched-door room graph with a start node, critical path, exit room, bounded branches; `manifest.graph` (nodes/edges) inspectable | Renders walls from `solids`, player at the start-room spawn, `Enemy` sprites; BFS over `manifest.graph` for start→exit reachability; `INTERACT` / `SECONDARY_ACTION` reproducibility checks | Start (`valid`, `hasStartNode`, `hasExitObject`, `edgesValid`, `startToExitReachable`, `roomCount >= 4`); move → `travelled > 40` (wall collision holds); `INTERACT` → `regenMatchesInitial === true`; `SECONDARY_ACTION` → `altDiffers` && `altValid`; restart → `roomCount` and reachability unchanged | PASS |
 
 ## Phase 10 deep proofs
 

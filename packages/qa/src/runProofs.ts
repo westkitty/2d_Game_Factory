@@ -49,6 +49,9 @@ const PROOF_SPEC_MODULES: Readonly<Record<string, string>> = {
   'lane-defense': 'laneDefense',
   // Phase 6 - data-driven puzzle rules (ADR-0023)
   'puzzle-platformer': 'puzzlePlatformer',
+  // Phase 7 - deterministic procedural generation (ADR-0024)
+  'endless-runner': 'endlessRunner',
+  'dungeon-crawler': 'dungeonCrawler',
 };
 
 function proofTargets(): Target[] {

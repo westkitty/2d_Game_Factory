@@ -49,11 +49,13 @@ export const PLATFORMING_PRESETS: readonly PresetDefinition[] = [
     displayName: 'Endless Runner',
     family: 'platforming',
     controllerFamilies: ['platform'],
-    requiredSystemPacks: [pack(PACK_IDS.arcade)],
+    requiredSystemPacks: [pack(PACK_IDS.arcade), pack(PACK_IDS.generation)],
     optionalSystemPacks: [pack(PACK_IDS.world), pack(PACK_IDS.worldEntities)],
-    requiredContentRoles: ['tuning', 'levels'],
+    requiredContentRoles: ['tuning', 'levels', 'generation'],
     validationProfile: VALIDATION_PROFILES.platform,
-    knownLimitations: [LIMITATIONS.proceduralGeneration],
+    // Phase 7 (ADR-0024): the level is a deterministic seeded segment chain from
+    // content/generation.json, driven by the reusable sw2d.generation capability.
+    knownLimitations: [],
   }),
 
   definePreset({
@@ -100,11 +102,12 @@ export const PLATFORMING_PRESETS: readonly PresetDefinition[] = [
     displayName: 'Auto Runner',
     family: 'platforming',
     controllerFamilies: ['platform'],
-    requiredSystemPacks: [pack(PACK_IDS.arcade)],
+    requiredSystemPacks: [pack(PACK_IDS.arcade), pack(PACK_IDS.generation)],
     optionalSystemPacks: [pack(PACK_IDS.world), pack(PACK_IDS.worldEntities)],
-    requiredContentRoles: ['tuning', 'levels'],
+    requiredContentRoles: ['tuning', 'levels', 'generation'],
     validationProfile: VALIDATION_PROFILES.platform,
-    knownLimitations: [LIMITATIONS.proceduralGeneration],
+    // Phase 7 (ADR-0024): deterministic seeded segment chain via sw2d.generation.
+    knownLimitations: [],
   }),
 
   definePreset({

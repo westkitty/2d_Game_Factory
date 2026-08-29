@@ -21,11 +21,11 @@ pack/controller selections were actually exercised through, and
 |---|---|---|---|---|---|
 | `traditional-platformer` | world, world-entities | arcade | platform | keyboard, touch | platform-recipe |
 | `chase-platformer` | world, world-entities | combat, arcade | platform | keyboard, touch | platform-recipe |
-| `endless-runner` | arcade | world, world-entities | platform | keyboard, touch | platform-recipe |
+| `endless-runner` | arcade, generation | world, world-entities | platform | keyboard, touch | platform-recipe |
 | `precision-platformer` | world, world-entities | arcade | platform | keyboard, touch | platform-recipe |
 | `metroidvania` | world, world-entities, progression | combat, ai | platform | keyboard, touch | platform-recipe |
 | `puzzle-platformer` | puzzle-rules, world, world-entities | - | platform, grid | keyboard, touch | platform-recipe |
-| `auto-runner` | arcade | world, world-entities | platform | keyboard, touch | platform-recipe |
+| `auto-runner` | arcade, generation | world, world-entities | platform | keyboard, touch | platform-recipe |
 | `climbing-game` | world, world-entities | arcade | platform | keyboard, touch | platform-recipe |
 | `grappling-platformer` | world, world-entities | arcade | platform | keyboard, touch | platform-recipe |
 | `collectathon-platformer` | world, world-entities, arcade, items | progression | platform | keyboard, touch | platform-recipe |
@@ -38,8 +38,8 @@ pack/controller selections were actually exercised through, and
 | `action-adventure` | world, world-entities, combat | ai, progression, weapons | top-down | keyboard, touch | top-down-action-recipe |
 | `twin-stick-shooter` | combat | world, world-entities, arcade, weapons | top-down | keyboard, touch | top-down-action-recipe |
 | `survivor-like` | combat, ai, progression | arcade, world, weapons, encounters | top-down | keyboard, touch | top-down-action-recipe |
-| `dungeon-crawler` | world, world-entities, combat | ai, progression | top-down | keyboard, touch | top-down-action-recipe |
-| `action-roguelite` | combat, progression | ai, world, world-entities | top-down | keyboard, touch | top-down-action-recipe |
+| `dungeon-crawler` | world, world-entities, combat, generation | ai, progression | top-down | keyboard, touch | top-down-action-recipe |
+| `action-roguelite` | combat, progression, generation | ai, world, world-entities | top-down | keyboard, touch | top-down-action-recipe |
 | `stealth-game` | ai, combat, world | world-entities | top-down, navigation | keyboard, touch | top-down-action-recipe |
 | `heist-game` | ai, combat, world | world-entities, progression | top-down, navigation | keyboard, touch | top-down-action-recipe |
 | `arena-combat` | combat | ai, arcade, weapons | top-down | keyboard, touch | top-down-action-recipe |
@@ -64,7 +64,7 @@ pack/controller selections were actually exercised through, and
 | `top-down-racer` | world, world-entities | arcade | vehicle | keyboard, touch | vehicle-movement-recipe |
 | `kart-racer` | world, world-entities | arcade | vehicle | keyboard, touch | vehicle-movement-recipe |
 | `time-trial-racer` | world, world-entities, arcade | - | vehicle | keyboard, touch | vehicle-movement-recipe |
-| `endless-driving` | arcade | world, world-entities | vehicle | keyboard, touch | vehicle-movement-recipe |
+| `endless-driving` | arcade, generation | world, world-entities | vehicle | keyboard, touch | vehicle-movement-recipe |
 | `boat-flight-racer` | world, world-entities | arcade | vehicle | keyboard, touch | vehicle-movement-recipe |
 
 ## Puzzle / arcade (Phase 7B)
@@ -153,13 +153,17 @@ pack/controller selections were actually exercised through, and
 | weapons | `sw2d.weapons` | `combat.weapons` | 7 | 7 |
 | encounters | `sw2d.encounters` | `combat.encounters` | 4 | 5 |
 | navigation | `sw2d.navigation` | `world.navigation` | 2 | 8 |
+| generation | `sw2d.generation` | `world.generation` | 5 | 5 |
 
-**All fifteen current packs have at least one preset consumer.** `sw2d.items` (capability
+**All sixteen current packs have at least one preset consumer.** `sw2d.items` (capability
 program Phase 2) is required by `collectathon-platformer`, whose generated starter consumes
 the reusable item/effect service through the shared platform shell. `sw2d.puzzle-rules`
 (capability program Phase 6) is required by `sokoban` and `puzzle-platformer`, whose
 generated starters drive the whole push/goal and switch/sequence rulesets from the validated
-`content/puzzles.json` document.
+`content/puzzles.json` document. `sw2d.generation` (capability program Phase 7) is required by
+`endless-runner`, `auto-runner`, `dungeon-crawler`, `action-roguelite` and `endless-driving`,
+whose generated shells build the playable world from a deterministic seed in
+`content/generation.json`.
 
 ## Validation profiles
 

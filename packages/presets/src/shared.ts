@@ -68,8 +68,6 @@ export const LIMITATIONS = {
     'AI state exists, but full vision cones, awareness geometry, noise propagation and hiding are not implemented. Patrol/chase navigation can use sw2d.navigation (Phase 5).',
   weaponsProjectiles:
     'The reusable weapon/projectile capability (sw2d.weapons, ADR-0020) exists; this starter\'s shell does not wire it yet.',
-  proceduralGeneration:
-    'No procedural level/segment generation exists yet; only hand-authored Tiled levels (Phase 6) are supported.',
   worldGraphAndMap:
     'A world graph, room transitions and a map system are not yet implemented; only flat single-level Tiled maps plus world flags/checkpoints exist (Phase 6).',
   climbingMechanics:

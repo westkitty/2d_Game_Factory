@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 1,
+  "seed": 1337,
+  "generators": [
+    {
+      "id": "main",
+      "kind": "segment-chain",
+      "count": 10,
+      "startTags": [
+        "start"
+      ],
+      "maxImmediateRepeat": 2,
+      "templates": [
+        {
+          "id": "start-flat",
+          "entrySocket": "ground",
+          "exitSocket": "ground",
+          "weight": 1,
+          "difficulty": 0,
+          "tags": [
+            "start"
+          ],
+          "length": 320,
+          "groundY": 480
+        },
+        {
+          "id": "flat",
+          "entrySocket": "ground",
+          "exitSocket": "ground",
+          "weight": 3,
+          "difficulty": 0,
+          "tags": [
+            "run"
+          ],
+          "length": 288,
+          "groundY": 480,
+          "collectibles": [
+            96,
+            192
+          ]
+        },
+        {
+          "id": "gap",
+          "entrySocket": "ground",
+          "exitSocket": "ground",
+          "weight": 2,
+          "difficulty": 1,
+          "tags": [
+            "run"
+          ],
+          "length": 320,
+          "groundY": 480,
+          "gapStart": 128,
+          "gapWidth": 96
+        },
+        {
+          "id": "hazard",
+          "entrySocket": "ground",
+          "exitSocket": "ground",
+          "weight": 2,
+          "difficulty": 1,
+          "tags": [
+            "run"
+          ],
+          "length": 288,
+          "groundY": 480,
+          "hazards": [
+            144
+          ]
+        }
+      ]
+    }
+  ]
+}

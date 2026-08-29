@@ -15,6 +15,7 @@ import { getState, selectedAsset, subscribe, update, type AppState } from '../st
 import { assignRole, deleteAsset, renameAsset, setProvenance, refreshCurrent } from '../actions.ts';
 import { reimportAsset } from './assetLab.ts';
 import { openImportInbox } from './importInbox.ts';
+import { renderGenerationLab } from './generationLab.ts';
 import { thumbnailFor } from '../image/clientImage.ts';
 import { ROLE_LABELS, type AssetRecord, type Provenance, type RoleAssignment } from '../../shared/types.ts';
 import { classifyFrames } from '../../shared/spritePresentation.ts';
@@ -30,6 +31,12 @@ const PROVENANCE_LABELS: Readonly<Record<Provenance['kind'], string>> = {
 export function renderInspector(host: HTMLElement): () => void {
   const head = el('div', { class: 'pane__head' }, el('span', { class: 'pane__title', text: 'Inspector' }));
   const body = el('div', { class: 'pane__body' });
+  // The procedural-generation authoring surface (capability program Phase 7).
+  // Its own persistent host so it is not torn down on every inspector repaint;
+  // remounted only when the open project changes.
+  const genLabHost = el('div', { class: 'pane__body', style: { 'border-top': '1px solid var(--line, #2a2a2a)' } });
+  let genLabGameId: string | null = null;
+  let disposeGenLab: (() => void) | null = null;
 
   function roleRow(assignment: RoleAssignment, state: AppState): HTMLElement {
     const current = state.current!;
@@ -250,7 +257,18 @@ export function renderInspector(host: HTMLElement): () => void {
     toast(result.rebuilt.length > 0 ? 'Rebuilt from its recipe.' : 'This one needs the browser to rebuild - open it in the Asset Lab and save again.', result.rebuilt.length > 0 ? 'ok' : 'warn');
   }
 
+  function syncGenLab(state: AppState): void {
+    const gameId = state.current?.project.gameId ?? null;
+    if (gameId === genLabGameId) return;
+    genLabGameId = gameId;
+    disposeGenLab?.();
+    disposeGenLab = null;
+    replace(genLabHost);
+    if (gameId) disposeGenLab = renderGenerationLab(genLabHost, gameId);
+  }
+
   function paint(state: AppState): void {
+    syncGenLab(state);
     const current = state.current;
     if (!current) {
       replace(body, el('div', { class: 'faint', text: 'No project open.' }));
@@ -286,9 +304,13 @@ export function renderInspector(host: HTMLElement): () => void {
     );
   }
 
-  replace(host, head, body);
+  replace(host, head, body, genLabHost);
   paint(getState());
-  return subscribe(paint);
+  const unsubscribe = subscribe(paint);
+  return () => {
+    unsubscribe();
+    disposeGenLab?.();
+  };
 }
 
 export { update };

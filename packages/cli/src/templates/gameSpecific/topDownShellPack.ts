@@ -1,5 +1,6 @@
-import type { InstalledSystemPack, NormalizedLevel } from '@sw2d/contracts';
-import { bindCollectiblePickups, bindStarterWeapon, topDownController, type SceneContext, type ScenePackDefinition } from '@sw2d/runtime';
+import Phaser from 'phaser';
+import type { InstalledSystemPack } from '@sw2d/contracts';
+import { bindCollectiblePickups, bindStarterWeapon, resolveSceneLevel, topDownController, type SceneContext, type ScenePackDefinition } from '@sw2d/runtime';
 
 /**
  * Generated starter shell: top-down controller family.
@@ -45,9 +46,20 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
   install(context: SceneContext): InstalledSystemPack {
     const scene = context.scene;
     const tuning = readPlayerTuning(context);
-    const level = context.content.data[LEVEL_DOCUMENT]?.value as NormalizedLevel | undefined;
+    // Procedural generation (capability program Phase 7): when sw2d.generation
+    // is installed this is a deterministic seeded NormalizedLevel; otherwise it
+    // is the hand-authored content/levels/main.json. Same downstream readers.
+    const { level, manifest: generationManifest } = resolveSceneLevel(context, LEVEL_DOCUMENT);
     const playerKey = context.assets.resolve('player');
+    const platformKey = context.assets.resolve('platform');
     const { width, height } = context.definition.viewport;
+
+    const walls = scene.physics.add.staticGroup();
+    for (const solid of level?.solids ?? []) {
+      const body = walls.create(solid.x + solid.width / 2, solid.y + solid.height / 2, platformKey) as Phaser.Physics.Arcade.Sprite;
+      body.setDisplaySize(solid.width, solid.height);
+      body.refreshBody();
+    }
 
     const spawn = level?.objects.find((object) => object.class === 'PlayerSpawn');
     const spawnX = spawn?.x ?? width * 0.5;
@@ -56,6 +68,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     const player = scene.physics.add.sprite(spawnX, spawnY, playerKey);
     player.setCollideWorldBounds(true);
     player.body.setAllowGravity(false);
+    scene.physics.add.collider(player, walls);
 
     // Data-driven item pickups (capability program Phase 2). Inert unless the
     // game installs sw2d.items - see platformShellPack.ts's note.
@@ -74,6 +87,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       items: pickups.inventory(),
       pickupsRemaining: pickups.remaining(),
       weapon: weapon.snapshot(),
+      ...(generationManifest ? { generation: generationManifest } : {}),
     }));
 
     let disposed = false;
@@ -106,6 +120,12 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         weapon.dispose();
         try {
           player.destroy();
+        } catch {
+          /* scene already tearing down */
+        }
+        try {
+          walls.clear(true, true);
+          walls.destroy(true);
         } catch {
           /* scene already tearing down */
         }

@@ -1,0 +1,83 @@
+{
+  "schemaVersion": 1,
+  "seed": 4242,
+  "generators": [
+    {
+      "id": "main",
+      "kind": "room-graph",
+      "roomCount": 6,
+      "criticalPathLength": 4,
+      "maxBranches": 2,
+      "startTags": [
+        "start"
+      ],
+      "exitTags": [
+        "exit"
+      ],
+      "templates": [
+        {
+          "id": "start-room",
+          "doors": [
+            "n",
+            "s",
+            "e",
+            "w"
+          ],
+          "width": 320,
+          "height": 240,
+          "weight": 1,
+          "tags": [
+            "start"
+          ]
+        },
+        {
+          "id": "hall",
+          "doors": [
+            "n",
+            "s",
+            "e",
+            "w"
+          ],
+          "width": 320,
+          "height": 240,
+          "weight": 3,
+          "tags": [
+            "path"
+          ],
+          "enemies": 2
+        },
+        {
+          "id": "chamber",
+          "doors": [
+            "n",
+            "s",
+            "e",
+            "w"
+          ],
+          "width": 320,
+          "height": 240,
+          "weight": 2,
+          "tags": [
+            "path"
+          ],
+          "enemies": 3
+        },
+        {
+          "id": "exit-room",
+          "doors": [
+            "n",
+            "s",
+            "e",
+            "w"
+          ],
+          "width": 320,
+          "height": 240,
+          "weight": 1,
+          "tags": [
+            "exit"
+          ]
+        }
+      ]
+    }
+  ]
+}

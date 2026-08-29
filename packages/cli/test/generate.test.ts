@@ -88,6 +88,12 @@ describe('all 74 presets generate valid, token-free, schema-valid source', () =>
       expect(() => validateContentBundleData({ puzzles: puzzlesJson })).not.toThrow();
     });
 
+    it(`${preset.id}'s generated content/generation.json validates as a generation document`, () => {
+      const files = buildGameFiles('matrix-game', preset);
+      const genJson: unknown = JSON.parse(files.get('content/generation.json')!);
+      expect(() => validateContentBundleData({ generation: genJson })).not.toThrow();
+    });
+
     it(`${preset.id} selects a real, resolvable shell template for its primary controller family`, () => {
       const files = buildGameFiles('matrix-game', preset);
       expect(files.has('src/game-specific/shellPack.ts')).toBe(true);

@@ -42,6 +42,7 @@ import {
 import { buildPlan, beginBatch, clearStaging, commitImport, discardBatch, readStagedBytes, stageFile, type ClientAnalysisHints } from './importService.ts';
 import { SYNTHESIZABLE_ROLES, writeTheme } from './themeSynthesis.ts';
 import { buildSeeds, seedForPreset } from './seeds.ts';
+import { previewGeneration } from './generationLab.ts';
 import { loadScene, listLevels, newObject, objectClassOptions, saveScene, SceneValidationError, type SceneDocument } from './sceneStore.ts';
 import { buildProject, createProject, packProject, validateProject } from './factoryService.ts';
 import { starterKitDepthFor, starterKitFor } from './starterKits/index.ts';
@@ -605,6 +606,31 @@ const ROUTES: ReadonlyMap<string, Handler> = new Map<string, Handler>([
       const body = bodyObject(request);
       const gameId = gameIdOf(request, body);
       return ok({ seed: seedForPreset(requiredString(body, 'presetId'), loadAssets(gameId)) });
+    },
+  ],
+
+  [
+    // Procedural-generation authoring surface (capability program Phase 7).
+    // Pick a generator, set a seed / size / difficulty, regenerate, read a
+    // reproducible manifest. Runs the pure `runGenerator` from @sw2d/contracts;
+    // reads content/generation.json, never writes.
+    'POST /generation/preview',
+    (request) => {
+      const body = bodyObject(request);
+      const gameId = gameIdOf(request, body);
+      const generatorId = optionalString(body, 'generatorId');
+      const seed = typeof body['seed'] === 'number' ? body['seed'] : undefined;
+      const size = typeof body['size'] === 'number' ? body['size'] : undefined;
+      const difficulty = typeof body['difficulty'] === 'number' ? body['difficulty'] : undefined;
+      return ok(
+        previewGeneration({
+          gameId,
+          ...(generatorId !== undefined ? { generatorId } : {}),
+          ...(seed !== undefined ? { seed } : {}),
+          ...(size !== undefined ? { size } : {}),
+          ...(difficulty !== undefined ? { difficulty } : {}),
+        }),
+      );
     },
   ],
 

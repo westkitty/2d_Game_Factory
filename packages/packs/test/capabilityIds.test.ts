@@ -6,6 +6,7 @@ import {
   encountersPack,
   navigationPack,
   puzzleRulesPack,
+  generationPack,
   aiPack,
   arcadePack,
   combatPack,
@@ -45,6 +46,7 @@ const ALL_PACKS = [
   encountersPack,
   navigationPack,
   puzzleRulesPack,
+  generationPack,
 ];
 
 /** `<family>.<service>`: lowercase segments, at least two, dash-separated words allowed after the first. */

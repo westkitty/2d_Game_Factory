@@ -81,3 +81,4 @@ export { weaponsPack, UnknownWeaponError, type WeaponsService } from './weapons/
 export { encountersPack, UnknownEncounterError, type EncounterService } from './encounters/encountersPack.ts';
 export { navigationPack, type NavService, type NavGrid } from './navigation/navigationPack.ts';
 export { puzzleRulesPack, UnknownPuzzleError, type PuzzleRulesService } from './puzzleRules/puzzleRulesPack.ts';
+export { generationPack, type GenerationService } from './generation/generationPack.ts';

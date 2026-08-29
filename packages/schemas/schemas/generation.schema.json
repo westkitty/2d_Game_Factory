@@ -1,0 +1,128 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:sw2d:schema:content-generation:v1",
+  "title": "GenerationDoc",
+  "description": "Mirrors @sw2d/contracts GenerationDoc (generation.ts). Content document name 'generation'. A bounded discriminated union of deterministic generator families - segment-chain, room-graph, road-chain - each expanded by a pure function into a NormalizedLevel. Not a scripting language.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "seed", "generators"],
+  "properties": {
+    "schemaVersion": { "type": "integer", "minimum": 1 },
+    "seed": { "type": "integer", "minimum": 0 },
+    "generators": { "type": "array", "items": { "$ref": "#/definitions/generator" } }
+  },
+  "definitions": {
+    "generator": {
+      "type": "object",
+      "required": ["id", "kind"],
+      "properties": { "id": { "type": "string", "minLength": 1 } },
+      "oneOf": [
+        { "$ref": "#/definitions/segmentChain" },
+        { "$ref": "#/definitions/roomGraph" },
+        { "$ref": "#/definitions/roadChain" }
+      ]
+    },
+    "segmentChain": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "templates", "count"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "kind": { "const": "segment-chain" },
+        "count": { "type": "integer", "minimum": 1, "maximum": 512 },
+        "difficulty": { "type": "integer", "minimum": 0 },
+        "startTags": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "maxImmediateRepeat": { "type": "integer", "minimum": 1 },
+        "templates": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "entrySocket", "exitSocket", "weight", "difficulty", "tags", "length", "groundY"],
+            "properties": {
+              "id": { "type": "string", "minLength": 1 },
+              "entrySocket": { "type": "string", "minLength": 1 },
+              "exitSocket": { "type": "string", "minLength": 1 },
+              "weight": { "type": "number", "exclusiveMinimum": 0 },
+              "difficulty": { "type": "integer", "minimum": 0 },
+              "tags": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+              "length": { "type": "number", "exclusiveMinimum": 0 },
+              "groundY": { "type": "number" },
+              "gapStart": { "type": "number", "minimum": 0 },
+              "gapWidth": { "type": "number", "minimum": 0 },
+              "hazards": { "type": "array", "items": { "type": "number", "minimum": 0 } },
+              "collectibles": { "type": "array", "items": { "type": "number", "minimum": 0 } },
+              "maxRepeat": { "type": "integer", "minimum": 1 }
+            }
+          }
+        }
+      }
+    },
+    "roomGraph": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "templates", "roomCount", "criticalPathLength", "maxBranches"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "kind": { "const": "room-graph" },
+        "roomCount": { "type": "integer", "minimum": 2, "maximum": 64 },
+        "criticalPathLength": { "type": "integer", "minimum": 2, "maximum": 64 },
+        "maxBranches": { "type": "integer", "minimum": 0, "maximum": 32 },
+        "startTags": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "exitTags": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "requiredTags": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "maxRetries": { "type": "integer", "minimum": 0, "maximum": 64 },
+        "templates": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "doors", "width", "height", "weight", "tags"],
+            "properties": {
+              "id": { "type": "string", "minLength": 1 },
+              "doors": { "type": "array", "items": { "enum": ["n", "s", "e", "w"] } },
+              "width": { "type": "number", "exclusiveMinimum": 0 },
+              "height": { "type": "number", "exclusiveMinimum": 0 },
+              "weight": { "type": "number", "exclusiveMinimum": 0 },
+              "tags": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+              "enemies": { "type": "integer", "minimum": 0, "maximum": 16 }
+            }
+          }
+        }
+      }
+    },
+    "roadChain": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "templates", "count"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "kind": { "const": "road-chain" },
+        "count": { "type": "integer", "minimum": 1, "maximum": 512 },
+        "difficulty": { "type": "integer", "minimum": 0 },
+        "templates": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "entryHeading", "exitHeading", "length", "width", "weight", "difficulty", "tags"],
+            "properties": {
+              "id": { "type": "string", "minLength": 1 },
+              "entryHeading": { "type": "number" },
+              "exitHeading": { "type": "number" },
+              "length": { "type": "number", "exclusiveMinimum": 0 },
+              "width": { "type": "number", "exclusiveMinimum": 0 },
+              "weight": { "type": "number", "exclusiveMinimum": 0 },
+              "difficulty": { "type": "integer", "minimum": 0 },
+              "tags": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+              "obstacles": { "type": "array", "items": { "type": "number" } }
+            }
+          }
+        }
+      }
+    }
+  }
+}

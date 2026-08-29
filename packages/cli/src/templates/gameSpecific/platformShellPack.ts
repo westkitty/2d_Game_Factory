@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
-import type { InstalledSystemPack, NormalizedLevel, PuzzleRulesService } from '@sw2d/contracts';
+import type { InstalledSystemPack, PuzzleRulesService } from '@sw2d/contracts';
 import { PUZZLE_RULES_CAPABILITY_ID } from '@sw2d/contracts';
-import { bindCollectiblePickups, bindStarterWeapon, platformController, type SceneContext, type ScenePackDefinition } from '@sw2d/runtime';
+import { bindCollectiblePickups, bindStarterWeapon, platformController, resolveSceneLevel, type SceneContext, type ScenePackDefinition } from '@sw2d/runtime';
 
 /**
  * Generated starter shell: platform controller family.
@@ -54,7 +54,10 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
   install(context: SceneContext): InstalledSystemPack {
     const scene = context.scene;
     const tuning = readPlayerTuning(context);
-    const level = context.content.data[LEVEL_DOCUMENT]?.value as NormalizedLevel | undefined;
+    // Procedural generation (capability program Phase 7): a deterministic
+    // seeded NormalizedLevel when sw2d.generation is installed, else the
+    // hand-authored content/levels/main.json.
+    const { level, manifest: generationManifest } = resolveSceneLevel(context, LEVEL_DOCUMENT);
     const platformKey = context.assets.resolve('platform');
     const playerKey = context.assets.resolve('player');
 
@@ -102,6 +105,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       pickupsRemaining: pickups.remaining(),
       weapon: weapon.snapshot(),
       ...(puzzle ? { puzzle: puzzle.snapshot(), solved: puzzle.isSolved() } : {}),
+      ...(generationManifest ? { generation: generationManifest } : {}),
     }));
 
     let disposed = false;

@@ -154,6 +154,79 @@ export function generatePuzzleRulesDoc(kind: 'sokoban' | 'switch-sequence' | 'no
   return { schemaVersion: 1, puzzles: [] };
 }
 
+/**
+ * content/generation.json - a GenerationDoc (capability program Phase 7).
+ * Always emitted; empty unless the preset installs `sw2d.generation`. A
+ * preset that does gets a bounded starter generator of the family matching
+ * its controller (segment-chain for runners, room-graph for top-down
+ * dungeons, road-chain for driving), so its generated shell builds the
+ * playable world from a deterministic seed - same seed, identical layout.
+ */
+export function generateGenerationDoc(kind: 'segment-chain' | 'room-graph' | 'road-chain' | 'none'): Record<string, unknown> {
+  if (kind === 'segment-chain') {
+    return {
+      schemaVersion: 1,
+      seed: 1337,
+      generators: [
+        {
+          id: 'main',
+          kind: 'segment-chain',
+          count: 10,
+          startTags: ['start'],
+          maxImmediateRepeat: 2,
+          templates: [
+            { id: 'start-flat', entrySocket: 'ground', exitSocket: 'ground', weight: 1, difficulty: 0, tags: ['start'], length: 320, groundY: 480 },
+            { id: 'flat', entrySocket: 'ground', exitSocket: 'ground', weight: 3, difficulty: 0, tags: ['run'], length: 288, groundY: 480, collectibles: [96, 192] },
+            { id: 'gap', entrySocket: 'ground', exitSocket: 'ground', weight: 2, difficulty: 1, tags: ['run'], length: 320, groundY: 480, gapStart: 128, gapWidth: 96 },
+            { id: 'hazard', entrySocket: 'ground', exitSocket: 'ground', weight: 2, difficulty: 1, tags: ['run'], length: 288, groundY: 480, hazards: [144] },
+          ],
+        },
+      ],
+    };
+  }
+  if (kind === 'room-graph') {
+    return {
+      schemaVersion: 1,
+      seed: 4242,
+      generators: [
+        {
+          id: 'main',
+          kind: 'room-graph',
+          roomCount: 6,
+          criticalPathLength: 4,
+          maxBranches: 2,
+          startTags: ['start'],
+          exitTags: ['exit'],
+          templates: [
+            { id: 'start-room', doors: ['n', 's', 'e', 'w'], width: 320, height: 240, weight: 1, tags: ['start'] },
+            { id: 'hall', doors: ['n', 's', 'e', 'w'], width: 320, height: 240, weight: 3, tags: ['path'], enemies: 2 },
+            { id: 'chamber', doors: ['n', 's', 'e', 'w'], width: 320, height: 240, weight: 2, tags: ['path'], enemies: 3 },
+            { id: 'exit-room', doors: ['n', 's', 'e', 'w'], width: 320, height: 240, weight: 1, tags: ['exit'] },
+          ],
+        },
+      ],
+    };
+  }
+  if (kind === 'road-chain') {
+    return {
+      schemaVersion: 1,
+      seed: 909,
+      generators: [
+        {
+          id: 'main',
+          kind: 'road-chain',
+          count: 12,
+          templates: [
+            { id: 'straight', entryHeading: 0, exitHeading: 0, length: 240, width: 200, weight: 4, difficulty: 0, tags: ['road'] },
+            { id: 'straight-obstacle', entryHeading: 0, exitHeading: 0, length: 240, width: 200, weight: 2, difficulty: 1, tags: ['road'], obstacles: [70, 130] },
+          ],
+        },
+      ],
+    };
+  }
+  return { schemaVersion: 1, seed: 0, generators: [] };
+}
+
 /** content/tuning.json - the one content document @sw2d/schemas validates for every game today. */
 export function generateTuning(): Record<string, unknown> {
   return {

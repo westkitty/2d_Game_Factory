@@ -75,11 +75,15 @@ export const TOP_DOWN_ACTION_PRESETS: readonly PresetDefinition[] = [
     displayName: 'Dungeon Crawler',
     family: 'top-down-action',
     controllerFamilies: ['top-down'],
-    requiredSystemPacks: [pack(PACK_IDS.world), pack(PACK_IDS.worldEntities), pack(PACK_IDS.combat)],
+    requiredSystemPacks: [pack(PACK_IDS.world), pack(PACK_IDS.worldEntities), pack(PACK_IDS.combat), pack(PACK_IDS.generation)],
     optionalSystemPacks: [pack(PACK_IDS.ai), pack(PACK_IDS.progression)],
-    requiredContentRoles: ['tuning', 'levels'],
+    requiredContentRoles: ['tuning', 'levels', 'generation'],
     validationProfile: VALIDATION_PROFILES.topDown,
-    knownLimitations: [LIMITATIONS.proceduralGeneration],
+    // Phase 7 (ADR-0024): the dungeon is a deterministic seeded room graph from
+    // content/generation.json, driven by the reusable sw2d.generation capability.
+    knownLimitations: [
+      'The room graph places Enemy objects, but the generated top-down shell does not yet wire them into sw2d.combat / sw2d.ai - enemy behaviour is game-specific code.',
+    ],
   }),
 
   definePreset({
@@ -87,12 +91,12 @@ export const TOP_DOWN_ACTION_PRESETS: readonly PresetDefinition[] = [
     displayName: 'Action Roguelite',
     family: 'top-down-action',
     controllerFamilies: ['top-down'],
-    requiredSystemPacks: [pack(PACK_IDS.combat), pack(PACK_IDS.progression)],
+    requiredSystemPacks: [pack(PACK_IDS.combat), pack(PACK_IDS.progression), pack(PACK_IDS.generation)],
     optionalSystemPacks: [pack(PACK_IDS.ai), pack(PACK_IDS.world), pack(PACK_IDS.worldEntities)],
-    requiredContentRoles: ['tuning', 'levels'],
+    requiredContentRoles: ['tuning', 'levels', 'generation'],
     validationProfile: VALIDATION_PROFILES.topDown,
+    // Phase 7 (ADR-0024): deterministic seeded room graph via sw2d.generation.
     knownLimitations: [
-      LIMITATIONS.proceduralGeneration,
       'Run-based meta-progression/permadeath state is not yet a reusable capability beyond sw2d.progression.',
     ],
   }),

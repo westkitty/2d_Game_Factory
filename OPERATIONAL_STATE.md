@@ -774,6 +774,32 @@ adjudicated individually in the Phase 12 acceptance document):
 
 ## Revision history
 
+### Revision 22 - 2026-08-29 (Sonnet 5) - Capability program Phase 7
+
+**Deterministic procedural generation (ADR-0024).** Seventh phase of the ten-phase program. Full
+detail in [`docs/architecture/CAPABILITY_PROGRAM_STATE.md`](docs/architecture/CAPABILITY_PROGRAM_STATE.md).
+
+- **New capability.** `sw2d.generation` pack -> `world.generation`. Project-owned seeded PRNG
+  (`createRng`, mulberry32 - no `Math.random`); `normalizeSeed`. Three **bounded** generator
+  families expanded by pure functions to a `NormalizedLevel` (same structure the Tiled pipeline
+  emits): `segment-chain` (runners), `room-graph` (dungeons, bounded retry), `road-chain`
+  (driving). `GenerationResult = { output, manifest, validation }`. `content/generation.json`
+  (schema `generation`) always emitted; `resolveSceneLevel` in `@sw2d/runtime` lets the
+  platform/top-down/vehicle shells prefer a validated generated level. Workbench gains
+  `POST /api/generation/preview` + an inspector panel (pick generator, seed, size, difficulty,
+  regenerate, copy seed, read manifest). Sixteen packs now.
+- **Proofs.** New `proofs/endless-runner/` (segment-chain - same seed reproduces the exact
+  template sequence in-run and across a real reinstall) and `proofs/dungeon-crawler/`
+  (room-graph - connected graph, start node, exit, valid edges, start->exit reachability).
+  `qa:proof` 15/15 -> 17/17.
+- **Limitations.** `LIMITATIONS.proceduralGeneration` removed (constant deleted) from
+  `endless-runner`, `auto-runner`, `dungeon-crawler`, `action-roguelite`, `endless-driving`;
+  `action-roguelite` keeps its permadeath limitation, `endless-driving` keeps `vehicleIntentOnly`
+  (Phase 10), `dungeon-crawler` gains a narrow true limitation. Maturity split unchanged
+  (5/7/62).
+- **Validation:** typecheck PASS; `npm test` 2404/2404; builds + `check:offline` PASS; `qa:proof`
+  17/17; `qa:matrix` 43/43; `qa:starter-kits` all 14; `qa:workbench` 16/16; `release:verify` 6/6.
+
 ### Revision 21 - 2026-08-29 (Sonnet 5) - Capability program Phase 6
 
 **Data-driven puzzle rules (ADR-0023).** Sixth phase of the ten-phase program. Full detail in

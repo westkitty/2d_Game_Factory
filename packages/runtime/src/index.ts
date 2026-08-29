@@ -42,6 +42,7 @@ export { bindCollectiblePickups, type CollectiblePickupBinding } from './game-su
 export { createProjectileRuntime, type ProjectileRuntime, type ProjectileRuntimeOptions } from './game-support/projectileRuntime.ts';
 export { bindStarterWeapon, type StarterWeaponBinding } from './game-support/starterWeapon.ts';
 export { createEncounterRuntime, type EncounterRuntime, type EncounterRuntimeOptions, type SpawnedEnemyHandle } from './game-support/encounterRuntime.ts';
+export { resolveSceneLevel, type ResolvedSceneLevel } from './game-support/generatedLevel.ts';
 
 export { LocalStorageDriver, MemoryStorageDriver } from './persistence/LocalStorageDriver.ts';
 export { SaveStoreImpl } from './persistence/SaveStoreImpl.ts';

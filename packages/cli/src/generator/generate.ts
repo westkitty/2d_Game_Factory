@@ -9,6 +9,7 @@ import {
   generateWeaponCatalog,
   generateEncounterCatalog,
   generatePuzzleRulesDoc,
+  generateGenerationDoc,
   generateResourceManifest,
   generateTiledLevel,
   generateTheme,
@@ -87,6 +88,22 @@ export function buildGameFiles(gameId: string, preset: PresetDefinition): Map<st
           ? preset.controllerFamilies[0] === 'grid'
             ? 'sokoban'
             : 'switch-sequence'
+          : 'none',
+      ),
+      null,
+      2,
+    ) + '\n',
+  );
+  files.set(
+    'content/generation.json',
+    JSON.stringify(
+      generateGenerationDoc(
+        requiredPackIds.includes('sw2d.generation')
+          ? preset.controllerFamilies[0] === 'vehicle'
+            ? 'road-chain'
+            : preset.controllerFamilies[0] === 'top-down' || preset.controllerFamilies[0] === 'grid'
+              ? 'room-graph'
+              : 'segment-chain'
           : 'none',
       ),
       null,
