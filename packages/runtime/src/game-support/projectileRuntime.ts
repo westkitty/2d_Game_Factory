@@ -50,6 +50,8 @@ interface LiveProjectile {
 
 export interface ProjectileRuntime {
   fire(request: FireRequest): FireResult;
+  /** Spawn one projectile directly from a fully-resolved spec (used by encounter fire patterns). */
+  spawnRaw(spec: ProjectileSpawn): void;
   /** Advance projectile lifetimes, bounces and out-of-bounds; spawn any due burst shots. */
   update(deltaMs: number, nowMs: number): void;
   readonly liveCount: number;
@@ -142,6 +144,10 @@ export function createProjectileRuntime(options: ProjectileRuntimeOptions): Proj
   }
 
   return {
+    spawnRaw(spec: ProjectileSpawn): void {
+      if (!disposed) spawn(spec);
+    },
+
     fire(request: FireRequest): FireResult {
       if (disposed) return { fired: false, spawns: [], blockedBy: 'no-weapon' };
       nowMsRef.value = request.nowMs;

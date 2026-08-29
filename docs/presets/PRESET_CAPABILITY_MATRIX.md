@@ -37,13 +37,13 @@ pack/controller selections were actually exercised through, and
 | `top-down-adventure` | world, world-entities | narrative, progression | top-down | keyboard, touch | top-down-action-recipe |
 | `action-adventure` | world, world-entities, combat | ai, progression, weapons | top-down | keyboard, touch | top-down-action-recipe |
 | `twin-stick-shooter` | combat | world, world-entities, arcade, weapons | top-down | keyboard, touch | top-down-action-recipe |
-| `survivor-like` | combat, ai, progression | arcade, world, weapons | top-down | keyboard, touch | top-down-action-recipe |
+| `survivor-like` | combat, ai, progression | arcade, world, weapons, encounters | top-down | keyboard, touch | top-down-action-recipe |
 | `dungeon-crawler` | world, world-entities, combat | ai, progression | top-down | keyboard, touch | top-down-action-recipe |
 | `action-roguelite` | combat, progression | ai, world, world-entities | top-down | keyboard, touch | top-down-action-recipe |
 | `stealth-game` | ai, combat, world | world-entities | top-down | keyboard, touch | top-down-action-recipe |
 | `heist-game` | ai, combat, world | world-entities, progression | top-down | keyboard, touch | top-down-action-recipe |
 | `arena-combat` | combat | ai, arcade, weapons | top-down | keyboard, touch | top-down-action-recipe |
-| `boss-rush` | combat, ai | arcade | top-down | keyboard, touch | top-down-action-recipe |
+| `boss-rush` | combat, ai | arcade, encounters | top-down | keyboard, touch | top-down-action-recipe |
 
 ## Shooter (Phase 7A)
 
@@ -51,7 +51,7 @@ pack/controller selections were actually exercised through, and
 |---|---|---|---|---|---|
 | `horizontal-shmup` | combat | arcade, weapons | top-down | keyboard, touch | shooter-recipe |
 | `vertical-shmup` | combat | arcade, weapons | top-down | keyboard, touch | shooter-recipe |
-| `bullet-hell` | combat | arcade, weapons | top-down | keyboard, touch | shooter-recipe |
+| `bullet-hell` | combat | arcade, weapons, encounters | top-down | keyboard, touch | shooter-recipe |
 | `asteroids-shooter` | combat | arcade | vehicle | keyboard, touch | shooter-recipe |
 | `gallery-shooter` | combat | arcade | pointer | keyboard, pointer, touch | shooter-recipe |
 | `run-and-gun` | combat, world, world-entities | arcade, weapons | platform | keyboard, touch | shooter-recipe |
@@ -91,7 +91,7 @@ pack/controller selections were actually exercised through, and
 | `auto-battler` | strategy, combat, ai | progression | ui-simulation | keyboard, touch | strategy-defense-recipe |
 | `simple-rts` | strategy, combat | ai, world, world-entities | top-down | keyboard, touch | strategy-defense-recipe |
 | `turn-based-tactics` | strategy, combat | ai, world, world-entities | grid, ui-simulation | keyboard, touch | strategy-defense-recipe |
-| `base-defense` | world, world-entities, combat | ai, progression | top-down | keyboard, touch | strategy-defense-recipe |
+| `base-defense` | world, world-entities, combat | ai, progression | top-down, encounters | keyboard, touch | strategy-defense-recipe |
 | `territory-control` | world, world-entities, strategy, combat | ai | top-down | keyboard, touch | strategy-defense-recipe |
 
 ## Simulation / management (Phase 7C)
@@ -150,8 +150,9 @@ pack/controller selections were actually exercised through, and
 | strategy | `sw2d.strategy` | `strategy.turns` | 4 | 4 |
 | items | `sw2d.items` | `items.state` | 1 | 1 |
 | weapons | `sw2d.weapons` | `combat.weapons` | 7 | 7 |
+| encounters | `sw2d.encounters` | `combat.encounters` | 4 | 5 |
 
-**All twelve current packs have at least one preset consumer.** `sw2d.items` (capability
+**All thirteen current packs have at least one preset consumer.** `sw2d.items` (capability
 program Phase 2) is required by `collectathon-platformer`, whose generated starter consumes
 the reusable item/effect service through the shared platform shell.
 

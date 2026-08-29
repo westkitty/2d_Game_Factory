@@ -1,0 +1,146 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:sw2d:schema:content-encounter-catalog:v1",
+  "title": "EncounterCatalog",
+  "description": "Mirrors @sw2d/contracts EncounterCatalog (encounters.ts). Content document name 'encounters'. Phases, waves, spawn points, bounded fire patterns and bounded completion conditions - no scripting.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "encounters"],
+  "properties": {
+    "schemaVersion": { "type": "integer", "minimum": 1 },
+    "encounters": { "type": "array", "items": { "$ref": "#/definitions/encounter" } }
+  },
+  "definitions": {
+    "encounter": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "phases"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "bossEntityId": { "type": "string", "minLength": 1 },
+        "phases": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/phase" } }
+      }
+    },
+    "phase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "completeWhen"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "spawns": { "type": "array", "items": { "$ref": "#/definitions/spawnGroup" } },
+        "emitters": { "type": "array", "items": { "$ref": "#/definitions/emitter" } },
+        "completeWhen": { "$ref": "#/definitions/condition" },
+        "onEnterInvulnMs": { "type": "number", "exclusiveMinimum": 0 },
+        "onEnterFlag": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["flag", "value"],
+          "properties": { "flag": { "type": "string", "minLength": 1 }, "value": { "type": "boolean" } }
+        }
+      }
+    },
+    "spawnGroup": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["archetype", "count", "at"],
+      "properties": {
+        "archetype": { "type": "string", "minLength": 1 },
+        "count": { "type": "integer", "minimum": 1 },
+        "at": { "$ref": "#/definitions/spawnPoint" },
+        "intervalMs": { "type": "number", "minimum": 0 },
+        "startDelayMs": { "type": "number", "minimum": 0 },
+        "health": { "type": "number", "exclusiveMinimum": 0 },
+        "emitterIds": { "type": "array", "items": { "type": "string", "minLength": 1 } }
+      }
+    },
+    "spawnPoint": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "x", "y"],
+          "properties": { "kind": { "const": "point" }, "x": { "type": "number" }, "y": { "type": "number" } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "x", "y", "width", "height"],
+          "properties": {
+            "kind": { "const": "rect" },
+            "x": { "type": "number" },
+            "y": { "type": "number" },
+            "width": { "type": "number", "exclusiveMinimum": 0 },
+            "height": { "type": "number", "exclusiveMinimum": 0 }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "edge"],
+          "properties": { "kind": { "const": "edge" }, "edge": { "enum": ["top", "bottom", "left", "right"] } }
+        }
+      ]
+    },
+    "emitter": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "weaponId", "pattern", "everyMs"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "weaponId": { "type": "string", "minLength": 1 },
+        "everyMs": { "type": "number", "exclusiveMinimum": 0 },
+        "startDelayMs": { "type": "number", "minimum": 0 },
+        "maxEmissions": { "type": "integer", "minimum": 1 },
+        "pattern": { "$ref": "#/definitions/pattern" }
+      }
+    },
+    "pattern": {
+      "oneOf": [
+        { "type": "object", "additionalProperties": false, "required": ["kind"], "properties": { "kind": { "const": "aimed" } } },
+        { "type": "object", "additionalProperties": false, "required": ["kind", "angleDeg"], "properties": { "kind": { "const": "fixed" }, "angleDeg": { "type": "number" } } },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "count", "spreadDeg"],
+          "properties": { "kind": { "const": "fan" }, "count": { "type": "integer", "minimum": 1 }, "spreadDeg": { "type": "number", "minimum": 0 }, "aimed": { "type": "boolean" } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "count"],
+          "properties": { "kind": { "const": "ring" }, "count": { "type": "integer", "minimum": 1 }, "rotationDeg": { "type": "number" } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "count", "rotationStepDeg"],
+          "properties": { "kind": { "const": "spiral" }, "count": { "type": "integer", "minimum": 1 }, "rotationStepDeg": { "type": "number" } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "count", "fromDeg", "toDeg"],
+          "properties": { "kind": { "const": "sweep" }, "count": { "type": "integer", "minimum": 2 }, "fromDeg": { "type": "number" }, "toDeg": { "type": "number" } }
+        }
+      ]
+    },
+    "condition": {
+      "oneOf": [
+        { "type": "object", "additionalProperties": false, "required": ["kind", "ms"], "properties": { "kind": { "const": "elapsed" }, "ms": { "type": "number", "exclusiveMinimum": 0 } } },
+        { "type": "object", "additionalProperties": false, "required": ["kind"], "properties": { "kind": { "const": "spawns-cleared" } } },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "entityId", "fraction"],
+          "properties": { "kind": { "const": "entity-health-below" }, "entityId": { "type": "string", "minLength": 1 }, "fraction": { "type": "number", "exclusiveMinimum": 0, "maximum": 1 } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "flag"],
+          "properties": { "kind": { "const": "flag" }, "flag": { "type": "string", "minLength": 1 }, "value": { "type": "boolean" } }
+        }
+      ]
+    }
+  }
+}

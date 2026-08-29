@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "encounters": [
+    {
+      "id": "storm",
+      "phases": [
+        {
+          "id": "spread",
+          "spawns": [{ "archetype": "drone", "count": 4, "at": { "kind": "rect", "x": 220, "y": 70, "width": 520, "height": 30 }, "intervalMs": 250, "health": 10 }],
+          "emitters": [
+            { "id": "ring", "weaponId": "enemy-bullet", "pattern": { "kind": "ring", "count": 12 }, "everyMs": 250, "maxEmissions": 8 },
+            { "id": "spiral", "weaponId": "enemy-bullet", "pattern": { "kind": "spiral", "count": 3, "rotationStepDeg": 17 }, "everyMs": 120, "maxEmissions": 16 }
+          ],
+          "completeWhen": { "kind": "elapsed", "ms": 2600 }
+        }
+      ]
+    }
+  ]
+}

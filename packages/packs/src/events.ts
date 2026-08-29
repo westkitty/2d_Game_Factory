@@ -32,6 +32,8 @@ declare module '@sw2d/contracts' {
     'items:consumed': { readonly itemId: string; readonly count: number };
     'weapons:fired': { readonly ownerId: string; readonly weaponId: string; readonly shots: number };
     'weapons:ammoChanged': { readonly ownerId: string; readonly ammo: number };
+    'encounters:phaseChanged': { readonly encounterId: string; readonly phaseId: string | null; readonly phaseIndex: number };
+    'encounters:completed': { readonly encounterId: string };
   }
 }
 

@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "encounters": [
+    {
+      "id": "warden",
+      "bossEntityId": "boss",
+      "phases": [
+        { "id": "phase-1", "emitters": [{ "id": "aimed", "weaponId": "enemy-bullet", "pattern": { "kind": "aimed" }, "everyMs": 400 }], "completeWhen": { "kind": "entity-health-below", "entityId": "boss", "fraction": 0.66 } },
+        { "id": "phase-2", "onEnterInvulnMs": 600, "emitters": [{ "id": "fan", "weaponId": "enemy-bullet", "pattern": { "kind": "fan", "count": 5, "spreadDeg": 60, "aimed": true }, "everyMs": 350 }], "completeWhen": { "kind": "entity-health-below", "entityId": "boss", "fraction": 0.33 } },
+        { "id": "phase-3", "onEnterInvulnMs": 600, "onEnterFlag": { "flag": "finalPhase", "value": true }, "emitters": [{ "id": "ring", "weaponId": "enemy-bullet", "pattern": { "kind": "ring", "count": 10, "rotationDeg": 15 }, "everyMs": 300 }], "completeWhen": { "kind": "entity-health-below", "entityId": "boss", "fraction": 0.03 } }
+      ]
+    }
+  ]
+}

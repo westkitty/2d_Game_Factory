@@ -1,0 +1,7 @@
+{
+  "schemaVersion": 1,
+  "weapons": [
+    { "id": "sidearm", "displayName": "Sidearm", "team": "player", "cooldownMs": 90, "fireMode": "auto", "muzzleOffset": 12, "projectile": { "assetRole": "pickup", "speed": 560, "lifetimeMs": 1400, "size": 8, "damage": 12 } },
+    { "id": "enemy-bullet", "displayName": "Boss Bullet", "team": "enemy", "cooldownMs": 10, "fireMode": "single", "projectile": { "assetRole": "hazard", "speed": 160, "lifetimeMs": 4000, "size": 10, "damage": 5 } }
+  ]
+}

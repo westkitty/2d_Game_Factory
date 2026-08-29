@@ -68,8 +68,6 @@ export const LIMITATIONS = {
     'AI state exists, but full vision cones, awareness geometry, noise propagation, hiding, and patrol navigation are not implemented.',
   weaponsProjectiles:
     'The reusable weapon/projectile capability (sw2d.weapons, ADR-0020) exists; this starter\'s shell does not wire it yet.',
-  bossOrchestration:
-    'AI/combat state foundations exist, but reusable boss-phase orchestration is not yet a production system.',
   proceduralGeneration:
     'No procedural level/segment generation exists yet; only hand-authored Tiled levels (Phase 6) are supported.',
   worldGraphAndMap:

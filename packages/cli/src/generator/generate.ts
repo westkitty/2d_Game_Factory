@@ -7,6 +7,7 @@ import {
   generateGameManifest,
   generateItemCatalog,
   generateWeaponCatalog,
+  generateEncounterCatalog,
   generateResourceManifest,
   generateTiledLevel,
   generateTheme,
@@ -72,6 +73,10 @@ export function buildGameFiles(gameId: string, preset: PresetDefinition): Map<st
   files.set(
     'content/weapons.json',
     JSON.stringify(generateWeaponCatalog(requiredPackIds.includes('sw2d.weapons')), null, 2) + '\n',
+  );
+  files.set(
+    'content/encounters.json',
+    JSON.stringify(generateEncounterCatalog(requiredPackIds.includes('sw2d.encounters')), null, 2) + '\n',
   );
   files.set('resources/RESOURCE_MANIFEST.json', JSON.stringify(generateResourceManifest(gameId), null, 2) + '\n');
 

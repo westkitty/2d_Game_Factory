@@ -95,10 +95,10 @@ export const STRATEGY_DEFENSE_PRESETS: readonly PresetDefinition[] = [
     family: 'strategy-defense',
     controllerFamilies: ['top-down'],
     requiredSystemPacks: [pack(PACK_IDS.world), pack(PACK_IDS.worldEntities), pack(PACK_IDS.combat)],
-    optionalSystemPacks: [pack(PACK_IDS.ai), pack(PACK_IDS.progression)],
+    optionalSystemPacks: [pack(PACK_IDS.ai), pack(PACK_IDS.progression), pack(PACK_IDS.encounters)],
     requiredContentRoles: ['tuning', 'levels'],
     validationProfile: VALIDATION_PROFILES.strategyDefense,
-    knownLimitations: ['Wave spawning/targeting/base-damage orchestration is not a reusable system yet.'],
+    knownLimitations: ['Wave spawning is reusable (sw2d.encounters, Phase 4, optional); base-damage/target-priority resolution is still starter-specific.'],
   }),
 
   definePreset({

@@ -28,6 +28,7 @@ export const CONTENT_DOCUMENTS: Readonly<Record<string, ContentDocumentRegistryE
   tuning: { schemaName: 'tuning' },
   items: { schemaName: 'item-catalog' },
   weapons: { schemaName: 'weapon-catalog' },
+  encounters: { schemaName: 'encounter-catalog' },
 };
 
 export type ContentDocumentName = keyof typeof CONTENT_DOCUMENTS;

@@ -24,3 +24,4 @@ One short record per decision that constrains later work. No ADR for trivia.
 | [0018](0018-spatial-pointer-input-ownership.md) | Spatial pointer is a scene service, not part of ActionInput | Capability program 1 |
 | [0019](0019-data-driven-items-and-effects.md) | Data-driven items: one pack, one bounded effect union | Capability program 2 |
 | [0020](0020-weapons-model-in-a-pack-projectiles-in-the-runtime.md) | Weapon model is a pack; projectiles are a runtime bridge | Capability program 3 |
+| [0021](0021-encounter-orchestration-model-and-runtime.md) | Encounter orchestration: bounded data model + runtime bridge | Capability program 4 |

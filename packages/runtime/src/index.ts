@@ -41,6 +41,7 @@ export { InteractionServiceImpl, phaserBoundsShape } from './game-support/intera
 export { bindCollectiblePickups, type CollectiblePickupBinding } from './game-support/itemPickups.ts';
 export { createProjectileRuntime, type ProjectileRuntime, type ProjectileRuntimeOptions } from './game-support/projectileRuntime.ts';
 export { bindStarterWeapon, type StarterWeaponBinding } from './game-support/starterWeapon.ts';
+export { createEncounterRuntime, type EncounterRuntime, type EncounterRuntimeOptions, type SpawnedEnemyHandle } from './game-support/encounterRuntime.ts';
 
 export { LocalStorageDriver, MemoryStorageDriver } from './persistence/LocalStorageDriver.ts';
 export { SaveStoreImpl } from './persistence/SaveStoreImpl.ts';

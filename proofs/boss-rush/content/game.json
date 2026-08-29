@@ -1,0 +1,36 @@
+{
+  "id": "proof-boss-rush",
+  "displayName": "Proof Boss Rush",
+  "version": "0.1.0",
+  "schemaVersion": 1,
+  "viewport": {
+    "width": 960,
+    "height": 540
+  },
+  "bindings": {},
+  "systemPacks": [
+    {
+      "packId": "sw2d.combat",
+      "config": {}
+    },
+    {
+      "packId": "sw2d.ai",
+      "config": {}
+    },
+    {
+      "packId": "sw2d.weapons",
+      "config": {}
+    },
+    {
+      "packId": "sw2d.encounters",
+      "config": {}
+    },
+    {
+      "packId": "game.top-down-shell",
+      "config": {}
+    }
+  ],
+  "defaultSettings": {
+    "masterVolume": 0.7
+  }
+}

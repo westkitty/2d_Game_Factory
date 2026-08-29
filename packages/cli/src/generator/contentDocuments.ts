@@ -85,6 +85,29 @@ export function generateWeaponCatalog(hasWeaponsPack: boolean): Record<string, u
   };
 }
 
+/**
+ * content/encounters.json - an EncounterCatalog (capability program Phase 4).
+ * Always emitted; empty unless the preset installs `sw2d.encounters`.
+ */
+export function generateEncounterCatalog(hasEncountersPack: boolean): Record<string, unknown> {
+  if (!hasEncountersPack) return { schemaVersion: 1, encounters: [] };
+  return {
+    schemaVersion: 1,
+    encounters: [
+      {
+        id: 'starter-skirmish',
+        phases: [
+          {
+            id: 'wave-1',
+            spawns: [{ archetype: 'grunt', count: 3, at: { kind: 'edge', edge: 'top' }, intervalMs: 500, health: 20 }],
+            completeWhen: { kind: 'spawns-cleared' },
+          },
+        ],
+      },
+    ],
+  };
+}
+
 /** content/tuning.json - the one content document @sw2d/schemas validates for every game today. */
 export function generateTuning(): Record<string, unknown> {
   return {

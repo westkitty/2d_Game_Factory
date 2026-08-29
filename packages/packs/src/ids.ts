@@ -27,6 +27,7 @@ export const PACK_IDS = {
   strategy: 'sw2d.strategy',
   items: 'sw2d.items',
   weapons: 'sw2d.weapons',
+  encounters: 'sw2d.encounters',
 } as const;
 
 export const CAPABILITY_IDS = {
@@ -45,4 +46,6 @@ export const CAPABILITY_IDS = {
   items: 'items.state',
   /** Capability program Phase 3: data-driven weapon/projectile model (composes with combat.health). */
   weapons: 'combat.weapons',
+  /** Capability program Phase 4: waves / phases / bullet patterns / boss phases. */
+  encounters: 'combat.encounters',
 } as const;

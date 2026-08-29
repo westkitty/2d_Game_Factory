@@ -27,7 +27,7 @@ export const SHOOTER_PRESETS: readonly PresetDefinition[] = [
     optionalSystemPacks: [pack(PACK_IDS.arcade)],
     requiredContentRoles: ['tuning'],
     validationProfile: VALIDATION_PROFILES.shooter,
-    knownLimitations: ['Enemy formations and bullet-pattern choreography are not yet a reusable capability (Phase 4).'],
+    knownLimitations: ['The reusable encounter capability (sw2d.encounters, ADR-0021) exists; this starter does not wire enemy formations into its shell yet.'],
   }),
 
   definePreset({
@@ -39,7 +39,7 @@ export const SHOOTER_PRESETS: readonly PresetDefinition[] = [
     optionalSystemPacks: [pack(PACK_IDS.arcade)],
     requiredContentRoles: ['tuning'],
     validationProfile: VALIDATION_PROFILES.shooter,
-    knownLimitations: ['Enemy formations and bullet-pattern choreography are not yet a reusable capability (Phase 4).'],
+    knownLimitations: ['The reusable encounter capability (sw2d.encounters, ADR-0021) exists; this starter does not wire enemy formations into its shell yet.'],
   }),
 
   definePreset({
@@ -48,14 +48,14 @@ export const SHOOTER_PRESETS: readonly PresetDefinition[] = [
     displayName: 'Bullet Hell',
     family: 'shooter',
     controllerFamilies: ['top-down'],
-    requiredSystemPacks: [pack(PACK_IDS.combat), pack(PACK_IDS.weapons)],
+    requiredSystemPacks: [pack(PACK_IDS.combat), pack(PACK_IDS.weapons), pack(PACK_IDS.encounters)],
     optionalSystemPacks: [pack(PACK_IDS.arcade)],
     requiredContentRoles: ['tuning'],
     validationProfile: VALIDATION_PROFILES.shooter,
-    // Weapons/projectiles are reusable now (Phase 3); dense pattern choreography
-    // and boss phases are Phase 4.
+    // Dense bullet-pattern choreography, waves and phases are reusable now
+    // (capability program Phase 4, ADR-0021; proof: proofs/bullet-hell/).
     knownLimitations: [
-      'Dense bullet-pattern choreography and boss-phase orchestration are not yet a reusable capability.',
+      'Per-bullet GPU-scale pooling for thousands of simultaneous bullets is not tuned; patterns are bounded.',
     ],
   }),
 

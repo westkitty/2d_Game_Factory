@@ -23,7 +23,7 @@ Git/validation/architecture checkpoint, not a new chat.
 | 1 | Spatial Pointer & Interaction | `feature/capability-01-spatial-interaction` | PASS |
 | 2 | Data-Driven Items / Effects / Pickups | `feature/capability-02-items-effects` | PASS |
 | 3 | Weapons & Projectiles | `feature/capability-03-weapons-projectiles` | PASS |
-| 4 | Combat / Encounter Orchestration | `feature/capability-04-combat-orchestration` | NOT STARTED |
+| 4 | Combat / Encounter Orchestration | `feature/capability-04-combat-orchestration` | PASS |
 | 5 | Navigation & Pathfinding | `feature/capability-05-navigation` | NOT STARTED |
 | 6 | Data-Driven Puzzle Rules | `feature/capability-06-data-puzzles` | NOT STARTED |
 | 7 | Procedural Generation | `feature/capability-07-procedural-generation` | NOT STARTED |
@@ -34,7 +34,7 @@ Git/validation/architecture checkpoint, not a new chat.
 Program starting `main`: `0af24cd6c2646cae84fb4be559b68c2477e63d0b`
 (the Start/Confirm prerequisite; verified present before Phase 1).
 
-Current phase: **4 — Combat / Encounter Orchestration** (NOT STARTED).
+Current phase: **5 — Navigation & Pathfinding** (NOT STARTED).
 
 ---
 
@@ -270,5 +270,73 @@ None.
 
 ### Next phase
 
-Phase 4 — Combat / Encounter Orchestration. Branch
-`feature/capability-04-combat-orchestration` from the integrated `main`.
+Phase 4 done, see below.
+
+---
+
+## Phase 4 — Combat / Encounter Orchestration — PASS
+
+- **Starting SHA:** `c4d71430c72ccb8f6ddfc22cb0bae529021881dc` (Phase 3 on `main`)
+- **Feature branch:** `feature/capability-04-combat-orchestration`
+- **Phase commit SHA:** this commit — `feat: add reusable encounter orchestration` on `main`
+- **Main integration SHA:** same commit, fast-forwarded onto `main`
+
+### Implementation summary
+
+- `packages/contracts/src/encounters.ts` (new): `EncounterDefinition` / phases /
+  `SpawnGroupDefinition` / `SpawnPoint` (point/rect/edge) / `EmitterDefinition`;
+  bounded `FirePattern` union + pure `expandFirePattern`; bounded
+  `EncounterCondition` union; `EncounterTick` / `EncounterUpdateContext` /
+  `EncounterService`; `ENCOUNTERS_CAPABILITY_ID`.
+- `packages/schemas` — `encounter-catalog` schema (content document `encounters`).
+- `packages/packs/src/encounters/encountersPack.ts` (new): `sw2d.encounters` →
+  `combat.encounters`, `dependencies: []`. Deterministic `EncounterServiceImpl` -
+  staggered spawn scheduling, phase-level + entity-carried emitter accumulators,
+  phase transitions on bounded conditions, `reportDeath` for `spawns-cleared`.
+  No Phaser, no wall clock, no RNG.
+- `packages/runtime/src/game-support/encounterRuntime.ts` (new):
+  `createEncounterRuntime` - builds the update context from game state,
+  materialises spawns via a callback, fires patterns through
+  `createProjectileRuntime` (new `spawnRaw`), applies `onEnterInvulnMs` /
+  `onEnterFlag` from the definition. Browser-proven.
+- Generator: `content/encounters.json` always emitted (a starter skirmish for a
+  preset that installs `sw2d.encounters`, empty otherwise); `content.ts` /
+  `main.ts` templates updated.
+- ADR-0021.
+
+### Proof consumers
+
+- **`proofs/bullet-hell/`** (new) — bounded, deterministic ring + spiral emitter
+  choreography (`bulletsFired === 144` exactly) + a spawn wave; player vs drones
+  and enemy bullets vs player, all through `combat.health`.
+- **`proofs/boss-rush/`** (new) — one boss, three mechanically distinct phases
+  (aimed → aimed fan → ring), `entity-health-below` transitions, `onEnterInvulnMs`
+  windows, an `onEnterFlag`, all from the encounter definition.
+- `npm run qa:proof` 10/10 → **12/12**.
+
+### Limitation changes
+
+- `LIMITATIONS.bossOrchestration` deleted. Full orchestration limitations removed
+  from `bullet-hell`, `boss-rush`; `arena-combat`, `horizontal-shmup`,
+  `vertical-shmup`, `survivor-like`, `base-defense` narrowed to their real
+  remaining gaps. Maturity split unchanged (5/7/62).
+
+### Validation completed
+
+- `npm run typecheck` — PASS
+- `npm test` — 2168/2168 PASS (was 2154; +14)
+- `npm run workbench:build`, `npm run build`, `npm run check:offline` — PASS
+- `npm run qa:proof` — 12/12 PASS
+- `npm run qa:matrix` — 42/42 PASS (auto-grew one signature)
+- `npm run qa:starter-kits` — all 14 sub-suites PASS
+- `npm run release:verify` — 6/6 PASS
+
+### Unresolved blockers
+
+None. Entity-carried emitters implemented but not proof-exercised (phase-level
+emitters cover both proofs) — noted, not a blocker.
+
+### Next phase
+
+Phase 5 — Navigation & Pathfinding. Branch `feature/capability-05-navigation`
+from the integrated `main`.

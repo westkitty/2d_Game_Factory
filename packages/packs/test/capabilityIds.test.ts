@@ -3,6 +3,7 @@ import { CAPABILITY_IDS, PACK_IDS } from '../src/ids.ts';
 import {
   itemsPack,
   weaponsPack,
+  encountersPack,
   aiPack,
   arcadePack,
   combatPack,
@@ -39,6 +40,7 @@ const ALL_PACKS = [
   strategyPack,
   itemsPack,
   weaponsPack,
+  encountersPack,
 ];
 
 /** `<family>.<service>`: lowercase segments, at least two, dash-separated words allowed after the first. */

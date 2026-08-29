@@ -63,11 +63,11 @@ export const TOP_DOWN_ACTION_PRESETS: readonly PresetDefinition[] = [
     displayName: 'Survivor-Like',
     family: 'top-down-action',
     controllerFamilies: ['top-down'],
-    requiredSystemPacks: [pack(PACK_IDS.combat), pack(PACK_IDS.ai), pack(PACK_IDS.progression), pack(PACK_IDS.weapons)],
+    requiredSystemPacks: [pack(PACK_IDS.combat), pack(PACK_IDS.ai), pack(PACK_IDS.progression), pack(PACK_IDS.weapons), pack(PACK_IDS.encounters)],
     optionalSystemPacks: [pack(PACK_IDS.arcade), pack(PACK_IDS.world)],
     requiredContentRoles: ['tuning'],
     validationProfile: VALIDATION_PROFILES.topDown,
-    knownLimitations: ['Wave-spawning orchestration is not yet a reusable capability.'],
+    knownLimitations: ['Endless difficulty scaling / meta-progression between runs is not a reusable system; the encounter capability (sw2d.encounters, Phase 4) drives finite waves.'],
   }),
 
   definePreset({
@@ -131,7 +131,7 @@ export const TOP_DOWN_ACTION_PRESETS: readonly PresetDefinition[] = [
     optionalSystemPacks: [pack(PACK_IDS.ai), pack(PACK_IDS.arcade)],
     requiredContentRoles: ['tuning', 'levels'],
     validationProfile: VALIDATION_PROFILES.topDown,
-    knownLimitations: ['Wave/encounter orchestration is not yet a reusable capability (Phase 4).'],
+    knownLimitations: ['The reusable encounter capability (sw2d.encounters, ADR-0021) exists; this starter does not wire it into its shell yet.'],
   }),
 
   definePreset({
@@ -139,10 +139,12 @@ export const TOP_DOWN_ACTION_PRESETS: readonly PresetDefinition[] = [
     displayName: 'Boss Rush',
     family: 'top-down-action',
     controllerFamilies: ['top-down'],
-    requiredSystemPacks: [pack(PACK_IDS.combat), pack(PACK_IDS.ai)],
+    requiredSystemPacks: [pack(PACK_IDS.combat), pack(PACK_IDS.ai), pack(PACK_IDS.weapons), pack(PACK_IDS.encounters)],
     optionalSystemPacks: [pack(PACK_IDS.arcade)],
     requiredContentRoles: ['tuning', 'levels'],
     validationProfile: VALIDATION_PROFILES.topDown,
-    knownLimitations: [LIMITATIONS.bossOrchestration],
+    // Reusable boss-phase orchestration implemented and consumed (capability
+    // program Phase 4, ADR-0021; proof: proofs/boss-rush/).
+    knownLimitations: ['Sequencing multiple bosses across a run is starter-specific; sw2d.encounters drives one boss encounter at a time.'],
   }),
 ];

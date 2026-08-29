@@ -3,7 +3,7 @@
 Phase 10's five deep, end-to-end proof games - the tier above Phase 8's smoke bar - plus the
 capability-completion program's per-phase proof consumers. Each row is backed by a frozen
 `proofs/<id>/PROOF_CONTRACT.md`, a real generated composition, and a committed real-browser proof
-spec run through `npm run qa:proof`. Mechanically, `npm run qa:proof` is **10/10** as of this
+spec run through `npm run qa:proof`. Mechanically, `npm run qa:proof` is **12/12** as of this
 revision.
 
 ## Capability program — Phase 1: reusable spatial pointer & interaction (ADR-0018)
@@ -32,6 +32,13 @@ folded into a capability phase.
 |---|---|---|---|---|---|
 | `proofs/twin-stick-shooter/` (upgraded) | `twin-stick-shooter` | `sw2d.weapons` (`WeaponsService`) from `content/weapons.json` + shared `createProjectileRuntime` replace the former raw `ProjectilePool` + hand-wired overlap; damage via `combat.health`; enemy death as a `combat:entityDied` reaction | Existing wave/aim/pause/restart journey, now fired through the reusable weapon model | Movement independent from aim; optional pointer aim (ADR-0018); two 10-damage hits per 20-hp enemy clear wave 1; projectile lifecycle `spawned = live + expired`; restart reinstalls a fresh weapon+runtime | PASS |
 | `proofs/run-and-gun/` (new) | `run-and-gun` | Same weapon model + projectile runtime on a **platform** shell; two `Enemy` turret targets; per-projectile overlap → `combat.damage`; `hitsResolved` counter | Level ground row + two turrets; the platform shell's `bindStarterWeapon` swapped for a full `createProjectileRuntime` wired to the enemy group | Start (sw2d.weapons installed, `sidearm` equipped); close distance, face right, fire (220ms cooldown gates rate); both turrets die after 2 hits each (`hitsResolved >= 4`); pause freezes the field; restart reinstalls | PASS |
+
+## Capability program — Phase 4: combat / encounter orchestration (ADR-0021)
+
+| Proof | Preset | Reusable capability exercised | Game-specific mechanics | Browser journey | Status |
+|---|---|---|---|---|---|
+| `proofs/bullet-hell/` (new) | `bullet-hell` | `sw2d.encounters` (`EncounterService`) from `content/encounters.json` - a capped ring + spiral emitter and a spawn wave; `expandFirePattern`; `createEncounterRuntime` firing through Phase 3's projectile runtime; `combat.health` for both sides | Player auto-aims a sidearm at the nearest drone; enemy bullets damage the player, player bullets kill the drones | Start (`phaseId: spread`); hold fire ~2.5s; `bulletsFired === 144` exactly (deterministic), `projectilesLive` bounded, drones killed, player damaged; `encounterComplete` at elapsed 2600ms; restart resets the runtime | PASS |
+| `proofs/boss-rush/` (new) | `boss-rush` | `sw2d.encounters` with `bossEntityId` - three phases with distinct emitter patterns (aimed → aimed fan → ring), `entity-health-below` transitions, `onEnterInvulnMs` windows, an `onEnterFlag`; `createEncounterRuntime` applies invuln + flag from the definition | Shell spawns the boss sprite + registers it in combat; player holds fire straight up | Start (`phase-1`, boss at 100%); fire; boss < 66% → `phase-2` + `bossInvulnerable` (health frozen during the window); < 33% → `phase-3` + `finalPhase` flag; < 3% → `encounterComplete`; restart returns to `phase-1` | PASS |
 
 ## Phase 10 deep proofs
 

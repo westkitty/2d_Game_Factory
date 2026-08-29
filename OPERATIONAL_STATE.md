@@ -774,6 +774,30 @@ adjudicated individually in the Phase 12 acceptance document):
 
 ## Revision history
 
+### Revision 19 - 2026-08-29 (Sonnet 5) - Capability program Phase 4
+
+**Combat / encounter orchestration (ADR-0021).** Fourth phase of the ten-phase program. Full
+detail in [`docs/architecture/CAPABILITY_PROGRAM_STATE.md`](docs/architecture/CAPABILITY_PROGRAM_STATE.md).
+
+- **New capability.** `sw2d.encounters` pack -> `combat.encounters` (renderer-neutral
+  `EncounterService`: phases, spawn groups with `point`/`rect`/`edge` spawn points, bounded
+  `FirePattern` emitters - aimed/fixed/fan/ring/spiral/sweep - via the pure `expandFirePattern`,
+  bounded `completeWhen` conditions - elapsed/spawns-cleared/entity-health-below/flag). Validated
+  by the new `encounter-catalog` schema. Renderer bridge: `createEncounterRuntime`
+  (`@sw2d/runtime/game-support`) materialises spawn requests via a game callback and fires
+  patterns through Phase 3's `createProjectileRuntime` (new `spawnRaw`); applies `onEnterInvulnMs`
+  / `onEnterFlag` from the definition. Thirteen packs now.
+- **Generation.** `content/encounters.json` always emitted; `content.ts` / `main.ts` templates
+  load it.
+- **Proofs.** New `proofs/bullet-hell/` (bounded deterministic ring+spiral choreography, exact
+  bullet count) and `proofs/boss-rush/` (one boss, three mechanically distinct phases,
+  health-threshold transitions, invuln windows, final-phase flag). `qa:proof` 10/10 -> 12/12.
+- **Limitations.** `LIMITATIONS.bossOrchestration` deleted; `bullet-hell` / `boss-rush` full
+  orchestration limitations removed; `arena-combat` / shmups / `survivor-like` / `base-defense`
+  narrowed to their real remaining gaps. Maturity split unchanged (5/7/62).
+- **Validation:** typecheck PASS; `npm test` 2168/2168; builds + `check:offline` PASS; `qa:proof`
+  12/12; `qa:matrix` / `qa:starter-kits` / `release:verify` - see the ledger.
+
 ### Revision 18 - 2026-08-29 (Sonnet 5) - Capability program Phase 3
 
 **Weapons & projectiles (ADR-0020).** Third phase of the ten-phase program. Full detail in the
