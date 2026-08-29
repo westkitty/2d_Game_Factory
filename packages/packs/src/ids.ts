@@ -36,7 +36,6 @@ export const PACK_IDS = {
   racing: 'sw2d.racing',
   aiPerception: 'sw2d.ai-perception',
   climbing: 'sw2d.climbing',
-  dungeonChests: 'sw2d.dungeon-chests',
 } as const;
 
 export const CAPABILITY_IDS = {
@@ -75,8 +74,4 @@ export const CAPABILITY_IDS = {
   aiPursuit: 'ai.pursuit',
   /** Capability program Phase 12: platformer climbing, wall-slide, wall-jump & ledge-hang. */
   climbing: 'movement.climbing',
-  /** Capability program Phase 13: procedural dungeon chests and rarity-tier loot. */
-  chests: 'loot.chests',
-  /** Capability program Phase 13: lockpicking minigame engine. */
-  lockpicking: 'loot.lockpicking',
 } as const;

@@ -10,8 +10,6 @@ import weaponsData from '../content/weapons.json' with { type: 'json' };
 import encountersData from '../content/encounters.json' with { type: 'json' };
 import puzzlesData from '../content/puzzles.json' with { type: 'json' };
 import generationData from '../content/generation.json' with { type: 'json' };
-import lootTablesData from '../content/loot-tables.json' with { type: 'json' };
-import chestTypesData from '../content/chest-types.json' with { type: 'json' };
 
 /**
  * The generated game's content source.
@@ -37,17 +35,7 @@ export const gameContent: ContentSource = {
   id: (gameData as { id: string }).id,
   load: async (): Promise<ContentBundle> => {
     const normalizedLevel = normalizeTiledMap('main', rawLevel);
-    const data = validateContentBundleData({
-      tuning: tuningData,
-      'levels/main': normalizedLevel,
-      items: itemsData,
-      weapons: weaponsData,
-      encounters: encountersData,
-      puzzles: puzzlesData,
-      generation: generationData,
-      'loot-tables': lootTablesData,
-      'chest-types': chestTypesData,
-    });
+    const data = validateContentBundleData({ tuning: tuningData, 'levels/main': normalizedLevel, items: itemsData, weapons: weaponsData, encounters: encountersData, puzzles: puzzlesData, generation: generationData });
 
     const assets: readonly AssetDescriptor[] = theme.assets;
     const ui: Partial<UiCopy> | undefined = theme.ui;

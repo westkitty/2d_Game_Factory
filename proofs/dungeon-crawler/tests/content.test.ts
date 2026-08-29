@@ -6,10 +6,6 @@ import tuningData from '../content/tuning.json' with { type: 'json' };
 import themeData from '../content/themes/default/theme.json' with { type: 'json' };
 import rawLevel from '../content/levels/main.json' with { type: 'json' };
 import generationData from '../content/generation.json' with { type: 'json' };
-import itemsData from '../content/items.json' with { type: 'json' };
-import lootTablesData from '../content/loot-tables.json' with { type: 'json' };
-import chestTypesData from '../content/chest-types.json' with { type: 'json' };
-
 describe('generated game content', () => {
   it('content/game.json validates against the GameDefinition schema', () => {
     expect(() => validateDocumentOrThrow('game-definition', 'content/game.json', gameData)).not.toThrow();
@@ -26,16 +22,6 @@ describe('generated game content', () => {
 
   it('content/generation.json validates as a generation document', () => {
     expect(() => validateContentBundleData({ generation: generationData })).not.toThrow();
-  });
-
-  it('content/items.json, loot-tables.json and chest-types.json validate against their schemas', () => {
-    expect(() =>
-      validateContentBundleData({
-        items: itemsData,
-        'loot-tables': lootTablesData,
-        'chest-types': chestTypesData,
-      }),
-    ).not.toThrow();
   });
 
   it('rejects a malformed tuning document with a located error', () => {

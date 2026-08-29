@@ -26,7 +26,7 @@ export const TOP_DOWN_ACTION_PRESETS: readonly PresetDefinition[] = [
     family: 'top-down-action',
     controllerFamilies: ['top-down'],
     requiredSystemPacks: [pack(PACK_IDS.world), pack(PACK_IDS.worldEntities)],
-    optionalSystemPacks: [pack(PACK_IDS.narrative), pack(PACK_IDS.progression), pack(PACK_IDS.items), pack(PACK_IDS.dungeonChests)],
+    optionalSystemPacks: [pack(PACK_IDS.narrative), pack(PACK_IDS.progression)],
     requiredContentRoles: ['tuning', 'levels'],
     validationProfile: VALIDATION_PROFILES.topDown,
   }),
@@ -75,7 +75,7 @@ export const TOP_DOWN_ACTION_PRESETS: readonly PresetDefinition[] = [
     family: 'top-down-action',
     controllerFamilies: ['top-down'],
     requiredSystemPacks: [pack(PACK_IDS.world), pack(PACK_IDS.worldEntities), pack(PACK_IDS.combat), pack(PACK_IDS.generation)],
-    optionalSystemPacks: [pack(PACK_IDS.ai), pack(PACK_IDS.progression), pack(PACK_IDS.items), pack(PACK_IDS.dungeonChests)],
+    optionalSystemPacks: [pack(PACK_IDS.ai), pack(PACK_IDS.progression)],
     requiredContentRoles: ['tuning', 'levels', 'generation'],
     validationProfile: VALIDATION_PROFILES.topDown,
     // Phase 7 (ADR-0024): the dungeon is a deterministic seeded room graph from

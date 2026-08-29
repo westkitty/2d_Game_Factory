@@ -22,7 +22,6 @@ import {
   racingPack,
   aiPerceptionPack,
   climbingPack,
-  dungeonChestsPack,
 } from '@sw2d/packs';
 import { resolveInstallOrder } from '@sw2d/runtime/composition';
 import { PRESETS } from '../src/index.ts';
@@ -65,7 +64,6 @@ const REAL_PACKS = [
   racingPack,
   aiPerceptionPack,
   climbingPack,
-  dungeonChestsPack,
 ];
 
 const REGISTRY = new Map(REAL_PACKS.map((definition) => [definition.id, definition]));
@@ -105,15 +103,6 @@ describe('every preset\'s full pack selection resolves through resolveInstallOrd
       const referenced = new Set([...preset.requiredSystemPacks, ...preset.optionalSystemPacks].map((s) => s.packId));
       if (referenced.has(aiPack.id)) {
         expect(referenced.has(combatPack.id), `${preset.id} selects sw2d.ai without sw2d.combat`).toBe(true);
-      }
-    }
-  });
-
-  it('every preset selecting sw2d.dungeon-chests also selects sw2d.items (dungeonChestsPack.dependencies)', () => {
-    for (const preset of PRESETS) {
-      const referenced = new Set([...preset.requiredSystemPacks, ...preset.optionalSystemPacks].map((s) => s.packId));
-      if (referenced.has(dungeonChestsPack.id)) {
-        expect(referenced.has(itemsPack.id), `${preset.id} selects sw2d.dungeon-chests without sw2d.items`).toBe(true);
       }
     }
   });

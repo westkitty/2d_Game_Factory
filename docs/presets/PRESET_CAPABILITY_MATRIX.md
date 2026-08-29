@@ -34,11 +34,11 @@ pack/controller selections were actually exercised through, and
 
 | id | required packs | optional packs | controller(s) | input modes | validation profile |
 |---|---|---|---|---|---|
-| `top-down-adventure` | world, world-entities | narrative, progression, items, dungeon-chests | top-down | keyboard, touch | top-down-action-recipe |
+| `top-down-adventure` | world, world-entities | narrative, progression | top-down | keyboard, touch | top-down-action-recipe |
 | `action-adventure` | world, world-entities, combat | ai, progression, weapons | top-down | keyboard, touch | top-down-action-recipe |
 | `twin-stick-shooter` | combat | world, world-entities, arcade, weapons | top-down | keyboard, touch | top-down-action-recipe |
 | `survivor-like` | combat, ai, progression | arcade, world, weapons, encounters | top-down | keyboard, touch | top-down-action-recipe |
-| `dungeon-crawler` | world, world-entities, combat, generation | ai, progression, items, dungeon-chests | top-down | keyboard, touch | top-down-action-recipe |
+| `dungeon-crawler` | world, world-entities, combat, generation | ai, progression | top-down | keyboard, touch | top-down-action-recipe |
 | `action-roguelite` | combat, progression, generation | ai, world, world-entities | top-down | keyboard, touch | top-down-action-recipe |
 | `stealth-game` | ai, combat, world | world-entities | top-down, navigation | keyboard, touch | top-down-action-recipe |
 | `heist-game` | ai, combat, world | world-entities, progression | top-down, navigation | keyboard, touch | top-down-action-recipe |
@@ -111,7 +111,7 @@ pack/controller selections were actually exercised through, and
 
 | id | required packs | optional packs | controller(s) | input modes | validation profile |
 |---|---|---|---|---|---|
-| `exploration-game` | world, world-entities, world-graph | narrative, items, dungeon-chests | top-down | keyboard, touch | narrative-exploration-recipe |
+| `exploration-game` | world, world-entities, world-graph | narrative | top-down | keyboard, touch | narrative-exploration-recipe |
 | `visual-novel` | narrative | progression | ui-simulation | keyboard, touch | narrative-exploration-recipe |
 | `point-and-click` | narrative, world, world-entities | puzzle | pointer, ui-simulation | keyboard, pointer, touch | narrative-exploration-recipe |
 | `interactive-fiction-hybrid` | narrative | world | ui-simulation | keyboard, touch | narrative-exploration-recipe |
