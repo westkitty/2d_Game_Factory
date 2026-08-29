@@ -796,7 +796,7 @@ adjudicated individually in the Phase 12 acceptance document):
   `knownLimitations: []`, stays `proof-validated`) and `puzzle-platformer`; rewritten to be
   accurate for `match-puzzle` / `falling-block-puzzle` / `physics-puzzle` / `escape-room`, which
   keep it for a kind the union does not cover. Maturity split unchanged (5/7/62).
-- **Validation:** typecheck PASS; `npm test` 2299/2299; builds + `check:offline` PASS; `qa:proof`
+- **Validation:** typecheck PASS; `npm test` 2295/2295; builds + `check:offline` PASS; `qa:proof`
   15/15; `qa:matrix` / `qa:starter-kits` / `release:verify` - see the ledger.
 
 ### Revision 20 - 2026-08-29 (Sonnet 5) - Capability program Phase 5

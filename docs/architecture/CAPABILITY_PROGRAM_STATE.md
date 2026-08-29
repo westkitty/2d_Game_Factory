@@ -461,7 +461,7 @@ Phase 6 done, see below.
 ### Validation completed
 
 - `npm run typecheck` — PASS
-- `npm test` — 2299/2299 PASS (was 2288; +11)
+- `npm test` — 2295/2295 PASS (was 2198 at Phase 5; +97)
 - `npm run workbench:build`, `npm run build`, `npm run check:offline` — PASS
 - `npm run qa:proof` — 15/15 PASS
 - `npm run qa:matrix` — PASS
