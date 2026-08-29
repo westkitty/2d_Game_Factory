@@ -1,71 +1,67 @@
-import type { InstalledSystemPack } from '@sw2d/contracts';
+import type { InstalledSystemPack, PuzzleRulesService, PuzzleSnapshot } from '@sw2d/contracts';
+import { PUZZLE_RULES_CAPABILITY_ID } from '@sw2d/contracts';
 import { gridController, type SceneContext, type ScenePackDefinition } from '@sw2d/runtime';
-import { CAPABILITY_IDS, type PuzzleService } from '@sw2d/packs';
-import { GOAL, isWall, pointsEqual, type Point, type SokobanState } from './packConfig.ts';
 
 /**
- * Proof D - sokoban (Phase 10 deep proof, see ../PROOF_CONTRACT.md).
+ * Proof D - sokoban (see ../PROOF_CONTRACT.md).
  *
- * `puzzle.current()` (from the real `sw2d.puzzle` pack, installed via
- * ../packConfig.ts's `configSource: 'code'` seam) is the ONLY board state -
- * this file holds no parallel player/box variables or undo stack of its
- * own, unlike the Phase 8 demo this proof supersedes for the generated
- * composition path.
+ * As of the capability program's Phase 6 (ADR-0023) the ENTIRE Sokoban
+ * ruleset - board dimensions, walls, box, goal, legal-move/legal-push
+ * resolution, solved-detection, undo history, reset - lives in the reusable
+ * `sw2d.puzzle-rules` service, fed the validated `content/puzzles.json`
+ * document. This file holds no board state, no move rules and no undo stack
+ * of its own: it maps a `gridController` step to one bounded `move` op,
+ * CANCEL to `undo()`, SECONDARY_ACTION to `reset()`, and renders whatever
+ * `puzzle.snapshot()` reports.
  */
 
 const CELL_SIZE = 64;
-const DIRS: Readonly<Record<'up' | 'down' | 'left' | 'right', Point>> = {
-  up: { x: 0, y: -1 },
-  down: { x: 0, y: 1 },
-  left: { x: -1, y: 0 },
-  right: { x: 1, y: 0 },
-};
 
-/** Standard Sokoban rule: step into empty floor moves the player; step into the box pushes it one further cell if that cell is clear. Returns null for a rejected move - the caller must not touch history for those. */
-function attemptMove(state: SokobanState, delta: Point): SokobanState | null {
-  const target: Point = { x: state.player.x + delta.x, y: state.player.y + delta.y };
-  if (isWall(target)) return null;
-  if (pointsEqual(target, state.box)) {
-    const beyond: Point = { x: target.x + delta.x, y: target.y + delta.y };
-    if (isWall(beyond)) return null;
-    return { player: target, box: beyond };
-  }
-  return { player: target, box: state.box };
+interface SokobanSnap extends PuzzleSnapshot {
+  readonly playerCol: number;
+  readonly playerRow: number;
+  readonly boxes: ReadonlyArray<readonly [number, number]>;
+  readonly goals: ReadonlyArray<readonly [number, number]>;
 }
 
 export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
   id: 'game.grid-shell',
   version: '0.1.0',
   provides: [],
-  dependencies: [CAPABILITY_IDS.puzzle],
+  dependencies: [PUZZLE_RULES_CAPABILITY_ID],
 
   install(context: SceneContext): InstalledSystemPack {
     const scene = context.scene;
-    const puzzle = context.capabilities.require<PuzzleService<SokobanState>>(CAPABILITY_IDS.puzzle);
+    const puzzle = context.capabilities.require<PuzzleRulesService>(PUZZLE_RULES_CAPABILITY_ID);
     const playerKey = context.assets.resolve('player');
     const boxKey = context.assets.resolve('platform');
     const goalKey = context.assets.resolve('checkpoint');
 
     let rejectedMoves = 0;
 
-    const toPixel = (point: Point): [number, number] => [point.x * CELL_SIZE + CELL_SIZE / 2, point.y * CELL_SIZE + CELL_SIZE / 2];
+    const toPixel = (col: number, row: number): [number, number] => [
+      col * CELL_SIZE + CELL_SIZE / 2,
+      row * CELL_SIZE + CELL_SIZE / 2,
+    ];
 
-    const goalSprite = scene.add.sprite(...toPixel(GOAL), goalKey).setAlpha(0.5);
-    const boxSprite = scene.add.sprite(...toPixel(puzzle.current().box), boxKey);
-    const playerSprite = scene.add.sprite(...toPixel(puzzle.current().player), playerKey);
+    const snap = (): SokobanSnap => puzzle.snapshot() as SokobanSnap;
+
+    const first = snap();
+    const goalSprites = first.goals.map((g) => scene.add.sprite(...toPixel(g[0], g[1]), goalKey).setAlpha(0.5));
+    const boxSprites = first.boxes.map((b) => scene.add.sprite(...toPixel(b[0], b[1]), boxKey));
+    const playerSprite = scene.add.sprite(...toPixel(first.playerCol, first.playerRow), playerKey);
 
     function syncSprites(): void {
-      const state = puzzle.current();
-      playerSprite.setPosition(...toPixel(state.player));
-      boxSprite.setPosition(...toPixel(state.box));
+      const s = snap();
+      playerSprite.setPosition(...toPixel(s.playerCol, s.playerRow));
+      s.boxes.forEach((b, i) => boxSprites[i]?.setPosition(...toPixel(b[0], b[1])));
     }
 
     const debugHandle = context.debug.contribute('game.grid-shell', () => {
-      const state = puzzle.current();
+      const s = snap();
       return {
-        state,
+        snapshot: s,
         solved: puzzle.isSolved(),
-        visibleComplete: pointsEqual(state.box, GOAL),
         rejectedMoves,
       };
     });
@@ -79,9 +75,9 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         if (disposed) return;
         const intent = gridController.read(context.input);
         if (intent.step) {
-          const next = attemptMove(puzzle.current(), DIRS[intent.step]);
-          if (next) puzzle.apply(() => next);
-          else rejectedMoves += 1;
+          const before = snap().moves;
+          const after = puzzle.apply({ kind: 'move', dir: intent.step });
+          if (after.moves === before) rejectedMoves += 1;
         }
         if (context.input.consumePress('CANCEL')) puzzle.undo();
         if (context.input.consumePress('SECONDARY_ACTION')) puzzle.reset();
@@ -94,8 +90,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         debugHandle.dispose();
         try {
           playerSprite.destroy();
-          boxSprite.destroy();
-          goalSprite.destroy();
+          for (const s of [...boxSprites, ...goalSprites]) s.destroy();
         } catch {
           /* scene already tearing down */
         }

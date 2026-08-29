@@ -1,4 +1,5 @@
-import type { InstalledSystemPack, NormalizedLevel } from '@sw2d/contracts';
+import type { InstalledSystemPack, NormalizedLevel, PuzzleRulesService } from '@sw2d/contracts';
+import { PUZZLE_RULES_CAPABILITY_ID } from '@sw2d/contracts';
 import { gridController, type SceneContext, type ScenePackDefinition } from '@sw2d/runtime';
 
 /**
@@ -7,6 +8,12 @@ import { gridController, type SceneContext, type ScenePackDefinition } from '@sw
  * One discrete cell per physical press, no physics body - `gridController`
  * already guarantees at most one `step` per frame. See
  * platformShellPack.ts's file comment for the template pattern.
+ *
+ * If the preset installs `sw2d.puzzle-rules` (capability program Phase 6),
+ * this shell drives the reusable puzzle service instead of free-roaming the
+ * actor: each grid step is a bounded `move` op, CANCEL undoes, SECONDARY_ACTION
+ * resets, and the whole ruleset (walls, boxes, goals, solved-detection) is the
+ * validated `content/puzzles.json` document - no game-specific rule code here.
  */
 
 const LEVEL_DOCUMENT = 'levels/main';
@@ -24,6 +31,8 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     const playerKey = context.assets.resolve('player');
     const { width, height } = context.definition.viewport;
 
+    const puzzle = context.capabilities.get<PuzzleRulesService>(PUZZLE_RULES_CAPABILITY_ID);
+
     const spawn = level?.objects.find((object) => object.class === 'PlayerSpawn');
     let col = Math.round((spawn?.x ?? width * 0.5) / CELL_SIZE);
     let row = Math.round((spawn?.y ?? height * 0.5) / CELL_SIZE);
@@ -32,9 +41,24 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     const maxCol = Math.floor(width / CELL_SIZE) - 1;
     const maxRow = Math.floor(height / CELL_SIZE) - 1;
 
+    // With a puzzle loaded, the actor tracks the puzzle's own player cell.
+    const puzzlePlayerCell = (): { col: number; row: number } => {
+      const snap = puzzle?.snapshot() as { playerCol?: number; playerRow?: number } | undefined;
+      return { col: snap?.playerCol ?? col, row: snap?.playerRow ?? row };
+    };
+    if (puzzle) {
+      const cell = puzzlePlayerCell();
+      col = cell.col;
+      row = cell.row;
+    }
+
     const actor = scene.add.sprite(col * CELL_SIZE, row * CELL_SIZE, playerKey);
 
-    const debugHandle = context.debug.contribute('game.grid-shell', () => ({ col, row }));
+    const debugHandle = context.debug.contribute('game.grid-shell', () => ({
+      col,
+      row,
+      ...(puzzle ? { puzzle: puzzle.snapshot(), solved: puzzle.isSolved() } : {}),
+    }));
 
     let disposed = false;
 
@@ -44,6 +68,18 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       update(): void {
         if (disposed) return;
         const intent = gridController.read(context.input);
+
+        if (puzzle) {
+          if (intent.step) puzzle.apply({ kind: 'move', dir: intent.step });
+          if (context.input.consumePress('CANCEL')) puzzle.undo();
+          if (context.input.consumePress('SECONDARY_ACTION')) puzzle.reset();
+          const cell = puzzlePlayerCell();
+          col = cell.col;
+          row = cell.row;
+          actor.setPosition(col * CELL_SIZE, row * CELL_SIZE);
+          return;
+        }
+
         if (intent.step === 'up' && row > minRow) row -= 1;
         else if (intent.step === 'down' && row < maxRow) row += 1;
         else if (intent.step === 'left' && col > minCol) col -= 1;

@@ -24,7 +24,7 @@ pack/controller selections were actually exercised through, and
 | `endless-runner` | arcade | world, world-entities | platform | keyboard, touch | platform-recipe |
 | `precision-platformer` | world, world-entities | arcade | platform | keyboard, touch | platform-recipe |
 | `metroidvania` | world, world-entities, progression | combat, ai | platform | keyboard, touch | platform-recipe |
-| `puzzle-platformer` | puzzle, world, world-entities | - | platform, grid | keyboard, touch | platform-recipe |
+| `puzzle-platformer` | puzzle-rules, world, world-entities | - | platform, grid | keyboard, touch | platform-recipe |
 | `auto-runner` | arcade | world, world-entities | platform | keyboard, touch | platform-recipe |
 | `climbing-game` | world, world-entities | arcade | platform | keyboard, touch | platform-recipe |
 | `grappling-platformer` | world, world-entities | arcade | platform | keyboard, touch | platform-recipe |
@@ -71,7 +71,7 @@ pack/controller selections were actually exercised through, and
 
 | id | required packs | optional packs | controller(s) | input modes | validation profile |
 |---|---|---|---|---|---|
-| `sokoban` | puzzle | - | grid | keyboard, touch | puzzle-arcade-recipe |
+| `sokoban` | puzzle-rules | - | grid | keyboard, touch | puzzle-arcade-recipe |
 | `match-puzzle` | puzzle | arcade | grid | keyboard, touch | puzzle-arcade-recipe |
 | `falling-block-puzzle` | puzzle | arcade | grid, ui-simulation | keyboard, touch | puzzle-arcade-recipe |
 | `breakout` | arcade | - | top-down | keyboard, touch | puzzle-arcade-recipe |
@@ -144,7 +144,8 @@ pack/controller selections were actually exercised through, and
 | world-entities | `sw2d.world-entities` | `world.entities` | 27 | 36 |
 | progression | `sw2d.progression` | `progression.state` | 11 | 26 |
 | arcade | `sw2d.arcade` | `arcade.score` | 14 | 41 |
-| puzzle | `sw2d.puzzle` | `puzzle.state` | 6 | 10 |
+| puzzle | `sw2d.puzzle` | `puzzle.state` | 4 | 8 |
+| puzzle-rules | `sw2d.puzzle-rules` | `puzzle.rules` | 2 | 2 |
 | simulation | `sw2d.simulation` | `simulation.resources` | 9 | 10 |
 | narrative | `sw2d.narrative` | `narrative.state` | 4 | 8 |
 | strategy | `sw2d.strategy` | `strategy.turns` | 4 | 4 |
@@ -153,9 +154,12 @@ pack/controller selections were actually exercised through, and
 | encounters | `sw2d.encounters` | `combat.encounters` | 4 | 5 |
 | navigation | `sw2d.navigation` | `world.navigation` | 2 | 8 |
 
-**All fourteen current packs have at least one preset consumer.** `sw2d.items` (capability
+**All fifteen current packs have at least one preset consumer.** `sw2d.items` (capability
 program Phase 2) is required by `collectathon-platformer`, whose generated starter consumes
-the reusable item/effect service through the shared platform shell.
+the reusable item/effect service through the shared platform shell. `sw2d.puzzle-rules`
+(capability program Phase 6) is required by `sokoban` and `puzzle-platformer`, whose
+generated starters drive the whole push/goal and switch/sequence rulesets from the validated
+`content/puzzles.json` document.
 
 ## Validation profiles
 

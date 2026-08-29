@@ -47,6 +47,8 @@ const PROOF_SPEC_MODULES: Readonly<Record<string, string>> = {
   // Phase 5 - navigation & pathfinding (ADR-0022)
   'turn-based-tactics': 'turnBasedTactics',
   'lane-defense': 'laneDefense',
+  // Phase 6 - data-driven puzzle rules (ADR-0023)
+  'puzzle-platformer': 'puzzlePlatformer',
 };
 
 function proofTargets(): Target[] {

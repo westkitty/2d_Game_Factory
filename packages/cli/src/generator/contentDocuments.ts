@@ -108,6 +108,52 @@ export function generateEncounterCatalog(hasEncountersPack: boolean): Record<str
   };
 }
 
+/**
+ * content/puzzles.json - a PuzzleRulesDoc (capability program Phase 6).
+ * Always emitted; empty unless the preset installs `sw2d.puzzle-rules`. A
+ * puzzle-family preset gets one built-in starter definition matching its
+ * kind, so its generated shell loads an entire ruleset - moves, undo, reset,
+ * solved-detection - from serialized data with no `createInitialState` /
+ * `isSolved` callback.
+ */
+export function generatePuzzleRulesDoc(kind: 'sokoban' | 'switch-sequence' | 'none'): Record<string, unknown> {
+  if (kind === 'sokoban') {
+    return {
+      schemaVersion: 1,
+      puzzles: [
+        {
+          id: 'starter',
+          kind: 'sokoban',
+          width: 7,
+          height: 5,
+          walls: [
+            [0, 0], [1, 0], [2, 0], [3, 0], [4, 0], [5, 0], [6, 0],
+            [0, 4], [1, 4], [2, 4], [3, 4], [4, 4], [5, 4], [6, 4],
+            [0, 1], [0, 2], [0, 3], [6, 1], [6, 2], [6, 3],
+          ],
+          boxes: [[3, 2]],
+          goals: [[5, 2]],
+          player: [1, 2],
+        },
+      ],
+    };
+  }
+  if (kind === 'switch-sequence') {
+    return {
+      schemaVersion: 1,
+      puzzles: [
+        {
+          id: 'starter',
+          kind: 'switch-sequence',
+          switches: ['a', 'b', 'c'],
+          completeWhen: { kind: 'all-on' },
+        },
+      ],
+    };
+  }
+  return { schemaVersion: 1, puzzles: [] };
+}
+
 /** content/tuning.json - the one content document @sw2d/schemas validates for every game today. */
 export function generateTuning(): Record<string, unknown> {
   return {

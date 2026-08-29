@@ -25,7 +25,7 @@ Git/validation/architecture checkpoint, not a new chat.
 | 3 | Weapons & Projectiles | `feature/capability-03-weapons-projectiles` | PASS |
 | 4 | Combat / Encounter Orchestration | `feature/capability-04-combat-orchestration` | PASS |
 | 5 | Navigation & Pathfinding | `feature/capability-05-navigation` | PASS |
-| 6 | Data-Driven Puzzle Rules | `feature/capability-06-data-puzzles` | NOT STARTED |
+| 6 | Data-Driven Puzzle Rules | `feature/capability-06-data-puzzles` | PASS |
 | 7 | Procedural Generation | `feature/capability-07-procedural-generation` | NOT STARTED |
 | 8 | World Graph / Rooms / Transitions / Map | `feature/capability-08-world-graph` | NOT STARTED |
 | 9 | Advanced 2D Physics & Constraints | `feature/capability-09-advanced-physics` | NOT STARTED |
@@ -34,7 +34,7 @@ Git/validation/architecture checkpoint, not a new chat.
 Program starting `main`: `0af24cd6c2646cae84fb4be559b68c2477e63d0b`
 (the Start/Confirm prerequisite; verified present before Phase 1).
 
-Current phase: **6 — Data-Driven Puzzle Rules** (NOT STARTED).
+Current phase: **7 — Procedural Generation** (NOT STARTED). Phases 1–6 integrated to `origin/main`.
 
 ---
 
@@ -399,5 +399,82 @@ hand-authored route proof stays valid; `lane-defense` covers the intent).
 
 ### Next phase
 
-Phase 6 — Data-Driven Puzzle Rules. Branch `feature/capability-06-data-puzzles`
+Phase 6 done, see below.
+
+---
+
+## Phase 6 — Data-Driven Puzzle Rules — PASS
+
+- **Starting SHA:** `1a0177774418d60e60d0120d354ea9967c1d2aa8` (Phase 5 on `main`)
+- **Feature branch:** `feature/capability-06-data-puzzles`
+- **Phase commit SHA:** this commit — `feat: make standard puzzle rules data-driven` on `main`
+- **Main integration SHA:** same commit, fast-forwarded onto `main`
+
+### Implementation summary
+
+- `packages/contracts/src/puzzles.ts` (new): `PuzzleRules` bounded discriminated
+  union (`sokoban` | `switch-sequence` | `match` | `falling-block` |
+  `physics-goal`), fixed `PuzzleOp` vocabulary, `PuzzleRulesDoc`,
+  `PuzzleRulesService`, `PUZZLE_RULES_CAPABILITY_ID = 'puzzle.rules'`.
+- `packages/packs/src/puzzleRules/puzzleRulesPack.ts` (new): `sw2d.puzzle-rules`
+  → `puzzle.rules`, `dependencies: []`. One small pure engine per kind
+  (`load`/`apply`/`undo`/`reset`/`isSolved`/`snapshot`). Renderer-neutral, no
+  new dependency. No definition loaded ⇒ `apply`/`reset` no-op.
+- `packages/schemas/schemas/puzzle-rules.schema.json` (new,
+  `urn:sw2d:schema:content-puzzle-rules:v1`); wired into `validator.ts` +
+  `CONTENT_DOCUMENTS` as document `puzzles`.
+- Generator: `generatePuzzleRulesDoc` + always-emit `content/puzzles.json`
+  (starter definition when the preset installs `sw2d.puzzle-rules`, else empty).
+  `content.ts` / `main.ts` templates load it and pass `puzzleRulesPack`.
+  `gridShellPack` + `platformShellPack` templates consume `puzzle.rules` when
+  present (grid: step→`move`, CANCEL→undo, SECONDARY_ACTION→reset; platform:
+  SECONDARY_ACTION→toggle, CANCEL→undo).
+- `sw2d.puzzle` (`configSource: 'code'`) retained for unique mechanics.
+- ADR-0023.
+
+### Proof consumers
+
+- **`proofs/sokoban/`** (revised) — the entire push/goal ruleset is now the
+  validated `content/puzzles.json` `sokoban` definition driven by
+  `sw2d.puzzle-rules`; `packConfig.ts` is `{}`. Move / legal push / invalid push
+  (snapshot unchanged, `moves` frozen, rejection counted) / second push solves /
+  undo / reset / replay. Frozen `PROOF_CONTRACT.md` revised.
+- **`proofs/puzzle-platformer/`** (new) — `switch-sequence` kind: switch set,
+  `a`→`d` link, press-order completion rule all in `content/puzzles.json`. A
+  platform shell walks the player; three `Interactable` level zones are the
+  switches; INTERACT toggles, CANCEL undoes, SECONDARY_ACTION resets. Journey:
+  out-of-order press, link fires the decoy, tail-match solves, undo, reset,
+  clean re-solve.
+- `npm run qa:proof` 14/14 → **15/15**.
+
+### Limitation changes
+
+- `sokoban` and `puzzle-platformer` no longer require `sw2d.puzzle`;
+  `LIMITATIONS.puzzleConfigIsCode` **removed** from both (`sokoban`
+  `knownLimitations: []`, stays `proof-validated`). Honesty case
+  `sokoban → /not JSON-serializable data/` removed.
+- `LIMITATIONS.puzzleConfigIsCode` rewritten to be accurate: standard kinds are
+  now content-authorable; `match-puzzle`, `falling-block-puzzle`,
+  `physics-puzzle`, `escape-room` keep it for a kind the union does not cover.
+- Maturity split unchanged (5/7/62). Fifteen packs now have a preset consumer.
+
+### Validation completed
+
+- `npm run typecheck` — PASS
+- `npm test` — 2299/2299 PASS (was 2288; +11)
+- `npm run workbench:build`, `npm run build`, `npm run check:offline` — PASS
+- `npm run qa:proof` — 15/15 PASS
+- `npm run qa:matrix` — PASS
+- `npm run qa:starter-kits` — all sub-suites PASS
+- `npm run release:verify` — PASS
+
+### Unresolved blockers
+
+None. `match` / `falling-block` / `physics-goal` engines are implemented and
+unit-tested but not yet consumed by a generated starter — their presets keep a
+narrowed `puzzleConfigIsCode`; not a blocker.
+
+### Next phase
+
+Phase 7 — Procedural Generation. Branch `feature/capability-07-procedural-generation`
 from the integrated `main`.

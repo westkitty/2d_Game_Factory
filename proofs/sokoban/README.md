@@ -62,14 +62,13 @@ with a small working placeholder to replace. Every other pack is configured as J
 ## Composition
 
 - Controller family/families: grid
-- Required packs (enabled by default): sw2d.puzzle
+- Required packs (enabled by default): sw2d.puzzle-rules
 - Optional packs (available, not enabled by default - add to content/game.json's systemPacks to use): (none)
-- Content roles this preset expects: tuning
+- Content roles this preset expects: tuning, puzzles
 
 ## Known preset limitations
 
-- puzzlePack's config (createInitialState/isSolved) is functions, not JSON-serializable data, so puzzle definitions are not content-authorable through a schema. The pack declares configSource: 'code' (ADR-0017) and a generated game supplies it from src/game-specific/packConfig.ts, which ships with a small working placeholder to replace - so the pack really installs, but the puzzle's own rules are game-specific TypeScript, not content.
-- Pushing/goal rules are not yet a reusable content system.
+- (none) - as of the capability program's Phase 6 (ADR-0023) the whole push/goal ruleset is the validated content/puzzles.json document, driven by the reusable sw2d.puzzle-rules capability.
 
 ## How to add a level
 

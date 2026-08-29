@@ -17,6 +17,7 @@ import levelDocumentSchema from '../schemas/level-document.schema.json' with { t
 import itemCatalogSchema from '../schemas/item-catalog.schema.json' with { type: 'json' };
 import weaponCatalogSchema from '../schemas/weapon-catalog.schema.json' with { type: 'json' };
 import encounterCatalogSchema from '../schemas/encounter-catalog.schema.json' with { type: 'json' };
+import puzzleRulesSchema from '../schemas/puzzle-rules.schema.json' with { type: 'json' };
 
 /**
  * Ajv-based validation for every schema this package owns.
@@ -43,7 +44,8 @@ export type SchemaName =
   | 'level-document'
   | 'item-catalog'
   | 'weapon-catalog'
-  | 'encounter-catalog';
+  | 'encounter-catalog'
+  | 'puzzle-rules';
 
 export const SCHEMA_NAMES: readonly SchemaName[] = [
   'action-bindings',
@@ -62,6 +64,7 @@ export const SCHEMA_NAMES: readonly SchemaName[] = [
   'item-catalog',
   'weapon-catalog',
   'encounter-catalog',
+  'puzzle-rules',
 ];
 
 /** One located problem: which document, where in it, and what is wrong. */
@@ -102,6 +105,7 @@ const SCHEMA_DOCUMENTS: Readonly<Record<SchemaName, SchemaDocument>> = {
   'item-catalog': itemCatalogSchema,
   'weapon-catalog': weaponCatalogSchema,
   'encounter-catalog': encounterCatalogSchema,
+  'puzzle-rules': puzzleRulesSchema,
 };
 
 // Registration order matters: a schema must be added before anything that
@@ -122,6 +126,7 @@ for (const name of [
   'item-catalog',
   'weapon-catalog',
   'encounter-catalog',
+  'puzzle-rules',
 ] as const) {
   const schema = SCHEMA_DOCUMENTS[name];
   ajv.addSchema(schema, schema.$id);

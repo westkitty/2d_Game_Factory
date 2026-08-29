@@ -22,6 +22,7 @@ export * from './level.ts';
 export * from './navigation.ts';
 export * from './persistence.ts';
 export * from './presets.ts';
+export * from './puzzles.ts';
 export * from './resources.ts';
 export * from './scenes.ts';
 export * from './spatial.ts';

@@ -29,6 +29,7 @@ export const PACK_IDS = {
   weapons: 'sw2d.weapons',
   encounters: 'sw2d.encounters',
   navigation: 'sw2d.navigation',
+  puzzleRules: 'sw2d.puzzle-rules',
 } as const;
 
 export const CAPABILITY_IDS = {
@@ -51,4 +52,6 @@ export const CAPABILITY_IDS = {
   encounters: 'combat.encounters',
   /** Capability program Phase 5: deterministic grid pathfinding + reachable range. */
   navigation: 'world.navigation',
+  /** Capability program Phase 6: bounded data-driven puzzle rules (sits alongside puzzle.state). */
+  puzzleRules: 'puzzle.rules',
 } as const;

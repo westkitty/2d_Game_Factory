@@ -1,0 +1,145 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:sw2d:schema:content-puzzle-rules:v1",
+  "title": "PuzzleRulesDoc",
+  "description": "Mirrors @sw2d/contracts PuzzleRulesDoc (puzzles.ts). Content document name 'puzzles'. A bounded discriminated union of built-in puzzle kinds - sokoban, switch-sequence, match, falling-block, physics-goal - not a scripting language.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "puzzles"],
+  "properties": {
+    "schemaVersion": { "type": "integer", "minimum": 1 },
+    "puzzles": { "type": "array", "items": { "$ref": "#/definitions/puzzle" } }
+  },
+  "definitions": {
+    "cell": {
+      "type": "array",
+      "items": { "type": "integer" },
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "cellList": { "type": "array", "items": { "$ref": "#/definitions/cell" } },
+    "puzzle": {
+      "type": "object",
+      "required": ["id", "kind"],
+      "properties": { "id": { "type": "string", "minLength": 1 } },
+      "oneOf": [
+        { "$ref": "#/definitions/sokoban" },
+        { "$ref": "#/definitions/switchSequence" },
+        { "$ref": "#/definitions/match" },
+        { "$ref": "#/definitions/fallingBlock" },
+        { "$ref": "#/definitions/physicsGoal" }
+      ]
+    },
+    "sokoban": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "width", "height", "walls", "boxes", "goals", "player"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "kind": { "const": "sokoban" },
+        "width": { "type": "integer", "minimum": 1 },
+        "height": { "type": "integer", "minimum": 1 },
+        "walls": { "$ref": "#/definitions/cellList" },
+        "boxes": { "$ref": "#/definitions/cellList" },
+        "goals": { "$ref": "#/definitions/cellList" },
+        "player": { "$ref": "#/definitions/cell" }
+      }
+    },
+    "switchSequence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "switches", "completeWhen"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "kind": { "const": "switch-sequence" },
+        "switches": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } },
+        "initiallyOn": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "links": {
+          "type": "object",
+          "additionalProperties": { "type": "array", "items": { "type": "string", "minLength": 1 } }
+        },
+        "completeWhen": {
+          "oneOf": [
+            { "type": "object", "additionalProperties": false, "required": ["kind"], "properties": { "kind": { "const": "all-on" } } },
+            { "type": "object", "additionalProperties": false, "required": ["kind", "on"], "properties": { "kind": { "const": "exact-set" }, "on": { "type": "array", "items": { "type": "string", "minLength": 1 } } } },
+            { "type": "object", "additionalProperties": false, "required": ["kind", "order"], "properties": { "kind": { "const": "sequence" }, "order": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } } } },
+            { "type": "object", "additionalProperties": false, "required": ["kind", "on"], "properties": { "kind": { "const": "count" }, "on": { "type": "integer", "minimum": 0 } } }
+          ]
+        }
+      }
+    },
+    "match": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "width", "height", "pieceTypes", "board", "matchLength", "objectiveClears"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "kind": { "const": "match" },
+        "width": { "type": "integer", "minimum": 2 },
+        "height": { "type": "integer", "minimum": 2 },
+        "pieceTypes": { "type": "integer", "minimum": 2 },
+        "board": { "type": "array", "items": { "type": "array", "items": { "type": "integer", "minimum": 0 } } },
+        "matchLength": { "type": "integer", "minimum": 3 },
+        "objectiveClears": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "fallingBlock": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "width", "height", "pieces", "sequence", "objectiveLines"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "kind": { "const": "falling-block" },
+        "width": { "type": "integer", "minimum": 2 },
+        "height": { "type": "integer", "minimum": 2 },
+        "pieces": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["cells", "spawnCol"],
+            "properties": {
+              "cells": { "$ref": "#/definitions/cellList" },
+              "spawnCol": { "type": "integer", "minimum": 0 }
+            }
+          }
+        },
+        "sequence": { "type": "array", "minItems": 1, "items": { "type": "integer", "minimum": 0 } },
+        "objectiveLines": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "physicsGoal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "goals"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "kind": { "const": "physics-goal" },
+        "goals": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["entityId", "zone"],
+            "properties": {
+              "entityId": { "type": "string", "minLength": 1 },
+              "zone": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["x", "y", "width", "height"],
+                "properties": {
+                  "x": { "type": "number" },
+                  "y": { "type": "number" },
+                  "width": { "type": "number", "exclusiveMinimum": 0 },
+                  "height": { "type": "number", "exclusiveMinimum": 0 }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -13,10 +13,13 @@ import { LIMITATIONS, POINTER_INPUT_MODES, VALIDATION_PROFILES, definePreset, pa
  * and the one recipe that is genuinely about pointer interaction
  * (`physics-puzzle`) gets `pointer`, honestly limited to press-style actions.
  *
- * `sw2d.puzzle` is a foundational, code-configured capability, not a genre
- * system (`LIMITATIONS.puzzleConfigIsCode`, already established in Phase 7A
- * for `puzzle-platformer` - reused verbatim here for every recipe that
- * selects it).
+ * Standard puzzle kinds (sokoban, switch/sequence) are content-authorable
+ * through `sw2d.puzzle-rules` + `content/puzzles.json` as of the capability
+ * program's Phase 6 (ADR-0023): `sokoban` here consumes that reusable service
+ * and carries no puzzle limitation. Recipes whose board rules are not a
+ * built-in kind (`match-puzzle`, `falling-block-puzzle`, `physics-puzzle`)
+ * still select the foundational, code-configured `sw2d.puzzle` and reuse
+ * `LIMITATIONS.puzzleConfigIsCode` verbatim.
  */
 export const PUZZLE_ARCADE_PRESETS: readonly PresetDefinition[] = [
   definePreset({
@@ -25,10 +28,14 @@ export const PUZZLE_ARCADE_PRESETS: readonly PresetDefinition[] = [
     displayName: 'Sokoban',
     family: 'puzzle-arcade',
     controllerFamilies: ['grid'],
-    requiredSystemPacks: [pack(PACK_IDS.puzzle)],
-    requiredContentRoles: ['tuning'],
+    requiredSystemPacks: [pack(PACK_IDS.puzzleRules)],
+    requiredContentRoles: ['tuning', 'puzzles'],
     validationProfile: VALIDATION_PROFILES.puzzleArcade,
-    knownLimitations: [LIMITATIONS.puzzleConfigIsCode, 'Pushing/goal rules are not yet a reusable content system.'],
+    // Phase 6 (ADR-0023): the entire push/goal ruleset - board, boxes, goals,
+    // solved-detection, undo, reset - is the validated content/puzzles.json
+    // document, driven by the reusable sw2d.puzzle-rules capability. No
+    // game-specific rule code, no code-config seam.
+    knownLimitations: [],
   }),
 
   definePreset({

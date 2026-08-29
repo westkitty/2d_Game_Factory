@@ -26,3 +26,4 @@ One short record per decision that constrains later work. No ADR for trivia.
 | [0020](0020-weapons-model-in-a-pack-projectiles-in-the-runtime.md) | Weapon model is a pack; projectiles are a runtime bridge | Capability program 3 |
 | [0021](0021-encounter-orchestration-model-and-runtime.md) | Encounter orchestration: bounded data model + runtime bridge | Capability program 4 |
 | [0022](0022-navigation-grid-capability.md) | Navigation is a pure grid capability, separate from AI state | Capability program 5 |
+| [0023](0023-data-driven-puzzle-rules.md) | Standard puzzle rules are a bounded data-driven capability | Capability program 6 |

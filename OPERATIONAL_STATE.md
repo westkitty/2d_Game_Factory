@@ -774,6 +774,31 @@ adjudicated individually in the Phase 12 acceptance document):
 
 ## Revision history
 
+### Revision 21 - 2026-08-29 (Sonnet 5) - Capability program Phase 6
+
+**Data-driven puzzle rules (ADR-0023).** Sixth phase of the ten-phase program. Full detail in
+[`docs/architecture/CAPABILITY_PROGRAM_STATE.md`](docs/architecture/CAPABILITY_PROGRAM_STATE.md).
+
+- **New capability.** `sw2d.puzzle-rules` pack -> `puzzle.rules`, alongside (not replacing)
+  `sw2d.puzzle` / `puzzle.state`. `PuzzleRules` is a **bounded discriminated union** of five
+  built-in kinds (`sokoban`, `switch-sequence`, `match`, `falling-block`, `physics-goal`) with a
+  fixed `PuzzleOp` vocabulary - not a DSL. `content/puzzles.json` (schema `puzzle-rules`,
+  document `puzzles`) is always emitted; one small pure engine per kind owns
+  `load`/`apply`/`undo`/`reset`/`isSolved`/`snapshot`. Renderer-neutral, no new dependency.
+  `main.ts` + `content.ts` templates load it; `gridShellPack` / `platformShellPack` consume it
+  when present. Fifteen packs now.
+- **Proofs.** `proofs/sokoban/` revised - the whole push/goal ruleset is now the validated
+  `content/puzzles.json` document (`packConfig.ts` is `{}`); frozen `PROOF_CONTRACT.md` revised.
+  New `proofs/puzzle-platformer/` - a `switch-sequence` gate (switch set, `a`->`d` link,
+  press-order completion) driven from the same document by a platform shell. `qa:proof`
+  14/14 -> 15/15.
+- **Limitations.** `LIMITATIONS.puzzleConfigIsCode` removed from `sokoban` (now
+  `knownLimitations: []`, stays `proof-validated`) and `puzzle-platformer`; rewritten to be
+  accurate for `match-puzzle` / `falling-block-puzzle` / `physics-puzzle` / `escape-room`, which
+  keep it for a kind the union does not cover. Maturity split unchanged (5/7/62).
+- **Validation:** typecheck PASS; `npm test` 2299/2299; builds + `check:offline` PASS; `qa:proof`
+  15/15; `qa:matrix` / `qa:starter-kits` / `release:verify` - see the ledger.
+
 ### Revision 20 - 2026-08-29 (Sonnet 5) - Capability program Phase 5
 
 **Navigation & pathfinding (ADR-0022).** Fifth phase of the ten-phase program. Full detail in

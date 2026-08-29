@@ -25,7 +25,7 @@ describe('validateContentBundleData', () => {
   });
 
   it('knows which schema is expected before validating anything', () => {
-    expect(Object.keys(CONTENT_DOCUMENTS)).toEqual(['tuning', 'items', 'weapons', 'encounters']);
+    expect(Object.keys(CONTENT_DOCUMENTS)).toEqual(['tuning', 'items', 'weapons', 'encounters', 'puzzles']);
   });
 
   it('rejects an unregistered document name - the "invalid content document" case', () => {

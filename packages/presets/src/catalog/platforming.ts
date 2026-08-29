@@ -85,10 +85,14 @@ export const PLATFORMING_PRESETS: readonly PresetDefinition[] = [
     displayName: 'Puzzle Platformer',
     family: 'platforming',
     controllerFamilies: ['platform', 'grid'],
-    requiredSystemPacks: [pack(PACK_IDS.puzzle), pack(PACK_IDS.world), pack(PACK_IDS.worldEntities)],
-    requiredContentRoles: ['tuning', 'levels'],
+    requiredSystemPacks: [pack(PACK_IDS.puzzleRules), pack(PACK_IDS.world), pack(PACK_IDS.worldEntities)],
+    requiredContentRoles: ['tuning', 'levels', 'puzzles'],
     validationProfile: VALIDATION_PROFILES.platform,
-    knownLimitations: [LIMITATIONS.puzzleConfigIsCode],
+    // Phase 6 (ADR-0023): the switch/sequence puzzle - switch set, links,
+    // completion condition, solved-detection - is the validated
+    // content/puzzles.json document, driven by the reusable
+    // sw2d.puzzle-rules capability. No code-config seam.
+    knownLimitations: [],
   }),
 
   definePreset({

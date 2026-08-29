@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
-import type { InstalledSystemPack, NormalizedLevel } from '@sw2d/contracts';
+import type { InstalledSystemPack, NormalizedLevel, PuzzleRulesService } from '@sw2d/contracts';
+import { PUZZLE_RULES_CAPABILITY_ID } from '@sw2d/contracts';
 import { bindCollectiblePickups, bindStarterWeapon, platformController, type SceneContext, type ScenePackDefinition } from '@sw2d/runtime';
 
 /**
@@ -82,6 +83,12 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     const pickups = bindCollectiblePickups(context, player, level);
     // Weapons (capability program Phase 3). Inert unless sw2d.weapons is installed.
     const weapon = bindStarterWeapon(context);
+    // Data-driven puzzle rules (capability program Phase 6). Inert unless
+    // sw2d.puzzle-rules is installed; then SECONDARY_ACTION toggles the next
+    // switch and CANCEL undoes, all through the reusable service - the
+    // switch/goal ruleset and solved-detection are content/puzzles.json, not
+    // code here.
+    const puzzle = context.capabilities.get<PuzzleRulesService>(PUZZLE_RULES_CAPABILITY_ID);
     let nowMs = 0;
     let facing = 1;
 
@@ -94,6 +101,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       items: pickups.inventory(),
       pickupsRemaining: pickups.remaining(),
       weapon: weapon.snapshot(),
+      ...(puzzle ? { puzzle: puzzle.snapshot(), solved: puzzle.isSolved() } : {}),
     }));
 
     let disposed = false;
@@ -112,6 +120,14 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         }
         weapon.update(deltaMs, nowMs);
         if (intent.primaryPressed) weapon.fire(nowMs, facing, 0, { x: player.x, y: player.y });
+        if (puzzle) {
+          if (context.input.consumePress('SECONDARY_ACTION')) {
+            const snap = puzzle.snapshot() as { switches?: readonly string[]; on?: readonly string[] };
+            const nextSwitch = (snap.switches ?? []).find((id) => !(snap.on ?? []).includes(id));
+            if (nextSwitch !== undefined) puzzle.apply({ kind: 'toggle', id: nextSwitch });
+          }
+          if (context.input.consumePress('CANCEL')) puzzle.undo();
+        }
         if (intent.jumpPressed && player.body.blocked.down) {
           player.setVelocityY(-tuning.jumpVelocity);
           context.audio.playCue('ui.confirm');

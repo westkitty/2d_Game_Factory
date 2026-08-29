@@ -117,7 +117,6 @@ describe('required knownLimitations (MASTER_PROJECT.md section 12)', () => {
     { id: 'time-trial-racer', pattern: /no reusable vehicle-physics\/drift\/handling system/ },
     { id: 'endless-driving', pattern: /No procedural level\/segment generation exists yet/ },
     { id: 'boat-flight-racer', pattern: /No reusable buoyancy\/altitude\/flight model exists yet/ },
-    { id: 'sokoban', pattern: /not JSON-serializable data/ },
     { id: 'match-puzzle', pattern: /No reusable match-detection\/cascade board rules/ },
     { id: 'falling-block-puzzle', pattern: /No reusable falling-piece\/line-clear board engine/ },
     { id: 'breakout', pattern: /No reusable ball\/paddle collision-and-bounce system/ },

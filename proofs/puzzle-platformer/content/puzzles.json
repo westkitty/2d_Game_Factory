@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "puzzles": [
+    {
+      "id": "gate",
+      "kind": "switch-sequence",
+      "switches": ["a", "b", "c", "d"],
+      "links": { "a": ["d"] },
+      "completeWhen": { "kind": "sequence", "order": ["a", "b", "c"] }
+    }
+  ]
+}

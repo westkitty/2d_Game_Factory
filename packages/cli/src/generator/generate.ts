@@ -8,6 +8,7 @@ import {
   generateItemCatalog,
   generateWeaponCatalog,
   generateEncounterCatalog,
+  generatePuzzleRulesDoc,
   generateResourceManifest,
   generateTiledLevel,
   generateTheme,
@@ -77,6 +78,20 @@ export function buildGameFiles(gameId: string, preset: PresetDefinition): Map<st
   files.set(
     'content/encounters.json',
     JSON.stringify(generateEncounterCatalog(requiredPackIds.includes('sw2d.encounters')), null, 2) + '\n',
+  );
+  files.set(
+    'content/puzzles.json',
+    JSON.stringify(
+      generatePuzzleRulesDoc(
+        requiredPackIds.includes('sw2d.puzzle-rules')
+          ? preset.controllerFamilies[0] === 'grid'
+            ? 'sokoban'
+            : 'switch-sequence'
+          : 'none',
+      ),
+      null,
+      2,
+    ) + '\n',
   );
   files.set('resources/RESOURCE_MANIFEST.json', JSON.stringify(generateResourceManifest(gameId), null, 2) + '\n');
 

@@ -10,7 +10,7 @@
   "bindings": {},
   "systemPacks": [
     {
-      "packId": "sw2d.puzzle",
+      "packId": "sw2d.puzzle-rules",
       "config": {}
     },
     {

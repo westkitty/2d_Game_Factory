@@ -5,6 +5,7 @@ import {
   weaponsPack,
   encountersPack,
   navigationPack,
+  puzzleRulesPack,
   aiPack,
   arcadePack,
   combatPack,
@@ -43,6 +44,7 @@ const ALL_PACKS = [
   weaponsPack,
   encountersPack,
   navigationPack,
+  puzzleRulesPack,
 ];
 
 /** `<family>.<service>`: lowercase segments, at least two, dash-separated words allowed after the first. */

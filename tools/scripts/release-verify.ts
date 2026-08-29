@@ -8,7 +8,7 @@
  *
  * One representative generated game per controller-shell family
  * (traditional-platformer/platform, top-down-adventure/top-down,
- * asteroids-shooter/vehicle, sokoban/grid+code-configured puzzle,
+ * asteroids-shooter/vehicle, sokoban/grid+data-driven puzzle rules,
  * gallery-shooter/pointer, idle-incremental/ui-simulation). For each:
  * generate -> build+typecheck+test (`sw2d validate`) -> pack -> verify
  * RELEASE_MANIFEST.json -> verify SHA256SUMS against the actual packed
@@ -42,7 +42,7 @@ const TARGETS: readonly FamilyTarget[] = [
   { family: 'platform', presetId: 'traditional-platformer' },
   { family: 'top-down', presetId: 'top-down-adventure' },
   { family: 'vehicle', presetId: 'asteroids-shooter' },
-  { family: 'grid (code-configured puzzle path)', presetId: 'sokoban' },
+  { family: 'grid (data-driven puzzle rules)', presetId: 'sokoban' },
   { family: 'pointer', presetId: 'gallery-shooter' },
   { family: 'ui-simulation', presetId: 'idle-incremental' },
 ];
