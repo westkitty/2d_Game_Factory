@@ -774,6 +774,37 @@ adjudicated individually in the Phase 12 acceptance document):
 
 ## Revision history
 
+### Revision 26 - 2026-08-29 (Sonnet 5) - FIRST-TEN CAPABILITY PROGRAM CERTIFIED
+
+**The first ten reusable factory capabilities are implemented, verified, and present on
+`origin/main`.** Full record in
+[`docs/architecture/CAPABILITY_PROGRAM_STATE.md`](docs/architecture/CAPABILITY_PROGRAM_STATE.md)
+("FINAL FIRST-TEN PROGRAM CERTIFICATION").
+
+- **Ten phases, ten linear implementation commits** on `main` (`b723866` spatial interaction →
+  `251b998` items/effects → `c4d7143` weapons/projectiles → `c21f9ad` encounter orchestration →
+  `1a01777` navigation → `0ae8f1b` data-driven puzzle rules → `18f585d` procedural generation →
+  `0b89630` world graph/transitions/map → `e39004d` optional advanced physics → `281f880`
+  vehicle handling & racing), program start `0af24cd`.
+- **Nineteen packs** now, each with a preset consumer. **18 new capability-program proof
+  consumers** (2 per phase, `top-down-adventure` shared) on top of the 5 pre-existing Phase-10
+  deep proofs — `qa:proof` **23/23**.
+- **Fresh full certification run:** typecheck PASS · `npm test` **2602/2602** · `npm run
+  validate` PASS · `qa:workbench` **16/16** · `qa:smoke` **14/14** · `qa:proof` **23/23** ·
+  `qa:starter-kits` all 14 · `qa:matrix` **45/45** · `qa:responsive` **19/19** ·
+  `release:verify` **6/6**.
+- **No new dependency** across the whole program (root + every workspace `package.json`
+  unchanged; `package-lock.json` byte-identical to the start). Offline preserved. Determinism
+  audited (no `Math.random`/`Date.now`/timers in any Phase 1–10 system). Lifecycle/leak
+  behaviour asserted by the proofs.
+- **Limitation honesty:** ten `LIMITATIONS` constants deleted as their capabilities shipped and
+  are consumed; three stale "does not exist" claims corrected to integration-gap wording.
+  Maturity split unchanged (5 proof-validated / 7 smoke-validated / 62 recipe).
+- **Not all 74 presets are finished.** Deferred genre systems (stealth perception, creature
+  simulation, customer/economy, local multiplayer routing, narrative presentation, parser,
+  rhythm, microgames, drawing/cooking/fishing/photography, permadeath meta-progression) and
+  per-recipe integration gaps remain honest `knownLimitations`.
+
 ### Revision 25 - 2026-08-29 (Sonnet 5) - Capability program Phase 10
 
 **Vehicle handling & racing (ADR-0027).** Tenth and final phase of the first-ten capability

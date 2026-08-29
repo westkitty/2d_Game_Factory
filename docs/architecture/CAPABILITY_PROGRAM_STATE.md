@@ -779,3 +779,125 @@ None.
 ### Next phase
 
 FINAL FIRST-TEN PROGRAM CERTIFICATION.
+
+---
+
+## FINAL FIRST-TEN PROGRAM CERTIFICATION — PASS — 2026-08-29 (Sonnet 5)
+
+The first ten reusable factory capabilities are implemented, verified, and present on
+`origin/main`.
+
+### Git
+
+- Program starting SHA: `0af24cd6c2646cae84fb4be559b68c2477e63d0b` (`fix: make game start controls explicit`)
+- Final local `main` == final `origin/main`: **`281f88018339801e4d70a72ae63aa835b7a7fca7`**
+  (before this certification commit; the certification's own limitation-honesty repairs +
+  this record are one further commit on `main`, pushed and verified equal).
+- Working tree clean. No force pushes. Linear history.
+
+### Ten phase implementation commits (all reachable from `main`)
+
+| # | Capability | Commit | Proof consumers |
+|---|---|---|---|
+| 1 | Spatial Pointer & Interaction | `b723866` | gallery-shooter, point-and-click (+ twin-stick-shooter regression) |
+| 2 | Data-Driven Items / Effects / Pickups | `251b998` | collectathon-platformer, top-down-adventure |
+| 3 | Weapons & Projectiles | `c4d7143` | run-and-gun (+ twin-stick-shooter) |
+| 4 | Combat / Encounter Orchestration | `c21f9ad` | bullet-hell, boss-rush |
+| 5 | Navigation & Pathfinding | `1a01777` | turn-based-tactics, lane-defense |
+| 6 | Data-Driven Puzzle Rules | `0ae8f1b` (+ `7d3ba5c` doc) | sokoban, puzzle-platformer |
+| 7 | Deterministic Procedural Generation | `18f585d` | endless-runner, dungeon-crawler |
+| 8 | World Graph / Rooms / Transitions / Map | `0b89630` | metroidvania, exploration-game |
+| 9 | Optional Advanced Physics & Constraints | `e39004d` | grappling-platformer, physics-toy |
+| 10 | Vehicle Handling & Racing | `281f880` | top-down-racer, time-trial-racer |
+
+### Fresh full validation (certification run)
+
+- `npm run typecheck` — PASS
+- `npm test` — **2602 / 2602** PASS (141 files)
+- `npm run validate` — PASS (typecheck + test + workbench:build + build + check:offline)
+- `npm run qa:workbench` — **16 / 16**
+- `npm run qa:smoke` — **14 / 14**
+- `npm run qa:proof` — **23 / 23** (18 new capability-program proof consumers + the 5
+  pre-existing Phase-10 deep proofs)
+- `npm run qa:starter-kits` — all **14** sub-suites, 0 FAIL
+- `npm run qa:matrix` — **45 / 45** generated games entered play (all 74 presets covered)
+- `npm run qa:responsive` — **19 / 19** surfaces (portrait + landscape)
+- `npm run release:verify` — **6 / 6** controller-shell families (packed, checksummed,
+  offline-guarded, real Chrome)
+
+### Generated-game inheritance (Step 4)
+
+Every one of the ten capabilities is present in a representative freshly-generated project
+through the normal generator path (`buildGameFiles`) — verified by direct inspection of the
+generated `content/game.json` / `content/*.json` / `src/game-specific/shellPack.ts`, and by
+`qa:matrix` running all 74 generated games and `generate.test.ts` schema-validating every
+generated content document per preset. Proof directories additionally prove the *behaviour*;
+they are not the inheritance evidence.
+
+### Determinism audit (Step 6)
+
+No `Math.random` / `Date.now` / `setTimeout` / `setInterval` in any Phase 1–10 contract,
+pack, runtime bridge, generator or generated shell (comment mentions only). Procedural
+generation uses a project-owned seeded PRNG (mulberry32); encounter, weapon, race and
+vehicle-boost timing all accumulate simulation-time `deltaMs`.
+
+### Lifecycle / resource sweep (Step 7)
+
+Every new system disposes cleanly; the leak-prone ones are asserted by their proofs:
+projectile pools (`spawned = live + expired`, fresh on restart), world-graph rooms
+(exploration-game: no room-sprite accumulation after repeated A→B→A→B), physics
+(grappling-platformer: `constraintCount 0` and `bodyCount` back to initial after restart),
+race state (top-down-racer: fresh race after restart). One real defect found and fixed during
+Phase 9 (a Matter teardown NPE when `matter.world` was already null). One pre-existing
+Phase-5 proof flake (`lane-defense` `advanceOk`) hardened during Phase 8.
+
+### Schema / serialization sweep (Step 8)
+
+items, weapons, encounters, puzzles, generation, world-graph, physics profile, vehicle and
+race definitions each have a coherent contract ↔ schema ↔ loader ↔ generated content ↔
+runtime consumption chain. `parity.test.ts` checks schema keys against the contract
+interfaces; the five newest documents all reject representative malformed content.
+
+### Limitation audit (Step 9)
+
+`LIMITATIONS` constants deleted as their capabilities shipped and are consumed:
+`spatialPointerTargeting`, `weaponsProjectiles` (narrowed then), `bossOrchestration`,
+`puzzleConfigIsCode` (removed from the migrated recipes; rewritten for the four still on the
+code seam), `proceduralGeneration`, `worldGraphAndMap`, `grapplingPhysics`, `advancedPhysics`,
+`vehicleIntentOnly`, `raceOrchestration`. This certification additionally corrected three
+stale "capability does not exist" claims to preset-integration-gap wording (`match-puzzle`
+spatial-pointer + match-engine lines, `run-and-gun` encounter line, `action-adventure`
+encounter line). Maturity split unchanged at **5 proof-validated / 7 smoke-validated / 62
+recipe**.
+
+### Dependency / offline audit (Step 10)
+
+**No new npm dependency** anywhere: root and every workspace `package.json` unchanged across
+the program; `package-lock.json` byte-identical to the program start. No CDN, no runtime
+remote JS, no hotlinked assets. `check:offline` PASS every phase; `release:verify` asserts
+zero external requests on packed builds. Newly generated projects depend only on the
+`@sw2d/*` workspace packages plus Phaser (Matter is bundled in Phaser 4.2.1 — no separate
+matter-js). Generated projects hold no dependency on Workbench server state.
+
+### Protected regression journeys (Step 5) — all PASS
+
+Zero-art creation, imported-art path, Free-Sprite Intelligence provider/rights/vault/
+provenance workflow, frame-group animation, Start UX (Enter / Space / Numpad Enter),
+pause/resume with no duplicate input edge, keyboard, pointer/touch, offline packaging, and
+every pre-program proof/smoke game — all covered green by `qa:workbench` 16/16,
+`qa:smoke` 14/14, `qa:responsive` 19/19, `qa:proof` 23/23 and `release:verify` 6/6 in this
+certification run.
+
+### Remaining limitations (deliberately outside the first-ten program)
+
+Full stealth perception (vision cones / noise / hiding), chase/pursuit-pressure, wall-slide /
+wall-jump / ledge-grab climbing, ball/paddle collision-and-bounce, customer AI / economy /
+demand models, creature needs/behaviour simulation, colony simulation, branching-dialogue
+renderer / parser / evidence board, rhythm/beat sync, microgame scheduler, canvas-stroke
+drawing capture, wardrobe/attachment system, fishing / cooking / photography gameplay
+systems, multi-player / local multi-device input routing, run-based permadeath /
+meta-progression, and per-recipe integration gaps where a shipped capability is not yet
+consumed by a particular preset's generated shell (e.g. `match-puzzle` → `sw2d.puzzle-rules`
+`match` engine; `run-and-gun` / `action-adventure` → `sw2d.encounters`). These are honest
+`knownLimitations` on the affected recipes; **not all 74 presets are finished** — this
+program completed the first ten *reusable capabilities*.

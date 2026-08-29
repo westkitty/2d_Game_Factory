@@ -49,8 +49,8 @@ export const PUZZLE_ARCADE_PRESETS: readonly PresetDefinition[] = [
     validationProfile: VALIDATION_PROFILES.puzzleArcade,
     knownLimitations: [
       LIMITATIONS.puzzleConfigIsCode,
-      'No reusable match-detection/cascade board rules exist yet.',
-      'Drag/hover interaction remains unavailable: spatial pointer support (world cursor, hover, drag) remains deferred.',
+      'The bounded `match` engine exists in sw2d.puzzle-rules (Phase 6, ADR-0023) and is unit-tested, but no reusable match-detection/cascade board rules are consumed by this recipe yet - it stays on the code-configured sw2d.puzzle.',
+      'The reusable spatial pointer (world cursor, hover, drag - ADR-0018) exists; this grid-family recipe does not consume it, so tile drag/swap interaction is game-specific code.',
     ],
   }),
 

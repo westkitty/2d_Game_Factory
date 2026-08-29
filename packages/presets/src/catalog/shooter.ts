@@ -100,8 +100,8 @@ export const SHOOTER_PRESETS: readonly PresetDefinition[] = [
     requiredContentRoles: ['tuning', 'levels'],
     validationProfile: VALIDATION_PROFILES.shooter,
     // Reusable weapons/projectiles consumed by the platform shell (Phase 3;
-    // proof: proofs/run-and-gun/). Encounter orchestration is Phase 4.
-    knownLimitations: ['Enemy encounter orchestration is not yet a reusable capability (Phase 4).'],
+    // proof: proofs/run-and-gun/).
+    knownLimitations: ['Enemy encounter orchestration (sw2d.encounters, Phase 4, ADR-0021) is reusable now, but this recipe does not install it - its enemy waves/patterns would be authored as game-specific code or by adding that pack.'],
   }),
 
   definePreset({

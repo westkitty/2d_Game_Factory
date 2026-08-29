@@ -40,9 +40,8 @@ export const TOP_DOWN_ACTION_PRESETS: readonly PresetDefinition[] = [
     optionalSystemPacks: [pack(PACK_IDS.ai), pack(PACK_IDS.progression)],
     requiredContentRoles: ['tuning', 'levels'],
     validationProfile: VALIDATION_PROFILES.topDown,
-    // Weapons/projectiles are reusable now (Phase 3); melee/knockback and
-    // encounter orchestration are not.
-    knownLimitations: ['Melee/knockback combat and reusable encounter orchestration are not yet implemented.'],
+    // Weapons/projectiles are reusable now (Phase 3).
+    knownLimitations: ['Melee / knockback combat is not a reusable capability. Encounter orchestration (sw2d.encounters, Phase 4) is reusable but this recipe does not install it.'],
   }),
 
   definePreset({
