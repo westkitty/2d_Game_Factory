@@ -1,7 +1,12 @@
 import { readShellState, readSnapshot } from '../src/snapshot.ts';
 import type { Harness } from '../src/harness.ts';
 import type { SmokeOutcome } from '../src/smokeRunner.ts';
-import type { ActionRogueliteShellState, ActionRogueliteShellService } from '../../proofs/action-roguelite/src/game-specific/shellPack.ts';
+import type { RunState } from '@sw2d/contracts';
+import type {
+  ActionRogueliteShellState,
+  ActionRogueliteShellService,
+  SavedRunProbe,
+} from '../../proofs/action-roguelite/src/game-specific/shellPack.ts';
 
 const SHELL_ID = 'game.action-roguelite-shell';
 
@@ -103,9 +108,57 @@ export async function run(harness: Harness): Promise<SmokeOutcome> {
   // 16. Run outcome = victory; victory rewards granted to ProgressionService
   const step16_victory = s15.phase === 'victory' && s15.metaUnlocks.includes('conquered-depths');
 
-  // 17. Resumable run save verified: after victory the active save slot is cleared
-  // (SaveStore has no has() method; the run lifecycle clean-up is proven by step 15/16)
-  const step17_resumable = true;
+  // 17. Resumable run lifecycle, proven against the game's real SaveStore rather
+  //     than asserted. Three observable properties, all through public API:
+  //       a) an active run with mutated transient state is durably written,
+  //       b) a RunService rebuilt over that same store restores the run,
+  //       c) finishing the run clears the slot and a rebuild does NOT resume it.
+  await evalShell(harness, `(shell) => shell.reset()`);
+  await harness.stepFrames(4);
+  await evalShell(harness, `(shell) => { shell.clearRoom(); shell.dealDamage(11); shell.collectCurrency(7); }`);
+  // Duration and stats are checkpointed on a bounded interval (1000ms of run
+  // time), so step past it before probing rather than probing mid-window.
+  await harness.stepFrames(70);
+
+  const live17 = await state(harness);
+  const saved17 = await evalShell<SavedRunProbe>(harness, `(shell) => shell.probeSavedRun()`);
+  const restored17 = await evalShell<RunState>(harness, `(shell) => shell.rehydrateRunService()`);
+
+  const step17a_activeRunPersisted =
+    live17.phase === 'active' &&
+    saved17.outcome === 'loaded' &&
+    saved17.record !== null &&
+    saved17.record.phase === 'active' &&
+    saved17.record.runId === live17.runId &&
+    saved17.record.attempt === live17.attempt &&
+    saved17.record.seed === live17.seed &&
+    saved17.record.transientCurrency === live17.transientCurrency &&
+    saved17.record.stats.roomsCleared === live17.stats.roomsCleared &&
+    saved17.record.stats.kills === live17.stats.kills &&
+    saved17.record.runDurationMs > 0;
+
+  const step17b_restoresIntoFreshService =
+    restored17.phase === 'active' &&
+    restored17.runId === live17.runId &&
+    restored17.attempt === live17.attempt &&
+    restored17.seed === live17.seed &&
+    restored17.transientCurrency === live17.transientCurrency &&
+    restored17.stats.roomsCleared === live17.stats.roomsCleared &&
+    restored17.stats.kills === live17.stats.kills &&
+    restored17.runDurationMs > 0;
+
+  await evalShell(harness, `(shell) => shell.reachObjective()`);
+  await harness.stepFrames(6);
+  const savedAfter17 = await evalShell<SavedRunProbe>(harness, `(shell) => shell.probeSavedRun()`);
+  const restoredAfter17 = await evalShell<RunState>(harness, `(shell) => shell.rehydrateRunService()`);
+
+  const step17c_finishedRunNotResumed =
+    savedAfter17.outcome === 'default' &&
+    savedAfter17.record === null &&
+    restoredAfter17.phase === 'idle' &&
+    restoredAfter17.attempt === 1 &&
+    restoredAfter17.transientUpgrades.length === 0 &&
+    restoredAfter17.stats.roomsCleared === 0;
 
   // 18. Clean scene teardown without leaked event listeners or dangling timers
   const snap = await readSnapshot(harness);
@@ -128,7 +181,9 @@ export async function run(harness: Harness): Promise<SmokeOutcome> {
     step14_metaBonus &&
     step15_bossDefeated &&
     step16_victory &&
-    step17_resumable &&
+    step17a_activeRunPersisted &&
+    step17b_restoresIntoFreshService &&
+    step17c_finishedRunNotResumed &&
     step18_teardown;
 
   return {
@@ -150,7 +205,9 @@ export async function run(harness: Harness): Promise<SmokeOutcome> {
       step14_metaBonus,
       step15_bossDefeated,
       step16_victory,
-      step17_resumable,
+      step17a_activeRunPersisted,
+      step17b_restoresIntoFreshService,
+      step17c_finishedRunNotResumed,
       step18_teardown,
     },
   };

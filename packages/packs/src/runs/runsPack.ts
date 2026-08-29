@@ -30,6 +30,24 @@ registerSchema(runsConfigSchema);
 export const RUNS_SAVE_SLOT_ACTIVE = 'sw2d.runs.active';
 const RUNS_SAVE_VERSION = 1;
 
+/**
+ * Coalescing window for the active-run checkpoint, in accumulated *run* time.
+ *
+ * Run lifecycle events (start, currency change, upgrade purchase) flush the
+ * active save immediately - they are rare and each one is a decision the player
+ * would be angry to lose. Duration and combat stats change every frame instead,
+ * so writing them through on each mutation would mean a JSON serialise plus a
+ * localStorage write per frame in exactly the genres (survivor-like, bullet
+ * hell) that can least afford one. They are instead checkpointed at
+ * most once per `RUNS_PERSIST_INTERVAL_MS` of run time, which is what makes
+ * `resumable: true` an honest promise: a resumed run keeps its elapsed time and
+ * kill/room/damage stats, not just the currency it happened to pick up last.
+ *
+ * The window is measured in accumulated `update(deltaMs)` time, never wall
+ * clock, so a fixed-step harness and a real browser checkpoint identically.
+ */
+const RUNS_PERSIST_INTERVAL_MS = 1000;
+
 export interface RunsConfig {
   readonly defaultRunId?: string;
 }
@@ -104,6 +122,8 @@ export class RunServiceImpl implements RunService {
   #runDurationMs = 0;
   #transientCurrency = 0;
   #transientUpgrades: string[] = [];
+  /** Accumulated run time since the last active-save checkpoint. Reset by `#persistActive()`. */
+  #msSinceFlush = 0;
   #stats: MutableRunStats = {
     kills: 0,
     roomsCleared: 0,
@@ -252,8 +272,12 @@ export class RunServiceImpl implements RunService {
   }
 
   update(deltaMs: number): void {
-    if (this.#phase === 'active') {
-      this.#runDurationMs += deltaMs;
+    if (this.#phase !== 'active') return;
+    this.#runDurationMs += deltaMs;
+    if (!this.#activeDef?.resumable || !this.#saves) return;
+    this.#msSinceFlush += deltaMs;
+    if (this.#msSinceFlush >= RUNS_PERSIST_INTERVAL_MS) {
+      this.#persistActive();
     }
   }
 
@@ -461,6 +485,7 @@ export class RunServiceImpl implements RunService {
 
   #persistActive(): void {
     if (!this.#activeDef?.resumable || !this.#saves || this.#phase !== 'active') return;
+    this.#msSinceFlush = 0;
     this.#saves.save<ActiveRunSaveRecord>(RUNS_SAVE_SLOT_ACTIVE, {
       schemaVersion: RUNS_SAVE_VERSION,
       runId: this.#runId,

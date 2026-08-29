@@ -5,6 +5,8 @@ import type {
   RunResetParticipant,
   RunService,
   RunState,
+  RunsDocument,
+  SaveLoadOutcome,
 } from '@sw2d/contracts';
 import {
   GENERATION_CAPABILITY_ID,
@@ -15,12 +17,35 @@ import type {
   ProgressionService,
   ItemsService,
 } from '@sw2d/packs';
-import { CAPABILITY_IDS } from '@sw2d/packs';
+import { CAPABILITY_IDS, RUNS_SAVE_SLOT_ACTIVE, RunServiceImpl } from '@sw2d/packs';
 import { topDownController, type SceneContext, type ScenePackDefinition } from '@sw2d/runtime';
 
 export const ACTION_ROGUELITE_SHELL_CAPABILITY_ID = 'game.action-roguelite-shell';
 
+/**
+ * What the real `SaveStore` currently holds in the active-run slot.
+ *
+ * `outcome` is `SaveStore.load`'s own report - `'loaded'` only when a record
+ * for this slot actually exists at the current schema version, `'default'` when
+ * the slot is empty. That is why the resumability proof needs no `SaveStore.has()`:
+ * the store already tells the caller whether it found anything.
+ */
+export interface SavedRunProbe {
+  readonly outcome: SaveLoadOutcome;
+  readonly record: {
+    readonly runId: string;
+    readonly phase: string;
+    readonly attempt: number;
+    readonly seed: number;
+    readonly transientCurrency: number;
+    readonly transientUpgrades: readonly string[];
+    readonly runDurationMs: number;
+    readonly stats: ActionRogueliteShellState['stats'];
+  } | null;
+}
+
 export interface ActionRogueliteShellState {
+  readonly runId: string;
   readonly phase: string;
   readonly attempt: number;
   readonly seed: number;
@@ -47,6 +72,15 @@ export interface ActionRogueliteShellState {
 
 export interface ActionRogueliteShellService {
   state(): ActionRogueliteShellState;
+  /** Read the live active-run save slot through the game's real SaveStore. */
+  probeSavedRun(): SavedRunProbe;
+  /**
+   * Build a second `RunService` over the *same* SaveStore and content document
+   * the installed one uses, and report the state it boots with. This is the
+   * "relaunch the game" half of resumability: no private state is touched, the
+   * new service only sees what was durably written.
+   */
+  rehydrateRunService(): RunState;
   startRun(): void;
   collectCurrency(amount: number): void;
   collectItem(itemId: string, quantity?: number): void;
@@ -134,6 +168,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         const currentHpMax = progression.isUnlocked('meta-health-boost') ? 120 : 100;
 
         return {
+          runId: rState.runId,
           phase: rState.phase,
           attempt: rState.attempt,
           seed: rState.seed,
@@ -151,6 +186,30 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
           totalRooms,
           attackBonus: hasAttackBuff ? 5 : 0,
         };
+      },
+
+      probeSavedRun(): SavedRunProbe {
+        const result = context.saves.load<{ schemaVersion: number }>(RUNS_SAVE_SLOT_ACTIVE, {
+          currentVersion: 1,
+          createDefault: () => ({ schemaVersion: 1, __absent: true }) as { schemaVersion: number },
+        });
+        if (result.outcome !== 'loaded') return { outcome: result.outcome, record: null };
+        return {
+          outcome: result.outcome,
+          record: result.value as unknown as NonNullable<SavedRunProbe['record']>,
+        };
+      },
+
+      rehydrateRunService(): RunState {
+        const doc = context.content.data['runs']?.value as RunsDocument | undefined;
+        const rehydrated = new RunServiceImpl(
+          context.events,
+          context.capabilities,
+          doc,
+          context.saves,
+          undefined,
+        );
+        return rehydrated.state();
       },
 
       startRun(): void {

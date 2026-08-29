@@ -2,8 +2,8 @@
 
 First-ten base SHA: `acf802f7a32a3f341273c084931af37cb5461784`
 Candidate branch: `candidate/antigravity-post-ten-program`
-Candidate HEAD: `e12785b8d25832475557a065b400db03dd283bfb`
-Current candidate phase: Phase 13 (FOCUSED TESTS PASS)
+Candidate HEAD: `69d957d27d9d6426f2e79480acac6eedfd3a3f76`
+Current candidate phase: Phase 13 (FOCUSED TESTS PASS, resumability proof repaired)
 
 ---
 
@@ -103,7 +103,7 @@ The dungeon-chest / lockpicking prototype was accidentally implemented under Pha
 - **Proof consumers:**
   - `proofs/action-roguelite/` — primary defining proof (18-step journey); spec `packages/qa/proof-specs/actionRoguelite.ts`
   - `proofs/survivor-like/` — secondary proof (10-step journey); spec `packages/qa/proof-specs/survivorLike.ts`
-- **Tests run:**
+- **Tests run (original Phase 13 commit `69d957d`):**
   - `npm run typecheck` (PASS, 0 errors)
   - `packages/packs/test/runs.test.ts` (vitest, targeted)
   - `packages/qa/src/runProofs.ts action-roguelite` (1/1 PASS — 18/18 steps, 0 console errors, 0 external requests)
@@ -112,8 +112,73 @@ The dungeon-chest / lockpicking prototype was accidentally implemented under Pha
 - **Actual results:** All focused tests passing, 0 console errors, 0 external network requests
 - **Limitations changed:** `LIMITATIONS.runLifecycle` updated to reflect existence of `sw2d.runs`
 - **Known failures:** None
-- **Suspected shortcuts:** `step17_resumable` asserts `true` unconditionally (SaveStore has no `has()` method; save lifecycle is exercised implicitly by the resume-on-boot path in RunServiceImpl constructor and cleared on endRun)
 - **Architectural concerns:** None
 - **Work required from certifier:** Adversarial browser validation of run lifecycle (start, defeat, reset, meta-upgrade, victory), seed determinism across resets, and permanent meta-unlock persistence.
+
+### Phase 13 repair — resumability shortcut removed
+
+The Phase 13 commit shipped one dishonest acceptance step:
+
+```ts
+const step17_resumable = true;   // "SaveStore has no has() method"
+```
+
+That is now removed. `SaveStore.load` already reports a `SaveLoadOutcome`
+(`'loaded'` when the slot holds a record at the current schema version,
+`'default'` when it is empty), so no `SaveStore.has()` was added — the proof
+uses the public API the store already exposes.
+
+**Architectural change (justified, not test-driven):** `RunServiceImpl` previously
+flushed the active-run save only on `startRun` / `addTransientCurrency` /
+`purchaseUpgrade` / `dispose`. Elapsed run time and combat stats — which change
+every frame — were never checkpointed, so a `resumable: true` run that survived a
+crash came back with the currency from its last pickup and none of its progress.
+`update(deltaMs)` now checkpoints on a bounded coalescing window
+(`RUNS_PERSIST_INTERVAL_MS = 1000`, measured in accumulated **run** time, never wall
+clock, so fixed-step harness and real browser behave identically). Lifecycle events
+still flush immediately; per-frame localStorage writes are still avoided.
+
+**Test surfaces added (public behaviour only, no private-state pokes):**
+- `packages/packs/test/runs.test.ts` — four new tests (14 → 18 in that file):
+  - full round trip: start resumable run → mutate currency/upgrade/stats/duration →
+    assert `SaveStore.load` outcome `'loaded'` and record contents → rebuild
+    `RunService` over the same store → assert `runId` / `phase` / `attempt` / `seed` /
+    `transientCurrency` / `transientUpgrades` / `stats` / `runDurationMs` restored →
+    `winRun()` → assert slot outcome `'default'` → third `RunService` boots
+    `idle`, `attempt: 1`, zeroed stats, no transient upgrades;
+  - defeated and abandoned runs are likewise not resumed;
+  - `resetRun()` clears the slot so a discarded attempt is not resumed;
+  - the checkpoint interval itself: nothing written mid-window, duration+stats written
+    once the window is crossed, remainder flushed on `dispose()`.
+- `proofs/action-roguelite/src/game-specific/shellPack.ts` — two shell methods:
+  `probeSavedRun()` (reads the real `SaveStore` active slot and returns its
+  `SaveLoadOutcome` + record) and `rehydrateRunService()` (constructs a second
+  `RunServiceImpl` over the same `SaveStore` and the same `content/runs.json`, and
+  returns the `RunState` it boots with — the "relaunch the game" half of resumability).
+  `ActionRogueliteShellState` gained `runId` so the proof can compare it.
+- `packages/qa/proof-specs/actionRoguelite.ts` — `step17_resumable` replaced by
+  `step17a_activeRunPersisted`, `step17b_restoresIntoFreshService`,
+  `step17c_finishedRunNotResumed`. Journey is now 20 named acceptance steps.
+
+**Negative-control verified** (each sabotage reverted afterwards; `grep` confirms no
+sabotage remains):
+
+| Sabotage | Result |
+| --- | --- |
+| `#clearActiveSave()` made a no-op | `step17c` FAIL, 17a/17b PASS |
+| `#persistActive()` made a no-op | `step17a` + `step17b` FAIL, 17c PASS |
+| constructor resume branch disabled | `step17b` FAIL, 17a/17c PASS |
+
+**Tests run after repair:**
+- `npm run typecheck` (PASS, 0 errors)
+- `npx vitest run` (full suite: **152 files, 2683 tests PASS**)
+- `packages/qa/src/runProofs.ts action-roguelite` (1/1 PASS — 20/20 steps, 0 console errors, 0 external requests)
+- `packages/qa/src/runProofs.ts survivor-like` (1/1 PASS — 10/10 steps, 0 console errors, 0 external requests)
+
+**Suspected shortcuts after repair:** none in Phase 13. The only remaining
+characteristic worth a certifier's attention is deliberate and documented in code:
+run time and stats are checkpointed on a 1000ms coalescing window, so a hard crash
+can lose up to one second of run time and the stats accrued within it. Currency,
+upgrades and lifecycle transitions are never in that window.
 
 ---

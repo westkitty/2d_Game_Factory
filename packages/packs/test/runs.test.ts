@@ -365,6 +365,167 @@ describe('runsPack and RunService', () => {
     expect(loadedState.runDurationMs).toBe(1000);
   });
 
+  /**
+   * The full resumability contract, exercised only through public behaviour:
+   * SaveStore + the RunService constructor the pack itself uses. Nothing here
+   * reaches past the service to poke private state, and nothing asserts an
+   * unconditional truth - the previous Phase 13 proof step asserted `true`
+   * because SaveStore has no `has()`, but a store that reports its load
+   * outcome never needed one.
+   */
+  it('persists an active resumable run, restores it into a fresh RunService, and stops restoring it once the run ends', () => {
+    const saves = new FakeSaveStore();
+
+    // 1. Start a resumable active run.
+    const context1 = createContext(SAMPLE_RUNS_DOC, saves);
+    const inst1 = runsPack.install(context1, {});
+    const runs1 = context1.capabilities.require<RunService>('progression.runs');
+    const started = runs1.startRun();
+    expect(started.phase).toBe('active');
+    expect(started.runId).toBe('dungeon-run');
+
+    // 2. Mutate meaningful transient run state: currency, an upgrade, stats, duration.
+    runs1.addTransientCurrency(40); // 20 starting + 40 = 60
+    expect(runs1.purchaseUpgrade('transient_armor')).toBe(true); // 60 - 15 = 45
+    runs1.recordKill();
+    runs1.recordKill();
+    runs1.recordRoomCleared();
+    runs1.recordDamage(70, 25);
+    // Stats and duration are coalesced, so they reach the store on the next
+    // checkpoint tick rather than on each mutation. One second of run time.
+    inst1.update?.(600);
+    inst1.update?.(600);
+
+    const live = runs1.state();
+    expect(live.transientCurrency).toBe(45);
+    expect(live.transientUpgrades).toEqual(['transient_armor']);
+    expect(live.stats).toEqual({ kills: 2, roomsCleared: 1, wavesCleared: 0, damageDealt: 70, damageTaken: 25 });
+    expect(live.runDurationMs).toBe(1200);
+
+    // 3. Confirm the active-run state really is in the persistence store.
+    const persisted = saves.load('sw2d.runs.active', {
+      currentVersion: 1,
+      createDefault: () => ({ schemaVersion: -1 }) as never,
+    });
+    expect(persisted.outcome).toBe('loaded');
+    const record = persisted.value as unknown as {
+      runId: string;
+      phase: string;
+      attempt: number;
+      seed: number;
+      transientCurrency: number;
+      transientUpgrades: readonly string[];
+      runDurationMs: number;
+      stats: Record<string, number>;
+    };
+    expect(record.phase).toBe('active');
+    expect(record.runId).toBe('dungeon-run');
+    expect(record.transientUpgrades).toEqual(['transient_armor']);
+
+    // 4. Recreate the RunService against the same persistence store.
+    const context2 = createContext(SAMPLE_RUNS_DOC, saves);
+    runsPack.install(context2, {});
+    const runs2 = context2.capabilities.require<RunService>('progression.runs');
+
+    // 5/6. The active run restores, with the fields that matter intact.
+    const restored = runs2.state();
+    expect(restored.phase).toBe('active');
+    expect(restored.runId).toBe(live.runId);
+    expect(restored.attempt).toBe(live.attempt);
+    expect(restored.seed).toBe(live.seed);
+    expect(restored.transientCurrency).toBe(live.transientCurrency);
+    expect(restored.transientUpgrades).toEqual(live.transientUpgrades);
+    expect(restored.stats).toEqual(live.stats);
+    expect(restored.runDurationMs).toBe(live.runDurationMs);
+    expect(runs2.definition()?.id).toBe('dungeon-run');
+
+    // 7. Complete the run; the active slot is cleared.
+    runs2.winRun();
+    const afterEnd = saves.load('sw2d.runs.active', {
+      currentVersion: 1,
+      createDefault: () => ({ schemaVersion: -1 }) as never,
+    });
+    expect(afterEnd.outcome).toBe('default');
+
+    // 8/9. A third RunService over the same store must NOT restore the finished run.
+    const context3 = createContext(SAMPLE_RUNS_DOC, saves);
+    runsPack.install(context3, {});
+    const runs3 = context3.capabilities.require<RunService>('progression.runs');
+    const fresh = runs3.state();
+    expect(fresh.phase).toBe('idle');
+    expect(fresh.attempt).toBe(1);
+    expect(fresh.transientCurrency).toBe(20); // back to the definition's starting grant
+    expect(fresh.transientUpgrades).toEqual([]);
+    expect(fresh.stats).toEqual({ kills: 0, roomsCleared: 0, wavesCleared: 0, damageDealt: 0, damageTaken: 0 });
+    expect(fresh.runDurationMs).toBe(0);
+  });
+
+  it('does not restore an abandoned or defeated run into a fresh RunService', () => {
+    for (const outcome of ['defeat', 'abandoned'] as const) {
+      const saves = new FakeSaveStore();
+      const contextA = createContext(SAMPLE_RUNS_DOC, saves);
+      runsPack.install(contextA, {});
+      const runsA = contextA.capabilities.require<RunService>('progression.runs');
+      runsA.startRun();
+      runsA.addTransientCurrency(5);
+      expect(saves.store.has('sw2d.runs.active')).toBe(true);
+
+      runsA.endRun(outcome);
+      expect(saves.store.has('sw2d.runs.active')).toBe(false);
+
+      const contextB = createContext(SAMPLE_RUNS_DOC, saves);
+      runsPack.install(contextB, {});
+      const runsB = contextB.capabilities.require<RunService>('progression.runs');
+      expect(runsB.state().phase).toBe('idle');
+    }
+  });
+
+  it('clears the active save on resetRun so the abandoned attempt is not resumed', () => {
+    const saves = new FakeSaveStore();
+    const contextA = createContext(SAMPLE_RUNS_DOC, saves);
+    runsPack.install(contextA, {});
+    const runsA = contextA.capabilities.require<RunService>('progression.runs');
+    runsA.startRun();
+    runsA.addTransientCurrency(5);
+    runsA.resetRun();
+    expect(saves.store.has('sw2d.runs.active')).toBe(false);
+
+    const contextB = createContext(SAMPLE_RUNS_DOC, saves);
+    runsPack.install(contextB, {});
+    expect(contextB.capabilities.require<RunService>('progression.runs').state().phase).toBe('idle');
+  });
+
+  it('checkpoints frame-rate run state at a bounded interval rather than on every mutation', () => {
+    const saves = new FakeSaveStore();
+    const context = createContext(SAMPLE_RUNS_DOC, saves);
+    const installed = runsPack.install(context, {});
+    const runs = context.capabilities.require<RunService>('progression.runs');
+
+    runs.startRun(); // flushes immediately
+    const atStart = saves.store.get('sw2d.runs.active') as { runDurationMs: number; stats: { kills: number } };
+    expect(atStart.runDurationMs).toBe(0);
+
+    runs.recordKill();
+    installed.update?.(500);
+    // Inside the coalescing window: the store still holds the start-of-run checkpoint.
+    const midWindow = saves.store.get('sw2d.runs.active') as { runDurationMs: number; stats: { kills: number } };
+    expect(midWindow.runDurationMs).toBe(0);
+    expect(midWindow.stats.kills).toBe(0);
+
+    installed.update?.(500); // crosses RUNS_PERSIST_INTERVAL_MS
+    const afterWindow = saves.store.get('sw2d.runs.active') as { runDurationMs: number; stats: { kills: number } };
+    expect(afterWindow.runDurationMs).toBe(1000);
+    expect(afterWindow.stats.kills).toBe(1);
+
+    // dispose() flushes whatever accrued since the last checkpoint.
+    runs.recordKill();
+    installed.update?.(120);
+    installed.dispose();
+    const atDispose = saves.store.get('sw2d.runs.active') as { runDurationMs: number; stats: { kills: number } };
+    expect(atDispose.runDurationMs).toBe(1120);
+    expect(atDispose.stats.kills).toBe(2);
+  });
+
   it('does not save active state when resumable is false', () => {
     const saves = new FakeSaveStore();
     const context = createContext(SAMPLE_RUNS_DOC, saves);

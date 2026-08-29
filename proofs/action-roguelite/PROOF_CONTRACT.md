@@ -20,7 +20,7 @@ Capability program Phase 13 primary defining proof consumer.
 - `sw2d.generation` (`GenerationService`) — room-graph procedural dungeon.
 - `sw2d.items` (`ItemsService`) — starting items, inventory pickups, consumables.
 
-## Defining journey (automated, real-browser, 18-step verification)
+## Defining journey (automated, real-browser, 20-step verification)
 
 1. Boot and initial idle/active run state.
 2. Initial attempt = 1, initial duration = 0, initial seed derived deterministically.
@@ -38,5 +38,9 @@ Capability program Phase 13 primary defining proof consumer.
 14. Player starts attempt 2 with advanced seed and permanent meta-bonus.
 15. Player defeats final objective / boss room.
 16. Run outcome = victory; victory rewards granted to ProgressionService.
-17. Resumable run save verified (if active) or cleanly cleaned up.
+17a. An active run whose transient state has been mutated (room cleared, damage dealt, kill recorded, currency collected, run time elapsed) is durably written to the game's real `SaveStore` — verified by reading the `sw2d.runs.active` slot back and comparing `runId`, `phase`, `attempt`, `seed`, `transientCurrency`, `stats` and `runDurationMs` against the live run.
+17b. A second `RunService` constructed over that same `SaveStore` and the same `content/runs.json` boots straight into the persisted run, with `runId`, `phase`, `attempt`, `seed`, `transientCurrency`, `stats` and `runDurationMs` restored.
+17c. Completing the run clears the active slot, and a `RunService` rebuilt afterwards does **not** resume the finished run (`phase: 'idle'`, `attempt: 1`, no transient upgrades, zeroed stats).
 18. Clean scene teardown without leaked event listeners or dangling timers.
+
+Steps 17a–17c replace an earlier `const step17_resumable = true;` placeholder. Each is negative-control verified: suppressing the active-save write fails 17a and 17b; suppressing the constructor's resume branch fails 17b alone; suppressing the end-of-run clear fails 17c alone.
