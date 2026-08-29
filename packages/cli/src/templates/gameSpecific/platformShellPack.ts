@@ -1,7 +1,16 @@
 import Phaser from 'phaser';
-import type { InstalledSystemPack, PuzzleRulesService } from '@sw2d/contracts';
-import { PUZZLE_RULES_CAPABILITY_ID } from '@sw2d/contracts';
-import { bindCollectiblePickups, bindStarterWeapon, platformController, resolveSceneLevel, type SceneContext, type ScenePackDefinition } from '@sw2d/runtime';
+import type { InstalledSystemPack, PuzzleRulesService, WorldGraphService } from '@sw2d/contracts';
+import { PUZZLE_RULES_CAPABILITY_ID, WORLD_GRAPH_CAPABILITY_ID } from '@sw2d/contracts';
+import {
+  bindCollectiblePickups,
+  bindStarterWeapon,
+  createRoomTransitionRuntime,
+  createWorldMapOverlay,
+  platformController,
+  resolveSceneLevel,
+  type SceneContext,
+  type ScenePackDefinition,
+} from '@sw2d/runtime';
 
 /**
  * Generated starter shell: platform controller family.
@@ -92,6 +101,26 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     // switch/goal ruleset and solved-detection are content/puzzles.json, not
     // code here.
     const puzzle = context.capabilities.get<PuzzleRulesService>(PUZZLE_RULES_CAPABILITY_ID);
+    // World graph / rooms / transitions / map (capability program Phase 8).
+    // Inert unless sw2d.world-graph is installed. Then: reaching the right edge
+    // takes the first traversable connection from the current node (the bridge
+    // tears the room down and rebuilds it at the destination entrance), and
+    // SECONDARY_ACTION toggles the map overlay (when no puzzle owns that key).
+    const worldGraph = context.capabilities.get<WorldGraphService>(WORLD_GRAPH_CAPABILITY_ID);
+    const mapContainer = scene.game.canvas.parentElement ?? scene.game.canvas;
+    const worldMap = worldGraph && mapContainer instanceof HTMLElement ? createWorldMapOverlay(mapContainer, worldGraph) : null;
+    const rooms = worldGraph
+      ? createRoomTransitionRuntime(context, {
+          teardownRoom: () => {
+            /* starter graph: nodes share one level, so only the player moves */
+          },
+          buildRoom: (_level, entrance) => {
+            player.setPosition(entrance.x, entrance.y);
+            player.setVelocity(0, 0);
+            worldMap?.refresh();
+          },
+        })
+      : null;
     let nowMs = 0;
     let facing = 1;
 
@@ -106,6 +135,9 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       weapon: weapon.snapshot(),
       ...(puzzle ? { puzzle: puzzle.snapshot(), solved: puzzle.isSolved() } : {}),
       ...(generationManifest ? { generation: generationManifest } : {}),
+      ...(worldGraph
+        ? { worldGraph: { current: worldGraph.currentNode().id, ...worldGraph.mapState(), mapOpen: worldMap?.isOpen ?? false, transitions: rooms?.transitions ?? 0 } }
+        : {}),
     }));
 
     let disposed = false;
@@ -132,6 +164,14 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
           }
           if (context.input.consumePress('CANCEL')) puzzle.undo();
         }
+        if (worldGraph && rooms) {
+          rooms.tick();
+          if (!puzzle && context.input.consumePress('SECONDARY_ACTION')) worldMap?.toggle();
+          if (!rooms.transitioning && !(worldMap?.isOpen ?? false) && player.x > context.definition.viewport.width - 48) {
+            const conn = worldGraph.connections().find((c) => worldGraph.canTraverse(c.id).allowed);
+            if (conn) rooms.requestTransition(conn.id);
+          }
+        }
         if (intent.jumpPressed && player.body.blocked.down) {
           player.setVelocityY(-tuning.jumpVelocity);
           context.audio.playCue('ui.confirm');
@@ -144,6 +184,8 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         debugHandle.dispose();
         pickups.dispose();
         weapon.dispose();
+        rooms?.dispose();
+        worldMap?.dispose();
         // A restart's batched stop+start can already have torn down this
         // scene's physics world by the time this runs - see
         // placeholderMoverPack.ts's own comment for the full story. Each

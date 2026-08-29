@@ -43,6 +43,8 @@ export { createProjectileRuntime, type ProjectileRuntime, type ProjectileRuntime
 export { bindStarterWeapon, type StarterWeaponBinding } from './game-support/starterWeapon.ts';
 export { createEncounterRuntime, type EncounterRuntime, type EncounterRuntimeOptions, type SpawnedEnemyHandle } from './game-support/encounterRuntime.ts';
 export { resolveSceneLevel, type ResolvedSceneLevel } from './game-support/generatedLevel.ts';
+export { createRoomTransitionRuntime, type RoomTransitionRuntime, type RoomTransitionHooks } from './game-support/roomTransition.ts';
+export { createWorldMapOverlay, type WorldMapOverlay } from './game-support/worldMapOverlay.ts';
 
 export { LocalStorageDriver, MemoryStorageDriver } from './persistence/LocalStorageDriver.ts';
 export { SaveStoreImpl } from './persistence/SaveStoreImpl.ts';

@@ -774,6 +774,30 @@ adjudicated individually in the Phase 12 acceptance document):
 
 ## Revision history
 
+### Revision 23 - 2026-08-29 (Sonnet 5) - Capability program Phase 8
+
+**World graph / rooms / transitions / map (ADR-0025).** Eighth phase of the ten-phase program.
+Full detail in [`docs/architecture/CAPABILITY_PROGRAM_STATE.md`](docs/architecture/CAPABILITY_PROGRAM_STATE.md).
+
+- **New capability.** `sw2d.world-graph` pack -> `world.graph`, composing with (not replacing)
+  `world.state`. `WorldGraphDefinition` = nodes (each names a level content-document) + entrances
+  + connections gated by **bounded** conditions (flag / item / progression-unlock / visited).
+  `WorldGraphService` moves the graph pointer and tracks discovery/visited; opt-in id-only
+  persistence. `createRoomTransitionRuntime` (tear down one room, build the next at the
+  destination entrance - never both active) and `createWorldMapOverlay` (semantic-DOM,
+  keyboard-operable, self-disposing) in `@sw2d/runtime`. `content/world-graph.json` (schema
+  `world-graph`) always emitted; platform/top-down shells consume it. Workbench gains
+  `POST /api/world-graph/inspect` + an inspector panel. Seventeen packs now.
+- **Proofs.** New `proofs/metroidvania/` (three real rooms, a flag-gated connection, a lever
+  that unlocks it, a return trip, the map, persistence across a real reinstall) and
+  `proofs/exploration-game/` (three areas in a loop, discovery/visited, a persistent flag
+  surviving every transition, no room-sprite accumulation). `qa:proof` 17/17 -> 19/19. Also
+  hardened the Phase-5 `lane-defense` proof against a timing flake.
+- **Limitations.** `LIMITATIONS.worldGraphAndMap` removed (constant deleted) from `metroidvania`
+  and `exploration-game`. Maturity split unchanged (5/7/62).
+- **Validation:** typecheck PASS; `npm test` 2496/2496; builds + `check:offline` PASS; `qa:proof`
+  19/19; `qa:matrix` PASS; `qa:starter-kits` all 14; `qa:workbench` 16/16; `release:verify` 6/6.
+
 ### Revision 22 - 2026-08-29 (Sonnet 5) - Capability program Phase 7
 
 **Deterministic procedural generation (ADR-0024).** Seventh phase of the ten-phase program. Full

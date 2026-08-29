@@ -1,0 +1,94 @@
+{
+  "schemaVersion": 1,
+  "id": "town",
+  "displayName": "Town",
+  "startNodeId": "plaza",
+  "nodes": [
+    {
+      "id": "plaza",
+      "displayName": "Plaza",
+      "level": "levels/plaza",
+      "mapX": 0,
+      "mapY": 0,
+      "entrances": [
+        {
+          "id": "start",
+          "x": 480,
+          "y": 270
+        },
+        {
+          "id": "from-garden",
+          "x": 760,
+          "y": 270,
+          "facing": "left"
+        }
+      ],
+      "connections": [
+        {
+          "id": "plaza-garden",
+          "destinationNodeId": "garden",
+          "destinationEntranceId": "from-plaza",
+          "mapLabel": "garden"
+        }
+      ]
+    },
+    {
+      "id": "garden",
+      "displayName": "Garden",
+      "level": "levels/garden",
+      "mapX": 1,
+      "mapY": 0,
+      "entrances": [
+        {
+          "id": "from-plaza",
+          "x": 160,
+          "y": 270,
+          "facing": "right"
+        },
+        {
+          "id": "from-library",
+          "x": 760,
+          "y": 270,
+          "facing": "left"
+        }
+      ],
+      "connections": [
+        {
+          "id": "garden-plaza",
+          "destinationNodeId": "plaza",
+          "destinationEntranceId": "from-garden",
+          "mapLabel": "plaza"
+        },
+        {
+          "id": "garden-library",
+          "destinationNodeId": "library",
+          "destinationEntranceId": "from-garden",
+          "mapLabel": "library"
+        }
+      ]
+    },
+    {
+      "id": "library",
+      "displayName": "Library",
+      "level": "levels/library",
+      "mapX": 2,
+      "mapY": 0,
+      "entrances": [
+        {
+          "id": "from-garden",
+          "x": 160,
+          "y": 270,
+          "facing": "right"
+        }
+      ],
+      "connections": [
+        {
+          "id": "library-garden",
+          "destinationNodeId": "garden",
+          "destinationEntranceId": "from-library",
+          "mapLabel": "garden"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,77 @@
+{
+  "manifestVersion": 1,
+  "updated": "generated-at-scaffold",
+  "category": "visual",
+  "records": [
+    {
+      "id": "proof-exploration.default.player",
+      "category": "visual",
+      "sourceKind": "project-owned",
+      "license": "project-owned",
+      "attributionRequired": false,
+      "modificationStatus": "generated",
+      "localPath": "content/themes/default/theme.json",
+      "status": "approved"
+    },
+    {
+      "id": "proof-exploration.default.enemy",
+      "category": "visual",
+      "sourceKind": "project-owned",
+      "license": "project-owned",
+      "attributionRequired": false,
+      "modificationStatus": "generated",
+      "localPath": "content/themes/default/theme.json",
+      "status": "approved"
+    },
+    {
+      "id": "proof-exploration.default.platform",
+      "category": "visual",
+      "sourceKind": "project-owned",
+      "license": "project-owned",
+      "attributionRequired": false,
+      "modificationStatus": "generated",
+      "localPath": "content/themes/default/theme.json",
+      "status": "approved"
+    },
+    {
+      "id": "proof-exploration.default.pickup",
+      "category": "visual",
+      "sourceKind": "project-owned",
+      "license": "project-owned",
+      "attributionRequired": false,
+      "modificationStatus": "generated",
+      "localPath": "content/themes/default/theme.json",
+      "status": "approved"
+    },
+    {
+      "id": "proof-exploration.default.hazard",
+      "category": "visual",
+      "sourceKind": "project-owned",
+      "license": "project-owned",
+      "attributionRequired": false,
+      "modificationStatus": "generated",
+      "localPath": "content/themes/default/theme.json",
+      "status": "approved"
+    },
+    {
+      "id": "proof-exploration.default.checkpoint",
+      "category": "visual",
+      "sourceKind": "project-owned",
+      "license": "project-owned",
+      "attributionRequired": false,
+      "modificationStatus": "generated",
+      "localPath": "content/themes/default/theme.json",
+      "status": "approved"
+    },
+    {
+      "id": "proof-exploration.default.exit",
+      "category": "visual",
+      "sourceKind": "project-owned",
+      "license": "project-owned",
+      "attributionRequired": false,
+      "modificationStatus": "generated",
+      "localPath": "content/themes/default/theme.json",
+      "status": "approved"
+    }
+  ]
+}

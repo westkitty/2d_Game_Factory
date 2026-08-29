@@ -227,6 +227,69 @@ export function generateGenerationDoc(kind: 'segment-chain' | 'room-graph' | 'ro
   return { schemaVersion: 1, seed: 0, generators: [] };
 }
 
+/**
+ * content/world-graph.json - a WorldGraphDefinition (capability program Phase 8).
+ * Always emitted; a single inert node unless the preset installs
+ * `sw2d.world-graph`, in which case a 3-node starter graph (hub -> east, and a
+ * west room gated behind a world flag) whose nodes all reference the one
+ * generated level via distinct entrances - enough for the generated shell to
+ * exercise transitions, discovery and the map.
+ */
+export function generateWorldGraphDoc(hasWorldGraphPack: boolean): Record<string, unknown> {
+  if (!hasWorldGraphPack) {
+    return {
+      schemaVersion: 1,
+      id: 'inert',
+      startNodeId: 'root',
+      nodes: [
+        { id: 'root', displayName: 'Root', level: 'levels/main', mapX: 0, mapY: 0, entrances: [{ id: 'start', x: 60, y: 440 }], connections: [] },
+      ],
+    };
+  }
+  return {
+    schemaVersion: 1,
+    id: 'starter-world',
+    displayName: 'Starter World',
+    startNodeId: 'hub',
+    nodes: [
+      {
+        id: 'hub',
+        displayName: 'Hub',
+        level: 'levels/main',
+        mapX: 1,
+        mapY: 0,
+        entrances: [
+          { id: 'start', x: 60, y: 440, facing: 'right' },
+          { id: 'from-east', x: 840, y: 440, facing: 'left' },
+          { id: 'from-west', x: 120, y: 440, facing: 'right' },
+        ],
+        connections: [
+          { id: 'hub-east', destinationNodeId: 'east', destinationEntranceId: 'from-hub', mapLabel: 'east' },
+          { id: 'hub-west', destinationNodeId: 'west', destinationEntranceId: 'from-hub', conditions: [{ kind: 'flag', flag: 'west-gate-open', value: true }], mapLabel: 'west (locked)' },
+        ],
+      },
+      {
+        id: 'east',
+        displayName: 'East Room',
+        level: 'levels/main',
+        mapX: 2,
+        mapY: 0,
+        entrances: [{ id: 'from-hub', x: 60, y: 440, facing: 'right' }],
+        connections: [{ id: 'east-hub', destinationNodeId: 'hub', destinationEntranceId: 'from-east', mapLabel: 'hub' }],
+      },
+      {
+        id: 'west',
+        displayName: 'West Room',
+        level: 'levels/main',
+        mapX: 0,
+        mapY: 0,
+        entrances: [{ id: 'from-hub', x: 840, y: 440, facing: 'left' }],
+        connections: [{ id: 'west-hub', destinationNodeId: 'hub', destinationEntranceId: 'from-west', mapLabel: 'hub' }],
+      },
+    ],
+  };
+}
+
 /** content/tuning.json - the one content document @sw2d/schemas validates for every game today. */
 export function generateTuning(): Record<string, unknown> {
   return {

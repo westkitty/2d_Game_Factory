@@ -3,7 +3,7 @@
 Phase 10's five deep, end-to-end proof games - the tier above Phase 8's smoke bar - plus the
 capability-completion program's per-phase proof consumers. Each row is backed by a frozen
 `proofs/<id>/PROOF_CONTRACT.md`, a real generated composition, and a committed real-browser proof
-spec run through `npm run qa:proof`. Mechanically, `npm run qa:proof` is **17/17** as of this
+spec run through `npm run qa:proof`. Mechanically, `npm run qa:proof` is **19/19** as of this
 revision.
 
 ## Capability program — Phase 1: reusable spatial pointer & interaction (ADR-0018)
@@ -60,6 +60,13 @@ folded into a capability phase.
 |---|---|---|---|---|---|
 | `proofs/endless-runner/` (new) | `endless-runner` | `sw2d.generation` (`GenerationService`) `segment-chain` generator from `content/generation.json`; project-owned seeded PRNG; output is a `NormalizedLevel` rendered exactly like a Tiled level | Renders the generated ground; `INTERACT` re-runs the same seed and records `regenMatchesInitial`; `SECONDARY_ACTION` re-runs a different seed and records `altDiffers` + `altValid`. No generation logic in the shell | Start (`valid`, `spawnPlaced`, `segmentCount === 10`, first template `start-flat`); hold Right → `progressedX > 200`; `INTERACT` → `regenMatchesInitial === true`; `SECONDARY_ACTION` → `altDiffers === true` && `altValid === true`; restart → `chosenTemplates` byte-identical to the reference sequence | PASS |
 | `proofs/dungeon-crawler/` (new) | `dungeon-crawler` | Same `sw2d.generation` service, `room-graph` generator: matched-door room graph with a start node, critical path, exit room, bounded branches; `manifest.graph` (nodes/edges) inspectable | Renders walls from `solids`, player at the start-room spawn, `Enemy` sprites; BFS over `manifest.graph` for start→exit reachability; `INTERACT` / `SECONDARY_ACTION` reproducibility checks | Start (`valid`, `hasStartNode`, `hasExitObject`, `edgesValid`, `startToExitReachable`, `roomCount >= 4`); move → `travelled > 40` (wall collision holds); `INTERACT` → `regenMatchesInitial === true`; `SECONDARY_ACTION` → `altDiffers` && `altValid`; restart → `roomCount` and reachability unchanged | PASS |
+
+## Capability program — Phase 8: world graph / rooms / transitions / map (ADR-0025)
+
+| Proof | Preset | Reusable capability exercised | Game-specific mechanics | Browser journey | Status |
+|---|---|---|---|---|---|
+| `proofs/metroidvania/` (new) | `metroidvania` | `sw2d.world-graph` (`WorldGraphService`) - three nodes each naming its own Tiled level; `createRoomTransitionRuntime` (tear down one room, build the next at the destination entrance); `createWorldMapOverlay`; a bounded `flag` traversal condition; opt-in persistence | Renders the current room's ground + door sprites; a door INTERACT is forwarded as `requestTransition`; a lever INTERACT sets `treasury-unlocked` on `world.state` | Start in Hub; Hub→East; locked East→Treasury rejected (`condition-failed`); pull the lever → flag set, `canTraverse` true; East→Treasury; return to East, flag still set; open map (3 areas, current marked); `roomDoorSprites` bounded (no leak); restart → persistence restores the graph (`currentNode`, discovered) | PASS |
+| `proofs/exploration-game/` (new) | `exploration-game` | Same service, simpler: three areas in a loop, no gating; discovery / visited state; the map; a persistent `world.state` flag; the room transition bridge | Top-down movement; door INTERACT → transition; `SECONDARY_ACTION` toggles the map | Start in Plaza (`town-visited` flag set); walk the full loop plaza→garden→library→garden→plaza and repeat; end: all 3 discovered + visited, flag still set through every transition, `roomDoorSprites` never exceeds 2 (no accumulation); map shows 3 areas + ≥2 known routes; restart → back to Plaza (no persistence configured) | PASS |
 
 ## Phase 10 deep proofs
 

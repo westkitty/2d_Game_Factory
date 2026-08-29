@@ -27,9 +27,14 @@ export async function run(harness: Harness): Promise<SmokeOutcome> {
     initial.enemiesActive === 3 &&
     initial.reachedBase === 0;
 
-  // Enemies advance along their routes.
-  await harness.stepFrames(20);
-  const advancing = await state(harness);
+  // Enemies advance along their routes. Poll rather than assume a fixed
+  // frame budget: movement is deterministic but ~1 cell per ~25 frames, so a
+  // single 20-frame window straddles the first crossing.
+  let advancing = initial;
+  for (let i = 0; i < 12 && !advancing.enemyCols.some((c, k) => c > initial.enemyCols[k]!); i++) {
+    await harness.stepFrames(6);
+    advancing = await state(harness);
+  }
   evidence.advancing = advancing;
   const advanceOk = advancing.enemyCols.some((c, i) => c > initial.enemyCols[i]!);
 

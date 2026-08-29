@@ -1,0 +1,95 @@
+{
+  "type": "map",
+  "orientation": "orthogonal",
+  "infinite": false,
+  "width": 30,
+  "height": 17,
+  "tilewidth": 32,
+  "tileheight": 32,
+  "layers": [
+    {
+      "type": "tilelayer",
+      "name": "Background",
+      "width": 30,
+      "height": 17
+    },
+    {
+      "type": "objectgroup",
+      "name": "Solids",
+      "objects": [
+        {
+          "id": 1,
+          "class": "Solid",
+          "name": "WallN",
+          "x": 0,
+          "y": 0,
+          "width": 960,
+          "height": 16
+        },
+        {
+          "id": 2,
+          "class": "Solid",
+          "name": "WallS",
+          "x": 0,
+          "y": 524,
+          "width": 960,
+          "height": 16
+        }
+      ]
+    },
+    {
+      "type": "objectgroup",
+      "name": "Entities",
+      "objects": [
+        {
+          "id": 3,
+          "class": "PlayerSpawn",
+          "name": "Start",
+          "x": 480,
+          "y": 270,
+          "width": 0,
+          "height": 0,
+          "properties": [
+            {
+              "name": "facing",
+              "type": "string",
+              "value": "right"
+            }
+          ]
+        },
+        {
+          "id": 4,
+          "class": "Interactable",
+          "name": "To Plaza",
+          "x": 80,
+          "y": 246,
+          "width": 64,
+          "height": 64,
+          "properties": [
+            {
+              "name": "interactionId",
+              "type": "string",
+              "value": "garden-plaza"
+            }
+          ]
+        },
+        {
+          "id": 5,
+          "class": "Interactable",
+          "name": "To Library",
+          "x": 820,
+          "y": 246,
+          "width": 64,
+          "height": 64,
+          "properties": [
+            {
+              "name": "interactionId",
+              "type": "string",
+              "value": "garden-library"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

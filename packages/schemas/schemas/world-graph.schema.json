@@ -1,0 +1,87 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:sw2d:schema:content-world-graph:v1",
+  "title": "WorldGraphDefinition",
+  "description": "Mirrors @sw2d/contracts WorldGraphDefinition (worldGraph.ts). Content document name 'world-graph'. A graph of location nodes; each names a level document, has entrances and connections gated by bounded conditions. Composes with world.state.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "id", "startNodeId", "nodes"],
+  "properties": {
+    "schemaVersion": { "type": "integer", "minimum": 1 },
+    "id": { "type": "string", "minLength": 1 },
+    "displayName": { "type": "string", "minLength": 1 },
+    "startNodeId": { "type": "string", "minLength": 1 },
+    "nodes": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/node" } }
+  },
+  "definitions": {
+    "node": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "displayName", "level", "mapX", "mapY", "entrances", "connections"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "displayName": { "type": "string", "minLength": 1 },
+        "level": { "type": "string", "minLength": 1 },
+        "mapX": { "type": "number" },
+        "mapY": { "type": "number" },
+        "tags": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "checkpointId": { "type": "string", "minLength": 1 },
+        "entrances": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/entrance" } },
+        "connections": { "type": "array", "items": { "$ref": "#/definitions/connection" } }
+      }
+    },
+    "entrance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "x", "y"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "x": { "type": "number" },
+        "y": { "type": "number" },
+        "facing": { "enum": ["left", "right", "up", "down"] },
+        "tags": { "type": "array", "items": { "type": "string", "minLength": 1 } }
+      }
+    },
+    "connection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "destinationNodeId", "destinationEntranceId"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "destinationNodeId": { "type": "string", "minLength": 1 },
+        "destinationEntranceId": { "type": "string", "minLength": 1 },
+        "oneWay": { "type": "boolean" },
+        "mapLabel": { "type": "string", "minLength": 1 },
+        "conditions": { "type": "array", "items": { "$ref": "#/definitions/condition" } }
+      }
+    },
+    "condition": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "flag"],
+          "properties": { "kind": { "const": "flag" }, "flag": { "type": "string", "minLength": 1 }, "value": { "type": "boolean" } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "itemId"],
+          "properties": { "kind": { "const": "item" }, "itemId": { "type": "string", "minLength": 1 }, "min": { "type": "integer", "minimum": 1 } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "unlockId"],
+          "properties": { "kind": { "const": "progression-unlock" }, "unlockId": { "type": "string", "minLength": 1 } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "nodeId"],
+          "properties": { "kind": { "const": "visited" }, "nodeId": { "type": "string", "minLength": 1 } }
+        }
+      ]
+    }
+  }
+}

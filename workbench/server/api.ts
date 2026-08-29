@@ -43,6 +43,7 @@ import { buildPlan, beginBatch, clearStaging, commitImport, discardBatch, readSt
 import { SYNTHESIZABLE_ROLES, writeTheme } from './themeSynthesis.ts';
 import { buildSeeds, seedForPreset } from './seeds.ts';
 import { previewGeneration } from './generationLab.ts';
+import { inspectWorldGraph } from './worldGraphLab.ts';
 import { loadScene, listLevels, newObject, objectClassOptions, saveScene, SceneValidationError, type SceneDocument } from './sceneStore.ts';
 import { buildProject, createProject, packProject, validateProject } from './factoryService.ts';
 import { starterKitDepthFor, starterKitFor } from './starterKits/index.ts';
@@ -631,6 +632,17 @@ const ROUTES: ReadonlyMap<string, Handler> = new Map<string, Handler>([
           ...(difficulty !== undefined ? { difficulty } : {}),
         }),
       );
+    },
+  ],
+
+  [
+    // World-graph authoring surface (capability program Phase 8). Structural
+    // read of content/world-graph.json: nodes, entrances, connections,
+    // conditions, plus validation and start-node reachability.
+    'POST /world-graph/inspect',
+    (request) => {
+      const body = bodyObject(request);
+      return ok(inspectWorldGraph(gameIdOf(request, body)));
     },
   ],
 

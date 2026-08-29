@@ -52,6 +52,9 @@ const PROOF_SPEC_MODULES: Readonly<Record<string, string>> = {
   // Phase 7 - deterministic procedural generation (ADR-0024)
   'endless-runner': 'endlessRunner',
   'dungeon-crawler': 'dungeonCrawler',
+  // Phase 8 - world graph / rooms / transitions / map (ADR-0025)
+  metroidvania: 'metroidvania',
+  'exploration-game': 'explorationGame',
 };
 
 function proofTargets(): Target[] {

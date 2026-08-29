@@ -75,11 +75,13 @@ export const PLATFORMING_PRESETS: readonly PresetDefinition[] = [
     displayName: 'Metroidvania',
     family: 'platforming',
     controllerFamilies: ['platform'],
-    requiredSystemPacks: [pack(PACK_IDS.world), pack(PACK_IDS.worldEntities), pack(PACK_IDS.progression)],
+    requiredSystemPacks: [pack(PACK_IDS.world), pack(PACK_IDS.worldEntities), pack(PACK_IDS.progression), pack(PACK_IDS.worldGraph)],
     optionalSystemPacks: [pack(PACK_IDS.combat), pack(PACK_IDS.ai)],
-    requiredContentRoles: ['tuning', 'levels'],
+    requiredContentRoles: ['tuning', 'levels', 'world-graph'],
     validationProfile: VALIDATION_PROFILES.platform,
-    knownLimitations: [LIMITATIONS.worldGraphAndMap],
+    // Phase 8 (ADR-0025): locations, gated connections, room transitions and the
+    // map are the reusable sw2d.world-graph capability + content/world-graph.json.
+    knownLimitations: [],
   }),
 
   definePreset({

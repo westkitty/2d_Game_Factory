@@ -82,3 +82,4 @@ export { encountersPack, UnknownEncounterError, type EncounterService } from './
 export { navigationPack, type NavService, type NavGrid } from './navigation/navigationPack.ts';
 export { puzzleRulesPack, UnknownPuzzleError, type PuzzleRulesService } from './puzzleRules/puzzleRulesPack.ts';
 export { generationPack, type GenerationService } from './generation/generationPack.ts';
+export { worldGraphPack, WORLD_GRAPH_SAVE_SLOT, type WorldGraphConfig, type WorldGraphService } from './worldGraph/worldGraphPack.ts';

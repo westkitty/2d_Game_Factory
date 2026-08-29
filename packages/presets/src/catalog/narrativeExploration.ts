@@ -27,11 +27,13 @@ export const NARRATIVE_EXPLORATION_PRESETS: readonly PresetDefinition[] = [
     displayName: 'Exploration Game',
     family: 'narrative-exploration',
     controllerFamilies: ['top-down'],
-    requiredSystemPacks: [pack(PACK_IDS.world), pack(PACK_IDS.worldEntities)],
+    requiredSystemPacks: [pack(PACK_IDS.world), pack(PACK_IDS.worldEntities), pack(PACK_IDS.worldGraph)],
     optionalSystemPacks: [pack(PACK_IDS.narrative)],
-    requiredContentRoles: ['tuning', 'levels'],
+    requiredContentRoles: ['tuning', 'levels', 'world-graph'],
     validationProfile: VALIDATION_PROFILES.narrativeExploration,
-    knownLimitations: [LIMITATIONS.worldGraphAndMap],
+    // Phase 8 (ADR-0025): areas, discovery/visited state, transitions and the map
+    // are the reusable sw2d.world-graph capability + content/world-graph.json.
+    knownLimitations: [],
   }),
 
   definePreset({

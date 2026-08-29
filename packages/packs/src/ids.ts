@@ -31,6 +31,7 @@ export const PACK_IDS = {
   navigation: 'sw2d.navigation',
   puzzleRules: 'sw2d.puzzle-rules',
   generation: 'sw2d.generation',
+  worldGraph: 'sw2d.world-graph',
 } as const;
 
 export const CAPABILITY_IDS = {
@@ -57,4 +58,6 @@ export const CAPABILITY_IDS = {
   puzzleRules: 'puzzle.rules',
   /** Capability program Phase 7: deterministic seeded procedural generation of normalized worlds. */
   generation: 'world.generation',
+  /** Capability program Phase 8: location graph, room transitions and map (composes with world.state). */
+  worldGraph: 'world.graph',
 } as const;

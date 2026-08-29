@@ -7,6 +7,7 @@ import {
   navigationPack,
   puzzleRulesPack,
   generationPack,
+  worldGraphPack,
   aiPack,
   arcadePack,
   combatPack,
@@ -47,6 +48,7 @@ const ALL_PACKS = [
   navigationPack,
   puzzleRulesPack,
   generationPack,
+  worldGraphPack,
 ];
 
 /** `<family>.<service>`: lowercase segments, at least two, dash-separated words allowed after the first. */

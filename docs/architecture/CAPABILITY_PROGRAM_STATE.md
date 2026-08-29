@@ -27,14 +27,14 @@ Git/validation/architecture checkpoint, not a new chat.
 | 5 | Navigation & Pathfinding | `feature/capability-05-navigation` | PASS |
 | 6 | Data-Driven Puzzle Rules | `feature/capability-06-data-puzzles` | PASS |
 | 7 | Procedural Generation | `feature/capability-07-procedural-generation` | PASS |
-| 8 | World Graph / Rooms / Transitions / Map | `feature/capability-08-world-graph` | NOT STARTED |
+| 8 | World Graph / Rooms / Transitions / Map | `feature/capability-08-world-graph` | PASS |
 | 9 | Advanced 2D Physics & Constraints | `feature/capability-09-advanced-physics` | NOT STARTED |
 | 10 | Vehicle Handling & Racing | `feature/capability-10-vehicle-racing` | NOT STARTED |
 
 Program starting `main`: `0af24cd6c2646cae84fb4be559b68c2477e63d0b`
 (the Start/Confirm prerequisite; verified present before Phase 1).
 
-Current phase: **8 — World Graph / Rooms / Transitions / Map** (NOT STARTED). Phases 1–7 integrated to `origin/main`.
+Current phase: **9 — Advanced 2D Physics & Constraints** (NOT STARTED). Phases 1–8 integrated to `origin/main`.
 
 ---
 
@@ -556,5 +556,82 @@ certification lifecycle sweep.
 
 ### Next phase
 
-Phase 8 — World Graph / Rooms / Transitions / Map. Branch
-`feature/capability-08-world-graph` from the integrated `main`.
+Phase 8 done, see below.
+
+---
+
+## Phase 8 — World Graph / Rooms / Transitions / Map — PASS
+
+- **Starting SHA:** `18f585d0baf0d1dad2229c266fd2c0021f3ae616` (Phase 7 on `main`)
+- **Feature branch:** `feature/capability-08-world-graph`
+- **Phase commit SHA:** this commit — `feat: add reusable world graph and room transitions` on `main`
+- **Main integration SHA:** same commit, fast-forwarded onto `main`
+
+### Implementation summary
+
+- `packages/contracts/src/worldGraph.ts` (new): `WorldGraphDefinition` (nodes →
+  level doc + entrances + connections + bounded conditions), `WorldGraphService`,
+  `WorldMapState`, `WorldGraphSave`, `validateWorldGraphDefinition`.
+  `WORLD_GRAPH_CAPABILITY_ID = 'world.graph'`.
+- `packages/packs/src/worldGraph/worldGraphPack.ts` (new): `sw2d.world-graph` →
+  `world.graph`, `dependencies: []`. Conditions read `world.state` / `items` /
+  `progression` via `capabilities.get`. Opt-in id-only persistence
+  (`config.persist`) through `context.saves`.
+- `packages/schemas/schemas/world-graph.schema.json` (new,
+  `urn:sw2d:schema:content-world-graph:v1`); wired into `validator.ts` +
+  `CONTENT_DOCUMENTS` as document `world-graph`.
+- `packages/runtime/src/game-support/roomTransition.ts` (new):
+  `createRoomTransitionRuntime` - verify → suppress input → `teardownRoom()` →
+  resolve destination level → `buildRoom(level, entrance)` → graph already
+  marked discovered/visited. A blocked/broken transition leaves the current
+  room untouched.
+- `packages/runtime/src/game-support/worldMapOverlay.ts` (new):
+  `createWorldMapOverlay` - semantic-DOM map of discovered nodes, keyboard
+  operable, self-disposing.
+- Generator: `generateWorldGraphDoc` + always-emit `content/world-graph.json`;
+  `content.ts` / `main.ts` templates load `worldGraphPack`. `platform` /
+  `top-down` shell templates consume the capability (map on SECONDARY_ACTION,
+  edge-triggered transition).
+- Workbench: `POST /api/world-graph/inspect` (`workbench/server/worldGraphLab.ts`)
+  + an inspector-pane panel (`workbench/src/views/worldGraphLab.ts`) - nodes,
+  entrances, connections, conditions, validation, reachability. Read-only.
+- ADR-0025. Also hardened the Phase-5 `lane-defense` proof's `advanceOk` check
+  (polled window instead of a fixed 20 frames).
+
+### Proof consumers
+
+- **`proofs/metroidvania/`** (new) — three real rooms; a locked
+  `east → treasury` connection unlocked by a lever setting a world flag; a
+  return trip with the flag intact; the map; graph state persisted across a
+  real scene reinstall.
+- **`proofs/exploration-game/`** (new) — three areas in a loop; discovery /
+  visited state; a persistent world flag surviving every transition; the map;
+  **no room-sprite accumulation** after repeated back-and-forth traversal.
+- `npm run qa:proof` 17/17 → **19/19**.
+
+### Limitation changes
+
+- `LIMITATIONS.worldGraphAndMap` **removed** (constant deleted) from
+  `metroidvania` and `exploration-game` (both now require `sw2d.world-graph`
+  and consume it). Maturity split unchanged (5/7/62). Seventeen packs now have
+  a preset consumer.
+
+### Validation completed
+
+- `npm run typecheck` — PASS
+- `npm test` — 2496/2496 PASS (was 2404 at Phase 7; +92)
+- `npm run validate` (build + `check:offline`) — PASS
+- `npm run qa:proof` — 19/19 PASS
+- `npm run qa:matrix` — PASS
+- `npm run qa:starter-kits` — all 14 sub-suites PASS
+- `npm run qa:workbench` — 16/16 PASS (workbench changed)
+- `npm run release:verify` — 6/6 PASS
+
+### Unresolved blockers
+
+None.
+
+### Next phase
+
+Phase 9 — Advanced 2D Physics & Constraints. Branch
+`feature/capability-09-advanced-physics` from the integrated `main`.

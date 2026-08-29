@@ -23,7 +23,7 @@ pack/controller selections were actually exercised through, and
 | `chase-platformer` | world, world-entities | combat, arcade | platform | keyboard, touch | platform-recipe |
 | `endless-runner` | arcade, generation | world, world-entities | platform | keyboard, touch | platform-recipe |
 | `precision-platformer` | world, world-entities | arcade | platform | keyboard, touch | platform-recipe |
-| `metroidvania` | world, world-entities, progression | combat, ai | platform | keyboard, touch | platform-recipe |
+| `metroidvania` | world, world-entities, progression, world-graph | combat, ai | platform | keyboard, touch | platform-recipe |
 | `puzzle-platformer` | puzzle-rules, world, world-entities | - | platform, grid | keyboard, touch | platform-recipe |
 | `auto-runner` | arcade, generation | world, world-entities | platform | keyboard, touch | platform-recipe |
 | `climbing-game` | world, world-entities | arcade | platform | keyboard, touch | platform-recipe |
@@ -111,7 +111,7 @@ pack/controller selections were actually exercised through, and
 
 | id | required packs | optional packs | controller(s) | input modes | validation profile |
 |---|---|---|---|---|---|
-| `exploration-game` | world, world-entities | narrative | top-down | keyboard, touch | narrative-exploration-recipe |
+| `exploration-game` | world, world-entities, world-graph | narrative | top-down | keyboard, touch | narrative-exploration-recipe |
 | `visual-novel` | narrative | progression | ui-simulation | keyboard, touch | narrative-exploration-recipe |
 | `point-and-click` | narrative, world, world-entities | puzzle | pointer, ui-simulation | keyboard, pointer, touch | narrative-exploration-recipe |
 | `interactive-fiction-hybrid` | narrative | world | ui-simulation | keyboard, touch | narrative-exploration-recipe |
@@ -154,8 +154,9 @@ pack/controller selections were actually exercised through, and
 | encounters | `sw2d.encounters` | `combat.encounters` | 4 | 5 |
 | navigation | `sw2d.navigation` | `world.navigation` | 2 | 8 |
 | generation | `sw2d.generation` | `world.generation` | 5 | 5 |
+| world-graph | `sw2d.world-graph` | `world.graph` | 2 | 2 |
 
-**All sixteen current packs have at least one preset consumer.** `sw2d.items` (capability
+**All seventeen current packs have at least one preset consumer.** `sw2d.items` (capability
 program Phase 2) is required by `collectathon-platformer`, whose generated starter consumes
 the reusable item/effect service through the shared platform shell. `sw2d.puzzle-rules`
 (capability program Phase 6) is required by `sokoban` and `puzzle-platformer`, whose
@@ -163,7 +164,9 @@ generated starters drive the whole push/goal and switch/sequence rulesets from t
 `content/puzzles.json` document. `sw2d.generation` (capability program Phase 7) is required by
 `endless-runner`, `auto-runner`, `dungeon-crawler`, `action-roguelite` and `endless-driving`,
 whose generated shells build the playable world from a deterministic seed in
-`content/generation.json`.
+`content/generation.json`. `sw2d.world-graph` (capability program Phase 8) is required by
+`metroidvania` and `exploration-game`, whose generated shells drive location transitions,
+discovery/visited state and the map from `content/world-graph.json`.
 
 ## Validation profiles
 

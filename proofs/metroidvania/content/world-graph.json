@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "id": "castle",
+  "displayName": "Castle",
+  "startNodeId": "hub",
+  "nodes": [
+    {
+      "id": "hub",
+      "displayName": "Hub",
+      "level": "levels/hub",
+      "mapX": 1,
+      "mapY": 0,
+      "checkpointId": "hub-checkpoint",
+      "entrances": [
+        { "id": "start", "x": 80, "y": 440, "facing": "right" },
+        { "id": "from-east", "x": 780, "y": 440, "facing": "left" }
+      ],
+      "connections": [
+        { "id": "hub-east", "destinationNodeId": "east", "destinationEntranceId": "from-hub", "mapLabel": "east" }
+      ]
+    },
+    {
+      "id": "east",
+      "displayName": "East Hall",
+      "level": "levels/east",
+      "mapX": 2,
+      "mapY": 0,
+      "entrances": [
+        { "id": "from-hub", "x": 150, "y": 440, "facing": "right" },
+        { "id": "from-treasury", "x": 780, "y": 440, "facing": "left" }
+      ],
+      "connections": [
+        { "id": "east-hub", "destinationNodeId": "hub", "destinationEntranceId": "from-east", "mapLabel": "hub" },
+        {
+          "id": "east-treasury",
+          "destinationNodeId": "treasury",
+          "destinationEntranceId": "from-east",
+          "conditions": [{ "kind": "flag", "flag": "treasury-unlocked", "value": true }],
+          "mapLabel": "treasury (locked)"
+        }
+      ]
+    },
+    {
+      "id": "treasury",
+      "displayName": "Treasury",
+      "level": "levels/treasury",
+      "mapX": 3,
+      "mapY": 0,
+      "entrances": [{ "id": "from-east", "x": 150, "y": 440, "facing": "right" }],
+      "connections": [
+        { "id": "treasury-east", "destinationNodeId": "east", "destinationEntranceId": "from-treasury", "mapLabel": "east" }
+      ]
+    }
+  ]
+}

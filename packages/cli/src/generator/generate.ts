@@ -10,6 +10,7 @@ import {
   generateEncounterCatalog,
   generatePuzzleRulesDoc,
   generateGenerationDoc,
+  generateWorldGraphDoc,
   generateResourceManifest,
   generateTiledLevel,
   generateTheme,
@@ -93,6 +94,10 @@ export function buildGameFiles(gameId: string, preset: PresetDefinition): Map<st
       null,
       2,
     ) + '\n',
+  );
+  files.set(
+    'content/world-graph.json',
+    JSON.stringify(generateWorldGraphDoc(requiredPackIds.includes('sw2d.world-graph')), null, 2) + '\n',
   );
   files.set(
     'content/generation.json',

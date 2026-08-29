@@ -31,3 +31,4 @@ export * from './systems.ts';
 export * from './theme.ts';
 export * from './ui.ts';
 export * from './weapons.ts';
+export * from './worldGraph.ts';

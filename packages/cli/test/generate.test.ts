@@ -94,6 +94,12 @@ describe('all 74 presets generate valid, token-free, schema-valid source', () =>
       expect(() => validateContentBundleData({ generation: genJson })).not.toThrow();
     });
 
+    it(`${preset.id}'s generated content/world-graph.json validates as a world-graph document`, () => {
+      const files = buildGameFiles('matrix-game', preset);
+      const wgJson: unknown = JSON.parse(files.get('content/world-graph.json')!);
+      expect(() => validateContentBundleData({ 'world-graph': wgJson })).not.toThrow();
+    });
+
     it(`${preset.id} selects a real, resolvable shell template for its primary controller family`, () => {
       const files = buildGameFiles('matrix-game', preset);
       expect(files.has('src/game-specific/shellPack.ts')).toBe(true);

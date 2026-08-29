@@ -1,6 +1,16 @@
 import Phaser from 'phaser';
-import type { InstalledSystemPack } from '@sw2d/contracts';
-import { bindCollectiblePickups, bindStarterWeapon, resolveSceneLevel, topDownController, type SceneContext, type ScenePackDefinition } from '@sw2d/runtime';
+import type { InstalledSystemPack, WorldGraphService } from '@sw2d/contracts';
+import { WORLD_GRAPH_CAPABILITY_ID } from '@sw2d/contracts';
+import {
+  bindCollectiblePickups,
+  bindStarterWeapon,
+  createRoomTransitionRuntime,
+  createWorldMapOverlay,
+  resolveSceneLevel,
+  topDownController,
+  type SceneContext,
+  type ScenePackDefinition,
+} from '@sw2d/runtime';
 
 /**
  * Generated starter shell: top-down controller family.
@@ -75,6 +85,23 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     const pickups = bindCollectiblePickups(context, player, level);
     // Weapons (capability program Phase 3). Inert unless sw2d.weapons is installed.
     const weapon = bindStarterWeapon(context);
+    // World graph / rooms / transitions / map (capability program Phase 8).
+    // Inert unless sw2d.world-graph is installed.
+    const worldGraph = context.capabilities.get<WorldGraphService>(WORLD_GRAPH_CAPABILITY_ID);
+    const mapContainer = scene.game.canvas.parentElement ?? scene.game.canvas;
+    const worldMap = worldGraph && mapContainer instanceof HTMLElement ? createWorldMapOverlay(mapContainer, worldGraph) : null;
+    const rooms = worldGraph
+      ? createRoomTransitionRuntime(context, {
+          teardownRoom: () => {
+            /* starter graph: nodes share one level, so only the player moves */
+          },
+          buildRoom: (_level, entrance) => {
+            player.setPosition(entrance.x, entrance.y);
+            player.setVelocity(0, 0);
+            worldMap?.refresh();
+          },
+        })
+      : null;
     let nowMs = 0;
     let facingX = 1;
     let facingY = 0;
@@ -88,6 +115,9 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       pickupsRemaining: pickups.remaining(),
       weapon: weapon.snapshot(),
       ...(generationManifest ? { generation: generationManifest } : {}),
+      ...(worldGraph
+        ? { worldGraph: { current: worldGraph.currentNode().id, ...worldGraph.mapState(), mapOpen: worldMap?.isOpen ?? false, transitions: rooms?.transitions ?? 0 } }
+        : {}),
     }));
 
     let disposed = false;
@@ -110,6 +140,14 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         }
         weapon.update(deltaMs, nowMs);
         if (intent.primaryPressed) weapon.fire(nowMs, facingX, facingY, { x: player.x, y: player.y });
+        if (worldGraph && rooms) {
+          rooms.tick();
+          if (context.input.consumePress('SECONDARY_ACTION')) worldMap?.toggle();
+          if (!rooms.transitioning && !(worldMap?.isOpen ?? false) && player.x > context.definition.viewport.width - 48) {
+            const conn = worldGraph.connections().find((c) => worldGraph.canTraverse(c.id).allowed);
+            if (conn) rooms.requestTransition(conn.id);
+          }
+        }
       },
 
       dispose(): void {
@@ -118,6 +156,8 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         debugHandle.dispose();
         pickups.dispose();
         weapon.dispose();
+        rooms?.dispose();
+        worldMap?.dispose();
         try {
           player.destroy();
         } catch {
