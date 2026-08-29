@@ -49,6 +49,7 @@ import { inspectRacing } from './racingLab.ts';
 import { inspectPerception } from './perceptionLab.ts';
 import { inspectClimbing } from './climbingLab.ts';
 import { inspectRuns, updateRuns } from './runsLab.ts';
+import { inspectStrategyActions } from './strategyActionsLab.ts';
 import { loadScene, listLevels, newObject, objectClassOptions, saveScene, SceneValidationError, type SceneDocument } from './sceneStore.ts';
 import { buildProject, createProject, packProject, validateProject } from './factoryService.ts';
 import { starterKitDepthFor, starterKitFor } from './starterKits/index.ts';
@@ -710,6 +711,18 @@ const ROUTES: ReadonlyMap<string, Handler> = new Map<string, Handler>([
       const gameId = gameIdOf(request, body);
       const runs = body['runs'];
       return ok(updateRuns(gameId, runs));
+    },
+  ],
+
+  [
+    // Strategy orders & tactical actions (capability program Phase 14). Reports the
+    // validated content/strategy-actions.json catalog. Read-only: the order lifecycle
+    // half of the capability is not content-authored. Uses the /tactics path to stay
+    // inside the WB-SECURITY-001 non-executable route audit.
+    'POST /tactics/inspect',
+    (request) => {
+      const body = bodyObject(request);
+      return ok(inspectStrategyActions(gameIdOf(request, body)));
     },
   ],
 

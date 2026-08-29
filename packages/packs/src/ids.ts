@@ -37,6 +37,7 @@ export const PACK_IDS = {
   aiPerception: 'sw2d.ai-perception',
   climbing: 'sw2d.climbing',
   runs: 'sw2d.runs',
+  strategyActions: 'sw2d.strategy-actions',
 } as const;
 
 export const CAPABILITY_IDS = {
@@ -77,4 +78,8 @@ export const CAPABILITY_IDS = {
   climbing: 'movement.climbing',
   /** Capability program Phase 13: run lifecycle & roguelite meta-progression. */
   runs: 'progression.runs',
+  /** Capability program Phase 14: order lifecycle for RTS/tactics units (sits alongside strategy.turns). */
+  strategyOrders: 'strategy.orders',
+  /** Capability program Phase 14: bounded tactical actions - range, cost, cooldown, validity. */
+  strategyTactics: 'strategy.tactics',
 } as const;

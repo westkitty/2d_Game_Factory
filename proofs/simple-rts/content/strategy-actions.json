@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "actions": [
+    {
+      "id": "focus-fire",
+      "displayName": "Focus Fire",
+      "orderKind": "attack",
+      "targeting": "entity",
+      "range": 220,
+      "cooldownTicks": 2,
+      "targetFilter": "enemy"
+    },
+    {
+      "id": "rally-point",
+      "displayName": "Rally Point",
+      "orderKind": "move",
+      "targeting": "position",
+      "range": 1200
+    }
+  ]
+}

@@ -82,6 +82,11 @@ export const LIMITATIONS = {
     'No complete customer AI, demand/economy model, queue/placement UI, or content-authored production chain exists.',
   creatureSimulation:
     'No reusable needs/behavior/relationship/creature simulation exists beyond foundational resources/state.',
+  // Capability program Phase 14 addition. Order issue/queue/cancel/lifecycle is
+  // reusable (sw2d.strategy-actions); what stays starter-specific is the *input*
+  // surface that turns a drag rectangle into a set of actor ids.
+  rtsSelectionUi:
+    'Unit orders (move, attack, attack-move, hold, stop, queued and replacement commands) are reusable through sw2d.strategy-actions (strategy.orders); box-select drag input and a command-card UI are still starter-specific.',
 } as const;
 
 export interface PresetSpec {

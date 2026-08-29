@@ -3,8 +3,10 @@
 Phase 10's five deep, end-to-end proof games - the tier above Phase 8's smoke bar - plus the
 capability-completion program's per-phase proof consumers. Each row is backed by a frozen
 `proofs/<id>/PROOF_CONTRACT.md`, a real generated composition, and a committed real-browser proof
-spec run through `npm run qa:proof`. Mechanically, `npm run qa:proof` is **23/23** as of this
-revision.
+spec run through `npm run qa:proof`. Mechanically, `npm run qa:proof` has **29 registered targets**
+as of this revision (`PROOF_SPEC_MODULES` in `packages/qa/src/runProofs.ts` is the authority; the
+per-phase sections below stop at Phase 10 and Phase 14 — Phases 11-13's rows live in
+[`ANTIGRAVITY_POST_TEN_CANDIDATE_STATE.md`](../architecture/ANTIGRAVITY_POST_TEN_CANDIDATE_STATE.md)).
 
 ## Capability program — Phase 1: reusable spatial pointer & interaction (ADR-0018)
 
@@ -81,6 +83,13 @@ folded into a capability phase.
 |---|---|---|---|---|---|
 | `proofs/top-down-racer/` (new) | `top-down-racer` | `sw2d.vehicles` (`VehicleService`, `vehicle.motion`) - `VehicleIntent` in, car motion out; `sw2d.racing` (`RaceService`, `race.state`) - four ordered checkpoints, two laps, a countdown, simulation time | A tiny autopilot points the wheel at `expectedCheckpoint()` (produces intent only); CONFIRM starts the race; SECONDARY_ACTION fires the last checkpoint out of order | Start + CONFIRM → `phase 'countdown'`; countdown elapses → `'racing'`, `expectedCheckpoint 'cp-1'`; the car accelerates (`maxSpeed > 100`) and steers; a skipped-checkpoint shortcut → `lastShortcutCounted false`, lap unchanged; the autopilot runs two ordered laps → `finished`, `lapCount 2`, `phase 'finished'`; restart → fresh race (`finished false`, `lapCount 0`) | PASS |
 | `proofs/time-trial-racer/` (new) | `time-trial-racer` | Same services in `time-trial` mode; best lap / total persisted through `context.saves` | Same autopilot; PRIMARY_ACTION restarts the attempt; holding INTERACT slows the autopilot for a deliberately slow first run | Start (INTERACT held, slow) + CONFIRM → countdown → `elapsedMs` climbs (a live timer); an out-of-order checkpoint is rejected; the slow lap finishes and sets `bestTotalMs`; PRIMARY_ACTION restarts (`phase 'idle'`, `elapsedMs 0`, best retained); a full-speed second lap finishes with `bestTotalMs` **less than** the first - a better valid run updates the best, and no invalid sequence is ever accepted as a run | PASS |
+
+## Capability program — Phase 14: strategy orders & tactical actions
+
+| Proof | Preset | Reusable capability exercised | Game-specific mechanics | Browser journey | Status |
+|---|---|---|---|---|---|
+| `proofs/simple-rts/` (new) | `simple-rts` | `sw2d.strategy-actions` — `strategy.orders` (order ids, queue order, replace/append policy, active-vs-queued status, cancel/stop, dead actor + dead target handling, `superseded`/`unreachable`/`actor-removed`/`target-lost` verdicts, named groups) and `strategy.tactics` (range verdict from `content/strategy-actions.json`); `sw2d.navigation` `RouteFollower` inside the order adapter; `sw2d.combat` for damage | Only the drag-rectangle selection surface and the `OrderWorldAdapter` (where a unit is; what one tick of move/attack/attack-move does) | Boot (5 units, no orders); drag-select 2 of 3 blue units; move order → `ord-1`/`ord-2` queued in ascending actor order; next tick active and moving; both complete on arrival; attack order routes to `red-1` and kills it; `append` queues behind the active order and `replace` cancels both as `superseded`; `stop` clears the lane and `cancel` resolves a queued order; unknown target rejected `invalid-target`, dead target `target-lost`, wall destination fails `unreachable`, a unit killed mid-order fails `actor-removed`; a named squad takes one command for two actors; `focus-fire` is out-of-range at 553 units and legal at 78; the same order from the same start position completes at the same place after the same number of ticks, twice | PASS (13/13) |
+| `proofs/turn-based-tactics/` (upgraded) | `turn-based-tactics` | Same pack, discrete side: action range, `minRange`, action-point cost, `usesPerTurn`, tick-based cooldown, ally/enemy target filter, `target-lost`, and the completed/failed order verdict — plus the unchanged Phase 5 `NavGrid.reachable`/`RouteFollower` journey | Grid cursor + `OrderWorldAdapter`; `reposition` orders route through the same Phase 5 follower | All five Phase 5 steps unchanged, then: 2 action points at boot with all four catalog actions available; `strike` valid at 60 units, out-of-range at 360, `snipe` `too-close` at 60 and valid at 360, wrong target kind rejected; `strike` spends 1 point, raises an `attack` order carrying `abilityId`, and takes the foe to 70 hp; the 2-point `snipe` is refused as `insufficient-points`; ending the turn rotates `strategy.turns` to `red` and restores points; `snipe` fires, sets a tick cooldown, and is refused as `on-cooldown`; `brace` is refused as `no-uses-remaining` after one use; `reposition` to an in-range cell completes and relocates the unit, out-of-range is refused, and a wall cell inside range fails as `unreachable`; a slain foe is `target-lost` and an ally target is `invalid-target` | PASS (15/15) |
 
 ## Phase 10 deep proofs
 

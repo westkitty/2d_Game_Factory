@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "actionPointsPerTurn": 2,
+  "actions": [
+    {
+      "id": "strike",
+      "displayName": "Strike",
+      "orderKind": "attack",
+      "targeting": "entity",
+      "range": 90,
+      "cost": 1,
+      "targetFilter": "enemy"
+    },
+    {
+      "id": "snipe",
+      "displayName": "Snipe",
+      "orderKind": "attack",
+      "targeting": "entity",
+      "range": 400,
+      "minRange": 120,
+      "cost": 2,
+      "cooldownTicks": 4,
+      "targetFilter": "enemy"
+    },
+    {
+      "id": "reposition",
+      "displayName": "Reposition",
+      "orderKind": "move",
+      "targeting": "position",
+      "range": 130,
+      "cost": 1
+    },
+    {
+      "id": "brace",
+      "displayName": "Brace",
+      "targeting": "none",
+      "range": 0,
+      "cost": 1,
+      "usesPerTurn": 1
+    }
+  ]
+}

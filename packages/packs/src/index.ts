@@ -88,3 +88,16 @@ export { racingPack, RACING_SAVE_SLOT, type RacingConfig, type RaceService } fro
 export { aiPerceptionPack, PerceptionServiceImpl, PursuitServiceImpl } from './aiPerception/aiPerceptionPack.ts';
 export { climbingPack, ClimbingServiceImpl, DEFAULT_CLIMBING_CONFIG } from './climbing/climbingPack.ts';
 export { runsPack, RunServiceImpl, RUNS_CONFIG_SCHEMA_ID, RUNS_SAVE_SLOT_ACTIVE, type RunsConfig } from './runs/runsPack.ts';
+export {
+  strategyActionsPack,
+  StrategyOrdersServiceImpl,
+  StrategyTacticsServiceImpl,
+  STRATEGY_ACTIONS_CONFIG_SCHEMA_ID,
+  MissingWorldAdapterError,
+  WorldAdapterAlreadySetError,
+  DuplicateOrderGroupError,
+  UnknownOrderGroupError,
+  type StrategyActionsConfig,
+  type StrategyOrdersService,
+  type StrategyTacticsService,
+} from './strategyActions/strategyActionsPack.ts';

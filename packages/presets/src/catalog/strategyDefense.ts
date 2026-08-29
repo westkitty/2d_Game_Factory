@@ -1,6 +1,6 @@
 import type { PresetDefinition } from '@sw2d/contracts';
 import { PACK_IDS } from '@sw2d/packs/ids';
-import { POINTER_INPUT_MODES, VALIDATION_PROFILES, definePreset, pack } from '../shared.ts';
+import { LIMITATIONS, POINTER_INPUT_MODES, VALIDATION_PROFILES, definePreset, pack } from '../shared.ts';
 
 /**
  * Family F - Strategy / defense (recipes 43-49).
@@ -64,7 +64,9 @@ export const STRATEGY_DEFENSE_PRESETS: readonly PresetDefinition[] = [
     optionalSystemPacks: [pack(PACK_IDS.progression)],
     requiredContentRoles: ['tuning'],
     validationProfile: VALIDATION_PROFILES.strategyDefense,
-    knownLimitations: ['AI/combat/strategy state foundations exist, but autonomous combat orchestration is not implemented.'],
+    knownLimitations: [
+      'AI/combat/strategy state foundations exist, and unit orders are reusable (sw2d.strategy-actions), but autonomous combat orchestration is not implemented.',
+    ],
   }),
 
   definePreset({
@@ -72,11 +74,13 @@ export const STRATEGY_DEFENSE_PRESETS: readonly PresetDefinition[] = [
     displayName: 'Simple RTS',
     family: 'strategy-defense',
     controllerFamilies: ['top-down'],
-    requiredSystemPacks: [pack(PACK_IDS.strategy), pack(PACK_IDS.combat)],
-    optionalSystemPacks: [pack(PACK_IDS.ai), pack(PACK_IDS.world), pack(PACK_IDS.worldEntities), pack(PACK_IDS.navigation)],
+    requiredSystemPacks: [pack(PACK_IDS.strategy), pack(PACK_IDS.combat), pack(PACK_IDS.navigation), pack(PACK_IDS.strategyActions)],
+    optionalSystemPacks: [pack(PACK_IDS.ai), pack(PACK_IDS.world), pack(PACK_IDS.worldEntities)],
     requiredContentRoles: ['tuning', 'levels'],
     validationProfile: VALIDATION_PROFILES.strategyDefense,
-    knownLimitations: ['Unit pathfinding is reusable (sw2d.navigation, optional); box-select and command-queue UI are not implemented.'],
+    // Order issue/queue/cancel and order lifecycle are reusable now
+    // (sw2d.strategy-actions, ADR-0028; proof: proofs/simple-rts/).
+    knownLimitations: [LIMITATIONS.rtsSelectionUi],
   }),
 
   definePreset({
@@ -85,14 +89,16 @@ export const STRATEGY_DEFENSE_PRESETS: readonly PresetDefinition[] = [
     displayName: 'Turn-Based Tactics',
     family: 'strategy-defense',
     controllerFamilies: ['grid', 'ui-simulation'],
-    requiredSystemPacks: [pack(PACK_IDS.strategy), pack(PACK_IDS.combat), pack(PACK_IDS.navigation)],
+    requiredSystemPacks: [pack(PACK_IDS.strategy), pack(PACK_IDS.combat), pack(PACK_IDS.navigation), pack(PACK_IDS.strategyActions)],
     optionalSystemPacks: [pack(PACK_IDS.ai), pack(PACK_IDS.world), pack(PACK_IDS.worldEntities)],
     requiredContentRoles: ['tuning', 'levels'],
     validationProfile: VALIDATION_PROFILES.strategyDefense,
     // Reachable-cell movement range + deterministic route-following are reusable
-    // now (sw2d.navigation, ADR-0022; proof: proofs/turn-based-tactics/).
+    // (sw2d.navigation, ADR-0022); action range, cost, cooldown, target legality
+    // and the order lifecycle are reusable now too (sw2d.strategy-actions,
+    // ADR-0028; proof: proofs/turn-based-tactics/).
     knownLimitations: [
-      'Attack-range/line-of-fire resolution and a full turn-action state machine are still starter-specific.',
+      'Line-of-fire occlusion and multi-unit turn ordering are still starter-specific; sw2d.strategy-actions supplies action range/cost/cooldown/validity and sw2d.strategy supplies team turn rotation.',
     ],
   }),
 
@@ -117,6 +123,9 @@ export const STRATEGY_DEFENSE_PRESETS: readonly PresetDefinition[] = [
     optionalSystemPacks: [pack(PACK_IDS.ai)],
     requiredContentRoles: ['tuning', 'levels'],
     validationProfile: VALIDATION_PROFILES.strategyDefense,
-    knownLimitations: ['Reusable capture-zone/territory ownership/scoring mechanics do not exist yet.'],
+    knownLimitations: [
+      'Reusable capture-zone/territory ownership/scoring mechanics do not exist yet.',
+      LIMITATIONS.rtsSelectionUi,
+    ],
   }),
 ];

@@ -89,8 +89,8 @@ pack/controller selections were actually exercised through, and
 | `tower-defense` | world, world-entities, progression, combat | ai, navigation | grid, pointer | keyboard, pointer, touch | strategy-defense-recipe |
 | `lane-defense` | world, world-entities, progression | combat | grid, pointer, navigation | keyboard, pointer, touch | strategy-defense-recipe |
 | `auto-battler` | strategy, combat, ai | progression | ui-simulation | keyboard, touch | strategy-defense-recipe |
-| `simple-rts` | strategy, combat | ai, world, world-entities | top-down, navigation | keyboard, touch | strategy-defense-recipe |
-| `turn-based-tactics` | strategy, combat | ai, world, world-entities, navigation | grid, ui-simulation | keyboard, touch | strategy-defense-recipe |
+| `simple-rts` | strategy, combat, navigation, strategy-actions | ai, world, world-entities | top-down | keyboard, touch | strategy-defense-recipe |
+| `turn-based-tactics` | strategy, combat, navigation, strategy-actions | ai, world, world-entities | grid, ui-simulation | keyboard, touch | strategy-defense-recipe |
 | `base-defense` | world, world-entities, combat | ai, progression | top-down, encounters | keyboard, touch | strategy-defense-recipe |
 | `territory-control` | world, world-entities, strategy, combat | ai | top-down | keyboard, touch | strategy-defense-recipe |
 

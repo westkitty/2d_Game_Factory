@@ -121,8 +121,8 @@ describe('required knownLimitations (MASTER_PROJECT.md section 12)', () => {
     { id: 'tower-defense', pattern: /route-following pathfinding is reusable/ },
     { id: 'lane-defense', pattern: /Lane-spawn scheduling and combat resolution are still starter-specific/ },
     { id: 'auto-battler', pattern: /autonomous combat orchestration is not implemented/ },
-    { id: 'simple-rts', pattern: /box-select and command-queue UI are not implemented/ },
-    { id: 'turn-based-tactics', pattern: /turn-action state machine are still starter-specific/ },
+    { id: 'simple-rts', pattern: /box-select drag input and a command-card UI are still starter-specific/ },
+    { id: 'turn-based-tactics', pattern: /Line-of-fire occlusion and multi-unit turn ordering are still starter-specific/ },
     { id: 'base-defense', pattern: /base-damage\/target-priority/ },
     { id: 'territory-control', pattern: /Reusable capture-zone\/territory ownership\/scoring mechanics/ },
     // Phase 7C (MASTER_PROJECT.md section 11)

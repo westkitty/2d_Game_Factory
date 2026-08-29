@@ -38,7 +38,53 @@ describe('validateContentBundleData', () => {
       'perception',
       'climbing',
       'runs',
+      'strategy-actions',
     ]);
+  });
+
+  it('validates a valid strategy-actions document', () => {
+    const doc = {
+      schemaVersion: 1,
+      actionPointsPerTurn: 2,
+      actions: [
+        {
+          id: 'strike',
+          displayName: 'Strike',
+          orderKind: 'attack',
+          targeting: 'entity',
+          range: 64,
+          cost: 1,
+          cooldownTicks: 2,
+          usesPerTurn: 1,
+          targetFilter: 'enemy',
+        },
+        { id: 'reposition', orderKind: 'move', targeting: 'position', range: 240, cost: 1 },
+      ],
+    };
+    const result = validateContentBundleData({ 'strategy-actions': doc });
+    expect(result['strategy-actions']?.valid).toBe(true);
+    expect(result['strategy-actions']?.schemaId).toBe('urn:sw2d:schema:content-strategy-actions:v1');
+  });
+
+  it('rejects a malformed strategy-actions document with a located error', () => {
+    expect(() =>
+      validateContentBundleData({
+        'strategy-actions': {
+          schemaVersion: 1,
+          actions: [{ id: 'bad', targeting: 'nowhere', range: 10 }],
+        },
+      }),
+    ).toThrow();
+    expect(() =>
+      validateContentBundleData({
+        'strategy-actions': { schemaVersion: 1, actions: [{ id: 'bad', targeting: 'entity', range: -5 }] },
+      }),
+    ).toThrow();
+    expect(() =>
+      validateContentBundleData({
+        'strategy-actions': { schemaVersion: 1, actions: [{ id: 'bad', targeting: 'entity', range: 5, whoops: true }] },
+      }),
+    ).toThrow();
   });
 
   it('validates a valid runs document', () => {

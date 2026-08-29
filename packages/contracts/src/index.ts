@@ -31,6 +31,7 @@ export * from './puzzles.ts';
 export * from './resources.ts';
 export * from './scenes.ts';
 export * from './spatial.ts';
+export * from './strategyOrders.ts';
 export * from './systems.ts';
 export * from './theme.ts';
 export * from './ui.ts';

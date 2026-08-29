@@ -62,13 +62,13 @@ with a small working placeholder to replace. Every other pack is configured as J
 ## Composition
 
 - Controller family/families: grid, ui-simulation
-- Required packs (enabled by default): sw2d.strategy, sw2d.combat, sw2d.navigation
+- Required packs (enabled by default): sw2d.strategy, sw2d.combat, sw2d.navigation, sw2d.strategy-actions
 - Optional packs (available, not enabled by default - add to content/game.json's systemPacks to use): sw2d.ai, sw2d.world, sw2d.world-entities
 - Content roles this preset expects: tuning, levels
 
 ## Known preset limitations
 
-- Attack-range/line-of-fire resolution and a full turn-action state machine are still starter-specific.
+- Line-of-fire occlusion and multi-unit turn ordering are still starter-specific; sw2d.strategy-actions supplies action range/cost/cooldown/validity and sw2d.strategy supplies team turn rotation.
 
 ## How to add a level
 

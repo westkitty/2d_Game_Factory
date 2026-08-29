@@ -1,0 +1,38 @@
+{
+  "id": "proof-simple-rts",
+  "displayName": "Proof Simple RTS",
+  "version": "0.1.0",
+  "schemaVersion": 1,
+  "viewport": {
+    "width": 960,
+    "height": 540
+  },
+  "bindings": {},
+  "systemPacks": [
+    {
+      "packId": "sw2d.strategy",
+      "config": {}
+    },
+    {
+      "packId": "sw2d.combat",
+      "config": {}
+    },
+    {
+      "packId": "sw2d.navigation",
+      "config": {}
+    },
+    {
+      "packId": "sw2d.strategy-actions",
+      "config": {
+        "historyLimit": 32
+      }
+    },
+    {
+      "packId": "game.rts-shell",
+      "config": {}
+    }
+  ],
+  "defaultSettings": {
+    "masterVolume": 0.7
+  }
+}

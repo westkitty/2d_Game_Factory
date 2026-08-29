@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:sw2d:schema:content-strategy-actions:v1",
+  "title": "StrategyActionsDocument",
+  "description": "Mirrors @sw2d/contracts StrategyActionsDocument (strategyOrders.ts). Content document name 'strategy-actions'. Bounded tactical actions consumed by the strategy.tactics capability; the strategy.orders lifecycle itself is not content-authored.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "actions"],
+  "properties": {
+    "schemaVersion": { "type": "integer", "minimum": 1, "maximum": 1 },
+    "actionPointsPerTurn": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Points restored to every actor on refresh(). Omit or 0 for an uncosted (RTS-style) catalog."
+    },
+    "actions": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/tacticalAction" }
+    }
+  },
+  "definitions": {
+    "tacticalAction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "targeting", "range"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "displayName": { "type": "string", "minLength": 1 },
+        "orderKind": {
+          "type": "string",
+          "enum": ["move", "attack", "attack-move", "hold", "stop", "interact", "guard", "ability"]
+        },
+        "targeting": {
+          "type": "string",
+          "enum": ["none", "position", "entity", "region", "direction"]
+        },
+        "range": { "type": "number", "minimum": 0 },
+        "minRange": { "type": "number", "minimum": 0 },
+        "cost": { "type": "number", "minimum": 0 },
+        "cooldownTicks": { "type": "integer", "minimum": 0 },
+        "usesPerTurn": { "type": "integer", "minimum": 1 },
+        "requiresTeam": { "type": "string", "minLength": 1 },
+        "targetFilter": {
+          "type": "string",
+          "enum": ["any", "ally", "enemy", "self", "empty"]
+        }
+      }
+    }
+  }
+}

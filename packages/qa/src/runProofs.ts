@@ -69,6 +69,8 @@ const PROOF_SPEC_MODULES: Readonly<Record<string, string>> = {
   // Phase 13 - run lifecycle & roguelite meta-progression
   'action-roguelite': 'actionRoguelite',
   'survivor-like': 'survivorLike',
+  // Phase 14 - strategy orders & tactical actions
+  'simple-rts': 'simpleRts',
 };
 
 function proofTargets(): Target[] {

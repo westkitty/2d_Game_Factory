@@ -31,3 +31,4 @@ One short record per decision that constrains later work. No ADR for trivia.
 | [0025](0025-world-graph-rooms-transitions-map.md) | World graph, room transitions and map: one capability that composes with world.state | Capability program 8 |
 | [0026](0026-optional-advanced-physics-and-constraints.md) | Advanced physics is an opt-in Matter profile with a renderer-neutral service | Capability program 9 |
 | [0027](0027-vehicle-handling-and-racing.md) | Vehicle handling and race state are two separate pure capabilities; the controller stays intent-only | Capability program 10 |
+| [0028](0028-strategy-orders-and-tactical-actions.md) | Order lifecycle is owned by the capability; world effects go through one `OrderWorldAdapter` seam | Post-ten 14 |

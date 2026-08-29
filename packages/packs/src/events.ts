@@ -42,6 +42,15 @@ declare module '@sw2d/contracts' {
     'runs:killRecorded': { readonly kills: number };
     'runs:roomCleared': { readonly roomsCleared: number };
     'runs:waveCleared': { readonly wavesCleared: number };
+    'orders:issued': { readonly orderId: string; readonly actorId: string; readonly kind: string; readonly tick: number };
+    'orders:resolved': {
+      readonly orderId: string;
+      readonly actorId: string;
+      readonly status: 'completed' | 'cancelled' | 'failed';
+      readonly reason: string | null;
+      readonly tick: number;
+    };
+    'tactics:executed': { readonly actionId: string; readonly actorId: string; readonly spent: number; readonly orderId: string };
   }
 }
 
