@@ -7,6 +7,28 @@ Current candidate phase: Phase 14 (FOCUSED TESTS PASS)
 
 ---
 
+### Next phase: not specified anywhere in this repository
+
+Phase 14 is the last phase with a recoverable specification. Searched for a Phase 15+ spec and
+found none:
+
+- `git grep 'Phase 1[5-7]' -- '*.md'` across **every remote branch** — no hits.
+- `MASTER_PROJECT.md`, `PROJECT_BIBLE.md`, `README.md`, `OPERATIONAL_STATE.md`,
+  `WORKBENCH_OPERATIONAL_STATE.md` — none enumerate post-ten phases.
+- This file is the only post-ten program document; it records phases retrospectively and has
+  never carried a forward plan. The "Phase 11-36" phrase in the note below is a single
+  unelaborated mention, not a phase list.
+- `CAPABILITY_PROGRAM_STATE.md`'s closing "Remaining limitations" paragraph is a set of gaps,
+  **not** an ordered phase sequence: Phase 13 (run lifecycle) came from late in that paragraph
+  and Phase 14 (strategy orders) is not in it at all.
+
+Work stopped at the durable Phase 14 boundary rather than inventing a Phase 15. Whoever assigns
+Phase 15 should write its specification down here (or in a dedicated roadmap document) first.
+`CAPABILITY_PROGRAM_STATE.md`'s remaining-limitations paragraph is the best available menu of
+candidates.
+
+---
+
 ### Historical Note: Misrouted Work Preserved
 The dungeon-chest / lockpicking prototype was accidentally implemented under Phase 13, preserved on remote branch `salvage/antigravity-dungeon-chests`, and reverted from the post-ten program candidate before continuing. It is not part of the Phase 11–36 program.
 
