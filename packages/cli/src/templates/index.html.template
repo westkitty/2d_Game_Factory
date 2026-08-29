@@ -10,7 +10,16 @@
   </head>
   <body>
     <main id="app">
-      <div id="game-root" aria-label="Game canvas"></div>
+      <div id="game-root" aria-label="Game canvas">
+        <!--
+          The visible Start control. It binds by name through the same semantic
+          input layer the touch buttons use (data-sw2d-action="CONFIRM"), so it
+          adds no second start path - a click here is an ordinary CONFIRM press.
+          Shown only on the title; src/main.ts hides it once a run begins.
+          Keyboard start (Enter / Space) works whether or not this is focused.
+        -->
+        <button type="button" id="start-overlay" class="start-overlay" data-sw2d-action="CONFIRM" aria-label="Start game">Start</button>
+      </div>
 
       <!--
         Touch controls bind by name through the semantic input layer. They are

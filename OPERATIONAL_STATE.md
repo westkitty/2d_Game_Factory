@@ -774,6 +774,53 @@ adjudicated individually in the Phase 12 acceptance document):
 
 ## Revision history
 
+### Revision 15 - 2026-08-28 (Sonnet 5)
+
+**Start / Confirm UX repair - the title screen no longer leaves a player at an opaque
+"PRESS CONFIRM TO START" with no visible way to start.**
+
+- **Defect.** A desktop player saw `PRESS CONFIRM TO START` (the internal semantic action name)
+  with no key named and no visible clickable control - the DOM `A`/CONFIRM button lives in the
+  `#touch-controls` cluster, which stays `hidden` unless `pointer: coarse`.
+- **Keyboard hint is now honest and physical.** `TitleScene` derives the prompt from the game's
+  *effective* `CONFIRM` keyboard bindings via a new pure `packages/runtime/src/input/keyLabels.ts`
+  (`humanizeKeyCode` / `describeKeys` / `startPromptFor`). Default bindings render
+  `PRESS ENTER OR SPACE TO START`; a rebind (e.g. `KeyX`) renders `PRESS X TO START`; an explicit
+  `content.ui.startPrompt` still wins verbatim. `DEFAULT_UI_COPY.startPrompt` in
+  `packages/contracts/src/ui.ts` changed from `PRESS CONFIRM TO START` to
+  `PRESS ENTER OR SPACE TO START` (fallback only).
+- **Visible Start control in the generated game.** A `<button id="start-overlay"
+  data-sw2d-action="CONFIRM">Start</button>` sits inside `#game-root`, shown on the title and
+  hidden by `src/main.ts` on `scene:changed` / `run:started`. It is a semantic `CONFIRM` press
+  through the existing `PointerAdapter` - **no second start path, no new transition logic**
+  (ADR-0003 preserved: `consumePress('CONFIRM')` still claims the edge exactly once). It is not
+  gated on `pointer: coarse`, so a desktop mouse user sees it. It belongs to the runtime
+  experience, so it survives build/pack/offline/opening outside the Workbench. Touch controls
+  and Enter/Space/Numpad Enter are unchanged.
+- Applied to the authoritative surfaces: `packages/cli/src/templates/{index.html.template,
+  styles.css.template, src/main.ts.template}` (every newly generated game), the hand-maintained
+  foundation slice `starter/{index.html, src/styles.css, src/main.ts}` and its
+  `starter/{tiled-proof.html, src/tiledProofMain.ts}`. The workbench preview placeholder hint
+  (`workbench/src/views/previewPane.ts`) now names the in-game Start button / Enter-Space
+  instead of "start it". Checked-in `demos/*` and `proofs/*` are generated snapshots and were
+  **not** mass-edited; they still start via Enter/Space and will gain the visible overlay on
+  their next intentional regeneration through `tools/scripts/generate-demos.ts`.
+- **Tests.** `packages/runtime/test/keyLabels.test.ts` (prompt derivation, no "CONFIRM",
+  content-override, fallback), `packages/runtime/test/startControls.test.ts` (a
+  `data-sw2d-action="CONFIRM"` DOM element routes to the CONFIRM action, claimed once, no
+  double-fire), `packages/cli/test/generate.test.ts` additions (generated `index.html` /
+  `styles.css` / `main.ts` carry the overlay + wiring; no generated file says "PRESS CONFIRM"),
+  and the real-browser proof `tools/scripts/qa-start-controls.ts` on a freshly generated game:
+  title says `PRESS ENTER OR SPACE TO START`, `#start-overlay` visible on title / hidden in
+  play, **Enter starts, Space starts, clicking Start starts**, touch CONFIRM button preserved,
+  pause/resume clean, zero console errors / external requests, lockfile unchanged.
+- **Validation on the final tree:** `npm run typecheck` PASS, `npm run validate` PASS,
+  `npm test` **2078/2078**, `npm run qa:smoke` **14/14**, `npm run qa:proof` **5/5**,
+  `tools/scripts/qa-frame-group-animation.ts` PASS, `tools/scripts/qa-start-controls.ts` PASS,
+  `npm run release:verify` **6/6** (deterministic pack, 0 external requests),
+  `npm run qa:matrix` **40/40**, `npm run qa:responsive` **19/19**.
+- This revision is the repair commit itself; pushed to `origin/main` (see `git log`).
+
 ### Revision 14 - 2026-08-26 (Opus 5)
 
 **Phase 12 - Final Cross-System Acceptance and Cold-Start Gate - COMPLETE. Verdict: Complete.**

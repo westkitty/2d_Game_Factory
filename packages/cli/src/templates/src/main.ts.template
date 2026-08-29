@@ -1,4 +1,5 @@
 import './styles.css';
+import { SCENE_KEYS } from '@sw2d/contracts';
 import { createGame } from '@sw2d/runtime';
 import {
   aiPack,
@@ -20,6 +21,7 @@ import { PACK_CONFIG } from './game-specific/packConfig.ts';
 
 const gameRoot = document.querySelector<HTMLElement>('#game-root');
 const touchControls = document.querySelector<HTMLElement>('#touch-controls');
+const startOverlay = document.querySelector<HTMLElement>('#start-overlay');
 
 if (!gameRoot) throw new Error('#game-root is missing from index.html');
 
@@ -49,6 +51,18 @@ function syncTouchControls(): void {
 
 syncTouchControls();
 runtime.context.events.on('settings:changed', syncTouchControls);
+
+// The visible Start control belongs on the title only. Clicking/tapping it is
+// an ordinary semantic CONFIRM press (data-sw2d-action), so this adds no second
+// start path - it only shows and hides the button. Fail-visible: it stays shown
+// until a run actually begins.
+function syncStartOverlay(sceneKey: string): void {
+  if (!startOverlay) return;
+  startOverlay.hidden = sceneKey !== SCENE_KEYS.title;
+}
+
+runtime.context.events.on('scene:changed', ({ to }) => syncStartOverlay(to));
+runtime.context.events.on('run:started', () => syncStartOverlay(SCENE_KEYS.play));
 
 window.addEventListener('error', (event) => {
   console.error('[sw2d]', event.error ?? event.message);

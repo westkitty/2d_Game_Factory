@@ -67,7 +67,7 @@ export function renderPreview(host: HTMLElement): () => void {
             { class: 'empty', style: { 'max-width': '440px' } },
             el('div', { class: 'preview__playmark', text: 'PLAY' }),
             el('strong', { text: 'Your game is ready to run' }),
-            el('div', { style: { 'margin-bottom': '14px' }, text: 'Run live opens the real generated game here. Click inside the game, start it, then use its on-screen controls or the keyboard.' }),
+            el('div', { style: { 'margin-bottom': '14px' }, text: 'Run live opens the real generated game here. On its title screen, click the Start button or press Enter / Space; then play with its on-screen controls or the keyboard.' }),
             button('Run game', () => void startPreview('fast'), { class: 'btn btn--run btn--lg' }),
             el('div', { class: 'preview__hint', text: `Inputs available: ${current.preset?.inputModes.join(', ') || 'keyboard'}. Press F inside the game for fullscreen.` }),
           ),

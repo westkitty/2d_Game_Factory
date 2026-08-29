@@ -196,3 +196,55 @@ describe('content/tuning.json is actually consumed, not just validated', () => {
     });
   }
 });
+
+/**
+ * Start / Confirm UX: a generated game must give the player an obvious
+ * keyboard start path AND an obvious clickable start control that lives in
+ * the game itself (not the Workbench). The click control routes through the
+ * semantic input layer (`data-sw2d-action="CONFIRM"`), so it is not a second
+ * start path. The full behaviour is proven in a real browser by
+ * `tools/scripts/qa-start-controls.ts`.
+ */
+describe('generated games ship explicit start controls', () => {
+  const preset = PRESETS.find((candidate) => candidate.controllerFamilies[0] === 'platform')!;
+
+  it('the generated index.html has a visible Start control inside the game, bound to CONFIRM', () => {
+    const html = buildGameFiles('start-ux', preset).get('index.html')!;
+    expect(html).toContain('id="start-overlay"');
+    expect(html).toContain('data-sw2d-action="CONFIRM"');
+    expect(html).toContain('aria-label="Start game"');
+    // It sits inside the game canvas container, not the touch-controls cluster.
+    const gameRoot = html.slice(html.indexOf('id="game-root"'), html.indexOf('id="touch-controls"'));
+    expect(gameRoot).toContain('id="start-overlay"');
+  });
+
+  it('the generated styles show the Start control on desktop (not gated on pointer: coarse) and hide it once running', () => {
+    const css = buildGameFiles('start-ux', preset).get('src/styles.css')!;
+    expect(css).toContain('.start-overlay');
+    expect(css).toContain('.start-overlay[hidden] { display: none; }');
+    // Never inside a `(pointer: coarse)` / touch media query.
+    const overlayBlock = css.slice(css.indexOf('.start-overlay'));
+    expect(overlayBlock).not.toContain('pointer: coarse');
+  });
+
+  it('the generated main.ts hides the Start control once a run begins, via runtime events only', () => {
+    const main = buildGameFiles('start-ux', preset).get('src/main.ts')!;
+    expect(main).toContain("#start-overlay");
+    expect(main).toContain("runtime.context.events.on('scene:changed'");
+    expect(main).toContain('SCENE_KEYS.title');
+    // No bespoke scene-transition logic in the template: it only shows/hides.
+    expect(main).not.toContain('router.startRun');
+  });
+
+  it('no generated file tells the player to "PRESS CONFIRM"', () => {
+    for (const candidate of PRESETS.slice(0, 6)) {
+      for (const [name, content] of buildGameFiles('confirm-jargon', candidate)) {
+        expect(content, `${candidate.id}:${name}`).not.toContain('PRESS CONFIRM TO START');
+      }
+    }
+  });
+
+  it('the template additions leave no unresolved tokens (covered per-preset by the 74 matrix too)', () => {
+    expect(findUnresolvedTokens(buildGameFiles('token-check', preset))).toEqual([]);
+  });
+});

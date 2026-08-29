@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { DEFAULT_UI_COPY, SCENE_KEYS, type GameContext, type UiCopy } from '@sw2d/contracts';
 import { DisposableBagImpl } from '../core/DisposableBagImpl.ts';
+import { startPromptFor } from '../input/keyLabels.ts';
 import { RUNTIME_UI, accentStyle, headingStyle, mutedStyle } from './theme.ts';
 
 /** Title state. Wording comes from content; the runtime supplies only the state. */
@@ -22,8 +23,16 @@ export class TitleScene extends Phaser.Scene {
     this.add.text(width / 2, height * 0.34, copy.title, headingStyle(44)).setOrigin(0.5);
     this.add.text(width / 2, height * 0.44, copy.subtitle, mutedStyle(16)).setOrigin(0.5);
 
+    // A player is never asked to "press CONFIRM": the hint is the game's own
+    // physical CONFIRM keys, so it stays honest if a game rebinds them. The
+    // visible on-screen Start control (DOM) covers the pointer/tap path.
+    const startText = startPromptFor(
+      this.#context.input.bindings.CONFIRM?.keyboard,
+      this.#context.content.ui?.startPrompt,
+      DEFAULT_UI_COPY.startPrompt,
+    );
     const prompt = this.add
-      .text(width / 2, height * 0.64, copy.startPrompt, accentStyle(18))
+      .text(width / 2, height * 0.64, startText, accentStyle(18))
       .setOrigin(0.5);
 
     // Reduced motion is honoured even by the title prompt: no pulsing when asked

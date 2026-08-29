@@ -14,7 +14,10 @@
         <a href="?theme=default">default</a>
         <a href="?theme=neon">neon</a>
       </nav>
-      <div id="game-root" aria-label="Game canvas"></div>
+      <div id="game-root" aria-label="Game canvas">
+        <!-- Visible Start control: an ordinary semantic CONFIRM press (see index.html). -->
+        <button type="button" id="start-overlay" class="start-overlay" data-sw2d-action="CONFIRM" aria-label="Start game">Start</button>
+      </div>
 
       <!--
         Touch controls bind by name through the semantic input layer. They are

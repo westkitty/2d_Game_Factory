@@ -32,7 +32,7 @@ export interface UiCopy {
 export const DEFAULT_UI_COPY: UiCopy = {
   title: 'SW2D RUNTIME',
   subtitle: 'foundation slice',
-  startPrompt: 'PRESS CONFIRM TO START',
+  startPrompt: 'PRESS ENTER OR SPACE TO START',
   playHint: 'MOVE / JUMP  -  PAUSE TO STOP',
   pausedHeading: 'PAUSED',
   pausedResume: 'CONFIRM  RESUME',

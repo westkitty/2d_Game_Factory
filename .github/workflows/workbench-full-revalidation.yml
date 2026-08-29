@@ -49,6 +49,9 @@ jobs:
       - name: Frame-group animation proof
         run: node --experimental-strip-types tools/scripts/qa-frame-group-animation.ts
 
+      - name: Explicit start-controls proof
+        run: node --experimental-strip-types tools/scripts/qa-start-controls.ts
+
       - name: Prove workbench Validate Build Pack did not mutate lockfile
         shell: bash
         run: git diff --exit-code -- package-lock.json

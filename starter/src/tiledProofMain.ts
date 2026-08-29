@@ -1,4 +1,5 @@
 import './styles.css';
+import { SCENE_KEYS } from '@sw2d/contracts';
 import { createGame } from '@sw2d/runtime';
 import { entityRegistryPack, worldPack } from '@sw2d/packs';
 import { packConfigValidator } from '@sw2d/schemas';
@@ -9,6 +10,7 @@ import { TILED_LEVEL_PACK } from './game-specific/tiledLevelPack.ts';
 
 const gameRoot = document.querySelector<HTMLElement>('#game-root');
 const touchControls = document.querySelector<HTMLElement>('#touch-controls');
+const startOverlay = document.querySelector<HTMLElement>('#start-overlay');
 
 if (!gameRoot) throw new Error('#game-root is missing from tiled-proof.html');
 
@@ -58,6 +60,15 @@ function syncTouchControls(): void {
   if (!touchControls) return;
   touchControls.hidden = !runtime.context.accessibility.touchControlsVisible;
 }
+
+// Visible Start control: shown on the title, hidden once a run begins. Clicking
+// it is an ordinary semantic CONFIRM press - not a second start path.
+function syncStartOverlay(sceneKey: string): void {
+  if (!startOverlay) return;
+  startOverlay.hidden = sceneKey !== SCENE_KEYS.title;
+}
+runtime.context.events.on('scene:changed', ({ to }) => syncStartOverlay(to));
+runtime.context.events.on('run:started', () => syncStartOverlay(SCENE_KEYS.play));
 
 applyThemeTokens();
 applyMotionPreference();

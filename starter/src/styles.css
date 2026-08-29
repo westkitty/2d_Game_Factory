@@ -33,6 +33,7 @@ html, body {
 }
 
 #game-root {
+  position: relative;
   flex: 1 1 auto;
   display: grid;
   place-items: center;
@@ -40,6 +41,37 @@ html, body {
 }
 
 #game-root canvas { display: block; max-width: 100%; max-height: 100%; object-fit: contain; }
+
+/*
+ * The visible Start control, centred over the canvas on the title screen.
+ * Not gated on pointer: coarse - a desktop mouse user must see it too.
+ * src/main.ts sets [hidden] once the run begins so it never covers gameplay.
+ */
+.start-overlay {
+  position: absolute;
+  left: 50%;
+  bottom: 12%;
+  transform: translateX(-50%);
+  padding: 0.7rem 2rem;
+  border: 1px solid var(--sw2d-accent);
+  border-radius: 12px;
+  background: var(--sw2d-panel);
+  color: var(--sw2d-accent);
+  font: inherit;
+  font-size: 1.15rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-user-select: none;
+  user-select: none;
+  transition: background var(--sw2d-motion-duration) ease-out;
+}
+
+.start-overlay:hover { background: var(--sw2d-panel-active); }
+.start-overlay:active { transform: translateX(-50%) scale(0.97); }
+.start-overlay:focus-visible { outline: 3px solid var(--sw2d-accent); outline-offset: 3px; }
+.start-overlay[hidden] { display: none; }
 
 .touch-controls {
   display: flex;
