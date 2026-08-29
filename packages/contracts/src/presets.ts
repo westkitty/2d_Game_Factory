@@ -38,6 +38,8 @@ export interface PresetDefinition {
   readonly requiredContentRoles: readonly string[];
   /** Capability program Phase 9: when 'matter', the generated game.json opts into the Matter backend. */
   readonly physicsProfile?: 'matter';
+  /** Capability program Phase 10: default vehicle profile for the generated content/vehicles.json. */
+  readonly vehicleProfile?: 'car' | 'kart' | 'boat' | 'flight';
   readonly supportedInputModes: readonly InputMode[];
   readonly defaultBindings?: ActionBindings;
   readonly starterScene: string;

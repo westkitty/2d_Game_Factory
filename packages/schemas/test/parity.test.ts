@@ -80,6 +80,7 @@ describe('schema/type parity', () => {
       validationProfile: 'default',
       knownLimitations: [],
       physicsProfile: 'matter',
+      vehicleProfile: 'car',
     };
     expect(propertyKeys('preset-definition')).toEqual(Object.keys(fixture).sort());
     expect(validateDocument('preset-definition', 'parity-fixture', fixture).valid).toBe(true);

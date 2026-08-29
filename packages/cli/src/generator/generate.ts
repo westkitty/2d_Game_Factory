@@ -11,6 +11,8 @@ import {
   generatePuzzleRulesDoc,
   generateGenerationDoc,
   generateWorldGraphDoc,
+  generateVehicleCatalog,
+  generateRaceCatalog,
   generateResourceManifest,
   generateTiledLevel,
   generateTheme,
@@ -116,6 +118,24 @@ export function buildGameFiles(gameId: string, preset: PresetDefinition): Map<st
               ? 'room-graph'
               : 'segment-chain'
           : 'none',
+      ),
+      null,
+      2,
+    ) + '\n',
+  );
+  files.set(
+    'content/vehicles.json',
+    JSON.stringify(
+      generateVehicleCatalog(requiredPackIds.includes('sw2d.vehicles') ? preset.vehicleProfile ?? 'car' : 'none'),
+      null,
+      2,
+    ) + '\n',
+  );
+  files.set(
+    'content/races.json',
+    JSON.stringify(
+      generateRaceCatalog(
+        requiredPackIds.includes('sw2d.racing') ? (preset.id.includes('time-trial') ? 'time-trial' : 'race') : 'none',
       ),
       null,
       2,

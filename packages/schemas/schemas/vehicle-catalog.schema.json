@@ -1,0 +1,69 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:sw2d:schema:content-vehicle-catalog:v1",
+  "title": "VehicleCatalog",
+  "description": "Mirrors @sw2d/contracts VehicleCatalog (vehicles.ts). Content document name 'vehicles'. Bounded tuning for one reusable vehicle system with four profiles (car / kart / boat / flight).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "vehicles"],
+  "properties": {
+    "schemaVersion": { "type": "integer", "minimum": 1 },
+    "vehicles": { "type": "array", "items": { "$ref": "#/definitions/vehicle" } }
+  },
+  "definitions": {
+    "modifier": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "traction": { "type": "number", "exclusiveMinimum": 0 },
+        "drag": { "type": "number", "exclusiveMinimum": 0 },
+        "maxSpeed": { "type": "number", "exclusiveMinimum": 0 },
+        "steering": { "type": "number", "exclusiveMinimum": 0 }
+      }
+    },
+    "vehicle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "profile",
+        "acceleration",
+        "braking",
+        "reverseAcceleration",
+        "maxForwardSpeed",
+        "maxReverseSpeed",
+        "steeringRate",
+        "speedSensitiveSteering",
+        "drag",
+        "lateralGrip",
+        "traction",
+        "driftFactor",
+        "boostForce",
+        "boostDurationMs",
+        "boostCooldownMs"
+      ],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "profile": { "enum": ["car", "kart", "boat", "flight"] },
+        "acceleration": { "type": "number", "exclusiveMinimum": 0 },
+        "braking": { "type": "number", "exclusiveMinimum": 0 },
+        "reverseAcceleration": { "type": "number", "minimum": 0 },
+        "maxForwardSpeed": { "type": "number", "exclusiveMinimum": 0 },
+        "maxReverseSpeed": { "type": "number", "minimum": 0 },
+        "steeringRate": { "type": "number", "exclusiveMinimum": 0 },
+        "speedSensitiveSteering": { "type": "number", "minimum": 0, "maximum": 1 },
+        "drag": { "type": "number", "exclusiveMinimum": 0, "maximum": 1 },
+        "lateralGrip": { "type": "number", "minimum": 0, "maximum": 1 },
+        "traction": { "type": "number", "minimum": 0, "maximum": 1 },
+        "driftFactor": { "type": "number", "minimum": 0, "maximum": 1 },
+        "boostForce": { "type": "number", "minimum": 0 },
+        "boostDurationMs": { "type": "number", "minimum": 0 },
+        "boostCooldownMs": { "type": "number", "minimum": 0 },
+        "altitudeRate": { "type": "number", "minimum": 0 },
+        "minAltitude": { "type": "number", "minimum": 0 },
+        "maxAltitude": { "type": "number", "minimum": 0 },
+        "surfaceModifiers": { "type": "object", "additionalProperties": { "$ref": "#/definitions/modifier" } }
+      }
+    }
+  }
+}

@@ -20,6 +20,8 @@ import encounterCatalogSchema from '../schemas/encounter-catalog.schema.json' wi
 import puzzleRulesSchema from '../schemas/puzzle-rules.schema.json' with { type: 'json' };
 import generationSchema from '../schemas/generation.schema.json' with { type: 'json' };
 import worldGraphSchema from '../schemas/world-graph.schema.json' with { type: 'json' };
+import vehicleCatalogSchema from '../schemas/vehicle-catalog.schema.json' with { type: 'json' };
+import raceCatalogSchema from '../schemas/race-catalog.schema.json' with { type: 'json' };
 
 /**
  * Ajv-based validation for every schema this package owns.
@@ -49,7 +51,9 @@ export type SchemaName =
   | 'encounter-catalog'
   | 'puzzle-rules'
   | 'generation'
-  | 'world-graph';
+  | 'world-graph'
+  | 'vehicle-catalog'
+  | 'race-catalog';
 
 export const SCHEMA_NAMES: readonly SchemaName[] = [
   'action-bindings',
@@ -71,6 +75,8 @@ export const SCHEMA_NAMES: readonly SchemaName[] = [
   'puzzle-rules',
   'generation',
   'world-graph',
+  'vehicle-catalog',
+  'race-catalog',
 ];
 
 /** One located problem: which document, where in it, and what is wrong. */
@@ -114,6 +120,8 @@ const SCHEMA_DOCUMENTS: Readonly<Record<SchemaName, SchemaDocument>> = {
   'puzzle-rules': puzzleRulesSchema,
   generation: generationSchema,
   'world-graph': worldGraphSchema,
+  'vehicle-catalog': vehicleCatalogSchema,
+  'race-catalog': raceCatalogSchema,
 };
 
 // Registration order matters: a schema must be added before anything that
@@ -137,6 +145,8 @@ for (const name of [
   'puzzle-rules',
   'generation',
   'world-graph',
+  'vehicle-catalog',
+  'race-catalog',
 ] as const) {
   const schema = SCHEMA_DOCUMENTS[name];
   ajv.addSchema(schema, schema.$id);

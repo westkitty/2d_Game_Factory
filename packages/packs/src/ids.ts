@@ -32,6 +32,8 @@ export const PACK_IDS = {
   puzzleRules: 'sw2d.puzzle-rules',
   generation: 'sw2d.generation',
   worldGraph: 'sw2d.world-graph',
+  vehicles: 'sw2d.vehicles',
+  racing: 'sw2d.racing',
 } as const;
 
 export const CAPABILITY_IDS = {
@@ -60,4 +62,8 @@ export const CAPABILITY_IDS = {
   generation: 'world.generation',
   /** Capability program Phase 8: location graph, room transitions and map (composes with world.state). */
   worldGraph: 'world.graph',
+  /** Capability program Phase 10: reusable vehicle handling (consumes VehicleIntent only). */
+  vehicles: 'vehicle.motion',
+  /** Capability program Phase 10: race / checkpoint / lap state, separate from vehicle motion. */
+  racing: 'race.state',
 } as const;

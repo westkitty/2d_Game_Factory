@@ -100,6 +100,13 @@ describe('all 74 presets generate valid, token-free, schema-valid source', () =>
       expect(() => validateContentBundleData({ 'world-graph': wgJson })).not.toThrow();
     });
 
+    it(`${preset.id}'s generated content/vehicles.json + content/races.json validate`, () => {
+      const files = buildGameFiles('matrix-game', preset);
+      const vJson: unknown = JSON.parse(files.get('content/vehicles.json')!);
+      const rJson: unknown = JSON.parse(files.get('content/races.json')!);
+      expect(() => validateContentBundleData({ vehicles: vJson, races: rJson })).not.toThrow();
+    });
+
     it(`${preset.id} selects a real, resolvable shell template for its primary controller family`, () => {
       const files = buildGameFiles('matrix-game', preset);
       expect(files.has('src/game-specific/shellPack.ts')).toBe(true);

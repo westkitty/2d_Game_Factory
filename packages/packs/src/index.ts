@@ -83,3 +83,5 @@ export { navigationPack, type NavService, type NavGrid } from './navigation/navi
 export { puzzleRulesPack, UnknownPuzzleError, type PuzzleRulesService } from './puzzleRules/puzzleRulesPack.ts';
 export { generationPack, type GenerationService } from './generation/generationPack.ts';
 export { worldGraphPack, WORLD_GRAPH_SAVE_SLOT, type WorldGraphConfig, type WorldGraphService } from './worldGraph/worldGraphPack.ts';
+export { vehiclesPack, type VehicleService } from './vehicles/vehiclesPack.ts';
+export { racingPack, RACING_SAVE_SLOT, type RacingConfig, type RaceService } from './racing/racingPack.ts';

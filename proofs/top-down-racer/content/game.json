@@ -1,0 +1,36 @@
+{
+  "id": "proof-top-down-racer",
+  "displayName": "Proof Top Down Racer",
+  "version": "0.1.0",
+  "schemaVersion": 1,
+  "viewport": {
+    "width": 960,
+    "height": 540
+  },
+  "bindings": {},
+  "systemPacks": [
+    {
+      "packId": "sw2d.world",
+      "config": {}
+    },
+    {
+      "packId": "sw2d.world-entities",
+      "config": {}
+    },
+    {
+      "packId": "sw2d.vehicles",
+      "config": {}
+    },
+    {
+      "packId": "sw2d.racing",
+      "config": {}
+    },
+    {
+      "packId": "game.vehicle-shell",
+      "config": {}
+    }
+  ],
+  "defaultSettings": {
+    "masterVolume": 0.7
+  }
+}

@@ -76,9 +76,6 @@ export const LIMITATIONS = {
   // Phase 7B additions - each reused by two or more recipes; a recipe-specific gap gets an
   // inline string in its own catalog file instead (see platforming.ts's own comment on why:
   // sharing text is a decision, not laziness, and inline is correct when nothing else repeats it).
-  vehicleIntentOnly:
-    'The vehicle controller supplies steering/throttle/brake intent only; no reusable vehicle-physics/drift/handling system exists.',
-  raceOrchestration: 'Lap/checkpoint/time-trial race orchestration is not a dedicated reusable system yet.',
   ballPaddleSystem: 'No reusable ball/paddle collision-and-bounce system exists yet.',
   // Phase 7C additions - same "two or more recipes" bar as Phase 7B's four.
   customerEconomy:
@@ -100,6 +97,8 @@ export interface PresetSpec {
   readonly knownLimitations?: readonly string[];
   /** Capability program Phase 9: 'matter' opts the generated game into the Matter backend. */
   readonly physicsProfile?: 'matter';
+  /** Capability program Phase 10: default vehicle profile the generated content/vehicles.json uses. */
+  readonly vehicleProfile?: 'car' | 'kart' | 'boat' | 'flight';
   /** Defaults to 'recipe'. Only set to 'smoke-validated' once a real, committed browser smoke test passes (Phase 8's twelve demos) - never hand-waved. */
   readonly maturity?: PresetMaturity;
 }
@@ -125,5 +124,6 @@ export function definePreset(spec: PresetSpec): PresetDefinition {
     validationProfile: spec.validationProfile,
     knownLimitations: spec.knownLimitations ?? [],
     ...(spec.physicsProfile ? { physicsProfile: spec.physicsProfile } : {}),
+    ...(spec.vehicleProfile ? { vehicleProfile: spec.vehicleProfile } : {}),
   };
 }

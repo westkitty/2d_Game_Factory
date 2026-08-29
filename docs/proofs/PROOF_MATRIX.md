@@ -3,7 +3,7 @@
 Phase 10's five deep, end-to-end proof games - the tier above Phase 8's smoke bar - plus the
 capability-completion program's per-phase proof consumers. Each row is backed by a frozen
 `proofs/<id>/PROOF_CONTRACT.md`, a real generated composition, and a committed real-browser proof
-spec run through `npm run qa:proof`. Mechanically, `npm run qa:proof` is **21/21** as of this
+spec run through `npm run qa:proof`. Mechanically, `npm run qa:proof` is **23/23** as of this
 revision.
 
 ## Capability program — Phase 1: reusable spatial pointer & interaction (ADR-0018)
@@ -74,6 +74,13 @@ folded into a capability phase.
 |---|---|---|---|---|---|
 | `proofs/grappling-platformer/` (new) | `grappling-platformer` | `physicsProfile: 'matter'`; `createAdvancedPhysics` (Matter-backed `AdvancedPhysicsService`); `createGrappleService` (a near-rigid distance constraint player↔anchor); named collision categories | The player is a Matter body moved by impulses; SECONDARY_ACTION toggles the grapple; INTERACT/CANCEL reel the rope. No scripted swing | Start (`physicsEnabled`, `constraintCount 0`, 2 eligible anchors); move under an anchor; attach → `constraintCount 1`, `grappleAttached`; the anchor distance stays near the rope length while the player's position changes (a real pendulum, not free fall); detach → `constraintCount 0`; re-attach; reel in → rope shortens; restart → no constraint survives, body count back to a fresh service's | PASS |
 | `proofs/physics-toy/` (new) | `physics-toy` | Same `AdvancedPhysicsService`; `createSpring`; Phase-1 `context.interaction` + `context.spatialPointer` | Three rigid balls + a box fall onto a static floor between two walls and a ceiling; a spring links two balls; a click on the centre target shakes every dynamic body | Start (`bodyCount ≥ 7`, `constraintCount 1`); the balls fall and settle above the floor (collision holds); the spring keeps the two linked balls within a bounded distance; a spatial-pointer click (`hoveredId === 'shaker'`) shakes them upward; they settle again bounded, spring intact; restart restores the fresh body/constraint counts and clears the shake count | PASS |
+
+## Capability program — Phase 10: vehicle handling & racing (ADR-0027)
+
+| Proof | Preset | Reusable capability exercised | Game-specific mechanics | Browser journey | Status |
+|---|---|---|---|---|---|
+| `proofs/top-down-racer/` (new) | `top-down-racer` | `sw2d.vehicles` (`VehicleService`, `vehicle.motion`) - `VehicleIntent` in, car motion out; `sw2d.racing` (`RaceService`, `race.state`) - four ordered checkpoints, two laps, a countdown, simulation time | A tiny autopilot points the wheel at `expectedCheckpoint()` (produces intent only); CONFIRM starts the race; SECONDARY_ACTION fires the last checkpoint out of order | Start + CONFIRM → `phase 'countdown'`; countdown elapses → `'racing'`, `expectedCheckpoint 'cp-1'`; the car accelerates (`maxSpeed > 100`) and steers; a skipped-checkpoint shortcut → `lastShortcutCounted false`, lap unchanged; the autopilot runs two ordered laps → `finished`, `lapCount 2`, `phase 'finished'`; restart → fresh race (`finished false`, `lapCount 0`) | PASS |
+| `proofs/time-trial-racer/` (new) | `time-trial-racer` | Same services in `time-trial` mode; best lap / total persisted through `context.saves` | Same autopilot; PRIMARY_ACTION restarts the attempt; holding INTERACT slows the autopilot for a deliberately slow first run | Start (INTERACT held, slow) + CONFIRM → countdown → `elapsedMs` climbs (a live timer); an out-of-order checkpoint is rejected; the slow lap finishes and sets `bestTotalMs`; PRIMARY_ACTION restarts (`phase 'idle'`, `elapsedMs 0`, best retained); a full-speed second lap finishes with `bestTotalMs` **less than** the first - a better valid run updates the best, and no invalid sequence is ever accepted as a run | PASS |
 
 ## Phase 10 deep proofs
 

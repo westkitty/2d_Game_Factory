@@ -111,10 +111,6 @@ describe('required knownLimitations (MASTER_PROJECT.md section 12)', () => {
     { id: 'run-and-gun', pattern: /Enemy encounter orchestration/ },
     { id: 'boss-rush', pattern: /Sequencing multiple bosses/ },
     // Phase 7B (MASTER_PROJECT.md section 9)
-    { id: 'top-down-racer', pattern: /no reusable vehicle-physics\/drift\/handling system/ },
-    { id: 'kart-racer', pattern: /no reusable vehicle-physics\/drift\/handling system/ },
-    { id: 'time-trial-racer', pattern: /no reusable vehicle-physics\/drift\/handling system/ },
-    { id: 'boat-flight-racer', pattern: /No reusable buoyancy\/altitude\/flight model exists yet/ },
     { id: 'match-puzzle', pattern: /No reusable match-detection\/cascade board rules/ },
     { id: 'falling-block-puzzle', pattern: /No reusable falling-piece\/line-clear board engine/ },
     { id: 'breakout', pattern: /No reusable ball\/paddle collision-and-bounce system/ },

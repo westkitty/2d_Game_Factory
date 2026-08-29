@@ -45,6 +45,7 @@ import { buildSeeds, seedForPreset } from './seeds.ts';
 import { previewGeneration } from './generationLab.ts';
 import { inspectWorldGraph } from './worldGraphLab.ts';
 import { inspectPhysics } from './physicsLab.ts';
+import { inspectRacing } from './racingLab.ts';
 import { loadScene, listLevels, newObject, objectClassOptions, saveScene, SceneValidationError, type SceneDocument } from './sceneStore.ts';
 import { buildProject, createProject, packProject, validateProject } from './factoryService.ts';
 import { starterKitDepthFor, starterKitFor } from './starterKits/index.ts';
@@ -654,6 +655,17 @@ const ROUTES: ReadonlyMap<string, Handler> = new Map<string, Handler>([
     (request) => {
       const body = bodyObject(request);
       return ok(inspectPhysics(gameIdOf(request, body)));
+    },
+  ],
+
+  [
+    // Vehicle + race surface (capability program Phase 10). Reports
+    // content/vehicles.json (profile + handling) and content/races.json
+    // (mode, laps, countdown, ordered checkpoints).
+    'POST /racing/inspect',
+    (request) => {
+      const body = bodyObject(request);
+      return ok(inspectRacing(gameIdOf(request, body)));
     },
   ],
 

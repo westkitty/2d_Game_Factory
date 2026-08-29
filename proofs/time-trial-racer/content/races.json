@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "races": [
+    {
+      "schemaVersion": 1,
+      "id": "main",
+      "mode": "time-trial",
+      "countdownMs": 1500,
+      "laps": 1,
+      "startPositions": [
+        {
+          "x": 160,
+          "y": 440,
+          "heading": 0
+        }
+      ],
+      "checkpoints": [
+        {
+          "id": "cp-1",
+          "x": 760,
+          "y": 440,
+          "radius": 70
+        },
+        {
+          "id": "cp-2",
+          "x": 760,
+          "y": 120,
+          "radius": 70
+        },
+        {
+          "id": "cp-3",
+          "x": 200,
+          "y": 120,
+          "radius": 70
+        },
+        {
+          "id": "cp-4",
+          "x": 160,
+          "y": 440,
+          "radius": 70
+        }
+      ]
+    }
+  ]
+}

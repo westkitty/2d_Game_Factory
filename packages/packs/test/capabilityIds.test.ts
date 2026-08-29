@@ -8,6 +8,8 @@ import {
   puzzleRulesPack,
   generationPack,
   worldGraphPack,
+  vehiclesPack,
+  racingPack,
   aiPack,
   arcadePack,
   combatPack,
@@ -49,6 +51,8 @@ const ALL_PACKS = [
   puzzleRulesPack,
   generationPack,
   worldGraphPack,
+  vehiclesPack,
+  racingPack,
 ];
 
 /** `<family>.<service>`: lowercase segments, at least two, dash-separated words allowed after the first. */

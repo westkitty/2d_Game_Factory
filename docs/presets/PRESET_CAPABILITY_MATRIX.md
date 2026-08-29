@@ -61,11 +61,11 @@ pack/controller selections were actually exercised through, and
 
 | id | required packs | optional packs | controller(s) | input modes | validation profile |
 |---|---|---|---|---|---|
-| `top-down-racer` | world, world-entities | arcade | vehicle | keyboard, touch | vehicle-movement-recipe |
-| `kart-racer` | world, world-entities | arcade | vehicle | keyboard, touch | vehicle-movement-recipe |
-| `time-trial-racer` | world, world-entities, arcade | - | vehicle | keyboard, touch | vehicle-movement-recipe |
-| `endless-driving` | arcade, generation | world, world-entities | vehicle | keyboard, touch | vehicle-movement-recipe |
-| `boat-flight-racer` | world, world-entities | arcade | vehicle | keyboard, touch | vehicle-movement-recipe |
+| `top-down-racer` | world, world-entities, vehicles, racing | arcade | vehicle | keyboard, touch | vehicle-movement-recipe |
+| `kart-racer` | world, world-entities, vehicles, racing | arcade, items | vehicle | keyboard, touch | vehicle-movement-recipe |
+| `time-trial-racer` | world, world-entities, arcade, vehicles, racing | - | vehicle | keyboard, touch | vehicle-movement-recipe |
+| `endless-driving` | arcade, generation, vehicles | world, world-entities | vehicle | keyboard, touch | vehicle-movement-recipe |
+| `boat-flight-racer` | world, world-entities, vehicles | arcade, racing | vehicle | keyboard, touch | vehicle-movement-recipe |
 
 ## Puzzle / arcade (Phase 7B)
 
@@ -155,8 +155,10 @@ pack/controller selections were actually exercised through, and
 | navigation | `sw2d.navigation` | `world.navigation` | 2 | 8 |
 | generation | `sw2d.generation` | `world.generation` | 5 | 5 |
 | world-graph | `sw2d.world-graph` | `world.graph` | 2 | 2 |
+| vehicles | `sw2d.vehicles` | `vehicle.motion` | 5 | 5 |
+| racing | `sw2d.racing` | `race.state` | 3 | 4 |
 
-**All seventeen current packs have at least one preset consumer.** `sw2d.items` (capability
+**All nineteen current packs have at least one preset consumer.** `sw2d.items` (capability
 program Phase 2) is required by `collectathon-platformer`, whose generated starter consumes
 the reusable item/effect service through the shared platform shell. `sw2d.puzzle-rules`
 (capability program Phase 6) is required by `sokoban` and `puzzle-platformer`, whose
@@ -166,7 +168,11 @@ generated starters drive the whole push/goal and switch/sequence rulesets from t
 whose generated shells build the playable world from a deterministic seed in
 `content/generation.json`. `sw2d.world-graph` (capability program Phase 8) is required by
 `metroidvania` and `exploration-game`, whose generated shells drive location transitions,
-discovery/visited state and the map from `content/world-graph.json`.
+discovery/visited state and the map from `content/world-graph.json`. `sw2d.vehicles`
+(`vehicle.motion`) and `sw2d.racing` (`race.state`) - capability program Phase 10 - are
+required by the vehicle-movement family; the generated vehicle shell turns `vehicleController`
+intent into car/kart/boat/flight motion and runs an ordered-checkpoint race from
+`content/vehicles.json` + `content/races.json`.
 
 ## Validation profiles
 

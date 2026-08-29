@@ -1,14 +1,18 @@
 import Phaser from 'phaser';
-import type { InstalledSystemPack } from '@sw2d/contracts';
+import type { InstalledSystemPack, RaceService, VehicleService } from '@sw2d/contracts';
+import { RACE_STATE_CAPABILITY_ID, VEHICLE_MOTION_CAPABILITY_ID } from '@sw2d/contracts';
 import { resolveSceneLevel, vehicleController, type SceneContext, type ScenePackDefinition } from '@sw2d/runtime';
 
 /**
  * Generated starter shell: vehicle controller family.
  *
- * Arcade-only, per MASTER_PROJECT.md section 6.5 ("no vehicle physics/drift
- * exists yet"): steering rotates a heading, throttle accelerates along it,
- * with simple linear drag. See platformShellPack.ts's file comment for the
- * template pattern.
+ * `vehicleController` supplies INPUT INTENT ONLY (ADR-0009). When
+ * `sw2d.vehicles` (capability program Phase 10) is installed the reusable
+ * VehicleService turns that intent into motion (car / kart / boat / flight
+ * profiles); otherwise a small arcade fallback keeps the shell runnable. When
+ * `sw2d.racing` is installed the RaceService owns the countdown, ordered
+ * checkpoints and laps - CONFIRM starts the race, and reaching a checkpoint
+ * circle reports it (only the expected next one counts).
  */
 
 const LEVEL_DOCUMENT = 'levels/main';
@@ -21,9 +25,6 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
 
   install(context: SceneContext): InstalledSystemPack {
     const scene = context.scene;
-    // Procedural generation (capability program Phase 7): a deterministic
-    // seeded road when sw2d.generation is installed (road-chain), else the
-    // hand-authored content/levels/main.json.
     const { level, manifest: generationManifest } = resolveSceneLevel(context, LEVEL_DOCUMENT);
     const vehicleKey = context.assets.resolve('player');
     const platformKey = context.assets.resolve('platform');
@@ -37,43 +38,71 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     }
 
     const spawn = level?.objects.find((object) => object.class === 'PlayerSpawn');
+    const vehicleSvc = context.capabilities.get<VehicleService>(VEHICLE_MOTION_CAPABILITY_ID);
+    const raceSvc = context.capabilities.get<RaceService>(RACE_STATE_CAPABILITY_ID);
+
     const spawnX = spawn?.x ?? width * 0.5;
     const spawnY = spawn?.y ?? height * 0.5;
+
+    if (vehicleSvc && vehicleSvc.definitionIds().length > 0) {
+      vehicleSvc.load(vehicleSvc.definitionIds()[0]!, { x: spawnX, y: spawnY, heading: 0 });
+    }
 
     const vehicle = scene.physics.add.sprite(spawnX, spawnY, vehicleKey);
     vehicle.setCollideWorldBounds(true);
     vehicle.body.setAllowGravity(false);
-    scene.physics.add.collider(vehicle, walls);
-    vehicle.setDamping(true);
-    vehicle.setDrag(0.92);
-    vehicle.setMaxVelocity(260);
+    if (!vehicleSvc) {
+      scene.physics.add.collider(vehicle, walls);
+      vehicle.setDamping(true);
+      vehicle.setDrag(0.92);
+      vehicle.setMaxVelocity(260);
+    }
 
+    let raceStarted = false;
     const debugHandle = context.debug.contribute('game.vehicle-shell', () => ({
       x: Math.round(vehicle.x),
       y: Math.round(vehicle.y),
       angle: Math.round(vehicle.angle),
-      speed: Math.round(vehicle.body.velocity.length()),
+      ...(vehicleSvc ? { vehicle: vehicleSvc.state() } : { speed: Math.round(vehicle.body.velocity.length()) }),
+      ...(raceSvc ? { race: raceSvc.raceState(), expectedCheckpoint: raceSvc.expectedCheckpoint()?.id ?? null } : {}),
       ...(generationManifest ? { generation: generationManifest } : {}),
     }));
 
-    const scratchAcceleration = new Phaser.Math.Vector2();
+    const scratch = new Phaser.Math.Vector2();
     let disposed = false;
 
     return {
       id: GAME_SPECIFIC_PACK.id,
 
-      update(): void {
+      update(deltaMs: number): void {
         if (disposed) return;
         const intent = vehicleController.read(context.input);
-        vehicle.angle += intent.steering * 3;
-        if (intent.throttle > 0) {
-          scene.physics.velocityFromRotation(vehicle.rotation, intent.throttle * 600, scratchAcceleration);
-          vehicle.setAcceleration(scratchAcceleration.x, scratchAcceleration.y);
-        } else {
-          vehicle.setAcceleration(0, 0);
+
+        if (raceSvc) {
+          if (!raceStarted && context.input.consumePress('CONFIRM')) {
+            raceSvc.startRace();
+            raceStarted = true;
+          }
+          raceSvc.tick(deltaMs);
         }
-        if (intent.brake > 0) {
-          vehicle.body.velocity.scale(1 - intent.brake * 0.1);
+
+        if (vehicleSvc) {
+          const st = vehicleSvc.update(deltaMs, intent);
+          vehicle.setPosition(st.x, st.y);
+          vehicle.setRotation(st.heading);
+          if (raceSvc) {
+            const cp = raceSvc.expectedCheckpoint();
+            if (cp && Math.hypot(st.x - cp.x, st.y - cp.y) <= cp.radius) raceSvc.checkpointEntered(cp.id);
+          }
+        } else {
+          vehicle.angle += intent.steering * 3;
+          if (intent.throttle > 0) {
+            scene.physics.velocityFromRotation(vehicle.rotation, intent.throttle * 600, scratch);
+            vehicle.setAcceleration(scratch.x, scratch.y);
+          } else {
+            vehicle.setAcceleration(0, 0);
+          }
+          if (intent.brake > 0) vehicle.body.velocity.scale(1 - intent.brake * 0.1);
         }
       },
 

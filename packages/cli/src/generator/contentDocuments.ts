@@ -293,6 +293,93 @@ export function generateWorldGraphDoc(hasWorldGraphPack: boolean): Record<string
   };
 }
 
+/**
+ * content/vehicles.json - a VehicleCatalog (capability program Phase 10).
+ * Always emitted; a single inert car unless the preset installs
+ * `sw2d.vehicles`, in which case a starter vehicle of the preset's profile
+ * (plus a flight vehicle when the profile is 'boat', so the boat/flight
+ * recipe can show both). Values come from VEHICLE_PROFILE_DEFAULTS, expressed
+ * inline so the document is real, editable tuning.
+ */
+export function generateVehicleCatalog(profile: 'car' | 'kart' | 'boat' | 'flight' | 'none'): Record<string, unknown> {
+  const car = {
+    id: 'starter-car',
+    profile: 'car',
+    acceleration: 520,
+    braking: 780,
+    reverseAcceleration: 260,
+    maxForwardSpeed: 340,
+    maxReverseSpeed: 120,
+    steeringRate: 2.6,
+    speedSensitiveSteering: 0.5,
+    drag: 0.7,
+    lateralGrip: 0.9,
+    traction: 0.85,
+    driftFactor: 0.15,
+    boostForce: 320,
+    boostDurationMs: 900,
+    boostCooldownMs: 2600,
+    surfaceModifiers: { dirt: { traction: 0.7, maxSpeed: 0.9 }, ice: { traction: 0.35, steering: 0.8 } },
+  };
+  if (profile === 'none') return { schemaVersion: 1, vehicles: [car] };
+  const kart = { ...car, id: 'starter-kart', profile: 'kart', steeringRate: 3.6, speedSensitiveSteering: 0.3, lateralGrip: 0.72, traction: 0.7, driftFactor: 0.55, boostCooldownMs: 2000 };
+  const boat = { ...car, id: 'starter-boat', profile: 'boat', acceleration: 300, braking: 180, maxForwardSpeed: 260, steeringRate: 1.5, drag: 0.9, lateralGrip: 0.35, traction: 0.4, surfaceModifiers: { water: { drag: 0.95 } } };
+  const flight = {
+    id: 'starter-flight',
+    profile: 'flight',
+    acceleration: 420,
+    braking: 260,
+    reverseAcceleration: 0,
+    maxForwardSpeed: 400,
+    maxReverseSpeed: 0,
+    steeringRate: 2.0,
+    speedSensitiveSteering: 0.1,
+    drag: 0.92,
+    lateralGrip: 0.55,
+    traction: 0.5,
+    driftFactor: 0.1,
+    boostForce: 300,
+    boostDurationMs: 1000,
+    boostCooldownMs: 2600,
+    altitudeRate: 90,
+    minAltitude: 0,
+    maxAltitude: 240,
+  };
+  if (profile === 'kart') return { schemaVersion: 1, vehicles: [kart] };
+  if (profile === 'boat') return { schemaVersion: 1, vehicles: [boat, flight] };
+  if (profile === 'flight') return { schemaVersion: 1, vehicles: [flight] };
+  return { schemaVersion: 1, vehicles: [car] };
+}
+
+/**
+ * content/races.json - a RaceCatalog (capability program Phase 10). Always
+ * emitted; empty unless the preset installs `sw2d.racing`, then one starter
+ * race: a small four-corner track, `time-trial` mode for the time-trial
+ * preset and `race` (two laps) otherwise.
+ */
+export function generateRaceCatalog(kind: 'race' | 'time-trial' | 'none'): Record<string, unknown> {
+  if (kind === 'none') return { schemaVersion: 1, races: [] };
+  return {
+    schemaVersion: 1,
+    races: [
+      {
+        schemaVersion: 1,
+        id: 'main',
+        mode: kind,
+        countdownMs: kind === 'time-trial' ? 1500 : 3000,
+        laps: kind === 'time-trial' ? 1 : 2,
+        startPositions: [{ x: 160, y: 440, heading: 0 }],
+        checkpoints: [
+          { id: 'cp-1', x: 760, y: 440, radius: 70 },
+          { id: 'cp-2', x: 760, y: 120, radius: 70 },
+          { id: 'cp-3', x: 200, y: 120, radius: 70 },
+          { id: 'cp-4', x: 160, y: 440, radius: 70 },
+        ],
+      },
+    ],
+  };
+}
+
 /** content/tuning.json - the one content document @sw2d/schemas validates for every game today. */
 export function generateTuning(): Record<string, unknown> {
   return {

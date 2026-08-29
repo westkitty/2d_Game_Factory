@@ -774,6 +774,31 @@ adjudicated individually in the Phase 12 acceptance document):
 
 ## Revision history
 
+### Revision 25 - 2026-08-29 (Sonnet 5) - Capability program Phase 10
+
+**Vehicle handling & racing (ADR-0027).** Tenth and final phase of the first-ten capability
+program. Full detail in [`docs/architecture/CAPABILITY_PROGRAM_STATE.md`](docs/architecture/CAPABILITY_PROGRAM_STATE.md).
+
+- **Two new pure packs.** `sw2d.vehicles` -> `vehicle.motion` (`VehicleService.update(deltaMs,
+  VehicleIntent, surfaceTag?)`; four bounded profiles car/kart/boat/flight; simulation-time
+  boost; surface modifiers) and `sw2d.racing` -> `race.state` (ordered checkpoints - out of
+  order never advances; race / time-trial modes; countdown + elapsed on simulation time;
+  opt-in best-time persistence). The `vehicleController` stays INPUT INTENT ONLY.
+  `content/vehicles.json` + `content/races.json` (schemas `vehicle-catalog` / `race-catalog`)
+  always emitted; the generated vehicle shell consumes both. Workbench gains
+  `POST /api/racing/inspect` + a panel. Nineteen packs now.
+- **Proofs.** New `proofs/top-down-racer/` (car + race, 2 laps, shortcut rejected, restart
+  clears state) and `proofs/time-trial-racer/` (countdown, live timer, shortcut rejected,
+  restart resets attempt, faster second run updates the persisted best). `qa:proof`
+  21/21 -> 23/23.
+- **Limitations.** `LIMITATIONS.vehicleIntentOnly` and `LIMITATIONS.raceOrchestration` removed
+  (both constants deleted). `top-down-racer` / `time-trial-racer` / `endless-driving` ->
+  `[]`; `kart-racer` and `boat-flight-racer` keep one narrow, accurate limitation each.
+  Maturity split unchanged (5/7/62).
+- **Validation:** typecheck PASS; `npm test` 2602/2602; builds + `check:offline` PASS;
+  `qa:proof` 23/23; `qa:matrix` 45/45; `qa:starter-kits` all 14; `qa:workbench` 16/16;
+  `release:verify` 6/6.
+
 ### Revision 24 - 2026-08-29 (Sonnet 5) - Capability program Phase 9
 
 **Optional advanced physics & constraints (ADR-0026).** Ninth phase of the ten-phase program.

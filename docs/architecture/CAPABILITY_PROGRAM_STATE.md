@@ -29,12 +29,12 @@ Git/validation/architecture checkpoint, not a new chat.
 | 7 | Procedural Generation | `feature/capability-07-procedural-generation` | PASS |
 | 8 | World Graph / Rooms / Transitions / Map | `feature/capability-08-world-graph` | PASS |
 | 9 | Advanced 2D Physics & Constraints | `feature/capability-09-advanced-physics` | PASS |
-| 10 | Vehicle Handling & Racing | `feature/capability-10-vehicle-racing` | NOT STARTED |
+| 10 | Vehicle Handling & Racing | `feature/capability-10-vehicle-racing` | PASS |
 
 Program starting `main`: `0af24cd6c2646cae84fb4be559b68c2477e63d0b`
 (the Start/Confirm prerequisite; verified present before Phase 1).
 
-Current phase: **10 — Vehicle Handling & Racing** (NOT STARTED). Phases 1–9 integrated to `origin/main`.
+Current phase: **Final Program Certification**. Phases 1–10 integrated to `origin/main`.
 
 ---
 
@@ -706,5 +706,76 @@ None.
 
 ### Next phase
 
-Phase 10 — Vehicle Handling & Racing. Branch
-`feature/capability-10-vehicle-racing` from the integrated `main`.
+Phase 10 done, see below. Then FINAL FIRST-TEN PROGRAM CERTIFICATION.
+
+---
+
+## Phase 10 — Vehicle Handling & Racing — PASS
+
+- **Starting SHA:** `e39004d2b9369ebc3c25400cc2de0dfd42bac6ae` (Phase 9 on `main`)
+- **Feature branch:** `feature/capability-10-vehicle-racing`
+- **Phase commit SHA:** this commit — `feat: add reusable vehicle handling and racing` on `main`
+- **Main integration SHA:** same commit, fast-forwarded onto `main`
+
+### Implementation summary
+
+- `packages/contracts/src/vehicles.ts` (new): `VehicleService` (`vehicle.motion`)
+  - `load` + `update(deltaMs, VehicleIntent, surfaceTag?)`; four bounded
+  profiles (car / kart / boat / flight), bounded tuning, surface modifiers,
+  simulation-time boost. `VEHICLE_PROFILE_DEFAULTS`.
+- `packages/contracts/src/racing.ts` (new): `RaceService` (`race.state`) -
+  `startRace` / `tick(deltaMs)` / `checkpointEntered` / `expectedCheckpoint`;
+  ordered checkpoints (out-of-order never advances), `race` / `time-trial`
+  modes, countdown + elapsed on simulation time, opt-in best-time persistence.
+- `packages/packs/src/vehicles/vehiclesPack.ts` + `racing/racingPack.ts` (new):
+  `sw2d.vehicles` / `sw2d.racing`, both pure (no Phaser). The `vehicleController`
+  stays intent-only.
+- `packages/schemas/schemas/vehicle-catalog.schema.json` +
+  `race-catalog.schema.json` (new); documents `vehicles` / `races`; wired into
+  `validator.ts` + `CONTENT_DOCUMENTS`. `GameDefinition` unchanged;
+  `PresetDefinition.vehicleProfile` added (+ schema).
+- Generator emits `content/vehicles.json` + `content/races.json`;
+  `content.ts` / `main.ts` templates load both packs; `vehicleShellPack`
+  template consumes both (intent → motion → sprite; CONFIRM starts the race;
+  checkpoint-circle test).
+- Workbench: `POST /api/racing/inspect` + an inspector panel.
+- ADR-0027.
+
+### Proof consumers
+
+- **`proofs/top-down-racer/`** (new) — car via `sw2d.vehicles`, race via
+  `sw2d.racing` (4 ordered checkpoints, 2 laps); an out-of-order checkpoint
+  never advances a lap; two valid laps finish; restart clears all race state.
+- **`proofs/time-trial-racer/`** (new) — same services, `time-trial` mode: a
+  countdown, a live elapsed timer, an invalid-shortcut rejection, a finish, a
+  restart that resets the attempt, and a faster second attempt that updates the
+  persisted best.
+- `npm run qa:proof` 21/21 → **23/23**.
+
+### Limitation changes
+
+- `LIMITATIONS.vehicleIntentOnly` and `LIMITATIONS.raceOrchestration` **removed**
+  (both constants deleted). `top-down-racer`, `time-trial-racer`,
+  `endless-driving` → `knownLimitations: []`. `kart-racer` keeps a narrow
+  hold/fire-a-kart-item limitation; `boat-flight-racer` keeps a narrow
+  bounded-arcade-handling limitation. Maturity split unchanged (5/7/62).
+  Nineteen packs now have a preset consumer.
+
+### Validation completed
+
+- `npm run typecheck` — PASS
+- `npm test` — 2602/2602 PASS (was 2505 at Phase 9; +97)
+- `npm run validate` (build + `check:offline`) — PASS
+- `npm run qa:proof` — 23/23 PASS
+- `npm run qa:matrix` — 45/45 PASS
+- `npm run qa:starter-kits` — all 14 sub-suites PASS
+- `npm run qa:workbench` — 16/16 PASS (workbench changed)
+- `npm run release:verify` — 6/6 PASS
+
+### Unresolved blockers
+
+None.
+
+### Next phase
+
+FINAL FIRST-TEN PROGRAM CERTIFICATION.

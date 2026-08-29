@@ -58,6 +58,9 @@ const PROOF_SPEC_MODULES: Readonly<Record<string, string>> = {
   // Phase 9 - optional advanced physics & constraints (ADR-0026)
   'grappling-platformer': 'grapplingPlatformer',
   'physics-toy': 'physicsToy',
+  // Phase 10 - vehicle handling & racing (ADR-0027)
+  'top-down-racer': 'topDownRacer',
+  'time-trial-racer': 'timeTrialRacer',
 };
 
 function proofTargets(): Target[] {
