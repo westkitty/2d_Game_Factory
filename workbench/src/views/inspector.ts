@@ -19,6 +19,8 @@ import { renderGenerationLab } from './generationLab.ts';
 import { renderWorldGraphLab } from './worldGraphLab.ts';
 import { renderPhysicsLab } from './physicsLab.ts';
 import { renderRacingLab } from './racingLab.ts';
+import { renderPerceptionLab } from './perceptionLab.ts';
+import { renderClimbingLab } from './climbingLab.ts';
 import { thumbnailFor } from '../image/clientImage.ts';
 import { ROLE_LABELS, type AssetRecord, type Provenance, type RoleAssignment } from '../../shared/types.ts';
 import { classifyFrames } from '../../shared/spritePresentation.ts';
@@ -41,11 +43,15 @@ export function renderInspector(host: HTMLElement): () => void {
   const worldGraphHost = el('div', { class: 'pane__body', style: { 'border-top': '1px solid var(--line, #2a2a2a)' } });
   const physicsHost = el('div', { class: 'pane__body', style: { 'border-top': '1px solid var(--line, #2a2a2a)' } });
   const racingHost = el('div', { class: 'pane__body', style: { 'border-top': '1px solid var(--line, #2a2a2a)' } });
+  const perceptionHost = el('div', { class: 'pane__body', style: { 'border-top': '1px solid var(--line, #2a2a2a)' } });
+  const climbingHost = el('div', { class: 'pane__body', style: { 'border-top': '1px solid var(--line, #2a2a2a)' } });
   let genLabGameId: string | null = null;
   let disposeGenLab: (() => void) | null = null;
   let disposeWorldGraphLab: (() => void) | null = null;
   let disposePhysicsLab: (() => void) | null = null;
   let disposeRacingLab: (() => void) | null = null;
+  let disposePerceptionLab: (() => void) | null = null;
+  let disposeClimbingLab: (() => void) | null = null;
 
   function roleRow(assignment: RoleAssignment, state: AppState): HTMLElement {
     const current = state.current!;
@@ -278,15 +284,23 @@ export function renderInspector(host: HTMLElement): () => void {
     disposePhysicsLab = null;
     disposeRacingLab?.();
     disposeRacingLab = null;
+    disposePerceptionLab?.();
+    disposePerceptionLab = null;
+    disposeClimbingLab?.();
+    disposeClimbingLab = null;
     replace(genLabHost);
     replace(worldGraphHost);
     replace(physicsHost);
     replace(racingHost);
+    replace(perceptionHost);
+    replace(climbingHost);
     if (gameId) {
       disposeGenLab = renderGenerationLab(genLabHost, gameId);
       disposeWorldGraphLab = renderWorldGraphLab(worldGraphHost, gameId);
       disposePhysicsLab = renderPhysicsLab(physicsHost, gameId);
       disposeRacingLab = renderRacingLab(racingHost, gameId);
+      disposePerceptionLab = renderPerceptionLab(perceptionHost, gameId);
+      disposeClimbingLab = renderClimbingLab(climbingHost, gameId);
     }
   }
 
@@ -327,7 +341,7 @@ export function renderInspector(host: HTMLElement): () => void {
     );
   }
 
-  replace(host, head, body, genLabHost, worldGraphHost, physicsHost, racingHost);
+  replace(host, head, body, genLabHost, worldGraphHost, physicsHost, racingHost, perceptionHost, climbingHost);
   paint(getState());
   const unsubscribe = subscribe(paint);
   return () => {
@@ -336,6 +350,8 @@ export function renderInspector(host: HTMLElement): () => void {
     disposeWorldGraphLab?.();
     disposePhysicsLab?.();
     disposeRacingLab?.();
+    disposePerceptionLab?.();
+    disposeClimbingLab?.();
   };
 }
 

@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "wallSlideMaxSpeed": 70,
+  "wallFriction": 0.7,
+  "wallJumpVelocityX": 250,
+  "wallJumpVelocityY": 380,
+  "wallStickMs": 150,
+  "ledgeGrabToleranceX": 28,
+  "ledgeGrabToleranceY": 28,
+  "ladderClimbSpeed": 150,
+  "enableLedgeClimb": true
+}

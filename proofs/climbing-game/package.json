@@ -1,0 +1,22 @@
+{
+  "name": "proof-climbing-game",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@sw2d/contracts": "workspace:*",
+    "@sw2d/packs": "workspace:*",
+    "@sw2d/runtime": "workspace:*",
+    "@sw2d/schemas": "workspace:*"
+  },
+  "devDependencies": {
+    "phaser": "^3.88.2",
+    "typescript": "^5.7.3",
+    "vite": "^8.2.2"
+  }
+}

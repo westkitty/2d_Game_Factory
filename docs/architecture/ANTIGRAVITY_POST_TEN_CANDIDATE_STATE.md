@@ -2,8 +2,13 @@
 
 First-ten base SHA: `acf802f7a32a3f341273c084931af37cb5461784`
 Candidate branch: `candidate/antigravity-post-ten-program`
-Candidate HEAD: `5215687`
-Current candidate phase: Phase 12 (PASS)
+Candidate HEAD: `candidate(repair-11-12)`
+Current candidate phase: Phase 12 (FOCUSED TESTS PASS)
+
+---
+
+### Historical Note: Misrouted Work Preserved
+The dungeon-chest / lockpicking prototype was accidentally implemented under Phase 13, preserved on remote branch `salvage/antigravity-dungeon-chests`, and reverted from the post-ten program candidate before continuing. It is not part of the Phase 11–36 program.
 
 ---
 
@@ -11,17 +16,17 @@ Current candidate phase: Phase 12 (PASS)
 
 - **Phase:** 11
 - **Capability:** `ai.perception`, `ai.pursuit`
-- **Status:** PASS
+- **Status:** FOCUSED TESTS PASS
 - **Starting SHA:** `acf802f7a32a3f341273c084931af37cb5461784`
-- **Candidate commit:** `88fe47e`
+- **Candidate commit:** `88fe47e` (repaired in `candidate(repair-11-12)`)
 - **Contracts:** `packages/contracts/src/perception.ts`, exported from `packages/contracts/src/index.ts`
 - **Schemas:** `packages/schemas/schemas/perception-catalog.schema.json`, registered as `perception-catalog` under document name `perception` in `packages/schemas/src/validator.ts` and `packages/schemas/src/contentDocuments.ts`
 - **Packs:** `sw2d.ai-perception` (`packages/packs/src/aiPerception/aiPerceptionPack.ts`), providing `ai.perception` and `ai.pursuit`
 - **Runtime bridges:** `packages/runtime/src/game-support/perceptionRuntime.ts`, exported from `packages/runtime/src/index.ts`
 - **Generator/template changes:** none required
-- **Workbench changes:** none required
+- **Workbench changes:** `workbench/server/perceptionLab.ts`, `workbench/src/views/perceptionLab.ts`, route `POST /perception/inspect` in `workbench/server/api.ts`, mounted in `workbench/src/views/inspector.ts`
 - **Presets changed:** `stealth-game`, `heist-game` in `packages/presets/src/catalog/topDownAction.ts`, `chase-platformer` in `packages/presets/src/catalog/platforming.ts`
-- **Proof consumers:** `proofs/stealth-game/` (new, full defining journey tested by `packages/qa/proof-specs/stealthGame.ts`), `proofs/chase-platformer/` (regression checked, 1/1 PASS)
+- **Proof consumers:** `proofs/stealth-game/` (defining journey in `packages/qa/proof-specs/stealthGame.ts`), `proofs/chase-platformer/` (regression checked)
 - **Tests added:**
   - `packages/contracts/test/perception.test.ts` (8 tests)
   - `packages/schemas/test/validator.test.ts` (perception test)
@@ -34,8 +39,8 @@ Current candidate phase: Phase 12 (PASS)
   - `packages/presets/test/` (605 tests PASS)
   - `packages/qa/src/runProofs.ts stealth-game` (1/1 PASS)
   - `packages/qa/src/runProofs.ts chase-platformer` (1/1 PASS)
-  - `packages/qa/src/runAll.ts` (14/14 smoke demos PASS)
-- **Actual results:** All tests passing, 0 console errors, 0 external network requests
+  - `npm run qa:workbench` (16/16 browser journeys PASS)
+- **Actual results:** All focused tests passing, 0 console errors, 0 external network requests
 - **Limitations changed:** `LIMITATIONS.stealthAi` and `LIMITATIONS.chasePressure` narrowed to reflect existence of `sw2d.ai-perception`
 - **Known failures:** None
 - **Suspected shortcuts:** None
@@ -48,35 +53,38 @@ Current candidate phase: Phase 12 (PASS)
 
 - **Phase:** 12
 - **Capability:** `movement.climbing`
-- **Status:** PASS
+- **Status:** FOCUSED TESTS PASS
 - **Starting SHA:** `88fe47e`
-- **Candidate commit:** `5215687`
+- **Candidate commit:** `5215687` (repaired in `candidate(repair-11-12)`)
 - **Contracts:** `packages/contracts/src/climbing.ts`, exported from `packages/contracts/src/index.ts`
 - **Schemas:** `packages/schemas/schemas/climbing-config.schema.json`, registered as `climbing-config` under document name `climbing` in `packages/schemas/src/validator.ts` and `packages/schemas/src/contentDocuments.ts`
 - **Packs:** `sw2d.climbing` (`packages/packs/src/climbing/climbingPack.ts`), providing `movement.climbing`
 - **Runtime bridges:** `packages/runtime/src/game-support/climbingRuntime.ts`, exported from `packages/runtime/src/index.ts`
 - **Generator/template changes:** none required
-- **Workbench changes:** none required
-- **Presets changed:** `precision-platformer`, `climbing-game` in `packages/presets/src/catalog/platforming.ts`
-- **Proof consumers:** `proofs/precision-platformer/` (new, full defining journey tested by `packages/qa/proof-specs/precisionPlatformer.ts`)
+- **Workbench changes:** `workbench/server/climbingLab.ts`, `workbench/src/views/climbingLab.ts`, route `POST /climbing/inspect` in `workbench/server/api.ts`, mounted in `workbench/src/views/inspector.ts`
+- **Presets changed:** `climbing-game` (primary defining preset), `precision-platformer` in `packages/presets/src/catalog/platforming.ts`
+- **Proof consumers:**
+  - `proofs/climbing-game/` (primary defining consumer: wall-slide, wall-jump, wall-to-wall movement, ledge detection, ledge grab, ledge drop, recovery, ledge climb, exit, clean restart; spec `packages/qa/proof-specs/climbingGame.ts`)
+  - `proofs/precision-platformer/` (secondary regression consumer; spec `packages/qa/proof-specs/precisionPlatformer.ts`)
 - **Tests added:**
   - `packages/contracts/test/climbing.test.ts` (7 tests)
   - `packages/schemas/test/validator.test.ts` (climbing-config test)
   - `packages/packs/test/climbing.test.ts` (7 tests)
   - `packages/runtime/test/climbingRuntime.test.ts` (2 tests)
+  - `proofs/climbing-game/tests/content.test.ts` (5 tests)
   - `proofs/precision-platformer/tests/content.test.ts` (5 tests)
 - **Tests run:**
   - `npm run typecheck` (PASS)
-  - vitest test suite for Phase 12 (71 targeted tests PASS)
+  - vitest test suite for Phase 12 (76 targeted tests PASS)
   - `packages/presets/test/` (605 tests PASS)
+  - `packages/qa/src/runProofs.ts climbing-game` (1/1 PASS)
   - `packages/qa/src/runProofs.ts precision-platformer` (1/1 PASS)
-  - `packages/qa/src/runAll.ts` (14/14 smoke demos PASS)
-- **Actual results:** All tests passing, 0 console errors, 0 external network requests
+  - `npm run qa:workbench` (16/16 browser journeys PASS)
+- **Actual results:** All focused tests passing, 0 console errors, 0 external network requests
 - **Limitations changed:** `LIMITATIONS.climbingMechanics` updated to reflect existence of `sw2d.climbing`
 - **Known failures:** None
 - **Suspected shortcuts:** None
 - **Architectural concerns:** None
-- **Work required from certifier:** Adversarial browser validation of climbing, wall jump reflection, and ledge hanging.
+- **Work required from certifier:** Adversarial browser validation of climbing, wall-to-wall traversal, ledge grab, ledge drop, recovery, and ledge climb.
 
 ---
-

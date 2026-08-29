@@ -46,6 +46,8 @@ import { previewGeneration } from './generationLab.ts';
 import { inspectWorldGraph } from './worldGraphLab.ts';
 import { inspectPhysics } from './physicsLab.ts';
 import { inspectRacing } from './racingLab.ts';
+import { inspectPerception } from './perceptionLab.ts';
+import { inspectClimbing } from './climbingLab.ts';
 import { loadScene, listLevels, newObject, objectClassOptions, saveScene, SceneValidationError, type SceneDocument } from './sceneStore.ts';
 import { buildProject, createProject, packProject, validateProject } from './factoryService.ts';
 import { starterKitDepthFor, starterKitFor } from './starterKits/index.ts';
@@ -666,6 +668,26 @@ const ROUTES: ReadonlyMap<string, Handler> = new Map<string, Handler>([
     (request) => {
       const body = bodyObject(request);
       return ok(inspectRacing(gameIdOf(request, body)));
+    },
+  ],
+
+  [
+    // AI Perception surface (capability program Phase 11). Reports
+    // content/perception.json (sensors & pursuit parameters).
+    'POST /perception/inspect',
+    (request) => {
+      const body = bodyObject(request);
+      return ok(inspectPerception(gameIdOf(request, body)));
+    },
+  ],
+
+  [
+    // Platformer climbing surface (capability program Phase 12). Reports
+    // content/climbing.json (wall-slide, wall-jump, ledge grab).
+    'POST /climbing/inspect',
+    (request) => {
+      const body = bodyObject(request);
+      return ok(inspectClimbing(gameIdOf(request, body)));
     },
   ],
 
