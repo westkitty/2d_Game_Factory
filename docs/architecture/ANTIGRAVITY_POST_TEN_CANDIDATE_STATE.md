@@ -2,8 +2,8 @@
 
 First-ten base SHA: `acf802f7a32a3f341273c084931af37cb5461784`
 Candidate branch: `candidate/antigravity-post-ten-program`
-Candidate HEAD: `88fe47e`
-Current candidate phase: Phase 11 (PASS)
+Candidate HEAD: `5215687`
+Current candidate phase: Phase 12 (PASS)
 
 ---
 
@@ -43,3 +43,40 @@ Current candidate phase: Phase 11 (PASS)
 - **Work required from certifier:** Adversarial browser validation of stealth and chase journeys.
 
 ---
+
+## Phase 12 — Platformer Climbing, Wall-Slide, Wall-Jump & Ledge-Hang
+
+- **Phase:** 12
+- **Capability:** `movement.climbing`
+- **Status:** PASS
+- **Starting SHA:** `88fe47e`
+- **Candidate commit:** `5215687`
+- **Contracts:** `packages/contracts/src/climbing.ts`, exported from `packages/contracts/src/index.ts`
+- **Schemas:** `packages/schemas/schemas/climbing-config.schema.json`, registered as `climbing-config` under document name `climbing` in `packages/schemas/src/validator.ts` and `packages/schemas/src/contentDocuments.ts`
+- **Packs:** `sw2d.climbing` (`packages/packs/src/climbing/climbingPack.ts`), providing `movement.climbing`
+- **Runtime bridges:** `packages/runtime/src/game-support/climbingRuntime.ts`, exported from `packages/runtime/src/index.ts`
+- **Generator/template changes:** none required
+- **Workbench changes:** none required
+- **Presets changed:** `precision-platformer`, `climbing-game` in `packages/presets/src/catalog/platforming.ts`
+- **Proof consumers:** `proofs/precision-platformer/` (new, full defining journey tested by `packages/qa/proof-specs/precisionPlatformer.ts`)
+- **Tests added:**
+  - `packages/contracts/test/climbing.test.ts` (7 tests)
+  - `packages/schemas/test/validator.test.ts` (climbing-config test)
+  - `packages/packs/test/climbing.test.ts` (7 tests)
+  - `packages/runtime/test/climbingRuntime.test.ts` (2 tests)
+  - `proofs/precision-platformer/tests/content.test.ts` (5 tests)
+- **Tests run:**
+  - `npm run typecheck` (PASS)
+  - vitest test suite for Phase 12 (71 targeted tests PASS)
+  - `packages/presets/test/` (605 tests PASS)
+  - `packages/qa/src/runProofs.ts precision-platformer` (1/1 PASS)
+  - `packages/qa/src/runAll.ts` (14/14 smoke demos PASS)
+- **Actual results:** All tests passing, 0 console errors, 0 external network requests
+- **Limitations changed:** `LIMITATIONS.climbingMechanics` updated to reflect existence of `sw2d.climbing`
+- **Known failures:** None
+- **Suspected shortcuts:** None
+- **Architectural concerns:** None
+- **Work required from certifier:** Adversarial browser validation of climbing, wall jump reflection, and ledge hanging.
+
+---
+
