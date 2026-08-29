@@ -3,7 +3,7 @@
 Phase 10's five deep, end-to-end proof games - the tier above Phase 8's smoke bar - plus the
 capability-completion program's per-phase proof consumers. Each row is backed by a frozen
 `proofs/<id>/PROOF_CONTRACT.md`, a real generated composition, and a committed real-browser proof
-spec run through `npm run qa:proof`. Mechanically, `npm run qa:proof` is **7/7** as of this
+spec run through `npm run qa:proof`. Mechanically, `npm run qa:proof` is **9/9** as of this
 revision.
 
 ## Capability program — Phase 1: reusable spatial pointer & interaction (ADR-0018)
@@ -18,6 +18,13 @@ The two new proof games' presets are left at `maturity: 'recipe'` for now — th
 exist and pass `qa:proof`, but the formal `proof-validated` promotion (and its 5/7/62 catalog
 count bookkeeping in `honesty.test.ts` / `OPERATIONAL_STATE.md`) is a dedicated catalog pass, not
 folded into a capability phase.
+
+## Capability program — Phase 2: data-driven items / effects / pickups (ADR-0019)
+
+| Proof | Preset | Reusable capability exercised | Game-specific mechanics | Browser journey | Status |
+|---|---|---|---|---|---|
+| `proofs/collectathon-platformer/` | `collectathon-platformer` | `sw2d.items` (`ItemsService`) from validated `content/items.json`; `bindCollectiblePickups` (shared platform shell, **no game-specific pickup code**); `arcade.score` + `chain`(`arcade.score` + `world.flag`) effects | Enriched item catalog (coin/gem/star) and level (5 Collectibles, one with an unknown itemId); shell debug reads score + world flag back from the real services | Start (sw2d.items installed, 4 bound pickups); walk right collecting all; inventory `{coin-1:2, gem-1:1, star-1:1}`, score 135, `gotStar` flag set, unknown itemId skipped; restart reinstalls (fresh services, pickups back, inventory cleared) | PASS |
+| `proofs/top-down-adventure/` | `top-down-adventure` | Same `sw2d.items` service, different preset/effects: `world.flag` (map key), `progression.currency` (gold), `progression.xp` via a real `consume()` (ration) | Content overlay enables `sw2d.items` + `sw2d.progression`; top-down shell binds pickups + consumes a ration on INTERACT | Start; sweep pickups → `hasMapKey`, currency 20, ration ×2; INTERACT twice → ration consumed, xp 3 → 6; restart clears (this preset's items config does not persist) | PASS |
 
 ## Phase 10 deep proofs
 

@@ -28,6 +28,8 @@ declare module '@sw2d/contracts' {
     'simulation:resourceChanged': { readonly resourceId: string; readonly amount: number; readonly delta: number };
     'narrative:flagChanged': { readonly flag: string; readonly value: boolean };
     'strategy:turnChanged': { readonly team: string; readonly turnNumber: number };
+    'items:countChanged': { readonly itemId: string; readonly count: number; readonly delta: number };
+    'items:consumed': { readonly itemId: string; readonly count: number };
   }
 }
 

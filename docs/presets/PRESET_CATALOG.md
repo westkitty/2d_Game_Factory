@@ -164,10 +164,10 @@ do yet. See each recipe's `knownLimitations` in source for the complete list.
 | `auto-runner` | No procedural level/segment generation exists yet; only hand-authored Tiled levels (Phase 6) are supported. |
 | `climbing-game` | Wall-slide, wall-jump and ledge-grab movement mechanics are not yet implemented as reusable capabilities (MASTER_PROJECT.md section 9.2); vertical movement must be authored as game-specific code, the same pattern starter/src/game-specific/ demonstrates. |
 | `grappling-platformer` | No advanced rope/constraint/grappling physics exists yet. |
-| `collectathon-platformer` | Item/collectible definitions beyond the Collectible Tiled object class (Phase 6) have no dedicated schema yet. |
+| `collectathon-platformer` | (none stated) |
 | `top-down-adventure` | (none stated) |
 | `action-adventure` | Combat core exists, but full projectile/weapon systems are not yet implemented. |
-| `twin-stick-shooter` | Independent spatial/analog aim is not yet a proven controller capability. Current pointer controller is press-style only; spatial pointer remains deferred. |
+| `twin-stick-shooter` | Independent spatial/analog aim is not wired into this starter. The digital AIM_* axis (ADR-0016) is the aim path; the spatial pointer (ADR-0018) can supply an optional aim fallback but the generated top-down shell does not consume it. |
 | `survivor-like` | Combat core exists, but full projectile/weapon systems are not yet implemented. |
 | `dungeon-crawler` | No procedural level/segment generation exists yet; only hand-authored Tiled levels (Phase 6) are supported. |
 | `action-roguelite` | No procedural level/segment generation exists yet; only hand-authored Tiled levels (Phase 6) are supported. |
@@ -179,9 +179,9 @@ do yet. See each recipe's `knownLimitations` in source for the complete list.
 | `vertical-shmup` | Combat core exists, but full projectile/weapon systems are not yet implemented. |
 | `bullet-hell` | Combat core exists, but full projectile/weapon systems are not yet implemented. |
 | `asteroids-shooter` | Combat core exists, but full projectile/weapon systems are not yet implemented. |
-| `gallery-shooter` | Spatial pointer targeting is not yet implemented. |
+| `gallery-shooter` | Combat core exists, but full projectile/weapon systems are not yet implemented. |
 | `run-and-gun` | Combat core exists, but full projectile/weapon systems are not yet implemented. |
-| `rail-shooter` | Spatial pointer targeting is not yet implemented. |
+| `rail-shooter` | Combat core exists, but full projectile/weapon systems are not yet implemented. / Fixed-path/rail camera movement is not yet a reusable capability. |
 | `top-down-racer` | The vehicle controller supplies steering/throttle/brake intent only; no reusable vehicle-physics/drift/handling system exists. |
 | `kart-racer` | The vehicle controller supplies steering/throttle/brake intent only; no reusable vehicle-physics/drift/handling system exists. |
 | `time-trial-racer` | The vehicle controller supplies steering/throttle/brake intent only; no reusable vehicle-physics/drift/handling system exists. |
@@ -214,18 +214,18 @@ do yet. See each recipe's `knownLimitations` in source for the complete list.
 | `aquarium-terrarium` | No reusable needs/behavior/relationship/creature simulation exists beyond foundational resources/state. |
 | `exploration-game` | A world graph, room transitions and a map system are not yet implemented; only flat single-level Tiled maps plus world flags/checkpoints exist (Phase 6). |
 | `visual-novel` | Narrative state exists, but no full content-authored branching dialogue renderer/portrait presentation system exists. |
-| `point-and-click` | Spatial pointer position, hover targets, and world-coordinate click targeting remain unimplemented. |
+| `point-and-click` | Narrative state exists, but no full content-authored branching dialogue renderer/portrait presentation system exists. |
 | `interactive-fiction-hybrid` | No dedicated parser/text-command system exists. |
 | `investigation-game` | No evidence-board/deduction/linking system exists. |
 | `museum-exhibit` | No dedicated exhibit/codex presentation framework exists beyond general world/narrative/UI foundations. |
-| `escape-room` | puzzlePack's config (createInitialState/isSolved) is functions, not JSON-serializable data, so puzzle definitions are not content-authorable through a schema. The pack declares configSource: 'code' (ADR-0017) and a generated game supplies it from src/game-specific/packConfig.ts, which ships with a small working placeholder to replace - so the pack really installs, but the puzzle's own rules are game-specific TypeScript, not content. |
+| `escape-room` | puzzlePack's config (createInitialState/isSolved) is functions, not JSON-serializable data, so puzzle definitions are not content-authorable through a schema. The pack declares configSource: 'code' (ADR-0017) and a generated game supplies it from src/game-specific/packConfig.ts, which ships with a small working placeholder to replace - so the pack really installs, but the puzzle's own rules are game-specific TypeScript, not content. / No content-authored escape-room puzzle grammar exists yet. |
 | `microgame-collection` | No microgame scheduler/rotation/meta-framework exists. |
 | `local-party-game` | No multi-player/local multi-device input routing exists. |
 | `physics-toy` | Optional advanced rigid-body/constraint physics has not been implemented. |
 | `virtual-pet` | No reusable needs/behavior/relationship/creature simulation exists beyond foundational resources/state. |
-| `dress-up-character-toy` | No spatial drag/drop wardrobe/attachment system exists. |
+| `dress-up-character-toy` | No wardrobe/attachment system is built on the drag/drop capability (ADR-0018) yet. |
 | `sandbox-playground` | No generalized authoring/editing sandbox exists. |
-| `drawing-game` | No spatial pointer drawing/canvas-stroke input service exists. |
+| `drawing-game` | No canvas-stroke/drawing capture is built on the spatial pointer service (ADR-0018) yet. |
 | `fishing-game` | No reusable casting/line/tension/fish behavior system exists. |
 | `cooking-game` | No reusable ingredient/recipe/action-sequence cooking system exists. |
 | `photography-game` | No reusable camera/framing/scoring/photo-capture gameplay system exists. |

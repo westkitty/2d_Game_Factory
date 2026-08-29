@@ -1,5 +1,5 @@
 import type { InstalledSystemPack, NormalizedLevel } from '@sw2d/contracts';
-import { topDownController, type SceneContext, type ScenePackDefinition } from '@sw2d/runtime';
+import { bindCollectiblePickups, topDownController, type SceneContext, type ScenePackDefinition } from '@sw2d/runtime';
 
 /**
  * Generated starter shell: top-down controller family.
@@ -57,11 +57,17 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     player.setCollideWorldBounds(true);
     player.body.setAllowGravity(false);
 
+    // Data-driven item pickups (capability program Phase 2). Inert unless the
+    // game installs sw2d.items - see platformShellPack.ts's note.
+    const pickups = bindCollectiblePickups(context, player, level);
+
     const debugHandle = context.debug.contribute('game.top-down-shell', () => ({
       x: Math.round(player.x),
       y: Math.round(player.y),
       vx: Math.round(player.body.velocity.x),
       vy: Math.round(player.body.velocity.y),
+      items: pickups.inventory(),
+      pickupsRemaining: pickups.remaining(),
     }));
 
     let disposed = false;
@@ -80,6 +86,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         if (disposed) return;
         disposed = true;
         debugHandle.dispose();
+        pickups.dispose();
         try {
           player.destroy();
         } catch {

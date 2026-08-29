@@ -1,0 +1,11 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:sw2d:schema:pack-config:items:v1",
+  "title": "ItemsConfig",
+  "description": "Config for the sw2d.items pack. `persist: true` backs the inventory with context.saves so held-item counts survive a browser reload; the default is an in-memory inventory that resets on a run restart.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "persist": { "type": "boolean" }
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "items": [
+    {
+      "id": "map-key",
+      "displayName": "Map Key",
+      "category": "key",
+      "tags": ["quest"],
+      "assetRole": "pickup",
+      "stackable": false,
+      "consumable": false,
+      "quantityPerGrant": 1,
+      "effects": [{ "kind": "world.flag", "flag": "hasMapKey", "value": true }]
+    },
+    {
+      "id": "gold-pouch",
+      "displayName": "Gold Pouch",
+      "category": "currency",
+      "tags": ["loot"],
+      "assetRole": "pickup",
+      "stackable": true,
+      "consumable": false,
+      "quantityPerGrant": 1,
+      "effects": [{ "kind": "progression.currency", "amount": 10 }]
+    },
+    {
+      "id": "ration",
+      "displayName": "Ration",
+      "category": "consumable",
+      "tags": ["supply"],
+      "assetRole": "pickup",
+      "stackable": true,
+      "maxCount": 5,
+      "consumable": true,
+      "quantityPerGrant": 2,
+      "effects": [{ "kind": "progression.xp", "amount": 3 }]
+    }
+  ]
+}

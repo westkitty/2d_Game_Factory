@@ -16,6 +16,7 @@ export * from './disposable.ts';
 export * from './events.ts';
 export * from './game.ts';
 export * from './input.ts';
+export * from './items.ts';
 export * from './level.ts';
 export * from './persistence.ts';
 export * from './presets.ts';

@@ -22,3 +22,4 @@ One short record per decision that constrains later work. No ADR for trivia.
 | [0016](0016-aim-as-a-digital-axis-not-spatial-pointer.md) | Aim is a fourth digital axis, not spatial pointer | 8 |
 | [0017](0017-pack-config-source-json-or-code.md) | A pack declares whether its config is JSON or code | 9 |
 | [0018](0018-spatial-pointer-input-ownership.md) | Spatial pointer is a scene service, not part of ActionInput | Capability program 1 |
+| [0019](0019-data-driven-items-and-effects.md) | Data-driven items: one pack, one bounded effect union | Capability program 2 |

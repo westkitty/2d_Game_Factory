@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { CAPABILITY_IDS, PACK_IDS } from '../src/ids.ts';
 import {
+  itemsPack,
   aiPack,
   arcadePack,
   combatPack,
@@ -35,6 +36,7 @@ const ALL_PACKS = [
   simulationPack,
   narrativePack,
   strategyPack,
+  itemsPack,
 ];
 
 /** `<family>.<service>`: lowercase segments, at least two, dash-separated words allowed after the first. */

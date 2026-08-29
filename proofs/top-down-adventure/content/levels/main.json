@@ -1,0 +1,69 @@
+{
+  "type": "map",
+  "orientation": "orthogonal",
+  "infinite": false,
+  "width": 30,
+  "height": 17,
+  "tilewidth": 32,
+  "tileheight": 32,
+  "layers": [
+    { "type": "tilelayer", "name": "Background", "width": 30, "height": 17 },
+    { "type": "objectgroup", "name": "Solids", "objects": [] },
+    {
+      "type": "objectgroup",
+      "name": "Entities",
+      "objects": [
+        {
+          "id": 1,
+          "class": "PlayerSpawn",
+          "name": "Start",
+          "x": 80,
+          "y": 270,
+          "width": 0,
+          "height": 0,
+          "properties": [{ "name": "facing", "type": "string", "value": "right" }]
+        },
+        {
+          "id": 2,
+          "class": "Collectible",
+          "name": "Map Key",
+          "x": 280,
+          "y": 270,
+          "width": 20,
+          "height": 20,
+          "properties": [{ "name": "itemId", "type": "string", "value": "map-key" }]
+        },
+        {
+          "id": 3,
+          "class": "Collectible",
+          "name": "Gold A",
+          "x": 420,
+          "y": 270,
+          "width": 16,
+          "height": 16,
+          "properties": [{ "name": "itemId", "type": "string", "value": "gold-pouch" }]
+        },
+        {
+          "id": 4,
+          "class": "Collectible",
+          "name": "Gold B",
+          "x": 540,
+          "y": 270,
+          "width": 16,
+          "height": 16,
+          "properties": [{ "name": "itemId", "type": "string", "value": "gold-pouch" }]
+        },
+        {
+          "id": 5,
+          "class": "Collectible",
+          "name": "Rations",
+          "x": 680,
+          "y": 270,
+          "width": 16,
+          "height": 16,
+          "properties": [{ "name": "itemId", "type": "string", "value": "ration" }]
+        }
+      ]
+    }
+  ]
+}

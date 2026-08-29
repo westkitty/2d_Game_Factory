@@ -32,6 +32,35 @@ export function generateGameManifest(input: GameManifestInput): Record<string, u
   };
 }
 
+/**
+ * content/items.json - an ItemCatalog (capability program Phase 2). Always
+ * emitted (like content/levels/main.json) so content.ts can always load and
+ * validate it; a preset whose requiredContentRoles include 'items' gets a
+ * one-item starter catalog whose `coin-1` matches the universal proof
+ * level's Collectible, so its pickups grant a real canonical item and apply
+ * its effect through the reusable `sw2d.items` service. Other presets get an
+ * empty catalog.
+ */
+export function generateItemCatalog(hasItemsRole: boolean): Record<string, unknown> {
+  if (!hasItemsRole) return { schemaVersion: 1, items: [] };
+  return {
+    schemaVersion: 1,
+    items: [
+      {
+        id: 'coin-1',
+        displayName: 'Coin',
+        category: 'collectible',
+        tags: ['currency'],
+        assetRole: 'pickup',
+        stackable: true,
+        consumable: false,
+        quantityPerGrant: 1,
+        effects: [{ kind: 'arcade.score', amount: 5 }],
+      },
+    ],
+  };
+}
+
 /** content/tuning.json - the one content document @sw2d/schemas validates for every game today. */
 export function generateTuning(): Record<string, unknown> {
   return {

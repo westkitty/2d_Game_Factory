@@ -36,6 +36,9 @@ const PROOF_SPEC_MODULES: Readonly<Record<string, string>> = {
   // Phase 1 - reusable spatial interaction (ADR-0018)
   'gallery-shooter': 'galleryShooter',
   'point-and-click': 'pointAndClick',
+  // Phase 2 - data-driven items / effects / pickups (ADR-0019)
+  'collectathon-platformer': 'collectathonPlatformer',
+  'top-down-adventure': 'topDownAdventure',
 };
 
 function proofTargets(): Target[] {

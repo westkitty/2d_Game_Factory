@@ -774,6 +774,31 @@ adjudicated individually in the Phase 12 acceptance document):
 
 ## Revision history
 
+### Revision 17 - 2026-08-28 (Sonnet 5) - Capability program Phase 2
+
+**Data-driven items / effects / pickups (ADR-0019).** Second phase of the ten-phase program.
+Full detail in the durable ledger
+[`docs/architecture/CAPABILITY_PROGRAM_STATE.md`](docs/architecture/CAPABILITY_PROGRAM_STATE.md).
+
+- **New capability.** `sw2d.items` pack → `items.state`. `@sw2d/contracts/items.ts`:
+  `ItemDefinition` / `ItemCatalog`, a bounded `EffectDefinition` union (8 leaf kinds +
+  non-nesting `chain`), `ItemsService`. `content/items.json` validated by the new
+  `item-catalog` schema (registered alongside `tuning`/`levels`); `items-config` schema
+  (`{ persist?: boolean }`, default in-memory). `bindCollectiblePickups`
+  (`@sw2d/runtime/game-support`) wires `Collectible` level objects to the service with no
+  per-pickup code; the shared `platform` + `top-down` shells call it capability-guarded.
+- **Generation.** `content/items.json` always emitted; `content.ts` / `main.ts` templates
+  updated. Eleven packs now.
+- **Proofs.** New `proofs/collectathon-platformer/` (arcade + chain effects, no
+  game-specific pickup code) and `proofs/top-down-adventure/` (world-flag + progression
+  currency/xp + a real `consume()`). `qa:proof` 7/7 → 9/9.
+- **Limitations.** `collectathon-platformer`'s `itemDefinitions` limitation removed
+  (`LIMITATIONS.itemDefinitions` deleted). Phase-1 doc debt in `PRESET_CATALOG.md` swept.
+  Maturity split unchanged (5/7/62).
+- **Validation:** typecheck PASS; `npm test` 2139/2139; builds + `check:offline` PASS;
+  `qa:proof` 9/9; `qa:matrix` 40/40; `release:verify` 6/6; `qa:starter-kits` all 14 sub-suites
+  PASS.
+
 ### Revision 16 - 2026-08-28 (Sonnet 5) - Capability program Phase 1
 
 **Reusable spatial pointer & interaction (ADR-0018).** First phase of the ten-phase

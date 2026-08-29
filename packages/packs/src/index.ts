@@ -75,3 +75,5 @@ export {
   NoTeamsRegisteredError,
   type StrategyService,
 } from './strategy/strategyPack.ts';
+
+export { itemsPack, ITEMS_SAVE_SLOT, UnknownItemError, type ItemsService } from './items/itemsPack.ts';

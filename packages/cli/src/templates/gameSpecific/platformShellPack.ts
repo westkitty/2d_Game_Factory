@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import type { InstalledSystemPack, NormalizedLevel } from '@sw2d/contracts';
-import { platformController, type SceneContext, type ScenePackDefinition } from '@sw2d/runtime';
+import { bindCollectiblePickups, platformController, type SceneContext, type ScenePackDefinition } from '@sw2d/runtime';
 
 /**
  * Generated starter shell: platform controller family.
@@ -75,12 +75,20 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     player.setGravityY(tuning.gravity);
     scene.physics.add.collider(player, ground);
 
+    // Data-driven item pickups (capability program Phase 2). Inert unless the
+    // game installs sw2d.items; then every Collectible whose itemId names a
+    // catalog entry grants that item and applies its effects through the
+    // reusable service - no per-pickup code here.
+    const pickups = bindCollectiblePickups(context, player, level);
+
     const debugHandle = context.debug.contribute('game.platform-shell', () => ({
       x: Math.round(player.x),
       y: Math.round(player.y),
       vx: Math.round(player.body.velocity.x),
       vy: Math.round(player.body.velocity.y),
       onGround: player.body.blocked.down,
+      items: pickups.inventory(),
+      pickupsRemaining: pickups.remaining(),
     }));
 
     let disposed = false;
@@ -103,6 +111,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         if (disposed) return;
         disposed = true;
         debugHandle.dispose();
+        pickups.dispose();
         // A restart's batched stop+start can already have torn down this
         // scene's physics world by the time this runs - see
         // placeholderMoverPack.ts's own comment for the full story. Each

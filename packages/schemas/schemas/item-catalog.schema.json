@@ -1,0 +1,119 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:sw2d:schema:content-item-catalog:v1",
+  "title": "ItemCatalog",
+  "description": "Mirrors @sw2d/contracts ItemCatalog (items.ts). Validated as a ContentBundle.data document (document name 'items') the same way tuning.json is. Effects are a bounded discriminated union - built-in kinds only, no embedded scripting.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "items"],
+  "properties": {
+    "schemaVersion": { "type": "integer", "minimum": 1 },
+    "items": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/itemDefinition" }
+    }
+  },
+  "definitions": {
+    "itemDefinition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "displayName", "category", "stackable", "consumable"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "displayName": { "type": "string", "minLength": 1 },
+        "category": { "type": "string", "minLength": 1 },
+        "tags": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "assetRole": { "type": "string", "minLength": 1 },
+        "stackable": { "type": "boolean" },
+        "maxCount": { "type": "integer", "exclusiveMinimum": 0 },
+        "quantityPerGrant": { "type": "integer", "exclusiveMinimum": 0 },
+        "consumable": { "type": "boolean" },
+        "effects": { "type": "array", "items": { "$ref": "#/definitions/effect" } },
+        "metadata": {
+          "type": "object",
+          "additionalProperties": {
+            "anyOf": [{ "type": "string" }, { "type": "number" }, { "type": "boolean" }]
+          }
+        }
+      }
+    },
+    "effect": {
+      "oneOf": [
+        { "$ref": "#/definitions/leafEffect" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "effects"],
+          "properties": {
+            "kind": { "const": "chain" },
+            "effects": { "type": "array", "items": { "$ref": "#/definitions/leafEffect" } }
+          }
+        }
+      ]
+    },
+    "leafEffect": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "amount"],
+          "properties": { "kind": { "const": "combat.heal" }, "amount": { "type": "number", "exclusiveMinimum": 0 } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "durationMs"],
+          "properties": { "kind": { "const": "combat.invulnerable" }, "durationMs": { "type": "number", "exclusiveMinimum": 0 } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "amount"],
+          "properties": { "kind": { "const": "progression.currency" }, "amount": { "type": "number" } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "amount"],
+          "properties": { "kind": { "const": "progression.xp" }, "amount": { "type": "number", "exclusiveMinimum": 0 } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "itemId", "amount"],
+          "properties": {
+            "kind": { "const": "progression.item" },
+            "itemId": { "type": "string", "minLength": 1 },
+            "amount": { "type": "integer" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "amount"],
+          "properties": { "kind": { "const": "arcade.score" }, "amount": { "type": "number" } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "resourceId", "amount"],
+          "properties": {
+            "kind": { "const": "simulation.resource" },
+            "resourceId": { "type": "string", "minLength": 1 },
+            "amount": { "type": "number" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "flag", "value"],
+          "properties": {
+            "kind": { "const": "world.flag" },
+            "flag": { "type": "string", "minLength": 1 },
+            "value": { "type": "boolean" }
+          }
+        }
+      ]
+    }
+  }
+}

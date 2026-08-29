@@ -28,7 +28,7 @@ pack/controller selections were actually exercised through, and
 | `auto-runner` | arcade | world, world-entities | platform | keyboard, touch | platform-recipe |
 | `climbing-game` | world, world-entities | arcade | platform | keyboard, touch | platform-recipe |
 | `grappling-platformer` | world, world-entities | arcade | platform | keyboard, touch | platform-recipe |
-| `collectathon-platformer` | world, world-entities, arcade | progression | platform | keyboard, touch | platform-recipe |
+| `collectathon-platformer` | world, world-entities, arcade, items | progression | platform | keyboard, touch | platform-recipe |
 
 ## Top-down action (Phase 7A)
 
@@ -148,11 +148,11 @@ pack/controller selections were actually exercised through, and
 | simulation | `sw2d.simulation` | `simulation.resources` | 9 | 10 |
 | narrative | `sw2d.narrative` | `narrative.state` | 4 | 8 |
 | strategy | `sw2d.strategy` | `strategy.turns` | 4 | 4 |
+| items | `sw2d.items` | `items.state` | 1 | 1 |
 
-**All ten current packs have at least one preset consumer** as of Phase 7C - the last
-gap (`sw2d.simulation`) is closed by Family G, whose recipes are built around a
-resource ledger by genuine identity, not to manufacture coverage (see
-`packages/presets/src/catalog/simulationManagement.ts`).
+**All eleven current packs have at least one preset consumer.** `sw2d.items` (capability
+program Phase 2) is required by `collectathon-platformer`, whose generated starter consumes
+the reusable item/effect service through the shared platform shell.
 
 ## Validation profiles
 

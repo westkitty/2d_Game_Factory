@@ -25,6 +25,7 @@ export const PACK_IDS = {
   simulation: 'sw2d.simulation',
   narrative: 'sw2d.narrative',
   strategy: 'sw2d.strategy',
+  items: 'sw2d.items',
 } as const;
 
 export const CAPABILITY_IDS = {
@@ -39,4 +40,6 @@ export const CAPABILITY_IDS = {
   simulation: 'simulation.resources',
   narrative: 'narrative.state',
   strategy: 'strategy.turns',
+  /** Capability program Phase 2: data-driven item definitions, inventory and effects. */
+  items: 'items.state',
 } as const;

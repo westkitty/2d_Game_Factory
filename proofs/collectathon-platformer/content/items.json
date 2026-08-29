@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "items": [
+    {
+      "id": "coin-1",
+      "displayName": "Coin",
+      "category": "collectible",
+      "tags": ["currency"],
+      "assetRole": "pickup",
+      "stackable": true,
+      "consumable": false,
+      "quantityPerGrant": 1,
+      "effects": [{ "kind": "arcade.score", "amount": 5 }]
+    },
+    {
+      "id": "gem-1",
+      "displayName": "Gem",
+      "category": "collectible",
+      "tags": ["rare"],
+      "assetRole": "pickup",
+      "stackable": true,
+      "maxCount": 2,
+      "consumable": false,
+      "quantityPerGrant": 1,
+      "effects": [{ "kind": "arcade.score", "amount": 25 }]
+    },
+    {
+      "id": "star-1",
+      "displayName": "Power Star",
+      "category": "collectible",
+      "tags": ["objective"],
+      "assetRole": "pickup",
+      "stackable": false,
+      "consumable": false,
+      "quantityPerGrant": 1,
+      "effects": [
+        {
+          "kind": "chain",
+          "effects": [
+            { "kind": "arcade.score", "amount": 100 },
+            { "kind": "world.flag", "flag": "gotStar", "value": true }
+          ]
+        }
+      ]
+    }
+  ]
+}

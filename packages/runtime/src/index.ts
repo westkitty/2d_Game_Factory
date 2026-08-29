@@ -38,6 +38,7 @@ export {
  */
 export { ProjectilePool, type ProjectileOptions } from './game-support/projectilePool.ts';
 export { InteractionServiceImpl, phaserBoundsShape } from './game-support/interactionService.ts';
+export { bindCollectiblePickups, type CollectiblePickupBinding } from './game-support/itemPickups.ts';
 
 export { LocalStorageDriver, MemoryStorageDriver } from './persistence/LocalStorageDriver.ts';
 export { SaveStoreImpl } from './persistence/SaveStoreImpl.ts';

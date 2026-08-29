@@ -132,10 +132,13 @@ export const PLATFORMING_PRESETS: readonly PresetDefinition[] = [
     displayName: 'Collectathon Platformer',
     family: 'platforming',
     controllerFamilies: ['platform'],
-    requiredSystemPacks: [pack(PACK_IDS.world), pack(PACK_IDS.worldEntities), pack(PACK_IDS.arcade)],
+    requiredSystemPacks: [pack(PACK_IDS.world), pack(PACK_IDS.worldEntities), pack(PACK_IDS.arcade), pack(PACK_IDS.items)],
     optionalSystemPacks: [pack(PACK_IDS.progression)],
     requiredContentRoles: ['tuning', 'levels', 'items'],
     validationProfile: VALIDATION_PROFILES.platform,
-    knownLimitations: [LIMITATIONS.itemDefinitions],
+    // Data-driven item/effect definitions are implemented and consumed by this
+    // starter (capability program Phase 2, ADR-0019; proof:
+    // proofs/collectathon-platformer/).
+    knownLimitations: [],
   }),
 ];

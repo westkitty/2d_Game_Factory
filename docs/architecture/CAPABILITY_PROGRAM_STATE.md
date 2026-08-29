@@ -21,7 +21,7 @@ Git/validation/architecture checkpoint, not a new chat.
 | # | Capability | Branch | Status |
 |---|---|---|---|
 | 1 | Spatial Pointer & Interaction | `feature/capability-01-spatial-interaction` | PASS |
-| 2 | Data-Driven Items / Effects / Pickups | `feature/capability-02-items-effects` | NOT STARTED |
+| 2 | Data-Driven Items / Effects / Pickups | `feature/capability-02-items-effects` | PASS |
 | 3 | Weapons & Projectiles | `feature/capability-03-weapons-projectiles` | NOT STARTED |
 | 4 | Combat / Encounter Orchestration | `feature/capability-04-combat-orchestration` | NOT STARTED |
 | 5 | Navigation & Pathfinding | `feature/capability-05-navigation` | NOT STARTED |
@@ -34,7 +34,7 @@ Git/validation/architecture checkpoint, not a new chat.
 Program starting `main`: `0af24cd6c2646cae84fb4be559b68c2477e63d0b`
 (the Start/Confirm prerequisite; verified present before Phase 1).
 
-Current phase: **2 — Data-Driven Items / Effects / Pickups** (NOT STARTED).
+Current phase: **3 — Weapons & Projectiles** (NOT STARTED).
 
 ---
 
@@ -124,5 +124,78 @@ None.
 
 ### Next phase
 
-Phase 2 — Data-Driven Items / Effects / Pickups. Branch
-`feature/capability-02-items-effects` from the integrated `main`.
+Phase 2 — Data-Driven Items / Effects / Pickups (done, see below).
+
+---
+
+## Phase 2 — Data-Driven Items / Effects / Pickups — PASS
+
+- **Starting SHA:** `b7238665558cd8b86e3b8124e706f49192e0c487` (Phase 1 on `main`)
+- **Feature branch:** `feature/capability-02-items-effects`
+- **Phase commit SHA:** this commit — `feat: add data-driven items and effects` on `main` (see `git log`)
+- **Main integration SHA:** same commit, fast-forwarded onto `main` (linear; no merge commit)
+
+### Implementation summary
+
+- `packages/contracts/src/items.ts` (new): `ItemDefinition`, `ItemCatalog`, the
+  bounded `EffectDefinition` union (8 leaf kinds + non-nesting `chain`),
+  `EFFECT_CAPABILITY_REQUIREMENT`, `ItemsService`, `ItemEffectContext`,
+  `ApplyEffectsResult` (`applied` / `skipped`), `ITEMS_CAPABILITY_ID`.
+- `packages/schemas` — `item-catalog` schema (content document `items`, registered
+  alongside `tuning`/`levels`); `items-config` schema (`{ persist?: boolean }`).
+- `packages/packs/src/items/itemsPack.ts` (new): `sw2d.items` → `items.state`,
+  `dependencies: []`. `ItemsServiceImpl`: definition registry from
+  `content/items.json`, inventory (`grant`/`remove`/`count`/`inventory`, maxCount
+  and zero clamps), `canConsume`/`consume`, `applyEffects` (deterministic order;
+  missing capability/context → reported skip, never throw). Persistence opt-in via
+  config `{ persist: true }` → `context.saves`; default in-memory.
+- `packages/packs/src/events.ts` — `items:countChanged`, `items:consumed`.
+- `packages/runtime/src/game-support/itemPickups.ts` (new): `bindCollectiblePickups`
+  — turns `Collectible` level objects into sensor sprites that grant the named
+  item on player overlap (on-pickup effects for non-consumables only). Inert when
+  `sw2d.items` is not installed. Browser-proven (the `ProjectilePool` convention).
+- Generator: `content/items.json` always emitted (one-item starter catalog for a
+  preset with the `items` role, empty otherwise); `content.ts.template` loads and
+  validates it; `main.ts.template` makes `itemsPack` available; the shared
+  `platform` + `top-down` shell templates call `bindCollectiblePickups` once,
+  capability-guarded, and expose inventory in their debug snapshot.
+
+### Proof consumers
+
+- **`proofs/collectathon-platformer/`** (new) — preset requires `sw2d.items`; the
+  shared platform shell binds pickups with **no game-specific pickup code**.
+  Walking collects `coin-1`×2 / `gem-1` / `star-1`; effects (`arcade.score`,
+  and a `chain` of score + `world.flag`) land in the real services;
+  an unknown `itemId` is skipped. Frozen contract + `collectathonPlatformer.ts`.
+- **`proofs/top-down-adventure/`** (new, cross-family) — top-down preset, items +
+  progression enabled by content overlay. `map-key` (`world.flag`), `gold-pouch`
+  (`progression.currency`), `ration` (consumable, `progression.xp` on `consume()`
+  via INTERACT). Frozen contract + `topDownAdventure.ts`.
+- `npm run qa:proof` 7/7 → **9/9**.
+
+### Limitation changes
+
+- `collectathon-platformer`: `LIMITATIONS.itemDefinitions` removed (starter
+  consumes the capability). Constant deleted (was its only user).
+- Phase 1 doc debt swept in `docs/presets/PRESET_CATALOG.md` (the stale
+  `twin-stick-shooter` / gallery / rail / point-and-click / drawing-game /
+  dress-up / escape-room limitation rows were still the pre-Phase-1 text).
+
+### Validation completed
+
+- `npm run typecheck` — PASS
+- `npm test` — 2139/2139 PASS (was 2114; +25)
+- `npm run workbench:build`, `npm run build`, `npm run check:offline` — PASS
+- `npm run qa:proof` — 9/9 PASS
+- `npm run qa:matrix` — 40/40 PASS
+- `npm run qa:starter-kits` — all 14 sub-suites PASS (exit 0)
+- `npm run release:verify` — 6/6 controller-shell families PASS
+
+### Unresolved blockers
+
+None.
+
+### Next phase
+
+Phase 3 — Weapons & Projectiles. Branch `feature/capability-03-weapons-projectiles`
+from the integrated `main`.
