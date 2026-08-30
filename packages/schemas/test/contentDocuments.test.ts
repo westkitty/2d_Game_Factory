@@ -42,6 +42,7 @@ describe('validateContentBundleData', () => {
       'players',
       'ball-paddle',
       'rhythm',
+      'agents',
     ]);
   });
 

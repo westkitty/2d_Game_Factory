@@ -79,6 +79,9 @@ const PROOF_SPEC_MODULES: Readonly<Record<string, string>> = {
   // Phase 17 - rhythm, beat & precision timing
   'rhythm-action': 'rhythmAction',
   'reaction-timing': 'reactionTiming',
+  // Phase 18 - simulation agents, needs, behavior & schedules
+  'pet-creature': 'petCreature',
+  'colony-lite': 'colonyLite',
 };
 
 function proofTargets(): Target[] {

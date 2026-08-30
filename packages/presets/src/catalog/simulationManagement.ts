@@ -85,9 +85,11 @@ export const SIMULATION_MANAGEMENT_PRESETS: readonly PresetDefinition[] = [
     displayName: 'Pet Creature',
     family: 'simulation-management',
     controllerFamilies: ['ui-simulation'],
-    requiredSystemPacks: [pack(PACK_IDS.simulation), pack(PACK_IDS.progression)],
+    // Post-ten Phase 18: needs, behaviour and relationships are reusable now
+    // (sw2d.simulation-agents, ADR-0032; proof: proofs/pet-creature/).
+    requiredSystemPacks: [pack(PACK_IDS.simulation), pack(PACK_IDS.progression), pack(PACK_IDS.simulationAgents)],
     optionalSystemPacks: [pack(PACK_IDS.world)],
-    requiredContentRoles: ['tuning'],
+    requiredContentRoles: ['tuning', 'agents'],
     validationProfile: VALIDATION_PROFILES.simulationManagement,
     knownLimitations: [LIMITATIONS.creatureSimulation],
   }),
@@ -97,12 +99,14 @@ export const SIMULATION_MANAGEMENT_PRESETS: readonly PresetDefinition[] = [
     displayName: 'Colony Lite',
     family: 'simulation-management',
     controllerFamilies: ['ui-simulation'],
-    requiredSystemPacks: [pack(PACK_IDS.simulation), pack(PACK_IDS.world)],
+    // Post-ten Phase 18: needs, schedules and work-order reservations are
+    // reusable now (sw2d.simulation-agents, ADR-0032; proof: proofs/colony-lite/).
+    requiredSystemPacks: [pack(PACK_IDS.simulation), pack(PACK_IDS.world), pack(PACK_IDS.simulationAgents)],
     optionalSystemPacks: [pack(PACK_IDS.progression), pack(PACK_IDS.navigation)],
-    requiredContentRoles: ['tuning'],
+    requiredContentRoles: ['tuning', 'agents'],
     validationProfile: VALIDATION_PROFILES.simulationManagement,
     knownLimitations: [
-      'Colonist pathfinding is reusable (sw2d.navigation, optional); needs, assignment AI, construction placement and colony simulation are not.',
+      'Colonist pathfinding is reusable (sw2d.navigation, optional) and needs / schedules / work-order assignment are reusable (sw2d.simulation-agents); construction placement is not - that is a later phase.',
     ],
   }),
 
@@ -123,9 +127,11 @@ export const SIMULATION_MANAGEMENT_PRESETS: readonly PresetDefinition[] = [
     displayName: 'Aquarium / Terrarium',
     family: 'simulation-management',
     controllerFamilies: ['ui-simulation'],
-    requiredSystemPacks: [pack(PACK_IDS.simulation)],
+    // Post-ten Phase 18: the same capability, with entirely different authored
+    // needs - an aquarium's are oxygen and cleanliness, not hunger and sleep.
+    requiredSystemPacks: [pack(PACK_IDS.simulation), pack(PACK_IDS.simulationAgents)],
     optionalSystemPacks: [pack(PACK_IDS.progression)],
-    requiredContentRoles: ['tuning'],
+    requiredContentRoles: ['tuning', 'agents'],
     validationProfile: VALIDATION_PROFILES.simulationManagement,
     knownLimitations: [LIMITATIONS.creatureSimulation],
   }),

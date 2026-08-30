@@ -65,9 +65,10 @@ export const PARTY_TOY_WEIRD_PRESETS: readonly PresetDefinition[] = [
     displayName: 'Virtual Pet',
     family: 'party-toy-weird',
     controllerFamilies: ['ui-simulation'],
-    requiredSystemPacks: [pack(PACK_IDS.simulation), pack(PACK_IDS.progression)],
+    // Post-ten Phase 18 (sw2d.simulation-agents, ADR-0032).
+    requiredSystemPacks: [pack(PACK_IDS.simulation), pack(PACK_IDS.progression), pack(PACK_IDS.simulationAgents)],
     optionalSystemPacks: [pack(PACK_IDS.world)],
-    requiredContentRoles: ['tuning'],
+    requiredContentRoles: ['tuning', 'agents'],
     validationProfile: VALIDATION_PROFILES.partyToyWeird,
     knownLimitations: [LIMITATIONS.creatureSimulation],
   }),

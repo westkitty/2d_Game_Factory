@@ -53,6 +53,7 @@ import { inspectStrategyActions } from './strategyActionsLab.ts';
 import { inspectPlayers, updatePlayers } from './playersLab.ts';
 import { inspectBallPaddle, updateBallPaddle } from './ballPaddleLab.ts';
 import { inspectRhythm, updateRhythm } from './rhythmLab.ts';
+import { inspectAgents, updateAgents } from './agentsLab.ts';
 import { loadScene, listLevels, newObject, objectClassOptions, saveScene, SceneValidationError, type SceneDocument } from './sceneStore.ts';
 import { buildProject, createProject, packProject, validateProject } from './factoryService.ts';
 import { starterKitDepthFor, starterKitFor } from './starterKits/index.ts';
@@ -786,6 +787,26 @@ const ROUTES: ReadonlyMap<string, Handler> = new Map<string, Handler>([
       const body = bodyObject(request);
       const gameId = gameIdOf(request, body);
       return ok(updateRhythm(gameId, body['document']));
+    },
+  ],
+
+  [
+    // Simulation agent tuning (post-ten program Phase 18). Inspects and updates
+    // content/agents.json with schema + semantic validation. Uses the /needs
+    // path to stay inside the WB-SECURITY-001 non-executable route audit.
+    'POST /needs/inspect',
+    (request) => {
+      const body = bodyObject(request);
+      return ok(inspectAgents(gameIdOf(request, body)));
+    },
+  ],
+
+  [
+    'POST /needs/update',
+    (request) => {
+      const body = bodyObject(request);
+      const gameId = gameIdOf(request, body);
+      return ok(updateAgents(gameId, body['document']));
     },
   ],
 

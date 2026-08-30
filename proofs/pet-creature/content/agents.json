@@ -1,0 +1,84 @@
+{
+  "schemaVersion": 1,
+  "decisionIntervalMs": 200,
+  "minutesPerSecond": 2,
+  "needs": [
+    {
+      "id": "hunger",
+      "displayName": "Hunger",
+      "minimum": 0,
+      "maximum": 100,
+      "initial": 100,
+      "changePerSecond": -8,
+      "warningThreshold": 45,
+      "criticalThreshold": 20
+    },
+    {
+      "id": "affection",
+      "displayName": "Affection",
+      "minimum": 0,
+      "maximum": 100,
+      "initial": 80,
+      "changePerSecond": -3,
+      "warningThreshold": 40,
+      "criticalThreshold": 15
+    }
+  ],
+  "behaviors": [
+    {
+      "id": "eat",
+      "displayName": "Eat",
+      "baseUtility": 0,
+      "needWeights": { "hunger": 12 },
+      "preconditions": [{ "kind": "has-tag", "tag": "has-food" }],
+      "durationMs": 400,
+      "cooldownMs": 1200,
+      "effects": [
+        { "kind": "need-delta", "needId": "hunger", "delta": 70 },
+        { "kind": "remove-tag", "tag": "has-food" }
+      ]
+    },
+    {
+      "id": "seek-owner",
+      "displayName": "Seek Owner",
+      "baseUtility": 0,
+      "needWeights": { "affection": 9 },
+      "targetTags": ["owner"],
+      "preconditions": [{ "kind": "target-available", "tag": "owner" }],
+      "durationMs": 300,
+      "effects": [
+        { "kind": "need-delta", "needId": "affection", "delta": 50 },
+        { "kind": "relationship-delta", "metricId": "bond", "delta": 4 }
+      ]
+    },
+    {
+      "id": "nap",
+      "displayName": "Nap",
+      "baseUtility": 0.5,
+      "preconditions": [{ "kind": "schedule-activity", "activity": "night" }],
+      "durationMs": 600,
+      "interruptible": false
+    },
+    { "id": "wander", "displayName": "Wander", "baseUtility": 1, "durationMs": 200 }
+  ],
+  "agents": [
+    {
+      "id": "pet",
+      "displayName": "Pet",
+      "tags": ["creature"],
+      "needs": ["hunger", "affection"],
+      "behaviors": ["eat", "seek-owner", "nap", "wander"],
+      "schedule": [
+        { "startMinute": 360, "endMinute": 1200, "activity": "day" },
+        { "startMinute": 1200, "endMinute": 360, "activity": "night" }
+      ]
+    },
+    {
+      "id": "owner",
+      "displayName": "Owner",
+      "tags": ["owner"],
+      "needs": ["affection"],
+      "behaviors": ["wander"]
+    }
+  ]
+}

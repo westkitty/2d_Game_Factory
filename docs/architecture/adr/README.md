@@ -35,3 +35,4 @@ One short record per decision that constrains later work. No ADR for trivia.
 | [0029](0029-player-identity-is-a-routing-dimension.md) | Player identity is a routing dimension over `ActionInput`, not a second vocabulary | Post-ten 15 |
 | [0030](0030-ball-paddle-is-an-authored-simulation.md) | Ball/paddle is an authored pure simulation; the pack is the single frame owner | Post-ten 16 |
 | [0031](0031-rhythm-judges-against-a-transport.md) | Rhythm judges against an audio transport, never a wall clock | Post-ten 17 |
+| [0032](0032-agent-needs-are-authored-vocabulary.md) | Agent needs, behaviours and work orders are authored vocabulary | Post-ten 18 |

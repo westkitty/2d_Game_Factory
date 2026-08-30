@@ -928,3 +928,198 @@ None.
 - Decide whether `tick()` should leave the public interface, matching Phase 16's stricter rule.
 - Confirm the generator supplies an `audio.transport` for any preset requiring `sw2d.rhythm`
   (currently a proof-shell responsibility).
+
+---
+
+## Phase 18 — Simulation Agents, Needs, Behavior & Schedules
+
+- **Phase:** 18
+- **Capability:** `simulation.agents` (`SimulationAgentsService`)
+- **Status:** FOCUSED TESTS PASS
+- **Starting SHA:** `ed74dc3` (`candidate(phase-17)`)
+- **ADR:** `docs/architecture/adr/0032-agent-needs-are-authored-vocabulary.md` (new; indexed)
+
+### Core decisions
+
+1. **The capability holds no vocabulary of its own.** It knows a need has a range, a drift rate and
+   two thresholds; it does not know that `hunger` exists. Shipping a `hunger`/`sleep`/`eat` starter
+   vocabulary is how most engines do this, and it is why most games built on those engines feel like
+   the same game. `pet-creature`'s proof asserts this directly: the agent's need set must be exactly
+   the two needs the document declares and nothing else.
+2. **Urgency normalises against each need's own authored range**, so a 0..100 need and a -50..50
+   need compare on the same scale without the author converting anything by hand.
+3. **Selection is utility, not scripting.** Score = base utility + Σ(need urgency × authored weight),
+   highest eligible score wins, ties break on ascending behaviour id. No behaviour tree, no state
+   machine, no scripting language.
+4. **Preconditions and effects are a closed declarative union** (six condition kinds, five effect
+   kinds). The moment a condition can be an arbitrary function, the document stops being data, the
+   Workbench cannot show it, and content validation cannot check it.
+5. **Blocking reasons are named, not silent.** An ineligible behaviour reports
+   `blockedBy: 'precondition:has-tag'` or `'cooldown'`. A creature that does nothing is the hardest
+   thing to debug in a simulation like this; a capability that cannot say why is untunable.
+6. **Interruption applies no effects.** Only completion applies them. Partial effects on interruption
+   would make "was it interrupted?" observable through need values — exactly the ambiguity the event
+   stream exists to remove. `#complete()` clears `active` *before* applying effects, so re-entry
+   cannot double-complete.
+7. **Drift ticks every frame; selection runs on `decisionIntervalMs` (default 250).** A need that
+   only moves on a decision boundary is visibly steppy; re-ranking every behaviour for every agent
+   every frame is the cost that stops a colony from scaling, and a creature that re-decides sixty
+   times a second dithers.
+8. **Work orders are reservations, not a task graph.** One agent per order, one order per agent,
+   tag-gated, priority with an ascending-id tie-break. Release resets progress to zero so work is
+   never half-credited to the next taker, and `despawn()` releases whatever the departing agent held.
+
+### Contracts
+
+`packages/contracts/src/simulationAgents.ts`, exported from `index.ts`:
+`SIMULATION_AGENTS_CAPABILITY_ID`, `NeedDefinition`/`NeedState`/`NeedLevel`, `needUrgency`/
+`needLevel`/`tickNeed`, `BehaviorCondition` (`need-below`, `need-above`, `has-tag`, `lacks-tag`,
+`schedule-activity`, `target-available`), `BehaviorEffect` (`need-delta`, `need-set`, `add-tag`,
+`remove-tag`, `relationship-delta`), `BehaviorDefinition`/`BehaviorScore`/`ActiveBehavior`,
+`behaviorScore`/`selectBehavior`, `ScheduleBlock`/`scheduleBlockAt`, `WorkOrder`/`WorkOrderKind`/
+`WorkOrderState`, `RelationshipEntry`, `AgentDefinition`/`AgentState`,
+`SimulationAgentsDocument`/`SimulationAgentsService`/`SimulationAgentEvent`,
+`validateSimulationAgentsDocument`/`InvalidSimulationAgentsError`, `tieBreakBySeed`.
+
+### Schemas
+
+- `packages/schemas/schemas/agents.schema.json` (`urn:sw2d:schema:content-agents:v1`), registered as
+  schema name `agents` and content document name `agents`.
+- `packages/packs/schemas/simulation-agents-config.schema.json` — `documentName`,
+  `decisionIntervalMs`, `minutesPerSecond`.
+- Global validation not weakened; the contract's semantic gate (dangling need references, threshold
+  ordering, zero-length schedule blocks, unknown behaviour references) runs at install.
+
+### Pack
+
+`sw2d.simulation-agents` (`packages/packs/src/simulationAgents/simulationAgentsPack.ts`).
+`PACK_IDS.simulationAgents`; `CAPABILITY_IDS.simulationAgents`. Agents are processed in ascending id
+order so a multi-agent frame is reproducible. Events: `agents:behavior`, `agents:need-level`,
+`agents:work-order`.
+
+### Presets changed
+
+- `pet-creature`, `colony-lite`, `aquarium-terrarium`, `virtual-pet`: `sw2d.simulation-agents` added
+  as required, content role `agents` added.
+- `packages/presets/src/shared.ts`: `LIMITATIONS.creatureSimulation` rewritten from a "does not
+  exist" claim to the honest remaining scope (no pathfinding — that is `sw2d.navigation`; no
+  inter-agent negotiation; no needs that depend on another agent's needs).
+- `docs/presets/PRESET_CAPABILITY_MATRIX.md` rows updated for all four.
+- Maturity deliberately not promoted, matching the Phases 11-17 precedent.
+
+### Workbench authoring surface
+
+`workbench/server/agentsLab.ts` + `workbench/src/views/agentsLab.ts`, mounted in `inspector.ts`;
+routes `POST /needs/inspect`, `POST /needs/update` (the `/needs` path keeps them inside the
+WB-SECURITY-001 audit). Edits drift rates, both thresholds, per-behaviour base utility and per-need
+weights — the numbers a creator re-tunes constantly — and **reports** how many seconds each need
+takes to reach each threshold at the authored rate, which is the thing JSON hides while tuning.
+**Preconditions, effects and schedules are reported, not edited**: a form for wiring an arbitrary
+condition graph is a visual scripting environment, which this program has consistently declined to
+build.
+
+### Proof consumers
+
+- **`proofs/pet-creature/` (new)** — one agent's inner life, 12 named steps; spec
+  `packages/qa/proof-specs/petCreature.ts`.
+- **`proofs/colony-lite/` (new)** — several agents sharing a job queue, 12 named steps; spec
+  `packages/qa/proof-specs/colonyLite.ts`.
+
+### Tests added
+
+- `packages/contracts/test/simulationAgents.test.ts` (22 tests) — urgency normalisation across
+  differently-ranged needs, level thresholds and their boundaries, drift clamping, every condition
+  kind, scoring, selection and the id tie-break, schedule lookup including a block wrapping past
+  midnight, and every branch of the semantic validator.
+- `packages/packs/test/simulationAgents.test.ts` (36 tests) — install/validation, drift, threshold
+  announcements once rather than per tick, automatic selection, precondition gating with named
+  reasons, cooldowns, effects on completion, no effects on interruption, `interruptible: false`,
+  relationships, spawn/despawn, the full work-order lifecycle (offer, tag gate, reservation
+  exclusivity, one job per agent, completion, release resetting progress, cancel, release on
+  despawn), and bus events.
+- `proofs/pet-creature/tests/content.test.ts` and `proofs/colony-lite/tests/content.test.ts`.
+- `packages/schemas/test/contentDocuments.test.ts` (document registry updated).
+
+### Tests run — actual results
+
+- `npm run typecheck` — **PASS**, 0 errors
+- `npx vitest run` — **PASS, 172 files / 3017 tests** (was 168 / 2941 before Phase 18)
+- `npm run qa:workbench` — **PASS, 16/16**; WB-SECURITY-001 now audits **68** endpoints (was 66)
+- `npm run qa:proof` (full suite) — **PASS, 36/36**, including `pet-creature` 12/12 and
+  `colony-lite` 12/12, 0 console errors, 0 external requests
+
+### Proof-quality evidence
+
+No unconditional acceptance step exists in either spec. Four sabotages were applied, observed and
+reverted (`grep SABOTAGE` clean afterwards):
+
+| Sabotage | Result |
+| --- | --- |
+| preconditions no longer gate eligibility | pet steps 4 and 8 FAIL |
+| a despawned agent's work order is not released | colony step 9 FAIL |
+| interrupted behaviours apply their effects | 2 pack tests FAIL |
+| tie-break by insertion order instead of behaviour id | 1 contract test FAIL |
+
+Two defects were found by running the work rather than by reading it. Six pack tests initially failed
+because the pet *keeps choosing to eat*, so hunger never reached starvation — the fix was not to
+weaken the assertions but to isolate the rules under test behind a `decisionIntervalMs` large enough
+that no automatic selection occurs, and to rewrite the automatic-selection test to assert on the
+event stream instead. And `pet-creature` step 12 originally asserted `clock.elapsedMs === 0` *after*
+stepping two frames; the stepping was removed, because a reset that is only clean until the next
+frame is not a reset.
+
+### Limitations changed
+
+`LIMITATIONS.creatureSimulation` (shared by `pet-creature`, `colony-lite`, `aquarium-terrarium`,
+`virtual-pet`) rewritten from "no creature/needs simulation exists" to the honest remaining scope.
+
+### Known failures
+
+None.
+
+### Known shortcuts / characteristics a certifier should look at
+
+1. **No pathfinding, and no spatial model at all.** `target-available` is a boolean the game supplies;
+   the capability never asks where anything is. A colonist "hauling" is a timer, not a walk. This is
+   deliberate — `sw2d.navigation` owns movement — but it means an agent can work an order it could
+   never physically reach.
+2. **Relationships are a flat metric per ordered pair**, changed only by a `relationship-delta`
+   effect. Nothing decays them, and no condition kind reads them, so a relationship can influence
+   presentation but cannot yet gate a behaviour. Recorded rather than hidden.
+3. **`decisionIntervalMs` is global, not per agent.** A colony where a few agents should think often
+   and many should think rarely cannot express that yet.
+4. **The schedule is one authored day, looping.** No calendar, no weekday/weekend, no seasons.
+5. **`minutesPerSecond` couples game time to real time linearly** with no speed control; a
+   management game wanting 1x/2x/3x would drive that through its own `update` scaling today.
+6. **Both proofs use a test control (`drain`) to force a need low.** It writes through the same
+   `need-set` path the effects use, so it is not a private back door, but it is a control a player
+   has no equivalent for.
+
+### Architectural concerns
+
+- **The `agents:behavior` event stream is the only record of what an agent decided.** `AgentState`
+  reports the *current* active behaviour; a consumer that misses an event has no way to reconstruct
+  the history. That is the same shape as Phase 16's `drainEvents()` and is fine for a renderer, but a
+  game wanting "what did this colonist do today" must record it itself.
+- **`selectBehavior` is a pure function on the contract and is also called inside the pack.** A
+  consumer can therefore score behaviours itself and act on a *different* choice than the one the
+  pack made. Nothing enforces that the pack's selection is the only one. Phase 16 closed this shape
+  by removing `update()` from the service; the analogous tightening here would be to stop exporting
+  `selectBehavior`, at the cost of making the Workbench unable to preview a ranking.
+- **Work-order progress advances only while an agent holds the order**, but the agent's *behaviour*
+  and its *work order* are independent — an agent can hold `haul-crates` while its selected behaviour
+  is `rest`, and the order still progresses. Whether that is a feature (jobs are assignments, not
+  actions) or a defect (a resting colonist should not be hauling) is a design decision this phase did
+  not make; `colony-lite` demonstrates the behaviour without endorsing it.
+
+### Work required from a later certifier
+
+- Adversarial browser validation of both journeys, especially the work-order lifecycle.
+- Decide whether holding an order should require the matching behaviour to be active.
+- Decide whether `selectBehavior` should leave the public contract, matching Phase 16's stricter
+  single-owner rule.
+- Decide whether a `relationship-above`/`relationship-below` condition kind should exist, which is
+  what would make relationships load-bearing rather than decorative.
+- Confirm the generator supplies `content/agents.json` for any preset requiring
+  `sw2d.simulation-agents` (currently a proof-shell responsibility, same gap Phase 17 recorded for
+  `audio.transport`).

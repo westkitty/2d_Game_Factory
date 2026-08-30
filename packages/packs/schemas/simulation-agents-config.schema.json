@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:sw2d:schema:pack-simulation-agents-config:v1",
+  "title": "SimulationAgentsPackConfig",
+  "description": "Mirrors @sw2d/packs' SimulationAgentsConfig. All fields optional.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "autoSpawn": {
+      "type": "boolean",
+      "description": "Spawn one agent per archetype at install, keyed by the archetype id. Defaults to false: the game decides who exists."
+    }
+  }
+}

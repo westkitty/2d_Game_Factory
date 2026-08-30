@@ -40,6 +40,7 @@ export const PACK_IDS = {
   strategyActions: 'sw2d.strategy-actions',
   ballPaddle: 'sw2d.ball-paddle',
   rhythm: 'sw2d.rhythm',
+  simulationAgents: 'sw2d.simulation-agents',
 } as const;
 
 export const CAPABILITY_IDS = {
@@ -96,4 +97,11 @@ export const CAPABILITY_IDS = {
    * the chart is judged against the same clock the music plays on.
    */
   audioTransport: 'audio.transport',
+  /**
+   * Post-ten Phase 18: needs, utility behaviour, schedules, relationships and
+   * work orders. Sits alongside `ai.state` (combat state machines) and
+   * `ai.perception` rather than replacing either - an agent here is deciding
+   * what it wants, not reacting to a threat.
+   */
+  simulationAgents: 'simulation.agents',
 } as const;

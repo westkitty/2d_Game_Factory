@@ -123,3 +123,13 @@ export {
   type RhythmService,
   type ReactionService,
 } from './rhythm/rhythmPack.ts';
+export {
+  simulationAgentsPack,
+  SimulationAgentsServiceImpl,
+  SIMULATION_AGENTS_CONFIG_SCHEMA_ID,
+  MissingSimulationAgentsDocumentError,
+  UnknownAgentDefinitionError,
+  DuplicateAgentError,
+  type SimulationAgentsConfig,
+  type SimulationAgentsService,
+} from './simulationAgents/simulationAgentsPack.ts';

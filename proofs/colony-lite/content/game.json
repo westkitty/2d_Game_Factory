@@ -1,0 +1,15 @@
+{
+  "id": "proof-colony-lite",
+  "displayName": "Proof Colony Lite",
+  "version": "0.1.0",
+  "schemaVersion": 1,
+  "viewport": { "width": 960, "height": 540 },
+  "bindings": {},
+  "systemPacks": [
+    { "packId": "sw2d.simulation", "config": {} },
+    { "packId": "sw2d.world", "config": {} },
+    { "packId": "sw2d.simulation-agents", "config": {} },
+    { "packId": "game.colony-shell", "config": {} }
+  ],
+  "defaultSettings": { "masterVolume": 0.7 }
+}

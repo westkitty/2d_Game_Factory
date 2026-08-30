@@ -84,8 +84,12 @@ export const LIMITATIONS = {
   // Phase 7C additions - same "two or more recipes" bar as Phase 7B's four.
   customerEconomy:
     'No complete customer AI, demand/economy model, queue/placement UI, or content-authored production chain exists.',
+  // Post-ten Phase 18 narrowed this. Needs, utility behaviour, schedules,
+  // relationships and work orders are reusable now (sw2d.simulation-agents);
+  // what stays honest to record is that agent *presentation* and the world an
+  // agent moves through remain starter-specific.
   creatureSimulation:
-    'No reusable needs/behavior/relationship/creature simulation exists beyond foundational resources/state.',
+    'Needs, utility-scored behaviour, schedules, relationships and work-order reservations are reusable through sw2d.simulation-agents (simulation.agents). Need ids, behaviours and relationship metrics are all authored content - the capability assumes no vocabulary of its own. Agent presentation, and moving an agent through a particular world, stay starter-specific; pathfinding when needed is sw2d.navigation.',
   // Capability program Phase 14 addition. Order issue/queue/cancel/lifecycle is
   // reusable (sw2d.strategy-actions); what stays starter-specific is the *input*
   // surface that turns a drag rectangle into a set of actor ids.

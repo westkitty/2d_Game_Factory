@@ -102,10 +102,10 @@ pack/controller selections were actually exercised through, and
 | `shopkeeper` | simulation, progression | world | ui-simulation | keyboard, touch | simulation-management-recipe |
 | `tycoon-lite` | simulation, progression | arcade | ui-simulation | keyboard, touch | simulation-management-recipe |
 | `farming-lite` | simulation, world | progression | ui-simulation | keyboard, touch | simulation-management-recipe |
-| `pet-creature` | simulation, progression | world | ui-simulation | keyboard, touch | simulation-management-recipe |
-| `colony-lite` | simulation, world | progression | ui-simulation, navigation | keyboard, touch | simulation-management-recipe |
+| `pet-creature` | simulation, progression, simulation-agents | world | ui-simulation | keyboard, touch | simulation-management-recipe |
+| `colony-lite` | simulation, world, simulation-agents | progression | ui-simulation, navigation | keyboard, touch | simulation-management-recipe |
 | `restaurant` | simulation, progression | arcade | ui-simulation | keyboard, touch | simulation-management-recipe |
-| `aquarium-terrarium` | simulation | progression | ui-simulation | keyboard, touch | simulation-management-recipe |
+| `aquarium-terrarium` | simulation, simulation-agents | progression | ui-simulation | keyboard, touch | simulation-management-recipe |
 
 ## Narrative / exploration (Phase 7C)
 
@@ -126,7 +126,7 @@ pack/controller selections were actually exercised through, and
 | `microgame-collection` | arcade | progression | ui-simulation | keyboard, touch | party-toy-weird-recipe |
 | `local-party-game` | arcade | combat | ui-simulation | keyboard, touch | party-toy-weird-recipe |
 | `physics-toy` | - | puzzle | pointer | keyboard, pointer, touch | party-toy-weird-recipe |
-| `virtual-pet` | simulation, progression | world | ui-simulation | keyboard, touch | party-toy-weird-recipe |
+| `virtual-pet` | simulation, progression, simulation-agents | world | ui-simulation | keyboard, touch | party-toy-weird-recipe |
 | `dress-up-character-toy` | - | progression | pointer, ui-simulation | keyboard, pointer, touch | party-toy-weird-recipe |
 | `sandbox-playground` | world, world-entities | puzzle | pointer, ui-simulation | keyboard, pointer, touch | party-toy-weird-recipe |
 | `drawing-game` | - | arcade | pointer | keyboard, pointer, touch | party-toy-weird-recipe |

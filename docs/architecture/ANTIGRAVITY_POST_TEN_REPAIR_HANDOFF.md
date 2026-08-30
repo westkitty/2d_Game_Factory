@@ -24,8 +24,9 @@ for candidate phases.
 | 14 | Strategy Orders & Tactical Actions | FOCUSED TESTS PASS | `7e46c91` | simple-rts (13 steps), turn-based-tactics (15 steps) |
 | 15 | Local Multiplayer & Gamepad Routing | FOCUSED TESTS PASS | `2670526` | local-party-game (13 steps), pong (input foundation) |
 | 16 | Ball & Paddle Arcade Systems | FOCUSED TESTS PASS | `81a7e12` | breakout (12 steps), pong (12 steps, upgraded) |
-| 17 | Rhythm, Beat & Precision Timing | FOCUSED TESTS PASS | this phase | rhythm-action (12 steps), reaction-timing (10 steps) |
-| 18–36 | see `POST_TEN_PROGRAM_SPEC.md` | NOT STARTED | — | — |
+| 17 | Rhythm, Beat & Precision Timing | FOCUSED TESTS PASS | `ed74dc3` | rhythm-action (12 steps), reaction-timing (10 steps) |
+| 18 | Simulation Agents, Needs, Behavior & Schedules | FOCUSED TESTS PASS | this phase | pet-creature (12 steps), colony-lite (12 steps) |
+| 19–36 | see `POST_TEN_PROGRAM_SPEC.md` | NOT STARTED | — | — |
 
 ---
 
@@ -96,19 +97,39 @@ Carried forward every phase until an independent certification pass closes them.
   automatically, which Phase 36's realization pass must address.
 - `reaction-timing` ships a `driveTransport` test control.
 
+### Phase 18
+
+- **No pathfinding and no spatial model at all.** `target-available` is a boolean the game supplies;
+  an agent can work an order it could never physically reach. `sw2d.navigation` owns movement.
+- **Relationships are decorative.** A flat metric per ordered pair, changed only by an effect, read
+  by no condition kind and decayed by nothing. Deciding whether a `relationship-above` condition
+  should exist is what would make them load-bearing.
+- **An agent's work order and its behaviour are independent** — a colonist can hold `haul-crates`
+  while resting, and the order still progresses. Feature or defect is a design decision this phase
+  did not make; `colony-lite` demonstrates it without endorsing it.
+- `selectBehavior` is exported on the contract *and* called inside the pack, so a consumer can score
+  behaviours itself and act on a different choice. Phase 16 closed this shape by removing `update()`;
+  the analogous tightening costs the Workbench its ranking preview.
+- `decisionIntervalMs` is global, not per agent; the schedule is one looping day; `minutesPerSecond`
+  is linear with no speed control.
+- Both proofs use a `drain` test control (it writes through the same `need-set` path effects use).
+- The generator does not supply `content/agents.json` for presets requiring `sw2d.simulation-agents`
+  — the same generator gap Phase 17 recorded for `audio.transport`, for Phase 36 to close.
+
+
 ---
 
 ## Verified gates at the latest phase boundary
 
-Re-run and re-recorded at each phase; these are the Phase-17 numbers.
+Re-run and re-recorded at each phase; these are the Phase-18 numbers.
 
 | Gate | Result |
 | --- | --- |
 | `npm run typecheck` | PASS, 0 errors |
-| `npx vitest run` | PASS — 168 files / 2941 tests |
-| `npm run validate` | PASS at the Phase-15 boundary (incl. offline check: no external request construct); Phases 16-17 are not tranche gates, so `validate` was not re-run |
-| `npm run qa:proof` | PASS — 34/34 |
-| `npm run qa:workbench` | PASS — 16/16; WB-SECURITY-001 audits 66 endpoints |
+| `npx vitest run` | PASS — 172 files / 3017 tests |
+| `npm run validate` | PASS at the Phase-15 boundary (incl. offline check: no external request construct); Phases 16-18 are not tranche gates, so `validate` was not re-run. The next tranche gate is Phase 20 |
+| `npm run qa:proof` | PASS — 36/36 |
+| `npm run qa:workbench` | PASS — 16/16; WB-SECURITY-001 audits 68 endpoints |
 
 ---
 

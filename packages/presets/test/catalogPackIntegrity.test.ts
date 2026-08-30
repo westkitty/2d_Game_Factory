@@ -26,6 +26,7 @@ import {
   strategyActionsPack,
   ballPaddlePack,
   rhythmPack,
+  simulationAgentsPack,
 } from '@sw2d/packs';
 import { resolveInstallOrder } from '@sw2d/runtime/composition';
 import { PRESETS } from '../src/index.ts';
@@ -72,6 +73,7 @@ const REAL_PACKS = [
   strategyActionsPack,
   ballPaddlePack,
   rhythmPack,
+  simulationAgentsPack,
 ];
 
 const REGISTRY = new Map(REAL_PACKS.map((definition) => [definition.id, definition]));

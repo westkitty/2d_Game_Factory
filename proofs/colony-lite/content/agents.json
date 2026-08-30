@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 1,
+  "decisionIntervalMs": 200,
+  "minutesPerSecond": 4,
+  "needs": [
+    {
+      "id": "stamina",
+      "displayName": "Stamina",
+      "minimum": 0,
+      "maximum": 100,
+      "initial": 100,
+      "changePerSecond": -6,
+      "warningThreshold": 40,
+      "criticalThreshold": 15
+    }
+  ],
+  "behaviors": [
+    {
+      "id": "rest",
+      "displayName": "Rest",
+      "baseUtility": 0,
+      "needWeights": { "stamina": 12 },
+      "durationMs": 400,
+      "effects": [{ "kind": "need-set", "needId": "stamina", "value": 100 }]
+    },
+    { "id": "labour", "displayName": "Labour", "baseUtility": 2, "durationMs": 300 },
+    {
+      "id": "socialise",
+      "displayName": "Socialise",
+      "baseUtility": 0.5,
+      "targetTags": ["colonist"],
+      "preconditions": [
+        { "kind": "target-available", "tag": "colonist" },
+        { "kind": "schedule-activity", "activity": "evening" }
+      ],
+      "durationMs": 300,
+      "effects": [{ "kind": "relationship-delta", "metricId": "friendship", "delta": 3 }]
+    }
+  ],
+  "agents": [
+    {
+      "id": "hauler",
+      "displayName": "Hauler",
+      "tags": ["colonist", "hauler"],
+      "needs": ["stamina"],
+      "behaviors": ["rest", "labour", "socialise"],
+      "schedule": [
+        { "startMinute": 420, "endMinute": 1020, "activity": "work" },
+        { "startMinute": 1020, "endMinute": 1380, "activity": "evening" },
+        { "startMinute": 1380, "endMinute": 420, "activity": "sleep" }
+      ]
+    },
+    {
+      "id": "builder",
+      "displayName": "Builder",
+      "tags": ["colonist", "builder"],
+      "needs": ["stamina"],
+      "behaviors": ["rest", "labour", "socialise"],
+      "schedule": [
+        { "startMinute": 420, "endMinute": 1020, "activity": "work" },
+        { "startMinute": 1020, "endMinute": 1380, "activity": "evening" },
+        { "startMinute": 1380, "endMinute": 420, "activity": "sleep" }
+      ]
+    }
+  ],
+  "workOrders": [
+    { "id": "haul-crates", "kind": "haul", "priority": 3, "requiredAgentTags": ["hauler"], "durationMs": 600 },
+    { "id": "haul-ore", "kind": "haul", "priority": 3, "requiredAgentTags": ["hauler"], "durationMs": 600 },
+    { "id": "raise-wall", "kind": "build", "priority": 9, "requiredAgentTags": ["builder"], "durationMs": 800 }
+  ]
+}

@@ -61,6 +61,10 @@ declare module '@sw2d/contracts' {
     'reaction:stimulus': { readonly round: number };
     /** `reactionMs` is -1 for a false start or a timeout. */
     'reaction:round': { readonly round: number; readonly falseStart: boolean; readonly reactionMs: number };
+    'agents:behaviorStarted': { readonly agentId: string; readonly behaviorId: string };
+    'agents:behaviorCompleted': { readonly agentId: string; readonly behaviorId: string };
+    'agents:needLevelChanged': { readonly agentId: string; readonly needId: string; readonly level: string };
+    'agents:workOrderCompleted': { readonly orderId: string; readonly agentId: string };
   }
 }
 
