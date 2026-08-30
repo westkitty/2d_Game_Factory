@@ -42,3 +42,41 @@ Generated via `npm run sw2d -- new proof-point-and-click --preset point-and-clic
 - Drag/drop works on at least one object, including pointer capture (the drag target stays captured while the pointer travels well outside its own bounds) and drop-zone resolution (step 4).
 - Restart genuinely reinstalls the scene (step 5).
 - Zero console errors, zero external requests (shared `runSmoke` oracle).
+
+---
+
+## Post-ten program Phase 20 extension (dialogue, ADR-0034)
+
+The five steps above are the certified Phase-1 spatial-interaction journey and are
+**unchanged**: the same lever, key, chest, hover, click, drag, drop and restart.
+
+### Additional composition
+
+`sw2d.dialogue` is added to `content/game.json`, and `content/dialogue.json`
+(`urn:sw2d:schema:content-dialogue:v1`) authors a short warden conversation whose choice
+sets a world flag. A fourth interactive object — the warden — is registered with the same
+`context.interaction` service the Phase-1 objects use.
+
+### Additional journey steps
+
+6. **World click opens a conversation.** Clicking the warden starts the dialogue; nothing was
+   showing before the click. The full line is in the DOM immediately — the same
+   accessibility bar the visual-novel proof holds the overlay to.
+7. **The two-press reveal rule.** While a reveal is painting, CONFIRM completes it rather
+   than skipping the line; only the next press moves on. A player who reads faster than the
+   animation must never lose a line to an eager keypress. With reduced motion there is no
+   reveal to complete and one press is enough; the step asserts whichever is correct in the
+   environment it runs in. The choices then appear as real buttons.
+8. **The choice's effect writes through `world.state`**, not into the dialogue.
+9. The conversation ends and the overlay goes away, leaving the world alone.
+10. **The consequence.** An ordinary world interaction some time later — the same
+    drag-and-drop the Phase-1 journey already proved — observes what was decided in the
+    conversation. This is the thing a fake dialogue cannot produce: the chest records
+    whether it was blessed *at the moment the key went in*.
+
+### Additional negative controls
+
+| Sabotage | Expected |
+| --- | --- |
+| Advancing steps past a pending decision | steps 7, 8, 10 FAIL |
+| An effect skips its capability owner | steps 8 and 10 FAIL |

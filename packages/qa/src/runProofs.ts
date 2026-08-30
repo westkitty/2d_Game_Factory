@@ -84,6 +84,8 @@ const PROOF_SPEC_MODULES: Readonly<Record<string, string>> = {
   'colony-lite': 'colonyLite',
   // Phase 19 - economy, production & customer simulation
   shopkeeper: 'shopkeeper',
+  // Phase 20 - narrative dialogue, choices & portraits
+  'visual-novel': 'visualNovel',
 };
 
 function proofTargets(): Target[] {

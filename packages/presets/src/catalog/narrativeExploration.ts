@@ -42,13 +42,12 @@ export const NARRATIVE_EXPLORATION_PRESETS: readonly PresetDefinition[] = [
     displayName: 'Visual Novel',
     family: 'narrative-exploration',
     controllerFamilies: ['ui-simulation'],
-    requiredSystemPacks: [pack(PACK_IDS.narrative)],
-    optionalSystemPacks: [pack(PACK_IDS.progression)],
+    // Post-ten Phase 20: the dialogue graph, portraits and DOM presentation.
+    requiredSystemPacks: [pack(PACK_IDS.narrative), pack(PACK_IDS.dialogue)],
+    optionalSystemPacks: [pack(PACK_IDS.progression), pack(PACK_IDS.items)],
     requiredContentRoles: ['tuning', 'dialogue'],
     validationProfile: VALIDATION_PROFILES.narrativeExploration,
-    knownLimitations: [
-      'Narrative state exists, but no full content-authored branching dialogue renderer/portrait presentation system exists.',
-    ],
+    knownLimitations: [LIMITATIONS.dialoguePresentation],
   }),
 
   definePreset({
@@ -56,15 +55,21 @@ export const NARRATIVE_EXPLORATION_PRESETS: readonly PresetDefinition[] = [
     displayName: 'Point and Click',
     family: 'narrative-exploration',
     controllerFamilies: ['pointer', 'ui-simulation'],
-    requiredSystemPacks: [pack(PACK_IDS.narrative), pack(PACK_IDS.world), pack(PACK_IDS.worldEntities)],
-    optionalSystemPacks: [pack(PACK_IDS.puzzle)],
+    // Post-ten Phase 20 adds the dialogue graph a clicked object opens.
+    requiredSystemPacks: [
+      pack(PACK_IDS.narrative),
+      pack(PACK_IDS.world),
+      pack(PACK_IDS.worldEntities),
+      pack(PACK_IDS.dialogue),
+    ],
+    optionalSystemPacks: [pack(PACK_IDS.puzzle), pack(PACK_IDS.items)],
     requiredContentRoles: ['tuning', 'levels', 'dialogue'],
     supportedInputModes: POINTER_INPUT_MODES,
     validationProfile: VALIDATION_PROFILES.narrativeExploration,
     // Spatial pointer position, hover targets and world-coordinate click/drag
     // targeting are implemented and consumed by the pointer shell (capability
     // program Phase 1, ADR-0018; proof: proofs/point-and-click/).
-    knownLimitations: ['Narrative state exists, but no full content-authored branching dialogue renderer/portrait presentation system exists.'],
+    knownLimitations: [LIMITATIONS.dialoguePresentation],
   }),
 
   definePreset({
@@ -72,7 +77,8 @@ export const NARRATIVE_EXPLORATION_PRESETS: readonly PresetDefinition[] = [
     displayName: 'Interactive Fiction Hybrid',
     family: 'narrative-exploration',
     controllerFamilies: ['ui-simulation'],
-    requiredSystemPacks: [pack(PACK_IDS.narrative)],
+    // Post-ten Phase 20: the dialogue half. The command parser is Phase 25.
+    requiredSystemPacks: [pack(PACK_IDS.narrative), pack(PACK_IDS.dialogue)],
     optionalSystemPacks: [pack(PACK_IDS.world)],
     requiredContentRoles: ['tuning', 'dialogue'],
     validationProfile: VALIDATION_PROFILES.narrativeExploration,
@@ -84,12 +90,19 @@ export const NARRATIVE_EXPLORATION_PRESETS: readonly PresetDefinition[] = [
     displayName: 'Investigation Game',
     family: 'narrative-exploration',
     controllerFamilies: ['top-down', 'pointer'],
-    requiredSystemPacks: [pack(PACK_IDS.narrative), pack(PACK_IDS.world), pack(PACK_IDS.worldEntities)],
-    optionalSystemPacks: [pack(PACK_IDS.puzzle)],
+    // Post-ten Phase 20: witness and clue dialogue is the same service every
+    // other narrative preset uses. The evidence board itself is Phase 26.
+    requiredSystemPacks: [
+      pack(PACK_IDS.narrative),
+      pack(PACK_IDS.world),
+      pack(PACK_IDS.worldEntities),
+      pack(PACK_IDS.dialogue),
+    ],
+    optionalSystemPacks: [pack(PACK_IDS.puzzle), pack(PACK_IDS.items)],
     requiredContentRoles: ['tuning', 'levels', 'dialogue'],
     supportedInputModes: POINTER_INPUT_MODES,
     validationProfile: VALIDATION_PROFILES.narrativeExploration,
-    knownLimitations: ['No evidence-board/deduction/linking system exists.'],
+    knownLimitations: [LIMITATIONS.dialoguePresentation, 'No evidence-board/deduction/linking system exists.'],
   }),
 
   definePreset({

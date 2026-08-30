@@ -1,0 +1,221 @@
+{
+  "schemaVersion": 1,
+  "startNode": "arrival",
+  "characters": [
+    {
+      "id": "mara",
+      "displayName": "Mara",
+      "defaultExpression": "calm",
+      "portraits": {
+        "calm": "player",
+        "angry": "enemy"
+      }
+    },
+    {
+      "id": "joss",
+      "displayName": "Joss",
+      "defaultExpression": "neutral",
+      "portraits": {
+        "neutral": "pickup"
+      }
+    },
+    {
+      "id": "warden",
+      "displayName": "The Warden"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "arrival",
+      "lines": [
+        {
+          "id": "arr-1",
+          "speaker": "mara",
+          "text": "You are late, Joss."
+        },
+        {
+          "id": "arr-2",
+          "speaker": "mara",
+          "expression": "angry",
+          "text": "The tide went out an hour ago."
+        },
+        {
+          "id": "arr-3",
+          "text": "Rain hisses on the jetty stones."
+        }
+      ],
+      "choices": [
+        {
+          "id": "apologise",
+          "text": "Say you are sorry.",
+          "target": "forgiven",
+          "once": true,
+          "effects": [
+            {
+              "kind": "set-narrative-flag",
+              "flag": "trusted",
+              "value": true
+            }
+          ]
+        },
+        {
+          "id": "deflect",
+          "text": "Say the road was flooded.",
+          "target": "doubted"
+        },
+        {
+          "id": "confide",
+          "text": "Show her the letter.",
+          "target": "forgiven",
+          "conditions": [
+            {
+              "kind": "item-count",
+              "itemId": "letter",
+              "comparison": "at-least",
+              "count": 1
+            }
+          ],
+          "effects": [
+            {
+              "kind": "set-narrative-flag",
+              "flag": "confided",
+              "value": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "forgiven",
+      "lines": [
+        {
+          "id": "for-1",
+          "speaker": "mara",
+          "text": "Then we go together."
+        },
+        {
+          "id": "for-2",
+          "speaker": "joss",
+          "text": "She hands me the key without looking.",
+          "effects": [
+            {
+              "kind": "grant-item",
+              "itemId": "letter"
+            }
+          ]
+        }
+      ],
+      "next": "jetty"
+    },
+    {
+      "id": "doubted",
+      "lines": [
+        {
+          "id": "dou-1",
+          "speaker": "mara",
+          "expression": "angry",
+          "text": "The road is a mile inland."
+        },
+        {
+          "id": "dou-2",
+          "speaker": "joss",
+          "text": "I let that sit.",
+          "effects": [
+            {
+              "kind": "set-world-flag",
+              "flag": "lied-to-mara",
+              "value": true
+            }
+          ]
+        }
+      ],
+      "next": "jetty"
+    },
+    {
+      "id": "jetty",
+      "lines": [
+        {
+          "id": "jet-1",
+          "speaker": "warden",
+          "text": "The boat leaves whether you are on it or not.",
+          "effects": [
+            {
+              "kind": "mark-seen",
+              "entryId": "chapter-1"
+            }
+          ]
+        }
+      ],
+      "choices": [
+        {
+          "id": "reflect",
+          "text": "Think about what you told her.",
+          "target": "reflection",
+          "conditions": [
+            {
+              "kind": "narrative-flag",
+              "flag": "trusted"
+            }
+          ]
+        },
+        {
+          "id": "regret",
+          "text": "Wish you had told the truth.",
+          "target": "reflection",
+          "conditions": [
+            {
+              "kind": "world-flag",
+              "flag": "lied-to-mara"
+            }
+          ],
+          "effects": [
+            {
+              "kind": "progression",
+              "currency": 5,
+              "unlock": "chapter-2"
+            }
+          ]
+        },
+        {
+          "id": "board",
+          "text": "Board the boat.",
+          "target": "ending"
+        }
+      ]
+    },
+    {
+      "id": "reflection",
+      "lines": [
+        {
+          "id": "ref-1",
+          "speaker": "joss",
+          "text": "It will matter later. It always does."
+        }
+      ],
+      "next": "ending"
+    },
+    {
+      "id": "ending",
+      "lines": [
+        {
+          "id": "end-1",
+          "speaker": "warden",
+          "text": "Aboard, then."
+        }
+      ],
+      "choices": [
+        {
+          "id": "again",
+          "text": "Begin again.",
+          "target": "arrival",
+          "conditions": [
+            {
+              "kind": "seen-node",
+              "nodeId": "jetty"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

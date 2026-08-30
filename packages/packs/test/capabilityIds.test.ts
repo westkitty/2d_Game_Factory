@@ -28,6 +28,7 @@ import {
   rhythmPack,
   simulationAgentsPack,
   economyPack,
+  dialoguePack,
 } from '../src/index.ts';
 
 /**
@@ -69,6 +70,7 @@ const ALL_PACKS = [
   rhythmPack,
   simulationAgentsPack,
   economyPack,
+  dialoguePack,
 ];
 
 /** `<family>.<service>`: lowercase segments, at least two, dash-separated words allowed after the first. */

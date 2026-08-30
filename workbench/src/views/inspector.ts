@@ -28,6 +28,7 @@ import { renderBallPaddleLab } from './ballPaddleLab.ts';
 import { renderRhythmLab } from './rhythmLab.ts';
 import { renderAgentsLab } from './agentsLab.ts';
 import { renderEconomyLab } from './economyLab.ts';
+import { renderDialogueLab } from './dialogueLab.ts';
 import { thumbnailFor } from '../image/clientImage.ts';
 import { ROLE_LABELS, type AssetRecord, type Provenance, type RoleAssignment } from '../../shared/types.ts';
 import { classifyFrames } from '../../shared/spritePresentation.ts';
@@ -59,6 +60,7 @@ export function renderInspector(host: HTMLElement): () => void {
   const rhythmHost = el('div', { class: 'pane__body', style: { 'border-top': '1px solid var(--line, #2a2a2a)' } });
   const agentsHost = el('div', { class: 'pane__body', style: { 'border-top': '1px solid var(--line, #2a2a2a)' } });
   const economyHost = el('div', { class: 'pane__body', style: { 'border-top': '1px solid var(--line, #2a2a2a)' } });
+  const dialogueHost = el('div', { class: 'pane__body', style: { 'border-top': '1px solid var(--line, #2a2a2a)' } });
   let genLabGameId: string | null = null;
   let disposeGenLab: (() => void) | null = null;
   let disposeWorldGraphLab: (() => void) | null = null;
@@ -73,6 +75,7 @@ export function renderInspector(host: HTMLElement): () => void {
   let disposeRhythmLab: (() => void) | null = null;
   let disposeAgentsLab: (() => void) | null = null;
   let disposeEconomyLab: (() => void) | null = null;
+  let disposeDialogueLab: (() => void) | null = null;
 
   function roleRow(assignment: RoleAssignment, state: AppState): HTMLElement {
     const current = state.current!;
@@ -323,6 +326,8 @@ export function renderInspector(host: HTMLElement): () => void {
     disposeAgentsLab = null;
     disposeEconomyLab?.();
     disposeEconomyLab = null;
+    disposeDialogueLab?.();
+    disposeDialogueLab = null;
     replace(genLabHost);
     replace(worldGraphHost);
     replace(physicsHost);
@@ -336,6 +341,7 @@ export function renderInspector(host: HTMLElement): () => void {
     replace(rhythmHost);
     replace(agentsHost);
     replace(economyHost);
+    replace(dialogueHost);
     if (gameId) {
       disposeGenLab = renderGenerationLab(genLabHost, gameId);
       disposeWorldGraphLab = renderWorldGraphLab(worldGraphHost, gameId);
@@ -350,6 +356,7 @@ export function renderInspector(host: HTMLElement): () => void {
       disposeRhythmLab = renderRhythmLab(rhythmHost, gameId);
       disposeAgentsLab = renderAgentsLab(agentsHost, gameId);
       disposeEconomyLab = renderEconomyLab(economyHost, gameId);
+      disposeDialogueLab = renderDialogueLab(dialogueHost, gameId);
     }
   }
 
@@ -390,7 +397,7 @@ export function renderInspector(host: HTMLElement): () => void {
     );
   }
 
-  replace(host, head, body, genLabHost, worldGraphHost, physicsHost, racingHost, perceptionHost, climbingHost, runsHost, strategyActionsHost, playersHost, ballPaddleHost, rhythmHost, agentsHost, economyHost);
+  replace(host, head, body, genLabHost, worldGraphHost, physicsHost, racingHost, perceptionHost, climbingHost, runsHost, strategyActionsHost, playersHost, ballPaddleHost, rhythmHost, agentsHost, economyHost, dialogueHost);
   paint(getState());
   const unsubscribe = subscribe(paint);
   return () => {

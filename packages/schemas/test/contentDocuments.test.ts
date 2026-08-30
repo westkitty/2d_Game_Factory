@@ -44,6 +44,7 @@ describe('validateContentBundleData', () => {
       'rhythm',
       'agents',
       'economy',
+      'dialogue',
     ]);
   });
 

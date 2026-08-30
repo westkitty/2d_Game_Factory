@@ -112,10 +112,10 @@ pack/controller selections were actually exercised through, and
 | id | required packs | optional packs | controller(s) | input modes | validation profile |
 |---|---|---|---|---|---|
 | `exploration-game` | world, world-entities, world-graph | narrative | top-down | keyboard, touch | narrative-exploration-recipe |
-| `visual-novel` | narrative | progression | ui-simulation | keyboard, touch | narrative-exploration-recipe |
-| `point-and-click` | narrative, world, world-entities | puzzle | pointer, ui-simulation | keyboard, pointer, touch | narrative-exploration-recipe |
-| `interactive-fiction-hybrid` | narrative | world | ui-simulation | keyboard, touch | narrative-exploration-recipe |
-| `investigation-game` | narrative, world, world-entities | puzzle | top-down, pointer | keyboard, pointer, touch | narrative-exploration-recipe |
+| `visual-novel` | narrative, dialogue | progression, items | ui-simulation | keyboard, touch | narrative-exploration-recipe |
+| `point-and-click` | narrative, world, world-entities, dialogue | puzzle, items | pointer, ui-simulation | keyboard, pointer, touch | narrative-exploration-recipe |
+| `interactive-fiction-hybrid` | narrative, dialogue | world | ui-simulation | keyboard, touch | narrative-exploration-recipe |
+| `investigation-game` | narrative, world, world-entities, dialogue | puzzle, items | top-down, pointer | keyboard, pointer, touch | narrative-exploration-recipe |
 | `museum-exhibit` | world, world-entities | narrative | top-down, pointer | keyboard, pointer, touch | narrative-exploration-recipe |
 | `escape-room` | puzzle | narrative, world | pointer, ui-simulation | keyboard, pointer, touch | narrative-exploration-recipe |
 

@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "startNode": "warden-greets",
+  "characters": [
+    { "id": "warden", "displayName": "The Warden", "defaultExpression": "watching", "portraits": { "watching": "player" } }
+  ],
+  "nodes": [
+    {
+      "id": "warden-greets",
+      "lines": [
+        { "id": "wg-1", "speaker": "warden", "text": "That chest has been shut since the flood." }
+      ],
+      "choices": [
+        {
+          "id": "bless",
+          "text": "Ask him to open it.",
+          "target": "warden-relents",
+          "once": true,
+          "effects": [{ "kind": "set-world-flag", "flag": "chest-blessed", "value": true }]
+        },
+        { "id": "demur", "text": "Say nothing.", "target": "warden-waits" }
+      ]
+    },
+    {
+      "id": "warden-relents",
+      "lines": [{ "id": "wr-1", "speaker": "warden", "text": "Then put the key in it yourself." }]
+    },
+    {
+      "id": "warden-waits",
+      "lines": [{ "id": "ww-1", "speaker": "warden", "text": "Suit yourself." }]
+    }
+  ]
+}

@@ -1341,3 +1341,240 @@ None.
 - Decide whether customers should be a separate capability from the shop.
 - Confirm the generator supplies `content/economy.json` for any preset requiring `sw2d.economy`
   (currently a proof-shell responsibility — the same generator gap Phases 17 and 18 recorded).
+
+---
+
+## Phase 20 — Narrative Dialogue, Choices & Portraits
+
+- **Phase:** 20
+- **Capability:** `narrative.dialogue` (`DialogueService`)
+- **Status:** FOCUSED TESTS PASS
+- **Starting SHA:** `13d7880` (`candidate(phase-19)`)
+- **ADR:** `docs/architecture/adr/0034-dialogue-is-data-not-a-language.md` (new; indexed)
+- **Tranche gate:** this is a §7 tranche boundary; `npm run validate` and `npm run qa:proof` were
+  both run in full (results below).
+
+### Core decisions
+
+1. **No expression evaluator.** Seven condition kinds and six effect kinds, both closed unions.
+   Dialogue is the system most likely to grow a scripting language, and the pressure is real —
+   a writer wants `trust > 3 && !metJoss` and a string field is the shortest path. Once a
+   condition can be arbitrary code the document stops being data: the Workbench cannot show it,
+   validation cannot check the references in it, a save becomes a script, and a translator can
+   break logic. The escape hatch for a game that genuinely needs arbitrary logic is an ordinary
+   flag — compute whatever you like, set a narrative flag the dialogue can read.
+2. **The dialogue owns the script and none of the state.** Every effect writes through the
+   capability owning what it touches. A missing owner **skips and names itself**
+   (`{ kind, reason: 'missing-capability', capability }`) rather than failing silently.
+3. **`seen-node`/`seen-line` read the dialogue's own history; `mark-seen` writes
+   `narrative.state`'s codex.** Two different questions that share a word: one is about the shape
+   of this conversation, the other is a fact about the game.
+4. **Ids are never text.** Every line and choice carries a stable id distinct from its text, and
+   save records hold ids only — proofreading must not be able to invalidate a save.
+5. **The typewriter never hides text.** The whole line goes into the DOM the instant it is shown;
+   the reveal is a clip, not an append. Reduced motion skips it entirely rather than speeding it up.
+6. **The reveal runs on simulation time** (`tick(deltaMs)`), not `setInterval` — see the defects
+   section; this was found by running the proof, not by reading the code.
+7. **No focus trap.** `role="region"`, not `role="dialog"`: the game is still running behind the
+   conversation, and a modal role implies trapped focus.
+8. **Advancing is caller-driven.** No `update()` on the service and none on the installed pack.
+
+### Contracts
+
+`packages/contracts/src/dialogue.ts`, exported from `index.ts`: `DIALOGUE_CAPABILITY_ID`,
+`CharacterDefinition`, `NumericComparison`/`compareNumeric`, `DialogueCondition`/
+`DialogueWorldView`/`evaluateCondition`/`evaluateConditions`, `DialogueEffect`/
+`DialogueEffectKind`/`DIALOGUE_EFFECT_CAPABILITY`/`SkippedDialogueEffect`/`AppliedEffects`,
+`DialogueLine`/`DialogueChoice`/`DialogueNode`/`DialogueDocument`, `DialogueHistory`/
+`EMPTY_DIALOGUE_HISTORY`, `DialogueStatus`/`ChoiceOption`/`DialogueView`/`IDLE_DIALOGUE_VIEW`,
+`portraitRoleFor`, `validateDialogueDocument`/`InvalidDialogueDocumentError`, `DialogueEvent`,
+`DialogueSaveState`, `DialogueService`.
+
+### Schemas
+
+- `packages/schemas/schemas/dialogue.schema.json` (`urn:sw2d:schema:content-dialogue:v1`),
+  registered as schema name `dialogue` and content document name `dialogue`.
+- `packages/packs/schemas/dialogue-config.schema.json` — `documentName`.
+- Global validation not weakened; the contract's semantic gate (dangling targets, unknown
+  speakers, expressions a character has no portrait for, duplicate ids) runs at install.
+
+### Runtime
+
+`packages/runtime/src/game-support/dialogueOverlay.ts` — `createDialogueOverlay`. A runtime
+bridge because the requirements are genuinely browser requirements: the full line must reach
+the accessibility tree immediately, choices must be real focusable buttons, and reduced motion
+must actually shorten the reveal. A canvas text object meets none of those.
+
+### Pack
+
+`sw2d.dialogue` (`packages/packs/src/dialogue/dialoguePack.ts`). `PACK_IDS.dialogue`;
+`CAPABILITY_IDS.dialogue`. Declares **no** hard dependencies: a dialogue with no effects needs
+none of the state owners, and one whose owner is missing skips loudly rather than refusing to
+install a whole conversation. `DialogueDependencies.items` is narrowed to
+`Pick<ItemsService, 'count' | 'grant' | 'remove'>` — a line of dialogue has no business calling
+`consume()` with a combat target. Events: `dialogue:nodeEntered`, `dialogue:lineShown`,
+`dialogue:choiceTaken`, `dialogue:ended`.
+
+### Presets changed
+
+- `visual-novel`, `point-and-click`, `interactive-fiction-hybrid`, `investigation-game`:
+  `sw2d.dialogue` added as required, `sw2d.items` added as optional. The `dialogue` content role
+  these four already declared now has a schema behind it.
+- `packages/presets/src/shared.ts`: new shared `LIMITATIONS.dialoguePresentation`, replacing the
+  three inline "no full content-authored branching dialogue renderer/portrait presentation system
+  exists" claims. `investigation-game` keeps its evidence-board limitation (Phase 26).
+- `docs/presets/PRESET_CAPABILITY_MATRIX.md` rows updated for all four.
+- Maturity deliberately not promoted, matching the Phases 11-19 precedent.
+
+### Workbench authoring surface
+
+`workbench/server/dialogueLab.ts` + `workbench/src/views/dialogueLab.ts`, mounted in
+`inspector.ts`; routes `POST /script/inspect`, `POST /script/update` (the `/script` path keeps
+them inside the WB-SECURITY-001 audit). Edits **text** — line text, choice text, character
+display names — and **reports** the graph: which node each choice leads to, what gates it, what
+it changes. Spec 20.11 forbids universal visual scripting and a form for rewiring a condition
+graph is exactly that. What it adds instead is the thing JSON hides: **which nodes nothing can
+reach**, computed by walking every edge kind from the start node.
+
+### Proof consumers
+
+- **`proofs/visual-novel/` (new)** — primary defining proof, 18 named steps; spec
+  `packages/qa/proof-specs/visualNovel.ts`. Asserts against the real DOM, including the
+  accessibility bar and the absence of a focus trap.
+- **`proofs/point-and-click/` (upgraded)** — the five certified Phase-1 steps **unchanged**, plus
+  five Phase-20 steps (10 total): world click → dialogue → choice → world flag → a later
+  drag-and-drop observing the consequence.
+- **Investigation regression (20.14)** — there is no `proofs/investigation-game/` game to run a
+  browser journey against. The regression is therefore four tests in
+  `packages/packs/test/dialogue.test.ts` driving a witness-shaped document through the *same*
+  service: a clue in the inventory unlocking a line of questioning, a prior deduction unlocking a
+  different route to the same admission, testimony landing in the narrative codex, and only
+  "leave" being offered with neither. Recorded as a unit-level regression rather than claimed as
+  a browser proof.
+
+### Tests added
+
+- `packages/contracts/test/dialogue.test.ts` (27 tests) — every comparison at its boundary, every
+  condition kind including the `value: false` inversion, portrait fallback (unknown expression,
+  no portraits at all, no default), the effect-capability map, and every branch of the semantic
+  validator including forward references and choices-only nodes.
+- `packages/packs/test/dialogue.test.ts` (46 tests) — install/validation, walking the graph,
+  choices with conditions and `once`, effect routing to all four owners, the named
+  missing-capability skip, history counting, save/restore including the "a writer renamed a
+  scene" fallback and the no-double-effects rule, events, and the investigation regression.
+- `proofs/visual-novel/tests/content.test.ts` (12) and additions to
+  `proofs/point-and-click/tests/content.test.ts`.
+- `packages/schemas/test/contentDocuments.test.ts` (document registry updated).
+
+### Tests run — actual results
+
+- `npm run typecheck` — **PASS**, 0 errors
+- `npx vitest run` — **PASS, 178 files / 3240 tests** (was 175 / 3151 before Phase 20)
+- `npm run validate` — **PASS** (tranche gate; includes the offline check: no external request
+  construct found in the build output)
+- `npm run qa:proof` (full suite) — **PASS, 38/38** (tranche gate), including `visual-novel`
+  18/18 and `point-and-click` 10/10, 0 console errors, 0 external requests
+- `npm run qa:workbench` — **15/16 on the first run, 16/16 on an unchanged re-run.**
+  WB-SECURITY-001 now audits **72** endpoints (was 70).
+
+  The first run failed WB-SCENE-001 with `Error: frame.evaluate: Frame was detached` — the
+  journey's production-preview iframe was replaced while it was being evaluated. Re-running with
+  **no code change** passed in 12.2s. This is a timing race in the QA harness's preview step, not
+  a Phase-20 regression, and it is recorded here rather than reported as a clean 16/16, because
+  "it passed the second time" is exactly the kind of thing that should be written down.
+
+### Proof-quality evidence
+
+No unconditional acceptance step exists in either spec. Six sabotages were applied, observed and
+reverted (`grep SABOTAGE` clean afterwards):
+
+| Sabotage | Result |
+| --- | --- |
+| the typewriter appends characters instead of clipping | visual-novel step 3 FAIL |
+| a spent `once` choice is offered again | visual-novel step 18 FAIL, 1 pack test FAIL |
+| restoring re-shows the line, re-running its effects | **initially PASSED** — see below |
+| choice conditions are ignored | visual-novel steps 7, 12, 13 FAIL |
+| advancing steps past a pending decision | visual-novel steps 7-11 FAIL, point-and-click steps 7, 8, 10 FAIL |
+| an effect skips its capability owner | visual-novel steps 13-15 FAIL, point-and-click steps 8, 10 FAIL |
+
+The restore control is the one worth recording. It **passed against an implementation that
+re-ran every effect on reload**, because step 16 happened to restore onto a line with no
+effects. The step was rewritten to save while standing on a line that grants an item, and the
+control then failed as it should. The pack test caught the same sabotage immediately, which is
+why it is worth having both.
+
+Two genuine defects were found by running the work rather than reading it.
+
+The first is architectural. The reveal animation was driven by `setInterval`, which meant it ran
+on **real** time: it kept painting while the game was paused, it would keep running under tab
+throttling, and it could not be asserted on deterministically — the proof harness steps frames
+without advancing wall time, so the animation never progressed and every `advance()` was
+consumed completing a reveal that would never finish. This is the same class of mistake Phase 17
+rejected for rhythm charts. The fix was `tick(deltaMs)` driven from the game's own frame.
+
+The second: the overlay decided whether to start a reveal by comparing the *text* to what it was
+already showing. Two different lines that share wording would not have re-revealed, and
+re-entering a node would silently skip its reveal. Now keyed on the line id.
+
+### Limitations changed
+
+`LIMITATIONS.dialoguePresentation` (new, shared by `visual-novel`, `point-and-click`,
+`interactive-fiction-hybrid`, `investigation-game`) replaces three inline "does not exist" claims.
+
+### Known failures
+
+None.
+
+### Known shortcuts / characteristics a certifier should look at
+
+1. **Portrait asset roles come from the canonical theme role union, which has no portrait role.**
+   The visual-novel proof names existing roles (`player`, `enemy`, `pickup`). Widening the theme
+   vocabulary is a decision this phase deliberately did not take unilaterally.
+2. **The overlay omits unavailable choices rather than showing them disabled.** Whether a locked
+   option should be visible is an authoring decision, and the overlay declines to make it — but
+   that means a game wanting "??? (requires the ledger)" has to render its own list.
+3. **`role="region"`, not `role="dialog"`.** Correct here, and wrong for a genuinely blocking
+   modal. A future pause menu must re-decide rather than copy.
+4. **There is no `toJSON()`.** `save()`/`restore()` move a `DialogueSaveState`; a game with its
+   own save format drives them rather than serialising the service.
+5. **A save naming a deleted node falls back to idle** rather than throwing. Deliberate — a
+   player's save must not crash because a writer renamed a scene — but it is a silent recovery,
+   and the only signal is that the dialogue is idle.
+6. **`world-transition` inside a line's effects moves immediately, mid-node.** Powerful and easy
+   to misuse; validation checks the target exists but nothing checks for a cycle.
+7. **The investigation regression is unit-level**, not a browser journey (see above).
+8. **No localisation platform.** Text is a plain string on the line. Ids are stable *so that* one
+   could be added, but none ships.
+9. **WB-SCENE-001 is flaky.** It failed once with `frame.evaluate: Frame was detached` and passed
+   on an unchanged re-run. The journey evaluates inside the production-preview iframe, which can
+   be replaced under it. Nothing in Phase 20 touches that path; the race predates this phase and
+   is now recorded rather than left to surprise the next run.
+
+### Architectural concerns
+
+- **`narrative.state` and `narrative.dialogue` are adjacent and could be confused.** The first
+  owns flags, codex entries and a choice record; the second owns the script and the cursor. The
+  split is deliberate and documented, but `narrative.state.chosenChoices()` and
+  `DialogueHistory.choiceCounts` are two records of overlapping facts kept by different owners,
+  and nothing reconciles them.
+- **The overlay is the only presentation, and it is one fixed layout.** A game wanting a
+  different arrangement re-implements it, at which point the accessibility properties this phase
+  proved are no longer guaranteed. The properties live in the implementation, not in a contract
+  a second implementation would have to satisfy.
+- **Effects apply in document order with no transaction.** If a later effect's owner is missing,
+  the earlier ones have already been applied. Reported through `AppliedEffects`, never rolled back.
+- **`choose()` on an unavailable choice returns the current view rather than a named refusal.**
+  The caller can tell by re-reading `availableChoices()`, but there is no `{ ok: false, reason }`
+  the way Phase 19's transactions have.
+
+### Work required from a later certifier
+
+- Adversarial browser validation of both journeys, especially save/restore and the reveal.
+- Decide whether the canonical asset-role union should gain portrait roles.
+- Decide whether `narrative.state`'s choice record and `DialogueHistory` should be reconciled or
+  one of them removed.
+- Decide whether `choose()` should return a named refusal like Phase 19's `TransactionResult`.
+- Build `proofs/investigation-game/` when Phase 26 adds the evidence board, and promote the
+  unit-level witness regression into a browser journey there.
+- Confirm the generator supplies `content/dialogue.json` for any preset requiring `sw2d.dialogue`
+  (currently a proof-shell responsibility — the same generator gap Phases 17-19 recorded).

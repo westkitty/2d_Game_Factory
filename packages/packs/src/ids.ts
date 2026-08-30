@@ -42,6 +42,7 @@ export const PACK_IDS = {
   rhythm: 'sw2d.rhythm',
   simulationAgents: 'sw2d.simulation-agents',
   economy: 'sw2d.economy',
+  dialogue: 'sw2d.dialogue',
 } as const;
 
 export const CAPABILITY_IDS = {
@@ -119,4 +120,10 @@ export const CAPABILITY_IDS = {
    * no contract or pack ever calls `Date.now()` itself.
    */
   wallClock: 'time.wall-clock',
+  /**
+   * Post-ten Phase 20: an authored dialogue graph and where in it the game is.
+   * Distinct from `narrative.state`, which owns the flags, codex entries and
+   * choice record a dialogue *writes to* - this owns the script, not the state.
+   */
+  dialogue: 'narrative.dialogue',
 } as const;

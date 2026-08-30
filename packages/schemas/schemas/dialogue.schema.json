@@ -1,0 +1,182 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:sw2d:schema:content-dialogue:v1",
+  "title": "DialogueDocument",
+  "description": "Mirrors @sw2d/contracts DialogueDocument (dialogue.ts). Content document name 'dialogue'. Every line and choice carries a stable id distinct from its text - localised text is never a persistent identifier. Conditions and effects are closed unions; there is deliberately no expression language.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "nodes"],
+  "properties": {
+    "schemaVersion": { "type": "integer", "minimum": 1, "maximum": 1 },
+    "startNode": { "type": "string", "minLength": 1 },
+    "characters": { "type": "array", "items": { "$ref": "#/definitions/character" } },
+    "nodes": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/node" } }
+  },
+  "definitions": {
+    "character": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "displayName"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "displayName": { "type": "string", "minLength": 1 },
+        "defaultExpression": { "type": "string", "minLength": 1 },
+        "portraits": {
+          "type": "object",
+          "description": "expression -> asset role. Resolved through the theme, never a file path. Optional: a zero-art game is valid.",
+          "additionalProperties": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "comparison": { "enum": ["at-least", "at-most", "equals"] },
+    "condition": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "flag"],
+          "properties": {
+            "kind": { "enum": ["narrative-flag", "world-flag", "progression-unlock"] },
+            "flag": { "type": "string", "minLength": 1 },
+            "value": { "type": "boolean" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "nodeId"],
+          "properties": {
+            "kind": { "const": "seen-node" },
+            "nodeId": { "type": "string", "minLength": 1 },
+            "value": { "type": "boolean" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "lineId"],
+          "properties": {
+            "kind": { "const": "seen-line" },
+            "lineId": { "type": "string", "minLength": 1 },
+            "value": { "type": "boolean" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "choiceId", "comparison", "count"],
+          "properties": {
+            "kind": { "const": "choice-count" },
+            "choiceId": { "type": "string", "minLength": 1 },
+            "comparison": { "$ref": "#/definitions/comparison" },
+            "count": { "type": "integer", "minimum": 0 }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "itemId", "comparison", "count"],
+          "properties": {
+            "kind": { "const": "item-count" },
+            "itemId": { "type": "string", "minLength": 1 },
+            "comparison": { "$ref": "#/definitions/comparison" },
+            "count": { "type": "integer", "minimum": 0 }
+          }
+        }
+      ]
+    },
+    "effect": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "flag", "value"],
+          "properties": {
+            "kind": { "enum": ["set-narrative-flag", "set-world-flag"] },
+            "flag": { "type": "string", "minLength": 1 },
+            "value": { "type": "boolean" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "itemId"],
+          "properties": {
+            "kind": { "enum": ["grant-item", "remove-item"] },
+            "itemId": { "type": "string", "minLength": 1 },
+            "quantity": { "type": "integer", "exclusiveMinimum": 0 }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind"],
+          "properties": {
+            "kind": { "const": "progression" },
+            "currency": { "type": "integer" },
+            "xp": { "type": "integer" },
+            "unlock": { "type": "string", "minLength": 1 }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "entryId"],
+          "properties": {
+            "kind": { "const": "mark-seen" },
+            "entryId": { "type": "string", "minLength": 1 }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "nodeId"],
+          "properties": {
+            "kind": { "const": "world-transition" },
+            "nodeId": { "type": "string", "minLength": 1 }
+          }
+        }
+      ]
+    },
+    "line": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "text"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Stable, and never the text. Text gets translated; ids must not."
+        },
+        "speaker": { "type": "string", "minLength": 1 },
+        "text": { "type": "string" },
+        "expression": { "type": "string", "minLength": 1 },
+        "effects": { "type": "array", "items": { "$ref": "#/definitions/effect" } }
+      }
+    },
+    "choice": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "text"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "text": { "type": "string", "minLength": 1 },
+        "conditions": { "type": "array", "items": { "$ref": "#/definitions/condition" } },
+        "target": { "type": "string", "minLength": 1 },
+        "effects": { "type": "array", "items": { "$ref": "#/definitions/effect" } },
+        "once": { "type": "boolean" }
+      }
+    },
+    "node": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "lines"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "lines": { "type": "array", "items": { "$ref": "#/definitions/line" } },
+        "choices": { "type": "array", "items": { "$ref": "#/definitions/choice" } },
+        "next": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

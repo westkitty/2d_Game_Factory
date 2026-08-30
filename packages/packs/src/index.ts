@@ -144,3 +144,13 @@ export {
   type EconomyService,
   type ProductionService,
 } from './economy/economyPack.ts';
+export {
+  dialoguePack,
+  DialogueServiceImpl,
+  DIALOGUE_CONFIG_SCHEMA_ID,
+  MissingDialogueDocumentError,
+  UnknownDialogueNodeError,
+  type DialogueConfig,
+  type DialogueDependencies,
+  type DialogueService,
+} from './dialogue/dialoguePack.ts';

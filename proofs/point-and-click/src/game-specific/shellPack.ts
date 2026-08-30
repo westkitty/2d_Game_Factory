@@ -1,6 +1,17 @@
 import type Phaser from 'phaser';
-import type { InstalledSystemPack } from '@sw2d/contracts';
-import { phaserBoundsShape, type SceneContext, type ScenePackDefinition } from '@sw2d/runtime';
+import {
+  DIALOGUE_CAPABILITY_ID,
+  type DialogueService,
+  type InstalledSystemPack,
+} from '@sw2d/contracts';
+import { CAPABILITY_IDS, type WorldService } from '@sw2d/packs';
+import {
+  createDialogueOverlay,
+  phaserBoundsShape,
+  uiSimulationController,
+  type SceneContext,
+  type ScenePackDefinition,
+} from '@sw2d/runtime';
 
 /**
  * Phase 1 proof - point-and-click (see ../PROOF_CONTRACT.md).
@@ -17,6 +28,15 @@ import { phaserBoundsShape, type SceneContext, type ScenePackDefinition } from '
  *
  * The service owns hit-testing, hover bookkeeping and pointer capture during
  * the drag - none of it is reimplemented here.
+ *
+ * ## Post-ten Phase 20
+ *
+ * The Phase-1 objects above are unchanged. Phase 20 adds a fourth: clicking the
+ * warden opens a real dialogue, a choice in it sets a world flag, and the chest
+ * reads that flag **when the key is later dropped into it**. That last part is
+ * the point - a consequence that only shows up in a world interaction some time
+ * after the conversation ended is the thing a dialogue system has to be able to
+ * produce, and the thing a fake one cannot.
  */
 
 export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
@@ -42,6 +62,24 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     let leverHovered = false;
     let leverPulled = false;
     let keyInChest = false;
+
+    // --- Post-ten Phase 20 ---
+    const dialogue = context.capabilities.require<DialogueService>(DIALOGUE_CAPABILITY_ID);
+    const world = context.capabilities.require<WorldService>(CAPABILITY_IDS.world);
+    const wardenPos = { x: 480, y: 180 };
+    const warden = scene.add.rectangle(wardenPos.x, wardenPos.y, 56, 96, 0x44507a).setStrokeStyle(2, 0xbcd0ff);
+    const overlay = createDialogueOverlay(scene.game.canvas.parentElement ?? document.body, dialogue, {
+      resolvePortrait: (assetRole) => {
+        try {
+          return scene.textures.getBase64(context.assets.resolve(assetRole as 'player'));
+        } catch {
+          return null;
+        }
+      },
+      reducedMotion: () => context.accessibility.reducedMotion,
+    });
+    /** Whether the chest was blessed at the moment the key went in, not later. */
+    let blessedOnDrop: boolean | null = null;
 
     context.interaction.register({
       id: 'lever',
@@ -84,9 +122,26 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       onDrop: (info) => {
         if (info.sourceId !== 'key') return;
         keyInChest = true;
+        // The consequence of a conversation that ended some time ago, observed
+        // by an ordinary world interaction.
+        blessedOnDrop = world.hasFlag('chest-blessed');
         keySprite.setPosition(chestPos.x, chestPos.y);
         chest.setFillStyle(0x66ff88);
         context.audio.playCue('ui.confirm');
+      },
+    });
+
+    context.interaction.register({
+      id: 'warden',
+      priority: 2,
+      shape: { kind: 'rect', x: wardenPos.x - 28, y: wardenPos.y - 48, width: 56, height: 96 },
+      onHoverEnter: () => warden.setFillStyle(0x6d7cb8),
+      onHoverLeave: () => warden.setFillStyle(0x44507a),
+      onClick: () => {
+        // A world click opens the conversation. The shell chooses *when*; the
+        // capability owns everything about what happens inside it.
+        dialogue.start('warden-greets');
+        overlay.refresh();
       },
     });
 
@@ -100,6 +155,17 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       keyY: Math.round(keySprite.y),
       pointerWorldX: Math.round(context.spatialPointer.state.worldX),
       pointerWorldY: Math.round(context.spatialPointer.state.worldY),
+      // Post-ten Phase 20 surface.
+      dialogue: dialogue.view(),
+      dialogueChoices: dialogue.availableChoices(),
+      dialogueButtons: [...overlay.root.querySelectorAll('[data-sw2d-choice]')].map(
+        (node) => (node as HTMLElement).dataset['sw2dChoice'] ?? '',
+      ),
+      dialogueText: overlay.root.querySelector('[data-sw2d-dialogue="text"]')?.textContent ?? '',
+      dialogueRevealing: overlay.isRevealing,
+      reducedMotion: context.accessibility.reducedMotion,
+      chestBlessed: world.hasFlag('chest-blessed'),
+      blessedOnDrop,
     }));
 
     let disposed = false;
@@ -107,15 +173,22 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     return {
       id: GAME_SPECIFIC_PACK.id,
 
-      update(): void {
-        /* All behaviour is event-driven through the interaction service. */
+      update(deltaMs: number): void {
+        /* Interaction behaviour is event-driven; only the reveal needs a frame. */
+        overlay.tick(deltaMs);
+        // This preset's controller families include `ui-simulation`, so CONFIRM
+        // is the ordinary way to advance a line - the same wire the visual-novel
+        // proof uses, not a second mechanism for the same job.
+        const intent = uiSimulationController.read(context.input);
+        if (intent.confirmPressed) overlay.advance();
       },
 
       dispose(): void {
         if (disposed) return;
         disposed = true;
         debugHandle.dispose();
-        for (const object of [lever, chest, keySprite] as Phaser.GameObjects.GameObject[]) {
+        overlay.dispose();
+        for (const object of [lever, chest, keySprite, warden] as Phaser.GameObjects.GameObject[]) {
           try {
             object.destroy();
           } catch {

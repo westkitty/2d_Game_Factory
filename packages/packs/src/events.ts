@@ -74,6 +74,10 @@ declare module '@sw2d/contracts' {
     'economy:customerLeft': { readonly customerId: string; readonly outcome: string };
     'economy:prestige': { readonly level: number; readonly multiplier: number };
     'production:jobCompleted': { readonly jobId: string; readonly recipeId: string };
+    'dialogue:nodeEntered': { readonly nodeId: string; readonly visit: number };
+    'dialogue:lineShown': { readonly lineId: string; readonly speakerId: string | null };
+    'dialogue:choiceTaken': { readonly choiceId: string; readonly target: string | null };
+    'dialogue:ended': { readonly nodeId: string | null };
   }
 }
 

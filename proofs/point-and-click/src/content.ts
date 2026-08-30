@@ -5,6 +5,7 @@ import gameData from '../content/game.json' with { type: 'json' };
 import tuningData from '../content/tuning.json' with { type: 'json' };
 import themeData from '../content/themes/default/theme.json' with { type: 'json' };
 import rawLevel from '../content/levels/main.json' with { type: 'json' };
+import dialogueData from '../content/dialogue.json' with { type: 'json' };
 
 /**
  * The generated game's content source.
@@ -30,7 +31,12 @@ export const gameContent: ContentSource = {
   id: (gameData as { id: string }).id,
   load: async (): Promise<ContentBundle> => {
     const normalizedLevel = normalizeTiledMap('main', rawLevel);
-    const data = validateContentBundleData({ tuning: tuningData, 'levels/main': normalizedLevel });
+    const data = validateContentBundleData({
+      tuning: tuningData,
+      'levels/main': normalizedLevel,
+      // Post-ten Phase 20: the conversation a clicked object opens.
+      dialogue: dialogueData,
+    });
 
     const assets: readonly AssetDescriptor[] = theme.assets;
     const ui: Partial<UiCopy> | undefined = theme.ui;

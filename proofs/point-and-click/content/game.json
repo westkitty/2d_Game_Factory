@@ -22,6 +22,10 @@
       "config": {}
     },
     {
+      "packId": "sw2d.dialogue",
+      "config": {}
+    },
+    {
       "packId": "game.pointer-shell",
       "config": {}
     }

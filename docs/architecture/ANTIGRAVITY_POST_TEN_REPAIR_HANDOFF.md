@@ -26,8 +26,9 @@ for candidate phases.
 | 16 | Ball & Paddle Arcade Systems | FOCUSED TESTS PASS | `81a7e12` | breakout (12 steps), pong (12 steps, upgraded) |
 | 17 | Rhythm, Beat & Precision Timing | FOCUSED TESTS PASS | `ed74dc3` | rhythm-action (12 steps), reaction-timing (10 steps) |
 | 18 | Simulation Agents, Needs, Behavior & Schedules | FOCUSED TESTS PASS | `af73bb5` | pet-creature (12 steps), colony-lite (12 steps) |
-| 19 | Economy, Production & Customer Simulation | FOCUSED TESTS PASS | this phase | shopkeeper (18 steps), idle-incremental (15 steps, upgraded) |
-| 20–36 | see `POST_TEN_PROGRAM_SPEC.md` | NOT STARTED | — | — |
+| 19 | Economy, Production & Customer Simulation | FOCUSED TESTS PASS | `13d7880` | shopkeeper (18 steps), idle-incremental (15 steps, upgraded) |
+| 20 | Narrative Dialogue, Choices & Portraits | FOCUSED TESTS PASS | this phase | visual-novel (18 steps), point-and-click (10 steps, upgraded) |
+| 21–36 | see `POST_TEN_PROGRAM_SPEC.md` | NOT STARTED | — | — |
 
 ---
 
@@ -141,19 +142,46 @@ Carried forward every phase until an independent certification pass closes them.
   the same gap Phases 17 and 18 recorded, for Phase 36 to close.
 
 
+### Phase 20
+
+- **WB-SCENE-001 is flaky.** It failed the tranche run with `frame.evaluate: Frame was detached`
+  and passed on an unchanged re-run. The journey evaluates inside the production-preview iframe,
+  which can be replaced under it. The race predates Phase 20; recorded rather than left to
+  surprise the next run.
+- **Portrait asset roles come from the canonical theme role union, which has no portrait role.**
+  The visual-novel proof names `player`/`enemy`/`pickup`. Widening the theme vocabulary was
+  deliberately not taken unilaterally.
+- **`narrative.state` and `narrative.dialogue` keep overlapping records.**
+  `narrative.state.chosenChoices()` and `DialogueHistory.choiceCounts` are two records of
+  overlapping facts under different owners, and nothing reconciles them.
+- **The overlay is the only presentation and is one fixed layout.** The accessibility properties
+  this phase proved live in that implementation, not in a contract a second one would satisfy.
+- Effects apply in document order with no transaction: a later missing owner leaves the earlier
+  effects applied (reported, never rolled back). `choose()` on an unavailable choice returns the
+  current view rather than a named refusal, unlike Phase 19's transactions.
+- `world-transition` inside a *line's* effects moves mid-node; the target is validated but nothing
+  checks for a cycle. A save naming a deleted node silently falls back to idle.
+- **The investigation regression (20.14) is unit-level**, not a browser journey: there is no
+  `proofs/investigation-game/`. Four tests drive a witness-shaped document through the same
+  service. Promote it when Phase 26 builds the evidence board.
+- The generator still does not supply `content/dialogue.json` for presets requiring
+  `sw2d.dialogue` — the same gap Phases 17-19 recorded, for Phase 36 to close.
+
+
 ---
 
 ## Verified gates at the latest phase boundary
 
-Re-run and re-recorded at each phase; these are the Phase-19 numbers.
+Re-run and re-recorded at each phase; these are the Phase-20 numbers. **Phase 20 is a §7
+tranche boundary**, so `npm run validate` and the full `npm run qa:proof` were both run.
 
 | Gate | Result |
 | --- | --- |
 | `npm run typecheck` | PASS, 0 errors |
-| `npx vitest run` | PASS — 175 files / 3151 tests |
-| `npm run validate` | PASS at the Phase-15 boundary (incl. offline check: no external request construct); Phases 16-19 are not tranche gates, so `validate` was not re-run. **Phase 20 is the next tranche gate** and must run `npm run validate` + `npm run qa:proof` |
-| `npm run qa:proof` | PASS — 37/37 |
-| `npm run qa:workbench` | PASS — 16/16; WB-SECURITY-001 audits 70 endpoints |
+| `npx vitest run` | PASS — 178 files / 3240 tests |
+| `npm run validate` | PASS at the **Phase-20 tranche boundary**, including the offline check (no external request construct in the build output). The next tranche gate is Phase 25 |
+| `npm run qa:proof` | PASS — 38/38 (tranche gate, full suite) |
+| `npm run qa:workbench` | 15/16 first run, **16/16 on an unchanged re-run**; WB-SECURITY-001 audits 72 endpoints. The one failure was WB-SCENE-001's `Frame was detached` — a preview-iframe race in the harness, not a Phase-20 regression (see the certifier queue) |
 
 ---
 

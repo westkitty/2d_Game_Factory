@@ -1,0 +1,15 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:sw2d:schema:pack-dialogue-config:v1",
+  "title": "DialoguePackConfig",
+  "description": "Mirrors @sw2d/packs' DialogueConfig. All fields optional.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "documentName": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Content document to read. Defaults to 'dialogue'."
+    }
+  }
+}

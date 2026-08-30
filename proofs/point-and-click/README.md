@@ -62,13 +62,17 @@ with a small working placeholder to replace. Every other pack is configured as J
 ## Composition
 
 - Controller family/families: pointer, ui-simulation
-- Required packs (enabled by default): sw2d.narrative, sw2d.world, sw2d.world-entities
-- Optional packs (available, not enabled by default - add to content/game.json's systemPacks to use): sw2d.puzzle
+- Required packs (enabled by default): sw2d.narrative, sw2d.world, sw2d.world-entities, sw2d.dialogue
+- Optional packs (available, not enabled by default - add to content/game.json's systemPacks to use): sw2d.puzzle, sw2d.items
 - Content roles this preset expects: tuning, levels, dialogue
+
+`content/levels/main.json` is the room and `content/dialogue.json` (post-ten Phase 20) is
+the conversation a clicked object opens. A choice in it writes a world flag, and an
+ordinary world interaction later reads that flag back.
 
 ## Known preset limitations
 
-- Spatial pointer position, hover targets, and world-coordinate click targeting remain unimplemented.
+- Content-authored branching dialogue - characters, portraits by expression, stable line and choice ids, bounded conditions and effects, once-choices, history and save/restore - is reusable through sw2d.dialogue (narrative.dialogue), with a semantic-DOM presentation in the runtime whose full line text reaches the accessibility tree immediately. Conditions and effects are closed unions rather than an expression language, so anything a game wants that is not one of the seven condition kinds or six effect kinds stays game-specific. No localisation platform, voice-over pipeline or branching-graph visual editor ships with this.
 
 ## How to add a level
 

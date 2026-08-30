@@ -28,6 +28,7 @@ export {
   createAudioTransport,
 } from './game-support/audioTransport.ts';
 export { BrowserWallClock, ManualWallClock } from './game-support/wallClock.ts';
+export { createDialogueOverlay, type DialogueOverlay, type DialogueOverlayOptions } from './game-support/dialogueOverlay.ts';
 export {
   DEFAULT_KEYBOARD_PROFILES,
   KEYBOARD_PROFILE_LEFT,

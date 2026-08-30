@@ -1,0 +1,40 @@
+{
+  "id": "proof-visual-novel",
+  "displayName": "Proof Visual Novel",
+  "version": "0.1.0",
+  "schemaVersion": 1,
+  "viewport": {
+    "width": 960,
+    "height": 540
+  },
+  "bindings": {},
+  "systemPacks": [
+    {
+      "packId": "sw2d.narrative",
+      "config": {}
+    },
+    {
+      "packId": "sw2d.progression",
+      "config": {}
+    },
+    {
+      "packId": "sw2d.items",
+      "config": {}
+    },
+    {
+      "packId": "sw2d.world",
+      "config": {}
+    },
+    {
+      "packId": "sw2d.dialogue",
+      "config": {}
+    },
+    {
+      "packId": "game.novel-shell",
+      "config": {}
+    }
+  ],
+  "defaultSettings": {
+    "masterVolume": 0.7
+  }
+}

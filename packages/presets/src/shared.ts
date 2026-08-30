@@ -86,6 +86,11 @@ export const LIMITATIONS = {
   // chains, stations, placement validation, customer arrival/queue/service and
   // prestige are reusable now (sw2d.economy); what stays out is the *presentation*
   // of a floor plan and any pathfinding a customer would need to walk it.
+  // Post-ten Phase 20 addition. Replaces the three inline "no full
+  // content-authored branching dialogue renderer/portrait presentation system
+  // exists" claims.
+  dialoguePresentation:
+    'Content-authored branching dialogue - characters, portraits by expression, stable line and choice ids, bounded conditions and effects, once-choices, history and save/restore - is reusable through sw2d.dialogue (narrative.dialogue), with a semantic-DOM presentation in the runtime whose full line text reaches the accessibility tree immediately. Conditions and effects are closed unions rather than an expression language, so anything a game wants that is not one of the seven condition kinds or six effect kinds stays game-specific. No localisation platform, voice-over pipeline or branching-graph visual editor ships with this.',
   customerEconomy:
     'Goods, stock, prices, transactions, production recipes on stations, station placement validation, customer arrival/queue/service and prestige are reusable through sw2d.economy (simulation.economy, simulation.production). Customers are a phase machine on simulation time, not agents walking a floor: placement checks zone, overlap and an authored access point, and pathfinding when a game needs it is sw2d.navigation. Floor-plan presentation stays starter-specific.',
   // Post-ten Phase 19 addition, split out of customerEconomy: what a restaurant
