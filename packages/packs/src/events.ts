@@ -51,6 +51,12 @@ declare module '@sw2d/contracts' {
       readonly tick: number;
     };
     'tactics:executed': { readonly actionId: string; readonly actorId: string; readonly spent: number; readonly orderId: string };
+    'ballPaddle:paddleBounce': { readonly paddleId: string; readonly relative: number; readonly speed: number };
+    'ballPaddle:brickDestroyed': { readonly placementId: string; readonly brickId: string; readonly score: number };
+    'ballPaddle:goal': { readonly edge: string; readonly scoresFor: string | null; readonly score: number };
+    /** `livesRemaining` is -1 when the definition declares unlimited lives. */
+    'ballPaddle:ballLost': { readonly edge: string; readonly livesRemaining: number };
+    'ballPaddle:matchComplete': { readonly winnerId: string | null };
   }
 }
 

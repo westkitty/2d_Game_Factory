@@ -4,6 +4,7 @@ import { createGame } from '@sw2d/runtime';
 import {
   aiPack,
   arcadePack,
+  ballPaddlePack,
   combatPack,
   entityRegistryPack,
   narrativePack,
@@ -51,6 +52,7 @@ const runtime = await createGame({
     simulationPack,
     narrativePack,
     strategyPack,
+    ballPaddlePack,
     GAME_SPECIFIC_PACK,
   ],
   packConfigValidator,

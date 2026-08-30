@@ -74,8 +74,8 @@ pack/controller selections were actually exercised through, and
 | `sokoban` | puzzle-rules | - | grid | keyboard, touch | puzzle-arcade-recipe |
 | `match-puzzle` | puzzle | arcade | grid | keyboard, touch | puzzle-arcade-recipe |
 | `falling-block-puzzle` | puzzle | arcade | grid, ui-simulation | keyboard, touch | puzzle-arcade-recipe |
-| `breakout` | arcade | - | top-down | keyboard, touch | puzzle-arcade-recipe |
-| `pong` | arcade | - | top-down | keyboard, touch | puzzle-arcade-recipe |
+| `breakout` | arcade, ball-paddle | - | top-down | keyboard, touch | puzzle-arcade-recipe |
+| `pong` | arcade, ball-paddle | - | top-down | keyboard, touch | puzzle-arcade-recipe |
 | `physics-puzzle` | puzzle | - | pointer | keyboard, pointer, touch | puzzle-arcade-recipe |
 | `maze-game` | world, world-entities | arcade | grid | keyboard, touch | puzzle-arcade-recipe |
 | `rhythm-action` | arcade | - | ui-simulation | keyboard, touch | puzzle-arcade-recipe |

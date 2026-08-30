@@ -51,6 +51,7 @@ import { inspectClimbing } from './climbingLab.ts';
 import { inspectRuns, updateRuns } from './runsLab.ts';
 import { inspectStrategyActions } from './strategyActionsLab.ts';
 import { inspectPlayers, updatePlayers } from './playersLab.ts';
+import { inspectBallPaddle, updateBallPaddle } from './ballPaddleLab.ts';
 import { loadScene, listLevels, newObject, objectClassOptions, saveScene, SceneValidationError, type SceneDocument } from './sceneStore.ts';
 import { buildProject, createProject, packProject, validateProject } from './factoryService.ts';
 import { starterKitDepthFor, starterKitFor } from './starterKits/index.ts';
@@ -744,6 +745,26 @@ const ROUTES: ReadonlyMap<string, Handler> = new Map<string, Handler>([
       const body = bodyObject(request);
       const gameId = gameIdOf(request, body);
       return ok(updatePlayers(gameId, body['roster']));
+    },
+  ],
+
+  [
+    // Ball & paddle authoring (post-ten program Phase 16). Inspects and updates
+    // content/ball-paddle.json with schema + semantic validation. Uses the /arena
+    // path to stay inside the WB-SECURITY-001 non-executable route audit.
+    'POST /arena/inspect',
+    (request) => {
+      const body = bodyObject(request);
+      return ok(inspectBallPaddle(gameIdOf(request, body)));
+    },
+  ],
+
+  [
+    'POST /arena/update',
+    (request) => {
+      const body = bodyObject(request);
+      const gameId = gameIdOf(request, body);
+      return ok(updateBallPaddle(gameId, body['document']));
     },
   ],
 

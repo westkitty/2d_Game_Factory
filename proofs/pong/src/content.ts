@@ -6,14 +6,16 @@ import tuningData from '../content/tuning.json' with { type: 'json' };
 import themeData from '../content/themes/default/theme.json' with { type: 'json' };
 import rawLevel from '../content/levels/main.json' with { type: 'json' };
 import playersData from '../content/players.json' with { type: 'json' };
+import ballPaddleData from '../content/ball-paddle.json' with { type: 'json' };
 
 /**
  * The generated game's content source.
  *
- * `content/players.json` seats exactly two players, which is what makes this the
- * Phase 15 *input foundation* for Pong. The ball, the paddles' physical bounce
- * and the scoring loop are Phase 16 (`arcade.ball-paddle`); this proof stops at
- * two isolated paddle-intent channels.
+ * Two post-ten documents meet here:
+ * - `content/players.json` (Phase 15) seats exactly two players and grants the
+ *   `input.players` routing capability.
+ * - `content/ball-paddle.json` (Phase 16) is the whole game: the ball, both
+ *   paddles, the goal edges and the target score.
  */
 const theme: ThemeManifest = validateDocumentOrThrow<ThemeManifest>(
   'theme-manifest',
@@ -29,6 +31,7 @@ export const gameContent: ContentSource = {
       tuning: tuningData,
       'levels/main': normalizedLevel,
       players: playersData,
+      'ball-paddle': ballPaddleData,
     });
 
     const assets: readonly AssetDescriptor[] = theme.assets;

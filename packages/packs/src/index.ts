@@ -101,3 +101,13 @@ export {
   type StrategyOrdersService,
   type StrategyTacticsService,
 } from './strategyActions/strategyActionsPack.ts';
+export {
+  ballPaddlePack,
+  BallPaddleServiceImpl,
+  BALL_PADDLE_CONFIG_SCHEMA_ID,
+  MissingBallPaddleDocumentError,
+  UnknownPaddleError,
+  UnsupportedBallSpeedError,
+  type BallPaddleConfig,
+  type BallPaddleService,
+} from './ballPaddle/ballPaddlePack.ts';

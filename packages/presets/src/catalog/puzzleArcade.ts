@@ -71,8 +71,10 @@ export const PUZZLE_ARCADE_PRESETS: readonly PresetDefinition[] = [
     displayName: 'Breakout',
     family: 'puzzle-arcade',
     controllerFamilies: ['top-down'],
-    requiredSystemPacks: [pack(PACK_IDS.arcade)],
-    requiredContentRoles: ['tuning'],
+    // Post-ten Phase 16: the ball/paddle simulation is reusable now
+    // (sw2d.ball-paddle, ADR-0030; proof: proofs/breakout/).
+    requiredSystemPacks: [pack(PACK_IDS.arcade), pack(PACK_IDS.ballPaddle)],
+    requiredContentRoles: ['tuning', 'ball-paddle'],
     validationProfile: VALIDATION_PROFILES.puzzleArcade,
     knownLimitations: [LIMITATIONS.ballPaddleSystem],
   }),
@@ -82,10 +84,11 @@ export const PUZZLE_ARCADE_PRESETS: readonly PresetDefinition[] = [
     displayName: 'Pong',
     family: 'puzzle-arcade',
     controllerFamilies: ['top-down'],
-    requiredSystemPacks: [pack(PACK_IDS.arcade)],
-    // Post-ten Phase 15: two-player input routing is reusable now
-    // (input.players; proof: proofs/pong/). The ball/paddle half is Phase 16.
-    requiredContentRoles: ['tuning', 'players'],
+    // Post-ten Phase 15 supplied the two-player input routing (input.players);
+    // Phase 16 supplies the ball and paddles (sw2d.ball-paddle, ADR-0030).
+    // Proof: proofs/pong/.
+    requiredSystemPacks: [pack(PACK_IDS.arcade), pack(PACK_IDS.ballPaddle)],
+    requiredContentRoles: ['tuning', 'players', 'ball-paddle'],
     validationProfile: VALIDATION_PROFILES.puzzleArcade,
     knownLimitations: [LIMITATIONS.ballPaddleSystem, LIMITATIONS.localTouchMultiplayer],
   }),

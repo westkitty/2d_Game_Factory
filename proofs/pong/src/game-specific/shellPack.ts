@@ -1,5 +1,9 @@
 import {
+  BALL_PADDLE_CAPABILITY_ID,
   PLAYER_INPUT_CAPABILITY_ID,
+  type BallPaddleEvent,
+  type BallPaddleService,
+  type BallPaddleState,
   type DeviceAssignment,
   type InstalledSystemPack,
   type PlayerId,
@@ -10,95 +14,83 @@ import {
 import { topDownController, type SceneContext, type ScenePackDefinition } from '@sw2d/runtime';
 
 /**
- * Phase 15 proof - pong, INPUT FOUNDATION ONLY.
+ * Pong proof - the composition of two post-ten phases.
  *
- * Deliberately not a finished Pong. There is no ball, no bounce, no serve and no
- * score, because those belong to `arcade.ball-paddle` in Phase 16. What this
- * proves is the half Phase 15 owns: two seated players, two paddles, two
- * independent semantic channels, and simultaneous *opposite* intent with no
- * cross-talk - the property a two-player game cannot be built on top of unless
- * it actually holds.
+ * - **Phase 15 (`input.players`)** seats two players on disjoint devices and
+ *   gives each an isolated semantic `ActionInput`.
+ * - **Phase 16 (`arcade.ball-paddle`)** owns the ball, both paddles, the serve,
+ *   the bounce, the goals and the match rules.
  *
- * Phase 16 will consume this shell rather than replace it.
+ * The shell is the wire between them: it reads each player's own channel through
+ * the ordinary shared `topDownController` and hands the resulting intent to that
+ * player's paddle. It owns no ball, no score and no bounce maths - and no
+ * per-player input handling either.
+ *
+ * The Phase-15 journey (two isolated paddle channels, simultaneous opposite
+ * intent) is still asserted; Phase 16 adds the ball on top of it rather than
+ * replacing it.
  */
 
 export const PONG_SHELL_CAPABILITY_ID = 'game.pong-shell';
 
-const PADDLE_SPEED = 320;
-const PADDLE_HEIGHT = 96;
-const COURT = { top: 40, bottom: 500 };
-const PADDLE_X: Readonly<Record<string, number>> = { left: 80, right: 880 };
-
-export interface PongPaddleState {
-  readonly x: number;
-  readonly y: number;
-  /** -1 up, +1 down, 0 still. The paddle-intent channel this phase is about. */
-  readonly moveY: number;
-  readonly atTop: boolean;
-  readonly atBottom: boolean;
-}
-
-export interface PongShellState {
+export interface PongShellState extends BallPaddleState {
   readonly phase: 'lobby' | 'playing';
   readonly canStart: boolean;
   readonly slots: readonly PlayerSlot[];
-  readonly paddles: Readonly<Record<string, PongPaddleState>>;
   readonly playerAdapterCount: number;
   /** True when the two paddles are moving in opposite directions this frame. */
   readonly oppositeIntent: boolean;
+  readonly lastEvents: readonly string[];
+  readonly counts: Readonly<Record<string, number>>;
+  readonly lastBounceRelative: number | null;
 }
 
 export interface PongShellService {
   state(): PongShellState;
   join(playerId: PlayerId, device: DeviceAssignment): PlayerJoinResult;
   start(): boolean;
+  serve(): void;
+  resetRound(): void;
 }
 
 export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
   id: PONG_SHELL_CAPABILITY_ID,
   version: '0.1.0',
   provides: [PONG_SHELL_CAPABILITY_ID],
-  dependencies: [PLAYER_INPUT_CAPABILITY_ID],
+  dependencies: [PLAYER_INPUT_CAPABILITY_ID, BALL_PADDLE_CAPABILITY_ID],
 
   install(context: SceneContext): InstalledSystemPack {
     const scene = context.scene;
     const players = context.capabilities.require<PlayerInputService>(PLAYER_INPUT_CAPABILITY_ID);
+    const sim = context.capabilities.require<BallPaddleService>(BALL_PADDLE_CAPABILITY_ID);
+    const doc = sim.definition();
 
     let phase: 'lobby' | 'playing' = 'lobby';
+    let lastEvents: string[] = [];
+    let lastBounceRelative: number | null = null;
+    const counts: Record<string, number> = {
+      served: 0,
+      'wall-bounce': 0,
+      'paddle-bounce': 0,
+      goal: 0,
+      'match-complete': 0,
+    };
 
-    interface Paddle {
-      x: number;
-      y: number;
-      moveY: number;
-      sprite: Phaser.GameObjects.Rectangle;
+    const ballSprite = scene.add.circle(doc.arena.serveX, doc.arena.serveY, doc.ball.radius, 0xf5f0e6);
+    const paddleSprites = new Map<string, Phaser.GameObjects.Rectangle>();
+    for (const def of doc.paddles) {
+      paddleSprites.set(
+        def.id,
+        scene.add.rectangle(def.fixedX, def.fixedY, def.width, def.height, 0x65d0a8),
+      );
     }
 
-    const paddles = new Map<PlayerId, Paddle>();
-
-    function ensurePaddle(slot: PlayerSlot): void {
-      if (paddles.has(slot.playerId)) return;
-      const x = PADDLE_X[slot.playerId] ?? 80 + slot.index * 800;
-      const y = (COURT.top + COURT.bottom) / 2;
-      const sprite = scene.add.rectangle(x, y, 16, PADDLE_HEIGHT, 0x65d0a8);
-      paddles.set(slot.playerId, { x, y, moveY: 0, sprite });
-    }
-
-    function syncPaddles(): void {
-      for (const slot of players.joinedPlayers()) ensurePaddle(slot);
-    }
-
-    function paddleStates(): Record<string, PongPaddleState> {
-      const out: Record<string, PongPaddleState> = {};
-      for (const [id, paddle] of paddles) {
-        out[id] = {
-          x: paddle.x,
-          y: Math.round(paddle.y * 100) / 100,
-          moveY: paddle.moveY,
-          atTop: paddle.y <= COURT.top + PADDLE_HEIGHT / 2 + 0.001,
-          atBottom: paddle.y >= COURT.bottom - PADDLE_HEIGHT / 2 - 0.001,
-        };
+    function absorb(events: readonly BallPaddleEvent[]): void {
+      if (events.length > 0) lastEvents = events.map((event) => event.kind);
+      for (const event of events) {
+        counts[event.kind] = (counts[event.kind] ?? 0) + 1;
+        if (event.kind === 'paddle-bounce') lastBounceRelative = event.relative;
       }
-      return out;
     }
 
     function playerAdapterCount(): number {
@@ -107,31 +99,42 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     }
 
     function state(): PongShellState {
-      const left = paddles.get('left');
-      const right = paddles.get('right');
+      const snapshot = sim.state();
+      const left = snapshot.paddles.find((paddle) => paddle.id === 'left');
+      const right = snapshot.paddles.find((paddle) => paddle.id === 'right');
       return {
+        ...snapshot,
         phase,
         canStart: players.canStart(),
         slots: players.players(),
-        paddles: paddleStates(),
         playerAdapterCount: playerAdapterCount(),
         oppositeIntent:
-          left !== undefined && right !== undefined && left.moveY !== 0 && right.moveY !== 0 && left.moveY !== right.moveY,
+          left !== undefined &&
+          right !== undefined &&
+          left.intent !== 0 &&
+          right.intent !== 0 &&
+          left.intent !== right.intent,
+        lastEvents: [...lastEvents],
+        counts: { ...counts },
+        lastBounceRelative,
       };
     }
 
     const shellService: PongShellService = {
       state,
-      join(playerId, device) {
-        const result = players.join(playerId, device);
-        if (result.ok) syncPaddles();
-        return result;
-      },
+      join: (playerId, device) => players.join(playerId, device),
       start() {
         if (!players.canStart()) return false;
         phase = 'playing';
-        syncPaddles();
         return true;
+      },
+      serve() {
+        sim.serve();
+        absorb(sim.drainEvents());
+      },
+      resetRound() {
+        sim.resetRound();
+        lastEvents = [];
       },
     };
 
@@ -142,20 +145,25 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     return {
       id: PONG_SHELL_CAPABILITY_ID,
 
-      update(deltaMs: number): void {
+      update(): void {
         if (disposed || phase !== 'playing') return;
-        const step = (PADDLE_SPEED * deltaMs) / 1000;
-        const half = PADDLE_HEIGHT / 2;
 
-        for (const slot of players.joinedPlayers()) {
-          const input = players.inputForPlayer(slot.playerId);
-          const paddle = paddles.get(slot.playerId);
-          if (!input || !paddle) continue;
-          // The shared controller again - a paddle is just a body with one axis.
+        // The Phase 15 -> Phase 16 wire: each paddle answers the channel of the
+        // player who owns it, read through the ordinary shared controller.
+        for (const def of doc.paddles) {
+          if (def.playerId === undefined) continue;
+          const input = players.inputForPlayer(def.playerId);
+          if (!input) continue;
           const intent = topDownController.read(input);
-          paddle.moveY = intent.moveY;
-          paddle.y = Math.min(COURT.bottom - half, Math.max(COURT.top + half, paddle.y + intent.moveY * step));
-          paddle.sprite.setPosition(paddle.x, paddle.y);
+          sim.setPaddleIntent(def.id, def.axis === 'vertical' ? intent.moveY : intent.moveX);
+        }
+
+        absorb(sim.drainEvents());
+
+        const snapshot = sim.state();
+        ballSprite.setPosition(snapshot.ball.x, snapshot.ball.y);
+        for (const paddle of snapshot.paddles) {
+          paddleSprites.get(paddle.id)?.setPosition(paddle.x, paddle.y);
         }
       },
 
@@ -165,11 +173,12 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         debugHandle.dispose();
         serviceHandle.dispose();
         try {
-          for (const paddle of paddles.values()) paddle.sprite.destroy();
+          ballSprite.destroy();
+          for (const sprite of paddleSprites.values()) sprite.destroy();
         } catch {
           /* tearing down */
         }
-        paddles.clear();
+        paddleSprites.clear();
       },
     };
   },

@@ -27,6 +27,7 @@ import climbingConfigSchema from '../schemas/climbing-config.schema.json' with {
 import runsSchema from '../schemas/runs.schema.json' with { type: 'json' };
 import strategyActionsSchema from '../schemas/strategy-actions.schema.json' with { type: 'json' };
 import playerRosterSchema from '../schemas/player-roster.schema.json' with { type: 'json' };
+import ballPaddleSchema from '../schemas/ball-paddle.schema.json' with { type: 'json' };
 
 /**
  * Ajv-based validation for every schema this package owns.
@@ -63,7 +64,8 @@ export type SchemaName =
   | 'climbing-config'
   | 'runs'
   | 'strategy-actions'
-  | 'player-roster';
+  | 'player-roster'
+  | 'ball-paddle';
 
 export const SCHEMA_NAMES: readonly SchemaName[] = [
   'action-bindings',
@@ -92,6 +94,7 @@ export const SCHEMA_NAMES: readonly SchemaName[] = [
   'runs',
   'strategy-actions',
   'player-roster',
+  'ball-paddle',
 ];
 
 /** One located problem: which document, where in it, and what is wrong. */
@@ -142,6 +145,7 @@ const SCHEMA_DOCUMENTS: Readonly<Record<SchemaName, SchemaDocument>> = {
   runs: runsSchema,
   'strategy-actions': strategyActionsSchema,
   'player-roster': playerRosterSchema,
+  'ball-paddle': ballPaddleSchema,
 };
 
 // Registration order matters: a schema must be added before anything that
@@ -172,6 +176,7 @@ for (const name of [
   'runs',
   'strategy-actions',
   'player-roster',
+  'ball-paddle',
 ] as const) {
   const schema = SCHEMA_DOCUMENTS[name];
   ajv.addSchema(schema, schema.$id);

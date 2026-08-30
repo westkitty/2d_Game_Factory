@@ -62,16 +62,17 @@ with a small working placeholder to replace. Every other pack is configured as J
 ## Composition
 
 - Controller family/families: top-down
-- Required packs (enabled by default): sw2d.arcade
+- Required packs (enabled by default): sw2d.arcade, sw2d.ball-paddle
 - Optional packs (available, not enabled by default - add to content/game.json's systemPacks to use): none
-- Content roles this preset expects: tuning, players
+- Content roles this preset expects: tuning, players, ball-paddle
 
-This proof is the Phase 15 **input foundation** only - two isolated paddle channels. The ball,
-bounce and score come from `arcade.ball-paddle` in Phase 16.
+This proof composes two post-ten phases: `input.players` (Phase 15) seats two players and gives
+each an isolated `ActionInput`; `arcade.ball-paddle` (Phase 16) owns the ball, the paddles, the
+goals and the match rules.
 
 ## Known preset limitations
 
-- No reusable ball/paddle collision-and-bounce system exists yet.
+- Ball/paddle serve, wall and paddle bounce, hit-location steering, brick damage, goals and match rules are reusable through sw2d.ball-paddle (arcade.ball-paddle). Collision safety is bounded substepping within the definition's declared speed range - not universal continuous collision detection.
 - Local multiplayer input routing is reusable (input.players); same-device multi-touch multiplayer is NOT implemented.
 
 ## How to add a level

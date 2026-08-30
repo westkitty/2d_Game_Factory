@@ -74,6 +74,8 @@ const PROOF_SPEC_MODULES: Readonly<Record<string, string>> = {
   // Phase 15 - local multiplayer & gamepad routing
   'local-party-game': 'localPartyGame',
   pong: 'pong',
+  // Phase 16 - ball & paddle arcade systems
+  breakout: 'breakout',
 };
 
 function proofTargets(): Target[] {

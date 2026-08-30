@@ -76,7 +76,11 @@ export const LIMITATIONS = {
   // Phase 7B additions - each reused by two or more recipes; a recipe-specific gap gets an
   // inline string in its own catalog file instead (see platforming.ts's own comment on why:
   // sharing text is a decision, not laziness, and inline is correct when nothing else repeats it).
-  ballPaddleSystem: 'No reusable ball/paddle collision-and-bounce system exists yet.',
+  // Post-ten Phase 16 narrowed this. The simulation is reusable now
+  // (sw2d.ball-paddle, arcade.ball-paddle, ADR-0030); what stays honest to
+  // record is that its safety story is bounded substeps, not universal CCD.
+  ballPaddleSystem:
+    'Ball/paddle serve, wall and paddle bounce, hit-location steering, brick damage, goals and match rules are reusable through sw2d.ball-paddle (arcade.ball-paddle). Collision safety is bounded substepping within the definition\'s declared speed range - not universal continuous collision detection; a definition beyond that range is rejected at install rather than silently tunnelling.',
   // Phase 7C additions - same "two or more recipes" bar as Phase 7B's four.
   customerEconomy:
     'No complete customer AI, demand/economy model, queue/placement UI, or content-authored production chain exists.',

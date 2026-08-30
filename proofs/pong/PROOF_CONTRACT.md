@@ -2,27 +2,36 @@
 
 Frozen before implementation. Post-ten program Phase 15 (local multiplayer & gamepad routing).
 
-**Scope: the input foundation only.** There is deliberately no ball, no bounce, no serve and no
-score in this proof. Those belong to `arcade.ball-paddle` in Phase 16, which will consume this
-shell rather than replace it. What this proof establishes is the property Phase 16 is built on and
-cannot itself demonstrate: two paddles driven by two isolated semantic channels, including
-simultaneous *opposite* intent.
+**Scope: the composition of two post-ten phases.** Phase 15 (`input.players`) seats two players and
+gives each an isolated semantic `ActionInput`; Phase 16 (`arcade.ball-paddle`) owns the ball, both
+paddles, the serve, the bounce, the goals and the match rules. The shell is only the wire between
+them.
+
+The six Phase-15 steps are unchanged and still asserted — Phase 16 was added on top of the input
+foundation rather than replacing it.
 
 ## Preset
 
 `pong` (`packages/presets/src/catalog/puzzleArcade.ts`) — controller family `top-down`,
-required pack `sw2d.arcade`, content roles `tuning`, **`players`**.
+required packs `sw2d.arcade`, **`sw2d.ball-paddle`**. Content roles `tuning`, **`players`**,
+**`ball-paddle`**.
 
 ## Reusable capability exercised
 
-- **`input.players`** — a two-slot roster (`left`, `right`) with `requireReady: false`, exclusive
-  keyboard-profile ownership, and one `ActionInput` per player.
+- **`input.players`** (Phase 15) — a two-slot roster (`left`, `right`) with `requireReady: false`,
+  exclusive keyboard-profile ownership, and one `ActionInput` per player.
+- **`arcade.ball-paddle`** (Phase 16) — the ball, both paddles, the serve policy, wall bounce,
+  hit-location steering, the speed ramp, the two `goal` edges naming their scorer, and the target
+  score, all from the validated `content/ball-paddle.json`.
 - `topDownController` — a paddle is a body with one axis; the shared controller reads each
   player's own channel.
 
 ## What is deliberately game-specific
 
-Paddle geometry, court bounds and the clamp. No input handling of any kind.
+Nothing but the wire: reading each player's own channel and handing the resulting intent to that
+player's paddle, plus drawing what the simulation reports. No input handling, no ball, no score, no
+bounce maths. The shell cannot advance the simulation - `update()` is absent from
+`BallPaddleService` and it observes through `drainEvents()`.
 
 ## Terminal success/failure oracle
 
@@ -51,4 +60,5 @@ Paddle geometry, court bounds and the clamp. No input handling of any kind.
 
 | Sabotage | Result |
 | --- | --- |
-| every channel given every profile's bindings (cross-talk) | steps 3 and 7 FAIL |
+| every channel given every profile's bindings (cross-talk) | steps 3 and 6 FAIL |
+| goal-edge ownership ignored (nobody credited) | steps 10 and 11 FAIL |

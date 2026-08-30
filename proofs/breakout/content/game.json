@@ -1,0 +1,14 @@
+{
+  "id": "proof-breakout",
+  "displayName": "Proof Breakout",
+  "version": "0.1.0",
+  "schemaVersion": 1,
+  "viewport": { "width": 960, "height": 540 },
+  "bindings": {},
+  "systemPacks": [
+    { "packId": "sw2d.arcade", "config": {} },
+    { "packId": "sw2d.ball-paddle", "config": {} },
+    { "packId": "game.breakout-shell", "config": {} }
+  ],
+  "defaultSettings": { "masterVolume": 0.7 }
+}

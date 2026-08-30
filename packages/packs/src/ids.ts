@@ -38,6 +38,7 @@ export const PACK_IDS = {
   climbing: 'sw2d.climbing',
   runs: 'sw2d.runs',
   strategyActions: 'sw2d.strategy-actions',
+  ballPaddle: 'sw2d.ball-paddle',
 } as const;
 
 export const CAPABILITY_IDS = {
@@ -82,4 +83,6 @@ export const CAPABILITY_IDS = {
   strategyOrders: 'strategy.orders',
   /** Capability program Phase 14: bounded tactical actions - range, cost, cooldown, validity. */
   strategyTactics: 'strategy.tactics',
+  /** Post-ten Phase 16: ball/paddle arcade simulation (breakout, pong). */
+  ballPaddle: 'arcade.ball-paddle',
 } as const;

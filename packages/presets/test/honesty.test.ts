@@ -113,8 +113,8 @@ describe('required knownLimitations (MASTER_PROJECT.md section 12)', () => {
     // Phase 7B (MASTER_PROJECT.md section 9)
     { id: 'match-puzzle', pattern: /match-detection\/cascade board rules are consumed by this recipe/ },
     { id: 'falling-block-puzzle', pattern: /No reusable falling-piece\/line-clear board engine/ },
-    { id: 'breakout', pattern: /No reusable ball\/paddle collision-and-bounce system/ },
-    { id: 'pong', pattern: /No reusable ball\/paddle collision-and-bounce system/ },
+    { id: 'breakout', pattern: /bounded substepping within the definition's declared speed range/ },
+    { id: 'pong', pattern: /bounded substepping within the definition's declared speed range/ },
     { id: 'rhythm-action', pattern: /No deterministic music-beat\/audio-synchronization system/ },
     { id: 'reaction-timing', pattern: /no specialized reaction-test flow is implemented/ },
     { id: 'tower-defense', pattern: /keyboard grid cursor/ },

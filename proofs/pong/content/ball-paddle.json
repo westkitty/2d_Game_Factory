@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 1,
+  "ball": {
+    "radius": 9,
+    "initialSpeed": 340,
+    "minimumSpeed": 280,
+    "maximumSpeed": 560,
+    "speedIncreasePerHit": 20,
+    "maximumBounceAngleDegrees": 55,
+    "servePolicy": {
+      "kind": "alternate",
+      "dx": 1,
+      "dy": 0.25
+    }
+  },
+  "arena": {
+    "left": 20,
+    "top": 40,
+    "right": 940,
+    "bottom": 500,
+    "edges": [
+      {
+        "edge": "left",
+        "behavior": "goal",
+        "id": "left-goal",
+        "scoresFor": "right"
+      },
+      {
+        "edge": "right",
+        "behavior": "goal",
+        "id": "right-goal",
+        "scoresFor": "left"
+      }
+    ],
+    "serveX": 480,
+    "serveY": 270
+  },
+  "paddles": [
+    {
+      "id": "left",
+      "playerId": "left",
+      "axis": "vertical",
+      "facing": "right",
+      "width": 16,
+      "height": 110,
+      "speed": 420,
+      "fixedX": 70,
+      "fixedY": 270,
+      "minTravel": 95,
+      "maxTravel": 445,
+      "bounceInfluence": 1
+    },
+    {
+      "id": "right",
+      "playerId": "right",
+      "axis": "vertical",
+      "facing": "left",
+      "width": 16,
+      "height": 110,
+      "speed": 420,
+      "fixedX": 890,
+      "fixedY": 270,
+      "minTravel": 95,
+      "maxTravel": 445,
+      "bounceInfluence": 1
+    }
+  ],
+  "match": {
+    "targetScore": 2
+  }
+}

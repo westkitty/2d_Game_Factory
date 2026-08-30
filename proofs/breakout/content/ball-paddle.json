@@ -1,0 +1,185 @@
+{
+  "schemaVersion": 1,
+  "ball": {
+    "radius": 9,
+    "initialSpeed": 320,
+    "minimumSpeed": 260,
+    "maximumSpeed": 560,
+    "speedIncreasePerHit": 18,
+    "maximumBounceAngleDegrees": 60,
+    "servePolicy": {
+      "kind": "fixed",
+      "dx": 0.35,
+      "dy": -1
+    }
+  },
+  "arena": {
+    "left": 20,
+    "top": 20,
+    "right": 940,
+    "bottom": 520,
+    "edges": [
+      {
+        "edge": "bottom",
+        "behavior": "loss",
+        "id": "floor"
+      }
+    ],
+    "serveX": 480,
+    "serveY": 400
+  },
+  "paddles": [
+    {
+      "id": "paddle",
+      "playerId": "player",
+      "axis": "horizontal",
+      "facing": "up",
+      "width": 140,
+      "height": 18,
+      "speed": 520,
+      "fixedX": 480,
+      "fixedY": 480,
+      "minTravel": 90,
+      "maxTravel": 870,
+      "bounceInfluence": 1
+    }
+  ],
+  "bricks": [
+    {
+      "id": "plain",
+      "hp": 1,
+      "score": 10
+    },
+    {
+      "id": "tough",
+      "hp": 2,
+      "score": 25,
+      "itemDropId": "coin-1"
+    }
+  ],
+  "layout": [
+    {
+      "id": "brick-r0c0",
+      "brickId": "tough",
+      "x": 164,
+      "y": 70,
+      "width": 120,
+      "height": 28
+    },
+    {
+      "id": "brick-r0c1",
+      "brickId": "tough",
+      "x": 292,
+      "y": 70,
+      "width": 120,
+      "height": 28
+    },
+    {
+      "id": "brick-r0c2",
+      "brickId": "tough",
+      "x": 420,
+      "y": 70,
+      "width": 120,
+      "height": 28
+    },
+    {
+      "id": "brick-r0c3",
+      "brickId": "tough",
+      "x": 548,
+      "y": 70,
+      "width": 120,
+      "height": 28
+    },
+    {
+      "id": "brick-r0c4",
+      "brickId": "tough",
+      "x": 676,
+      "y": 70,
+      "width": 120,
+      "height": 28
+    },
+    {
+      "id": "brick-r1c0",
+      "brickId": "plain",
+      "x": 164,
+      "y": 106,
+      "width": 120,
+      "height": 28
+    },
+    {
+      "id": "brick-r1c1",
+      "brickId": "plain",
+      "x": 292,
+      "y": 106,
+      "width": 120,
+      "height": 28
+    },
+    {
+      "id": "brick-r1c2",
+      "brickId": "plain",
+      "x": 420,
+      "y": 106,
+      "width": 120,
+      "height": 28
+    },
+    {
+      "id": "brick-r1c3",
+      "brickId": "plain",
+      "x": 548,
+      "y": 106,
+      "width": 120,
+      "height": 28
+    },
+    {
+      "id": "brick-r1c4",
+      "brickId": "plain",
+      "x": 676,
+      "y": 106,
+      "width": 120,
+      "height": 28
+    },
+    {
+      "id": "brick-r2c0",
+      "brickId": "plain",
+      "x": 164,
+      "y": 142,
+      "width": 120,
+      "height": 28
+    },
+    {
+      "id": "brick-r2c1",
+      "brickId": "plain",
+      "x": 292,
+      "y": 142,
+      "width": 120,
+      "height": 28
+    },
+    {
+      "id": "brick-r2c2",
+      "brickId": "plain",
+      "x": 420,
+      "y": 142,
+      "width": 120,
+      "height": 28
+    },
+    {
+      "id": "brick-r2c3",
+      "brickId": "plain",
+      "x": 548,
+      "y": 142,
+      "width": 120,
+      "height": 28
+    },
+    {
+      "id": "brick-r2c4",
+      "brickId": "plain",
+      "x": 676,
+      "y": 142,
+      "width": 120,
+      "height": 28
+    }
+  ],
+  "match": {
+    "lives": 3
+  }
+}

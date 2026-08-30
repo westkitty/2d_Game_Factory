@@ -3,7 +3,7 @@
 First-ten base SHA: `acf802f7a32a3f341273c084931af37cb5461784`
 Candidate branch: `candidate/antigravity-post-ten-program`
 Candidate HEAD: `4055e5ec4842882b34f1396b6166104051c9113b`
-Current candidate phase: Phase 15 (FOCUSED TESTS PASS) — Phase 16 next, per `POST_TEN_PROGRAM_SPEC.md`
+Current candidate phase: Phase 16 (FOCUSED TESTS PASS) — Phase 17 next, per `POST_TEN_PROGRAM_SPEC.md`
 
 ---
 
@@ -575,3 +575,178 @@ None.
 - Real-hardware validation with two physical gamepads (the automated proof uses the scripted seam).
 - Decide whether `adapterCount` belongs on the public service.
 - Decide whether touch multiplayer is in scope for a later phase or stays a permanent limitation.
+
+## Phase 16 — Ball & Paddle Arcade Systems
+
+- **Phase:** 16
+- **Capability:** `arcade.ball-paddle` (`BallPaddleService`)
+- **Status:** FOCUSED TESTS PASS
+- **Starting SHA:** `2670526` (`candidate(phase-15)`)
+- **ADR:** `docs/architecture/adr/0030-ball-paddle-is-an-authored-simulation.md` (new; indexed)
+
+### Core decisions
+
+1. **A pure, renderer-neutral simulation rather than a physics engine.** A ball/paddle bounce is
+   *authored* - the outgoing angle is a designed function of where the ball struck - which is the
+   opposite of what a restitution solver computes. Plus determinism: a pure integrator with bounded
+   substeps lets the browser proof assert exact speeds and exact scores. Follows the Phase-10
+   vehicle/racing precedent. Matter is untouched (nothing needs constraints or polygon collision).
+2. **One document, two genres.** Arena edges carry a behaviour (`bounce` | `goal` | `loss`), so
+   Breakout is three bouncing walls plus a `loss` floor with bricks and lives, and Pong is two
+   bouncing walls plus two `goal` edges naming their scorer with a target score.
+3. **Single ownership of frame advancement.** `update()` is absent from `BallPaddleService`; the pack
+   advances once per frame and consumers observe through `drainEvents()`. See the defect note below.
+4. **The 80-degree bounce cap IS the degenerate-trajectory prevention.** An outgoing vector built by
+   rotating the paddle normal by at most 80 degrees always keeps a real component along the normal,
+   so a ball can never leave a paddle travelling along its own face. No special case needed.
+5. **Bounded substeps, not CCD.** The ball moves at most half its radius per substep; the count is
+   capped at 64; a definition whose top speed would exceed that budget at 30fps is rejected at
+   install with `UnsupportedBallSpeedError` rather than tunnelling silently later.
+
+### Contracts
+
+`packages/contracts/src/ballPaddle.ts`, exported from `index.ts`: `BALL_PADDLE_CAPABILITY_ID`,
+`ArenaEdge`/`ArenaEdgeBehavior`/`ArenaEdgeRule`/`ArenaDefinition`, `ServePolicy` (`fixed` |
+`alternate` | `seeded-direction`), `BallDefinition`, `PaddleAxis`/`PaddleFacing`/`PaddleDefinition`
+with `axisForFacing`/`normalForFacing`, `BrickDefinition`/`BrickPlacement`, `BallPaddleDocument`,
+`BallPaddleStatus`/`BallState`/`PaddleState`/`BrickState`/`BallPaddleState`, `BallPaddleEvent`,
+`BallPaddleService`, `validateBallPaddleDocument`/`InvalidBallPaddleError`, and the pure bounce maths
+`paddleHitOffset`/`paddleBounceDirection`/`serveDirection`.
+
+### Schemas
+
+- `packages/schemas/schemas/ball-paddle.schema.json` (`urn:sw2d:schema:content-ball-paddle:v1`),
+  registered as schema name `ball-paddle` and content document name `ball-paddle`. The `servePolicy`
+  discriminated union is written as `oneOf` branches rather than `if`/`then` so Ajv strict mode can
+  see every property each branch permits.
+- `packages/packs/schemas/ball-paddle-config.schema.json` — `autoServe`.
+- Global validation not weakened: `additionalProperties: false` throughout, followed by the
+  contract's semantic gate at install.
+
+### Pack
+
+`sw2d.ball-paddle` (`packages/packs/src/ballPaddle/ballPaddlePack.ts`) providing `arcade.ball-paddle`.
+`PACK_IDS.ballPaddle` / `CAPABILITY_IDS.ballPaddle`. Events declared in `packages/packs/src/events.ts`:
+`ballPaddle:paddleBounce`, `ballPaddle:brickDestroyed`, `ballPaddle:goal`, `ballPaddle:ballLost`,
+`ballPaddle:matchComplete`.
+
+### Presets changed
+
+- `breakout`: `sw2d.ball-paddle` added as required; content role `ball-paddle` added.
+- `pong`: `sw2d.ball-paddle` added as required; content role `ball-paddle` added (keeping Phase 15's
+  `players`).
+- `packages/presets/src/shared.ts`: `LIMITATIONS.ballPaddleSystem` narrowed from "does not exist" to
+  what is true, **including the honest substep caveat**.
+- `docs/presets/PRESET_CAPABILITY_MATRIX.md` rows updated for both.
+- Maturity deliberately not promoted, matching the Phases 11-15 precedent.
+
+### Workbench authoring surface
+
+`workbench/server/ballPaddleLab.ts` + `workbench/src/views/ballPaddleLab.ts`, mounted in
+`inspector.ts`; routes `POST /arena/inspect`, `POST /arena/update` (the `/arena` path keeps them
+inside the WB-SECURITY-001 audit). Edits ball speed and bounds, per-hit speed gain, bounce angle,
+paddle size/speed and match rules. **Brick placement is reported but not edited** - that is the Scene
+Composer's spatial job, and a second numeric editor would give two answers to where a brick is.
+
+### Proof consumers
+
+- **`proofs/breakout/` (new)** — primary defining proof, 12 named steps; spec
+  `packages/qa/proof-specs/breakout.ts`. **The proof plays the game**: the paddle tracks the ball
+  with real arrow-key presses. The one test control (`parkPaddle`) refuses to run while the ball is
+  live, so a rally can never be staged.
+- **`proofs/pong/` (upgraded)** — composes Phases 15 and 16, 12 named steps. Its six Phase-15 steps
+  are unchanged and still asserted; the rally is played by both players with their own real keys.
+
+### Tests added
+
+- `packages/contracts/test/ballPaddle.test.ts` (22 tests) — bounce maths for all four facings, unit
+  vectors, the parallel-trajectory bound, `bounceInfluence`, all three serve policies, and every
+  branch of the semantic validator.
+- `packages/packs/test/ballPaddle.test.ts` (29 tests) — install/validation, serve, wall and paddle
+  bounce, steering, speed ramp and clamp, paddle travel clamp, brick damage/destruction/drops,
+  board clear, loss and lives, goals and target score, two-player paddle independence, high-speed
+  and long-frame tunnelling, determinism, resets, bus events, and the single-ownership regression.
+- `packages/schemas/test/contentDocuments.test.ts` (document registry updated).
+- `proofs/breakout/tests/content.test.ts` (8 tests).
+
+### Tests run — actual results
+
+- `npm run typecheck` — **PASS**, 0 errors
+- `npx vitest run` — **PASS, 163 files / 2861 tests** (was 160 / 2802 before Phase 16)
+- `npm run qa:workbench` — **PASS, 16/16**; WB-SECURITY-001 now audits **64** endpoints (was 62)
+- `npm run qa:proof` (full suite) — **PASS, 32/32**, including `breakout` 12/12 and `pong` 12/12,
+  0 console errors, 0 external requests
+
+### Defects this phase found and fixed
+
+1. **Double frame advancement (real architectural bug).** The first draft had the pack advance the
+   simulation *and* the consuming shell advance it, so the ball double-stepped and the shell only
+   ever saw the events of its own half. The browser proof caught it as a brick count that disagreed
+   with the board. Fixed by removing `update()` from `BallPaddleService` entirely — the same rule
+   `ActionInput` has used since Phase 1 — making the mistake unrepresentable rather than merely
+   documented. Two regression tests guard it.
+2. **Bounce direction wrong for two of four facings.** An earlier per-facing formula steered `left`
+   and `down` paddles backwards. A contract test caught it; replaced with one general rule
+   (`normal * cos + tangent * sin`) that cannot express the asymmetry.
+3. **`status: 'complete'` with a live ball.** Contradictory state a consumer would draw as a ball
+   hanging in mid-air. The proof asserted it; completion now parks the ball.
+4. **A proof assertion that was too weak.** Step 7's original single-sample steering check survived
+   the "flat mirror" sabotage because the sampled bounce happened to be near centre. Rewritten to
+   sample several bounces and require at least one genuinely off-centre — which then failed the
+   sabotage as it should.
+
+### Proof-quality evidence
+
+No unconditional acceptance step exists in either spec. Four sabotages were applied, observed and
+reverted (`grep SABOTAGE` clean afterwards):
+
+| Sabotage | Result |
+| --- | --- |
+| hit-location steering removed (flat mirror) | breakout steps 7 and 11 FAIL |
+| brick hit points ignored | breakout step 6 FAIL, step 5 PASS |
+| the loss edge no longer costs a life | breakout step 9 FAIL |
+| goal-edge ownership ignored | pong steps 10 and 11 FAIL |
+
+### Limitations changed
+
+`LIMITATIONS.ballPaddleSystem` narrowed. It now states what is reusable **and** that collision safety
+is bounded substepping within the definition's declared speed range, not universal CCD.
+
+### Known failures
+
+None.
+
+### Known shortcuts / characteristics a certifier should look at
+
+1. **Bounded substeps are not continuous collision detection.** Stated in the limitation, in the ADR
+   and in code. A definition beyond the budget is rejected at install, so the failure mode is a
+   startup error rather than a tunnelling ball - but the bound is real and worth confirming.
+2. **One brick per substep.** `#resolveBricks` resolves at most one brick per substep to avoid
+   double-reflecting. A ball wedged exactly between two bricks resolves them on consecutive substeps;
+   correct, but the ordering is "first in layout order", not "nearest".
+3. **Breakout brick score accrues to the first paddle's `playerId`.** There is no per-owner goal edge
+   in a Breakout-shaped document, so `#defaultScoreOwner()` picks `paddles[0].playerId`. Fine for one
+   paddle; a two-paddle Breakout variant would need an explicit owner.
+4. **`parkPaddle` is a proof-shell test control** that refuses to run while the ball is live. It is
+   shipped in the breakout proof build. Deliberate and guarded, but it is test-control code.
+5. **No runtime bridge package.** None needed - the capability is renderer-neutral end to end and the
+   only renderer-touching code is each consumer's own drawing.
+6. **`autoServe` is off by default**, so a game that installs the pack and never calls `serve()` sits
+   with a parked ball. Deliberate (the game decides when a round begins), but it is a quiet failure
+   mode for a careless consumer.
+
+### Architectural concerns
+
+- The `drainEvents()` model means a consumer that forgets to drain accumulates events forever. The
+  buffer is unbounded. In practice both proof shells drain every frame, and `reset()` clears it, but
+  a bound (or a documented drain contract) would be safer.
+- `BallPaddleServiceImpl.update()` is public on the class so the pack and unit tests can call it,
+  while being absent from the interface. That is exactly the `ActionInputHost` pattern, but it does
+  mean a consumer holding the impl type could still double-advance.
+
+### Work required from a later certifier
+
+- Adversarial browser validation of both journeys, especially the speed clamp and the board clear.
+- Confirm the substep bound empirically at the top of the supported speed range on slower hardware.
+- Decide whether the `drainEvents()` buffer needs an explicit bound.
+- Decide the Breakout multi-paddle score-owner question.
