@@ -27,6 +27,7 @@ export {
   ManualAudioTransport,
   createAudioTransport,
 } from './game-support/audioTransport.ts';
+export { BrowserWallClock, ManualWallClock } from './game-support/wallClock.ts';
 export {
   DEFAULT_KEYBOARD_PROFILES,
   KEYBOARD_PROFILE_LEFT,

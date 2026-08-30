@@ -1,4 +1,16 @@
-import type { InstalledSystemPack, VersionedRecord } from '@sw2d/contracts';
+import {
+  ECONOMY_CAPABILITY_ID,
+  PRODUCTION_CAPABILITY_ID,
+  WALL_CLOCK_CAPABILITY_ID,
+  type EconomyService,
+  type InstalledSystemPack,
+  type ManualWallClock,
+  type OfflineReport,
+  type PrestigeResult,
+  type ProductionService,
+  type ProductionStartResult,
+  type VersionedRecord,
+} from '@sw2d/contracts';
 import { accentStyle, mutedStyle, uiSimulationController, type SceneContext, type ScenePackDefinition } from '@sw2d/runtime';
 import { CAPABILITY_IDS, type ProgressionService, type SimulationService } from '@sw2d/packs';
 
@@ -8,6 +20,18 @@ import { CAPABILITY_IDS, type ProgressionService, type SimulationService } from 
  * No canvas movement required - a text-only ui-simulation scene, matching
  * the preset's controllerFamilies (`['ui-simulation']`). Persistence uses
  * `context.saves` (SaveStore), a real, already-existing runtime capability.
+ *
+ * ## Post-ten Phase 19
+ *
+ * The Phase-10 journey above is unchanged: the same gold ledger, the same job
+ * primitive, the same upgrade, the same save/reload equality bar. Phase 19 adds
+ * a second, independent surface on top - a smelting chain, a bounded offline
+ * catch-up and a prestige - because the preset's honest limitation was that
+ * offline progress and prestige *were not systems*, and the way to retire that
+ * claim is to make the same game use the real ones.
+ *
+ * The economy's frame advancement belongs to `sw2d.economy`. This shell reads
+ * it and reports it; it never steps it.
  */
 
 const SAVE_SLOT = 'idle-incremental-progress';
@@ -41,6 +65,13 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     const { width, height } = context.definition.viewport;
     const simulation = context.capabilities.require<SimulationService>(CAPABILITY_IDS.simulation);
     const progression = context.capabilities.require<ProgressionService>(CAPABILITY_IDS.progression);
+    const economy = context.capabilities.require<EconomyService>(ECONOMY_CAPABILITY_ID);
+    const production = context.capabilities.require<ProductionService>(PRODUCTION_CAPABILITY_ID);
+    // The same clock `src/main.ts` handed to `createGame`, so moving it here
+    // moves the one the economy stamps its save with.
+    const wallClock = context.capabilities.require<ManualWallClock>(WALL_CLOCK_CAPABILITY_ID);
+    let lastOffline: OfflineReport | null = null;
+    const completedRecipes: string[] = [];
 
     const loadResult = context.saves.load<SaveData>(SAVE_SLOT, { currentVersion: SAVE_SCHEMA_VERSION, createDefault });
     const restored = loadResult.value;
@@ -90,15 +121,51 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       lastSaveOutcome = 'loaded';
     }
 
-    const debugHandle = context.debug.contribute('game.ui-simulation-shell', () => ({
-      gold: simulation.resource('gold'),
-      currency: progression.currency(),
-      rateMultiplier,
-      jobsCompleted,
-      jobPending: jobActive,
-      loadOutcome: loadResult.outcome,
-      lastSaveOutcome,
-    }));
+    /**
+     * Phase 19 controls, provided as a capability so the proof can drive them.
+     * Every one is a pass-through: the shell decides nothing about the economy.
+     */
+    const economyControls = {
+      startSmelt: (): ProductionStartResult => production.start('smelt'),
+      restockOre: (quantity?: number) => economy.restock('ore', quantity),
+      /** Save now, claim to have been away for `ms`, and resume. */
+      goOffline(ms: number): OfflineReport {
+        economy.save();
+        wallClock.advance(ms);
+        lastOffline = economy.resume();
+        return lastOffline;
+      },
+      prestige: (): PrestigeResult => economy.performPrestige(),
+      resetEconomy(): void {
+        economy.reset();
+        completedRecipes.length = 0;
+        lastOffline = null;
+      },
+    };
+    const controlsHandle = context.capabilities.provide('game.idle-economy-controls', economyControls);
+
+    const debugHandle = context.debug.contribute('game.ui-simulation-shell', () => {
+      for (const event of production.drainEvents()) {
+        if (event.kind === 'job-completed') completedRecipes.push(event.recipeId);
+      }
+      return {
+        gold: simulation.resource('gold'),
+        currency: progression.currency(),
+        rateMultiplier,
+        jobsCompleted,
+        jobPending: jobActive,
+        loadOutcome: loadResult.outcome,
+        lastSaveOutcome,
+        // Phase 19 surface.
+        ore: economy.stock('ore'),
+        ingot: economy.stock('ingot'),
+        economyJobs: production.jobs().length,
+        completedRecipes: [...completedRecipes],
+        prestige: economy.prestigeState(),
+        lastOffline,
+        wallClockMs: wallClock.now(),
+      };
+    });
 
     let disposed = false;
 
@@ -132,6 +199,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         if (disposed) return;
         disposed = true;
         debugHandle.dispose();
+        controlsHandle.dispose();
         try {
           label.destroy();
         } catch {

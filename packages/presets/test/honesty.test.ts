@@ -126,10 +126,14 @@ describe('required knownLimitations (MASTER_PROJECT.md section 12)', () => {
     { id: 'base-defense', pattern: /base-damage\/target-priority/ },
     { id: 'territory-control', pattern: /Reusable capture-zone\/territory ownership\/scoring mechanics/ },
     // Phase 7C (MASTER_PROJECT.md section 11)
-    { id: 'idle-incremental', pattern: /offline-progress\/catch-up, prestige, and large economy balancing/ },
-    { id: 'shopkeeper', pattern: /No complete customer AI, demand\/economy model/ },
-    { id: 'tycoon-lite', pattern: /No complete customer AI, demand\/economy model/ },
-    { id: 'restaurant', pattern: /No complete customer AI, demand\/economy model/ },
+    // Post-ten Phase 19 narrowed this: catch-up and prestige exist now; what
+    // remains is that balancing a large economy is authoring, not a system.
+    { id: 'idle-incremental', pattern: /bounded offline catch-up against an injected wall clock/ },
+    { id: 'shopkeeper', pattern: /customer arrival\/queue\/service and prestige are reusable through sw2d\.economy/ },
+    { id: 'tycoon-lite', pattern: /production recipes on stations, station placement validation/ },
+    // Phase 19 gave the restaurant its customer/order/economy foundation; the
+    // cooking action sequence itself is Phase 34 and is still stated as absent.
+    { id: 'restaurant', pattern: /the cooking action sequence itself .* is not implemented yet/ },
     { id: 'farming-lite', pattern: /No reusable crop-growth\/season\/plot-interaction system/ },
     { id: 'pet-creature', pattern: /utility-scored behaviour, schedules, relationships and work-order reservations are reusable/ },
     { id: 'virtual-pet', pattern: /utility-scored behaviour, schedules, relationships and work-order reservations are reusable/ },

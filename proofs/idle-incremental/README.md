@@ -62,13 +62,17 @@ with a small working placeholder to replace. Every other pack is configured as J
 ## Composition
 
 - Controller family/families: ui-simulation
-- Required packs (enabled by default): sw2d.simulation, sw2d.progression
+- Required packs (enabled by default): sw2d.simulation, sw2d.progression, sw2d.economy
 - Optional packs (available, not enabled by default - add to content/game.json's systemPacks to use): sw2d.arcade
-- Content roles this preset expects: tuning
+- Content roles this preset expects: tuning, economy
+
+`content/economy.json` (post-ten Phase 19) authors the smelting chain, the bounded offline
+catch-up and the prestige. It sits alongside the Phase-10 gold ledger and job primitive
+rather than replacing them - the certified journey still runs exactly as it did.
 
 ## Known preset limitations
 
-- The simulation/resource core exists, but full offline-progress/catch-up, prestige, and large economy balancing are not production systems.
+- Deterministic passive production, bounded offline catch-up against an injected wall clock, and prestige with authored reset/retain scopes are reusable through sw2d.economy (simulation.economy, simulation.production). Catch-up aggregates whole completed batches rather than replaying frames, and is clamped by an authored maximum; large multi-currency economy balancing remains authoring work, not a system.
 
 ## How to add a level
 

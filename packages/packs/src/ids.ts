@@ -41,6 +41,7 @@ export const PACK_IDS = {
   ballPaddle: 'sw2d.ball-paddle',
   rhythm: 'sw2d.rhythm',
   simulationAgents: 'sw2d.simulation-agents',
+  economy: 'sw2d.economy',
 } as const;
 
 export const CAPABILITY_IDS = {
@@ -104,4 +105,18 @@ export const CAPABILITY_IDS = {
    * what it wants, not reacting to a threat.
    */
   simulationAgents: 'simulation.agents',
+  /**
+   * Post-ten Phase 19: goods, stock, prices and transactions; customer arrival,
+   * queueing and service; bounded offline catch-up; prestige. The shop's wallet
+   * is `progression.state`, never a second balance.
+   */
+  economy: 'simulation.economy',
+  /** Post-ten Phase 19: recipes, stations, timed jobs and station placement. */
+  production: 'simulation.production',
+  /**
+   * Post-ten Phase 19: the injected wall clock, provided by the game (the
+   * runtime ships a browser one). Read **only** at the load/resume boundary, so
+   * no contract or pack ever calls `Date.now()` itself.
+   */
+  wallClock: 'time.wall-clock',
 } as const;

@@ -1123,3 +1123,221 @@ None.
 - Confirm the generator supplies `content/agents.json` for any preset requiring
   `sw2d.simulation-agents` (currently a proof-shell responsibility, same gap Phase 17 recorded for
   `audio.transport`).
+
+---
+
+## Phase 19 — Economy, Production & Customer Simulation
+
+- **Phase:** 19
+- **Capabilities:** `simulation.economy` (`EconomyService`), `simulation.production` (`ProductionService`)
+- **Status:** FOCUSED TESTS PASS
+- **Starting SHA:** `af73bb5` (`candidate(phase-18)`)
+- **ADR:** `docs/architecture/adr/0033-one-item-system-one-wallet-one-clock.md` (new; indexed)
+
+### Core decisions
+
+1. **No second item definition system.** A `GoodDefinition` carries only what a *shop* knows —
+   `itemId`, stock, capacity, both prices, demand, restock quantity — and the schema refuses
+   `displayName` and `category`. What the thing *is* stays in `content/items.json`, the certified
+   Phase-2 catalog. Two item systems means two places to rename an apple, and the second one drifts.
+2. **No second wallet.** The shop's funds are `ProgressionService.currency()`. `sw2d.economy`
+   declares `progression.state` as a hard dependency and **throws** without it rather than falling
+   back to a private balance — a silent fallback is exactly how "how much money is there" acquires
+   two answers. A customer's `funds` is a separate thing because a customer is not the player.
+3. **No second clock.** `WallClock` is a one-method injected interface supplied through
+   `createGame({ wallClock })`, defaulting to `BrowserWallClock`. Nothing in contracts or packs
+   calls `Date.now()`. It is read **only** at the load/resume boundary. `offlineElapsedMs` clamps a
+   backwards clock to zero credit, so a timezone change cannot wrap into a windfall.
+4. **One input policy: consume at start.** Inputs leave stock when a job starts; outputs arrive once
+   on completion; a cancel refunds exactly what was consumed. Never both ends.
+5. **A transaction is atomic or it does not happen.** `evaluateTransaction` is a pure function; the
+   service applies its verdict rather than re-deriving it. A refusal moves nothing, emits nothing,
+   and names its reason. There are no partial fills.
+6. **Catch-up aggregates, never replays.** Eight hours at 60fps is 1.7M frames. Whole batches are
+   computed directly, each repeat pays for its own inputs, and it stops when the shelf runs dry.
+   Output past shelf capacity is reported as `wasted`, not silently dropped.
+7. **Placement validates reachability, not a path.** Fit inside one `buildable` zone, no overlap
+   with a placed station, and an `accessOffset` that lands in an `aisle`. Whether an agent can walk
+   there is `world.navigation`'s question.
+8. **Frame advancement is absent from both service interfaces** — the Phase-16 rule, applied from
+   the start this time rather than after the same defect appears twice.
+
+### Contracts
+
+`packages/contracts/src/economy.ts`, exported from `index.ts`: `ECONOMY_CAPABILITY_ID`,
+`PRODUCTION_CAPABILITY_ID`, `WALL_CLOCK_CAPABILITY_ID`, `GoodDefinition`/`GoodState`/`goodState`/
+`priceInCurrency`, `TransactionSide`/`TransactionRequest`/`TransactionResult`/
+`TransactionFailureReason`/`evaluateTransaction`, `ItemQuantity`, `UnlockCondition`/`evaluateUnlock`,
+`RecipeDefinition`/`hasInputs`, `StationDefinition`/`StationState`, `ProductionJob`/
+`ProductionStartResult`/`ProductionFailureReason`, `PlacementZone`/`PlacementResult`/
+`evaluatePlacement` with `footprintRect`/`rectContains`/`rectsOverlap`/`pointInRect`,
+`CustomerArchetype`/`CustomerPhase`/`CUSTOMER_PHASE_ORDER`/`CustomerState`/`CustomerOutcome`/
+`chooseTarget`/`pickArchetype`, `QueueDefinition`/`QueueEntry`/`QueueState`, `WallClock`/
+`ManualWallClock`/`OfflinePolicy`/`offlineElapsedMs`/`OfflineReport`/`EMPTY_OFFLINE_REPORT`,
+`PrestigeDefinition`/`PrestigeState`/`PrestigeResult`/`prestigeMultiplier`/`isPrestigeEligible`,
+`ArrivalPolicy`, `EconomyDocument`, `validateEconomyDocument`/`InvalidEconomyDocumentError`,
+`EconomyEvent`/`ProductionEvent`, `EconomyService`/`ProductionService`.
+
+### Schemas
+
+- `packages/schemas/schemas/economy.schema.json` (`urn:sw2d:schema:content-economy:v1`), registered
+  as schema name `economy` and content document name `economy`.
+- `packages/packs/schemas/economy-config.schema.json` — `documentName`, `arrivalSeed`.
+- Global validation not weakened; the contract's semantic gate runs at install.
+
+### Runtime
+
+- `packages/runtime/src/game-support/wallClock.ts` — `BrowserWallClock` (`Date.now()`, the epoch
+  clock rather than `performance.now()`, because an absence has to survive the page closing) and a
+  re-export of the contract's `ManualWallClock`.
+- `createGame` gained a `wallClock` option and now **provides `time.wall-clock` unconditionally**.
+  This closes for Phase 19 the generator gap Phase 17 had to record for `audio.transport`: every
+  browser has exactly one epoch clock, so unlike an audio transport there is nothing to decide.
+
+### Pack
+
+`sw2d.economy` (`packages/packs/src/economy/economyPack.ts`) providing both capabilities from one
+pack, because a shop's shelf is the same shelf a production job draws from. `PACK_IDS.economy`;
+`CAPABILITY_IDS.economy` / `.production` / `.wallClock`. Also exports `createEconomy`, a headless
+factory so `install` and tests share exactly one construction path. Events: `economy:transaction`,
+`economy:customerLeft`, `economy:prestige`, `production:jobCompleted`.
+
+### Presets changed
+
+- `shopkeeper`, `tycoon-lite`, `restaurant`, `idle-incremental`: `sw2d.economy` added as required,
+  content role `economy` added.
+- `packages/presets/src/shared.ts`: `LIMITATIONS.customerEconomy` rewritten to the honest remaining
+  scope; new `LIMITATIONS.cookingSequences` (split out for `restaurant`, whose kitchen is Phase 34)
+  and `LIMITATIONS.idleEconomy` (replacing `idle-incremental`'s inline "not production systems").
+- `docs/presets/PRESET_CAPABILITY_MATRIX.md` rows updated for all four.
+- `idle-incremental` keeps `maturity: 'proof-validated'`; no other preset was promoted, matching the
+  Phases 11-18 precedent.
+
+### Workbench authoring surface
+
+`workbench/server/economyLab.ts` + `workbench/src/views/economyLab.ts`, mounted in `inspector.ts`;
+routes `POST /ledger/inspect`, `POST /ledger/update` (the `/ledger` path keeps them inside the
+WB-SECURITY-001 audit). Edits both prices, demand, shelf capacity, recipe durations, the offline cap
+and efficiency, and the prestige reward and multiplier — and **computes what JSON hides**: the margin
+on each good (flagged when negative), whether a recipe's outputs are worth more than its inputs, and
+the offline cap in minutes. Recipe inputs/outputs, zones and customer archetypes are **reported, not
+edited**: what a recipe *is* is structure, and drawing a floor plan needs a canvas rather than a form.
+
+### Proof consumers
+
+- **`proofs/shopkeeper/` (new)** — primary defining proof, 18 named steps; spec
+  `packages/qa/proof-specs/shopkeeper.ts`. Injects a `ManualWallClock` through
+  `createGame({ wallClock })` so an eight-hour absence takes no time.
+- **`proofs/idle-incremental/` (upgraded)** — the ten certified Phase-10 steps **unchanged**, plus
+  five Phase-19 steps (15 total). The Phase-14 precedent for upgrading an existing proof.
+
+### Tests added
+
+- `packages/contracts/test/economy.test.ts` (58 tests) — price rounding, every transaction failure
+  branch including the exactly-affordable boundary, batch-aware input checks, every unlock kind,
+  placement geometry (inclusive containment, flush-but-not-overlapping edges, a station straddling
+  two zones), target choice including out-of-stock vs unaffordable and the id tie-break, the seeded
+  weighted archetype draw, every clamp in `offlineElapsedMs`, prestige eligibility, and every branch
+  of the semantic validator.
+- `packages/packs/test/economy.test.ts` (61 tests) — install/validation (including the refusal to run
+  without a wallet), goods and demand, atomic transactions in both directions, production with
+  consume-at-start and cancel-refunds, waste reporting, batch size, station capacity, all four
+  placement outcomes, the whole customer flow, FIFO, patience, queue capacity, seeded arrivals,
+  offline catch-up in every mode (immediate, whole batches, dry shelf, clamped, backwards, efficiency,
+  restore), prestige, reset, bus events, and an explicit check that neither service exposes `update()`.
+- `proofs/shopkeeper/tests/content.test.ts` (11) and additions to
+  `proofs/idle-incremental/tests/content.test.ts`.
+- `packages/schemas/test/contentDocuments.test.ts` (document registry updated).
+
+### Tests run — actual results
+
+- `npm run typecheck` — **PASS**, 0 errors
+- `npx vitest run` — **PASS, 175 files / 3151 tests** (was 172 / 3017 before Phase 19)
+- `npm run qa:workbench` — **PASS, 16/16**; WB-SECURITY-001 now audits **70** endpoints (was 68)
+- `npm run qa:proof` (full suite) — **PASS, 37/37**, including `shopkeeper` 18/18 and
+  `idle-incremental` 15/15, 0 console errors, 0 external requests
+
+### Proof-quality evidence
+
+No unconditional acceptance step exists in either spec. Six sabotages were applied, observed and
+reverted (`grep SABOTAGE` clean afterwards):
+
+| Sabotage | Result |
+| --- | --- |
+| a refused transaction still moves the stock | shopkeeper steps 3-7 FAIL |
+| offline catch-up is not clamped to the authored maximum | shopkeeper step 16 and idle step 13 FAIL |
+| a cancelled job does not refund what it consumed | shopkeeper step 7 FAIL |
+| the queue promotes whoever it reaches instead of the head | **initially PASSED** — see below |
+| patience never expires | shopkeeper step 13 FAIL |
+| the prestige reward is granted before the currency wipe | shopkeeper step 17 and idle step 14 FAIL |
+
+The FIFO control is the one worth recording. It **passed against a genuinely broken queue**, because
+the three customers were named `first`, `second`, `third` — and the economy iterates customers in
+ascending id order for reproducibility, which happened to coincide with join order. The step was
+rewritten with ids (`zoe`, `mia`, `ada`) that sort against arrival, and the control then failed as it
+should. That is a weak assertion the control caught, not a defect in the implementation.
+
+Two defects were found by running the work rather than reading it. The shell initially made its own
+`ManualWallClock`, which did nothing because the pack had already captured the runtime's browser
+clock at install — the fix was the `createGame({ wallClock })` injection point rather than reaching
+into the pack. And step 11 originally asserted three customers were served in order *and* the shop
+was empty, sampled the instant the third departure arrived; a customer in `leave` is cleared on the
+following frame, so the step needed one more frame before it could honestly claim the shop was empty.
+
+### Limitations changed
+
+`LIMITATIONS.customerEconomy` rewritten; `LIMITATIONS.cookingSequences` and `LIMITATIONS.idleEconomy`
+added. The claim that offline catch-up and prestige "are not production systems" is retired, and
+`idle-incremental` — the preset that made it — is the proof that retires it.
+
+### Known failures
+
+None.
+
+### Known shortcuts / characteristics a certifier should look at
+
+1. **Customers do not walk anywhere.** `navigate` is a timer, and `chooseTarget` never asks where
+   anything is. Placement validates that a station's access point is in an aisle, which is a
+   reachability *claim*, not a path. A customer can be served at a counter no route reaches.
+2. **`unlocks` is a declared prestige reset scope that does nothing.** `progression.state` has
+   `unlock()` but no revoke, and reaching into its private state to wipe flags would be worse than
+   recording this. The scope is accepted, validated and then skipped, which is honest but is a gap.
+3. **Prestige wipes in-flight jobs without refunding their inputs.** Defensible (the shelf is being
+   reset in the same breath) but it is a decision, not a consequence.
+4. **One queue is used implicitly.** `#defaultQueue()` picks the lowest-id queue; the document may
+   define several, but a customer always joins that one. Multi-counter routing is not implemented.
+5. **Demand is a number a game sets.** Nothing moves `demandMultiplier` on its own — no scarcity
+   response, no elasticity, no price discovery. The hook is real; the model behind it is authoring.
+6. **`arrival.maxConcurrent` skips arrivals rather than queueing them.** A busy shop silently gets
+   fewer customers rather than a backlog.
+7. **`MAX_OFFLINE_BATCHES` is 100,000.** A runaway-loop backstop, far above any real absence, but a
+   cap nonetheless.
+8. **Both proofs use a `goOffline` test control.** It calls the same public `save()`/`resume()` the
+   game does and moves the same injected clock — not a back door, but a control a player has no
+   equivalent for.
+
+### Architectural concerns
+
+- **`simulation.economy` is large.** It owns goods, transactions, customers, queues, offline
+  catch-up and prestige. The alternative — splitting customers into their own capability — would put
+  the shelf behind a second owner, which is the thing this phase most wanted to avoid. Worth a
+  decision if Phase 34's kitchen wants the customer half without the shop half.
+- **`EconomyService.save()`/`resume()` are on the service rather than a persistence seam.** They use
+  `context.saves` (the real `SaveStore`), but a game with its own save format has to drive them
+  rather than serialise the economy itself. There is no `toJSON()`.
+- **Customers are iterated in ascending id order and the queue is FIFO.** These are two different
+  orderings living side by side, and the proof only distinguishes them because the negative control
+  forced it to. A certifier should keep that distinction in mind when reading the customer loop.
+- **Prestige composes with `progression.state` but not with `progression.runs`.** A game using both
+  runs and prestige has two reset systems that know nothing about each other. `RunResetParticipant`
+  exists and the economy does not register with it.
+
+### Work required from a later certifier
+
+- Adversarial browser validation of both journeys, especially offline catch-up and prestige.
+- Decide whether the `unlocks` prestige scope should work (needing a revoke on `progression.state`)
+  or be removed from the union.
+- Decide whether the economy should register as a `RunResetParticipant` so runs and prestige compose.
+- Decide whether customers should be a separate capability from the shop.
+- Confirm the generator supplies `content/economy.json` for any preset requiring `sw2d.economy`
+  (currently a proof-shell responsibility — the same generator gap Phases 17 and 18 recorded).

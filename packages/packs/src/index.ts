@@ -133,3 +133,14 @@ export {
   type SimulationAgentsConfig,
   type SimulationAgentsService,
 } from './simulationAgents/simulationAgentsPack.ts';
+export {
+  economyPack,
+  createEconomy,
+  ECONOMY_CONFIG_SCHEMA_ID,
+  MissingEconomyDocumentError,
+  MissingProgressionError,
+  type EconomyConfig,
+  type EconomyBundle,
+  type EconomyService,
+  type ProductionService,
+} from './economy/economyPack.ts';

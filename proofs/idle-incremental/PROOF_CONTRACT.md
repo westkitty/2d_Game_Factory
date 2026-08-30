@@ -55,3 +55,52 @@ This proof's mechanics closely follow the already-proven, smoke-validated `demos
 - Save/reload preserves state across a genuine page reload, not an in-memory illusion.
 - Network-free: no required external requests (shared oracle).
 - No movement dependency: the whole loop is provable through `PRIMARY_ACTION`/`SECONDARY_ACTION`/`CONFIRM` and elapsed time alone.
+
+---
+
+## Post-ten program Phase 19 extension (economy, production & offline catch-up, ADR-0033)
+
+The ten steps above are the certified Phase-10 journey and are **unchanged**: the same gold
+ledger, the same job primitive, the same upgrade, the same save/reload equality bar. Phase 19
+appends five steps below them, because this preset's honest limitation was that offline
+catch-up and prestige *were not systems*, and the only way to retire that claim is to make
+the same game use the real ones.
+
+### Additional composition
+
+`sw2d.economy` is added to `content/game.json` alongside the packs it already had, and
+`content/economy.json` (`urn:sw2d:schema:content-economy:v1`) authors a smelting chain, a
+20-second offline cap at 50% efficiency, and a prestige gated on holding three ingots.
+
+`src/main.ts` injects a `ManualWallClock` through `createGame({ wallClock })`. It is the
+same one-method interface the browser clock implements — asserting on catch-up against
+`Date.now()` would mean genuinely waiting.
+
+### Additional journey steps
+
+11. **Consume at start, produce once.** Starting a smelt takes 2 ore immediately and yields
+    nothing; the ore count is unchanged when the ingot appears, so the inputs were never
+    taken twice.
+12. **Offline catch-up aggregates.** The document credits 50% efficiency, so 4000ms away buys
+    2000ms of work: the in-flight batch plus exactly one more, with the second batch paying
+    for its own ore. No frames are replayed.
+13. **The absence is bounded.** A 24-hour trip is clamped to the authored 20 seconds and the
+    report says `clamped`; a clock that moved backwards an hour credits nothing at all.
+14. **Prestige is gated, resets what it declares, and its reward survives.** Ineligible until
+    three ingots exist; then the shelf returns to its authored opening, and currency is wiped
+    and *then* granted the reward — so the balance is the reward, not zero.
+15. **The multiplier is load-bearing.** After one prestige the same recipe finishes in about
+    a third of the frames its authored duration would need.
+
+### Additional negative controls
+
+| Sabotage | Expected |
+| --- | --- |
+| Offline catch-up is not clamped to the authored maximum | step 13 FAILS |
+| The prestige reward is granted before the currency wipe | step 14 FAILS |
+
+### What this extension does not claim
+
+The Phase-10 maturity claim (`proof-validated`) rests on the ten steps above, which still
+pass exactly as they did. The five new steps strengthen the same proof; they do not promote
+any other preset, and `shopkeeper`, `tycoon-lite` and `restaurant` remain recipes.

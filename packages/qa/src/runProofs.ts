@@ -82,6 +82,8 @@ const PROOF_SPEC_MODULES: Readonly<Record<string, string>> = {
   // Phase 18 - simulation agents, needs, behavior & schedules
   'pet-creature': 'petCreature',
   'colony-lite': 'colonyLite',
+  // Phase 19 - economy, production & customer simulation
+  shopkeeper: 'shopkeeper',
 };
 
 function proofTargets(): Target[] {

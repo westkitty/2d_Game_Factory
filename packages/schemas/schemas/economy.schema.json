@@ -1,0 +1,239 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:sw2d:schema:content-economy:v1",
+  "title": "EconomyDocument",
+  "description": "Mirrors @sw2d/contracts EconomyDocument (economy.ts). Content document name 'economy'. A good's itemId points into content/items.json - this document never redefines an item.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "goods"],
+  "properties": {
+    "schemaVersion": { "type": "integer", "minimum": 1, "maximum": 1 },
+    "goods": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/good" } },
+    "recipes": { "type": "array", "items": { "$ref": "#/definitions/recipe" } },
+    "stations": { "type": "array", "items": { "$ref": "#/definitions/station" } },
+    "zones": { "type": "array", "items": { "$ref": "#/definitions/zone" } },
+    "queues": { "type": "array", "items": { "$ref": "#/definitions/queue" } },
+    "customers": { "type": "array", "items": { "$ref": "#/definitions/customer" } },
+    "arrival": { "$ref": "#/definitions/arrival" },
+    "offline": { "$ref": "#/definitions/offline" },
+    "prestige": { "type": "array", "items": { "$ref": "#/definitions/prestige" } }
+  },
+  "definitions": {
+    "good": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["itemId", "stock", "capacity", "buyPrice", "sellPrice"],
+      "properties": {
+        "itemId": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Item id from content/items.json. There is exactly one item definition system."
+        },
+        "stock": { "type": "integer", "minimum": 0 },
+        "capacity": { "type": "integer", "exclusiveMinimum": 0 },
+        "buyPrice": { "type": "number", "minimum": 0 },
+        "sellPrice": { "type": "number", "minimum": 0 },
+        "demandMultiplier": { "type": "number", "minimum": 0 },
+        "restockQuantity": { "type": "integer", "exclusiveMinimum": 0 }
+      }
+    },
+    "itemQuantity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["itemId", "quantity"],
+      "properties": {
+        "itemId": { "type": "string", "minLength": 1 },
+        "quantity": { "type": "integer", "exclusiveMinimum": 0 }
+      }
+    },
+    "unlockCondition": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "flag"],
+          "properties": {
+            "kind": { "const": "flag" },
+            "flag": { "type": "string", "minLength": 1 }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "itemId", "quantity"],
+          "properties": {
+            "kind": { "const": "stock-at-least" },
+            "itemId": { "type": "string", "minLength": 1 },
+            "quantity": { "type": "integer", "minimum": 0 }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "level"],
+          "properties": {
+            "kind": { "const": "prestige-at-least" },
+            "level": { "type": "integer", "minimum": 0 }
+          }
+        }
+      ]
+    },
+    "recipe": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "inputs", "outputs", "durationMs", "stationType"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "displayName": { "type": "string", "minLength": 1 },
+        "inputs": { "type": "array", "items": { "$ref": "#/definitions/itemQuantity" } },
+        "outputs": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/itemQuantity" } },
+        "durationMs": { "type": "number", "exclusiveMinimum": 0 },
+        "stationType": { "type": "string", "minLength": 1 },
+        "batchSize": { "type": "integer", "exclusiveMinimum": 0 },
+        "unlock": { "type": "array", "items": { "$ref": "#/definitions/unlockCondition" } }
+      }
+    },
+    "point": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y"],
+      "properties": { "x": { "type": "number" }, "y": { "type": "number" } }
+    },
+    "station": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "type", "capacity"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "type": { "type": "string", "minLength": 1 },
+        "capacity": { "type": "integer", "exclusiveMinimum": 0 },
+        "position": { "$ref": "#/definitions/point" },
+        "footprint": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["width", "height"],
+          "properties": {
+            "width": { "type": "number", "exclusiveMinimum": 0 },
+            "height": { "type": "number", "exclusiveMinimum": 0 }
+          }
+        },
+        "accessOffset": {
+          "$ref": "#/definitions/point",
+          "description": "Where an agent must stand, relative to the station centre. Present only when the station must be reachable."
+        }
+      }
+    },
+    "zone": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "x", "y", "width", "height"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "kind": { "enum": ["buildable", "aisle"] },
+        "x": { "type": "number" },
+        "y": { "type": "number" },
+        "width": { "type": "number", "exclusiveMinimum": 0 },
+        "height": { "type": "number", "exclusiveMinimum": 0 }
+      }
+    },
+    "queue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "capacity", "serviceSlots", "serviceMs"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "capacity": { "type": "integer", "exclusiveMinimum": 0 },
+        "serviceSlots": { "type": "integer", "exclusiveMinimum": 0 },
+        "serviceMs": { "type": "number", "exclusiveMinimum": 0 },
+        "navigateMs": { "type": "number", "minimum": 0 }
+      }
+    },
+    "customer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "budget", "patienceMs", "demandWeights", "arrivalWeight"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "displayName": { "type": "string", "minLength": 1 },
+        "budget": { "type": "integer", "minimum": 0 },
+        "patienceMs": { "type": "number", "exclusiveMinimum": 0 },
+        "demandWeights": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": { "type": "number", "minimum": 0 }
+        },
+        "maxQuantity": { "type": "integer", "exclusiveMinimum": 0 },
+        "arrivalWeight": { "type": "number", "minimum": 0 }
+      }
+    },
+    "arrival": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["intervalMs", "maxConcurrent"],
+      "properties": {
+        "intervalMs": { "type": "number", "exclusiveMinimum": 0 },
+        "maxConcurrent": { "type": "integer", "exclusiveMinimum": 0 },
+        "enabled": { "type": "boolean" }
+      }
+    },
+    "offline": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["maximumMs"],
+      "properties": {
+        "maximumMs": { "type": "number", "minimum": 0 },
+        "efficiency": { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    },
+    "prestigeEligibility": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "amount"],
+          "properties": {
+            "kind": { "const": "lifetime-earnings-at-least" },
+            "amount": { "type": "number", "minimum": 0 }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "itemId", "quantity"],
+          "properties": {
+            "kind": { "const": "stock-at-least" },
+            "itemId": { "type": "string", "minLength": 1 },
+            "quantity": { "type": "integer", "minimum": 0 }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "flag"],
+          "properties": {
+            "kind": { "const": "flag" },
+            "flag": { "type": "string", "minLength": 1 }
+          }
+        }
+      ]
+    },
+    "prestigeScope": {
+      "enum": ["goods-stock", "production-jobs", "station-placement", "currency", "unlocks"]
+    },
+    "prestige": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "eligibility", "resetScopes"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "displayName": { "type": "string", "minLength": 1 },
+        "eligibility": { "$ref": "#/definitions/prestigeEligibility" },
+        "resetScopes": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/prestigeScope" } },
+        "retainScopes": { "type": "array", "items": { "$ref": "#/definitions/prestigeScope" } },
+        "rewardCurrency": { "type": "integer", "minimum": 0 },
+        "multiplierPerLevel": { "type": "number", "minimum": 0 },
+        "unlockFlag": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

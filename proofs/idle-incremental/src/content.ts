@@ -5,6 +5,7 @@ import gameData from '../content/game.json' with { type: 'json' };
 import tuningData from '../content/tuning.json' with { type: 'json' };
 import themeData from '../content/themes/default/theme.json' with { type: 'json' };
 import rawLevel from '../content/levels/main.json' with { type: 'json' };
+import economyData from '../content/economy.json' with { type: 'json' };
 
 /**
  * The generated game's content source.
@@ -19,6 +20,12 @@ import rawLevel from '../content/levels/main.json' with { type: 'json' };
  * ships one Tiled level (content/levels/main.json) so the Tiled pipeline is
  * always real, even for controller families whose shell does not read it -
  * add more with `npm run sw2d -- add-level proof-idle-incremental <level-id>`.
+ *
+ * `content/economy.json` is the post-ten Phase 19 document
+ * (`urn:sw2d:schema:content-economy:v1`): the smelting chain this idle game
+ * runs, the offline cap and efficiency, and the prestige policy. The Phase-10
+ * gold ledger and job primitive it already had are untouched - the economy sits
+ * alongside them rather than replacing them.
  */
 const theme: ThemeManifest = validateDocumentOrThrow<ThemeManifest>(
   'theme-manifest',
@@ -30,7 +37,11 @@ export const gameContent: ContentSource = {
   id: (gameData as { id: string }).id,
   load: async (): Promise<ContentBundle> => {
     const normalizedLevel = normalizeTiledMap('main', rawLevel);
-    const data = validateContentBundleData({ tuning: tuningData, 'levels/main': normalizedLevel });
+    const data = validateContentBundleData({
+      tuning: tuningData,
+      'levels/main': normalizedLevel,
+      economy: economyData,
+    });
 
     const assets: readonly AssetDescriptor[] = theme.assets;
     const ui: Partial<UiCopy> | undefined = theme.ui;

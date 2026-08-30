@@ -35,13 +35,12 @@ export const SIMULATION_MANAGEMENT_PRESETS: readonly PresetDefinition[] = [
     displayName: 'Idle Incremental',
     family: 'simulation-management',
     controllerFamilies: ['ui-simulation'],
-    requiredSystemPacks: [pack(PACK_IDS.simulation), pack(PACK_IDS.progression)],
+    // Post-ten Phase 19: bounded offline catch-up and prestige are reusable now.
+    requiredSystemPacks: [pack(PACK_IDS.simulation), pack(PACK_IDS.progression), pack(PACK_IDS.economy)],
     optionalSystemPacks: [pack(PACK_IDS.arcade)],
-    requiredContentRoles: ['tuning'],
+    requiredContentRoles: ['tuning', 'economy'],
     validationProfile: VALIDATION_PROFILES.simulationManagement,
-    knownLimitations: [
-      'The simulation/resource core exists, but full offline-progress/catch-up, prestige, and large economy balancing are not production systems.',
-    ],
+    knownLimitations: [LIMITATIONS.idleEconomy],
   }),
 
   definePreset({
@@ -49,9 +48,10 @@ export const SIMULATION_MANAGEMENT_PRESETS: readonly PresetDefinition[] = [
     displayName: 'Shopkeeper',
     family: 'simulation-management',
     controllerFamilies: ['ui-simulation'],
-    requiredSystemPacks: [pack(PACK_IDS.simulation), pack(PACK_IDS.progression)],
+    // Post-ten Phase 19: the shop itself - goods, transactions, customers, queue.
+    requiredSystemPacks: [pack(PACK_IDS.simulation), pack(PACK_IDS.progression), pack(PACK_IDS.economy)],
     optionalSystemPacks: [pack(PACK_IDS.world)],
-    requiredContentRoles: ['tuning'],
+    requiredContentRoles: ['tuning', 'economy'],
     validationProfile: VALIDATION_PROFILES.simulationManagement,
     knownLimitations: [LIMITATIONS.customerEconomy],
   }),
@@ -61,9 +61,10 @@ export const SIMULATION_MANAGEMENT_PRESETS: readonly PresetDefinition[] = [
     displayName: 'Tycoon Lite',
     family: 'simulation-management',
     controllerFamilies: ['ui-simulation'],
-    requiredSystemPacks: [pack(PACK_IDS.simulation), pack(PACK_IDS.progression)],
+    // Post-ten Phase 19: production chains, stations and placement.
+    requiredSystemPacks: [pack(PACK_IDS.simulation), pack(PACK_IDS.progression), pack(PACK_IDS.economy)],
     optionalSystemPacks: [pack(PACK_IDS.arcade)],
-    requiredContentRoles: ['tuning'],
+    requiredContentRoles: ['tuning', 'economy'],
     validationProfile: VALIDATION_PROFILES.simulationManagement,
     knownLimitations: [LIMITATIONS.customerEconomy],
   }),
@@ -115,11 +116,13 @@ export const SIMULATION_MANAGEMENT_PRESETS: readonly PresetDefinition[] = [
     displayName: 'Restaurant',
     family: 'simulation-management',
     controllerFamilies: ['ui-simulation'],
-    requiredSystemPacks: [pack(PACK_IDS.simulation), pack(PACK_IDS.progression)],
+    // Post-ten Phase 19 supplies the customer/order/economy foundation only.
+    // Actual cooking - the action sequence at the stove - is Phase 34.
+    requiredSystemPacks: [pack(PACK_IDS.simulation), pack(PACK_IDS.progression), pack(PACK_IDS.economy)],
     optionalSystemPacks: [pack(PACK_IDS.arcade)],
-    requiredContentRoles: ['tuning'],
+    requiredContentRoles: ['tuning', 'economy'],
     validationProfile: VALIDATION_PROFILES.simulationManagement,
-    knownLimitations: [LIMITATIONS.customerEconomy],
+    knownLimitations: [LIMITATIONS.customerEconomy, LIMITATIONS.cookingSequences],
   }),
 
   definePreset({

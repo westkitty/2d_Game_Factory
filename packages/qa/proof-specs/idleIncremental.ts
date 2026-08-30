@@ -10,6 +10,33 @@ interface ShellSnap {
   readonly jobPending: boolean;
   readonly loadOutcome: string;
   readonly lastSaveOutcome: string;
+  // Post-ten Phase 19 surface.
+  readonly ore: number;
+  readonly ingot: number;
+  readonly economyJobs: number;
+  readonly completedRecipes: readonly string[];
+  readonly prestige: {
+    readonly level: number;
+    readonly multiplier: number;
+    readonly eligible: boolean;
+    readonly blockedBy: string | null;
+  };
+  readonly lastOffline: {
+    readonly requestedMs: number;
+    readonly appliedMs: number;
+    readonly clamped: boolean;
+    readonly jobsCompleted: number;
+  } | null;
+  readonly wallClockMs: number;
+}
+
+function evalControls<T>(harness: Harness, fnStr: string): Promise<T> {
+  return harness.evaluate(`
+    (() => {
+      const c = window.__SW2D__.context.capabilities.require('game.idle-economy-controls');
+      return (${fnStr})(c);
+    })()
+  `) as Promise<T>;
 }
 
 function state(harness: Harness): Promise<ShellSnap> {
@@ -31,6 +58,11 @@ async function runOneJobCycle(harness: Harness): Promise<ShellSnap> {
  *
  * Mirrors the reference demo's already-proven smoke journey, extended with
  * the stricter save/reload equality bar this deep proof requires.
+ *
+ * Post-ten Phase 19 appends five steps to the end. The seven Phase-10 steps
+ * above them are unchanged - the certified journey still has to pass exactly as
+ * it did - and the new ones exercise the offline catch-up and prestige this
+ * preset previously listed as "not production systems".
  */
 export async function run(harness: Harness): Promise<SmokeOutcome> {
   await harness.keyTap('Space'); // start run
@@ -94,9 +126,135 @@ export async function run(harness: Harness): Promise<SmokeOutcome> {
   const afterReloadTick = await state(harness);
   const continuesAfterReloadOk = afterReloadTick.gold > reloadedShell.gold;
 
+  // --- Post-ten Phase 19 ------------------------------------------------
+  // The reload above wiped the economy back to its authored opening state, so
+  // these steps start from a known shelf: 6 ore, 0 ingots.
+
+  // 8. A production job consumes its inputs at the moment it starts, and
+  //    produces its output once when it finishes - never on both ends.
+  await evalControls(harness, `(c) => c.resetEconomy()`);
+  await harness.stepFrames(2);
+  const smeltStart = await evalControls<{ ok: boolean; consumed: { itemId: string; quantity: number }[] }>(
+    harness,
+    `(c) => c.startSmelt()`,
+  );
+  const midSmelt = await state(harness);
+  await harness.stepFrames(70); // ~1167ms, past the authored 1000ms
+  const afterSmelt = await state(harness);
+  const productionOk =
+    smeltStart.ok === true &&
+    smeltStart.consumed[0]?.quantity === 2 &&
+    midSmelt.ore === 4 && // taken at start
+    midSmelt.ingot === 0 &&
+    afterSmelt.ore === 4 && // never taken again
+    afterSmelt.ingot === 1 &&
+    afterSmelt.completedRecipes.filter((id) => id === 'smelt').length === 1;
+
+  // 9. Offline catch-up aggregates whole batches against the injected wall
+  //    clock. The document credits 50% efficiency, so 4000ms away buys 2000ms
+  //    of work: the in-flight batch plus exactly one more.
+  await evalControls(harness, `(c) => c.resetEconomy()`);
+  await harness.stepFrames(2);
+  await evalControls(harness, `(c) => c.startSmelt()`);
+  const trip = await evalControls<{ requestedMs: number; appliedMs: number; clamped: boolean; jobsCompleted: number }>(
+    harness,
+    `(c) => c.goOffline(4000)`,
+  );
+  const afterTrip = await state(harness);
+  const offlineCatchUpOk =
+    trip.requestedMs === 4000 &&
+    trip.appliedMs === 4000 &&
+    trip.clamped === false &&
+    trip.jobsCompleted === 2 &&
+    afterTrip.ingot === 2 &&
+    afterTrip.ore === 2 && // 6 - 2 (start) - 2 (the second batch paid for itself)
+    afterTrip.economyJobs === 0;
+
+  // 10. The absence is bounded: a very long trip is clamped to the authored
+  //     maximum and says so, and a clock that moved backwards credits nothing.
+  await evalControls(harness, `(c) => c.resetEconomy()`);
+  await harness.stepFrames(2);
+  await evalControls(harness, `(c) => c.startSmelt()`);
+  const longTrip = await evalControls<{ requestedMs: number; appliedMs: number; clamped: boolean }>(
+    harness,
+    `(c) => c.goOffline(86400000)`,
+  );
+  const backwards = await evalControls<{ appliedMs: number; jobsCompleted: number }>(
+    harness,
+    `(c) => c.goOffline(-3600000)`,
+  );
+  const offlineBoundedOk =
+    longTrip.requestedMs === 86_400_000 &&
+    longTrip.appliedMs === 20_000 && // the authored cap
+    longTrip.clamped === true &&
+    backwards.appliedMs === 0 &&
+    backwards.jobsCompleted === 0;
+
+  // 11. Prestige is gated on the authored condition, resets what it declares,
+  //     and grants its reward after the currency wipe so the reward survives.
+  await evalControls(harness, `(c) => c.resetEconomy()`);
+  await harness.stepFrames(2);
+  const blocked = await evalControls<{ ok: boolean; reason: string }>(harness, `(c) => c.prestige()`);
+  await evalControls(harness, `(c) => c.startSmelt()`);
+  const earned = await evalControls<{ jobsCompleted: number }>(harness, `(c) => c.goOffline(8000)`);
+  const beforePrestige = await state(harness);
+  const promoted = await evalControls<{ ok: boolean; level: number; multiplier: number; grantedCurrency: number }>(
+    harness,
+    `(c) => c.prestige()`,
+  );
+  const afterPrestige = await state(harness);
+  const prestigeOk =
+    blocked.ok === false &&
+    blocked.reason === 'not-eligible' &&
+    beforePrestige.ingot >= 3 && // the authored eligibility now holds
+    beforePrestige.prestige.eligible === true &&
+    promoted.ok === true &&
+    promoted.level === 1 &&
+    promoted.multiplier === 3 && // 1 + 1 x the authored multiplierPerLevel of 2
+    afterPrestige.ore === 6 && // goods-stock reset to the authored opening
+    afterPrestige.ingot === 0 &&
+    afterPrestige.currency === 40; // wiped, then granted the reward
+
+  // 12. The prestige multiplier is load-bearing: the same recipe now finishes
+  //     in a third of the frames the authored duration would take.
+  await evalControls(harness, `(c) => c.startSmelt()`);
+  await harness.stepFrames(24); // ~400ms - well under the authored 1000ms
+  const sped = await state(harness);
+  const multiplierAppliesOk = sped.ingot === 1 && sped.completedRecipes.includes('smelt');
+
   return {
-    passed: startsAtZeroOk && deterministicProductionOk && jobQueueOk && upgradeSpendOk && upgradeAppliesOk && persistenceOk && continuesAfterReloadOk,
+    passed:
+      startsAtZeroOk &&
+      deterministicProductionOk &&
+      jobQueueOk &&
+      upgradeSpendOk &&
+      upgradeAppliesOk &&
+      persistenceOk &&
+      continuesAfterReloadOk &&
+      productionOk &&
+      offlineCatchUpOk &&
+      offlineBoundedOk &&
+      prestigeOk &&
+      multiplierAppliesOk,
     details: {
+      smeltStart,
+      midSmelt,
+      afterSmelt,
+      trip,
+      afterTrip,
+      longTrip,
+      backwards,
+      blocked,
+      earned,
+      beforePrestige,
+      promoted,
+      afterPrestige,
+      sped,
+      productionOk,
+      offlineCatchUpOk,
+      offlineBoundedOk,
+      prestigeOk,
+      multiplierAppliesOk,
       spawnShell,
       afterTickA,
       afterTickB,

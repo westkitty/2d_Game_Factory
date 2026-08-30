@@ -27,6 +27,7 @@ import {
   ballPaddlePack,
   rhythmPack,
   simulationAgentsPack,
+  economyPack,
 } from '../src/index.ts';
 
 /**
@@ -67,6 +68,7 @@ const ALL_PACKS = [
   ballPaddlePack,
   rhythmPack,
   simulationAgentsPack,
+  economyPack,
 ];
 
 /** `<family>.<service>`: lowercase segments, at least two, dash-separated words allowed after the first. */

@@ -42,6 +42,7 @@ export const CONTENT_DOCUMENTS: Readonly<Record<string, ContentDocumentRegistryE
   'ball-paddle': { schemaName: 'ball-paddle' },
   rhythm: { schemaName: 'rhythm' },
   agents: { schemaName: 'agents' },
+  economy: { schemaName: 'economy' },
 };
 
 export type ContentDocumentName = keyof typeof CONTENT_DOCUMENTS;

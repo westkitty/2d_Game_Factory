@@ -82,8 +82,20 @@ export const LIMITATIONS = {
   ballPaddleSystem:
     'Ball/paddle serve, wall and paddle bounce, hit-location steering, brick damage, goals and match rules are reusable through sw2d.ball-paddle (arcade.ball-paddle). Collision safety is bounded substepping within the definition\'s declared speed range - not universal continuous collision detection; a definition beyond that range is rejected at install rather than silently tunnelling.',
   // Phase 7C additions - same "two or more recipes" bar as Phase 7B's four.
+  // Post-ten Phase 19 closed most of this. Goods, transactions, production
+  // chains, stations, placement validation, customer arrival/queue/service and
+  // prestige are reusable now (sw2d.economy); what stays out is the *presentation*
+  // of a floor plan and any pathfinding a customer would need to walk it.
   customerEconomy:
-    'No complete customer AI, demand/economy model, queue/placement UI, or content-authored production chain exists.',
+    'Goods, stock, prices, transactions, production recipes on stations, station placement validation, customer arrival/queue/service and prestige are reusable through sw2d.economy (simulation.economy, simulation.production). Customers are a phase machine on simulation time, not agents walking a floor: placement checks zone, overlap and an authored access point, and pathfinding when a game needs it is sw2d.navigation. Floor-plan presentation stays starter-specific.',
+  // Post-ten Phase 19 addition, split out of customerEconomy: what a restaurant
+  // still lacks once the customer/order/economy foundation exists.
+  cookingSequences:
+    'The customer, order and economy foundation is reusable through sw2d.economy; the cooking action sequence itself - timed steps at a station with success windows - is not implemented yet.',
+  // Post-ten Phase 19 addition. Replaces idle-incremental's inline claim that
+  // offline catch-up and prestige "are not production systems".
+  idleEconomy:
+    'Deterministic passive production, bounded offline catch-up against an injected wall clock, and prestige with authored reset/retain scopes are reusable through sw2d.economy (simulation.economy, simulation.production). Catch-up aggregates whole completed batches rather than replaying frames, and is clamped by an authored maximum; large multi-currency economy balancing remains authoring work, not a system.',
   // Post-ten Phase 18 narrowed this. Needs, utility behaviour, schedules,
   // relationships and work orders are reusable now (sw2d.simulation-agents);
   // what stays honest to record is that agent *presentation* and the world an

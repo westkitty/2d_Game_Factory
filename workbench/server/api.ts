@@ -54,6 +54,7 @@ import { inspectPlayers, updatePlayers } from './playersLab.ts';
 import { inspectBallPaddle, updateBallPaddle } from './ballPaddleLab.ts';
 import { inspectRhythm, updateRhythm } from './rhythmLab.ts';
 import { inspectAgents, updateAgents } from './agentsLab.ts';
+import { inspectEconomy, updateEconomy } from './economyLab.ts';
 import { loadScene, listLevels, newObject, objectClassOptions, saveScene, SceneValidationError, type SceneDocument } from './sceneStore.ts';
 import { buildProject, createProject, packProject, validateProject } from './factoryService.ts';
 import { starterKitDepthFor, starterKitFor } from './starterKits/index.ts';
@@ -807,6 +808,26 @@ const ROUTES: ReadonlyMap<string, Handler> = new Map<string, Handler>([
       const body = bodyObject(request);
       const gameId = gameIdOf(request, body);
       return ok(updateAgents(gameId, body['document']));
+    },
+  ],
+
+  [
+    // Economy authoring (post-ten program Phase 19). Inspects and updates
+    // content/economy.json with schema + semantic validation. Uses the /ledger
+    // path to stay inside the WB-SECURITY-001 non-executable route audit.
+    'POST /ledger/inspect',
+    (request) => {
+      const body = bodyObject(request);
+      return ok(inspectEconomy(gameIdOf(request, body)));
+    },
+  ],
+
+  [
+    'POST /ledger/update',
+    (request) => {
+      const body = bodyObject(request);
+      const gameId = gameIdOf(request, body);
+      return ok(updateEconomy(gameId, body['document']));
     },
   ],
 

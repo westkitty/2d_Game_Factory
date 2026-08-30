@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "goods": [
+    { "itemId": "ore", "stock": 6, "capacity": 400, "buyPrice": 1, "sellPrice": 2, "restockQuantity": 10 },
+    { "itemId": "ingot", "stock": 0, "capacity": 200, "buyPrice": 6, "sellPrice": 12 }
+  ],
+  "stations": [{ "id": "smelter", "type": "smelter", "capacity": 1 }],
+  "recipes": [
+    {
+      "id": "smelt",
+      "displayName": "Smelt an ingot",
+      "inputs": [{ "itemId": "ore", "quantity": 2 }],
+      "outputs": [{ "itemId": "ingot", "quantity": 1 }],
+      "durationMs": 1000,
+      "stationType": "smelter"
+    }
+  ],
+  "offline": { "maximumMs": 20000, "efficiency": 0.5 },
+  "prestige": [
+    {
+      "id": "reforge",
+      "displayName": "Reforge",
+      "eligibility": { "kind": "stock-at-least", "itemId": "ingot", "quantity": 3 },
+      "resetScopes": ["goods-stock", "production-jobs", "currency"],
+      "rewardCurrency": 40,
+      "multiplierPerLevel": 2,
+      "unlockFlag": "reforged"
+    }
+  ]
+}

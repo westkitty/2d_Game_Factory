@@ -1,0 +1,192 @@
+{
+  "schemaVersion": 1,
+  "goods": [
+    {
+      "itemId": "apple",
+      "stock": 8,
+      "capacity": 12,
+      "buyPrice": 2,
+      "sellPrice": 5,
+      "restockQuantity": 4
+    },
+    {
+      "itemId": "pie",
+      "stock": 0,
+      "capacity": 4,
+      "buyPrice": 9,
+      "sellPrice": 20
+    },
+    {
+      "itemId": "cider",
+      "stock": 2,
+      "capacity": 6,
+      "buyPrice": 4,
+      "sellPrice": 11
+    }
+  ],
+  "stations": [
+    {
+      "id": "oven",
+      "type": "oven",
+      "capacity": 1,
+      "footprint": {
+        "width": 4,
+        "height": 3
+      },
+      "accessOffset": {
+        "x": 0,
+        "y": 3
+      }
+    },
+    {
+      "id": "press",
+      "type": "press",
+      "capacity": 2,
+      "footprint": {
+        "width": 3,
+        "height": 3
+      }
+    }
+  ],
+  "zones": [
+    {
+      "id": "back-room",
+      "kind": "buildable",
+      "x": 0,
+      "y": 0,
+      "width": 24,
+      "height": 12
+    },
+    {
+      "id": "shop-floor",
+      "kind": "aisle",
+      "x": 0,
+      "y": 12,
+      "width": 24,
+      "height": 6
+    }
+  ],
+  "recipes": [
+    {
+      "id": "bake-pie",
+      "displayName": "Bake a pie",
+      "inputs": [
+        {
+          "itemId": "apple",
+          "quantity": 3
+        }
+      ],
+      "outputs": [
+        {
+          "itemId": "pie",
+          "quantity": 1
+        }
+      ],
+      "durationMs": 1200,
+      "stationType": "oven"
+    },
+    {
+      "id": "press-cider",
+      "displayName": "Press cider",
+      "inputs": [
+        {
+          "itemId": "apple",
+          "quantity": 2
+        }
+      ],
+      "outputs": [
+        {
+          "itemId": "cider",
+          "quantity": 1
+        }
+      ],
+      "durationMs": 800,
+      "stationType": "press",
+      "unlock": [
+        {
+          "kind": "flag",
+          "flag": "cider-licence"
+        }
+      ]
+    }
+  ],
+  "queues": [
+    {
+      "id": "till",
+      "capacity": 3,
+      "serviceSlots": 1,
+      "serviceMs": 400,
+      "navigateMs": 300
+    }
+  ],
+  "customers": [
+    {
+      "id": "regular",
+      "displayName": "Regular",
+      "budget": 30,
+      "patienceMs": 4000,
+      "demandWeights": {
+        "apple": 6,
+        "cider": 2
+      },
+      "arrivalWeight": 3
+    },
+    {
+      "id": "gourmet",
+      "displayName": "Gourmet",
+      "budget": 60,
+      "patienceMs": 6000,
+      "demandWeights": {
+        "pie": 9,
+        "cider": 4,
+        "apple": 1
+      },
+      "arrivalWeight": 1
+    },
+    {
+      "id": "window-shopper",
+      "displayName": "Window shopper",
+      "budget": 1,
+      "patienceMs": 3000,
+      "demandWeights": {
+        "pie": 5
+      },
+      "arrivalWeight": 0
+    },
+    {
+      "id": "impatient",
+      "displayName": "In a hurry",
+      "budget": 30,
+      "patienceMs": 400,
+      "demandWeights": {
+        "apple": 1
+      },
+      "arrivalWeight": 0
+    }
+  ],
+  "offline": {
+    "maximumMs": 30000
+  },
+  "prestige": [
+    {
+      "id": "second-branch",
+      "displayName": "Open a second branch",
+      "eligibility": {
+        "kind": "lifetime-earnings-at-least",
+        "amount": 40
+      },
+      "resetScopes": [
+        "goods-stock",
+        "production-jobs",
+        "station-placement",
+        "currency"
+      ],
+      "retainScopes": [
+        "station-placement"
+      ],
+      "rewardCurrency": 25,
+      "multiplierPerLevel": 1,
+      "unlockFlag": "cider-licence"
+    }
+  ]
+}

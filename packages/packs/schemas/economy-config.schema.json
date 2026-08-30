@@ -1,0 +1,19 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:sw2d:schema:pack-economy-config:v1",
+  "title": "EconomyPackConfig",
+  "description": "Mirrors @sw2d/packs' EconomyConfig. All fields optional.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "documentName": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Content document to read. Defaults to 'economy'."
+    },
+    "arrivalSeed": {
+      "type": "integer",
+      "description": "Seed for the weighted archetype draw. Defaults to 1, so the same shop always sees the same sequence of customers."
+    }
+  }
+}

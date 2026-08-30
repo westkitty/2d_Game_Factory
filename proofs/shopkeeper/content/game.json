@@ -1,0 +1,15 @@
+{
+  "id": "proof-shopkeeper",
+  "displayName": "Proof Shopkeeper",
+  "version": "0.1.0",
+  "schemaVersion": 1,
+  "viewport": { "width": 960, "height": 540 },
+  "bindings": {},
+  "systemPacks": [
+    { "packId": "sw2d.simulation", "config": {} },
+    { "packId": "sw2d.progression", "config": { "startingCurrency": 60 } },
+    { "packId": "sw2d.economy", "config": { "arrivalSeed": 20260830 } },
+    { "packId": "game.shop-shell", "config": {} }
+  ],
+  "defaultSettings": { "masterVolume": 0.7 }
+}

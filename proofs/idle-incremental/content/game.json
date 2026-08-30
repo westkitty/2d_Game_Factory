@@ -18,6 +18,10 @@
       "config": {}
     },
     {
+      "packId": "sw2d.economy",
+      "config": {}
+    },
+    {
       "packId": "game.ui-simulation-shell",
       "config": {}
     }

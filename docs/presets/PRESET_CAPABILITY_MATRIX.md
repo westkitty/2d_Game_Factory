@@ -98,13 +98,13 @@ pack/controller selections were actually exercised through, and
 
 | id | required packs | optional packs | controller(s) | input modes | validation profile |
 |---|---|---|---|---|---|
-| `idle-incremental` | simulation, progression | arcade | ui-simulation | keyboard, touch | simulation-management-recipe |
-| `shopkeeper` | simulation, progression | world | ui-simulation | keyboard, touch | simulation-management-recipe |
-| `tycoon-lite` | simulation, progression | arcade | ui-simulation | keyboard, touch | simulation-management-recipe |
+| `idle-incremental` | simulation, progression, economy | arcade | ui-simulation | keyboard, touch | simulation-management-recipe |
+| `shopkeeper` | simulation, progression, economy | world | ui-simulation | keyboard, touch | simulation-management-recipe |
+| `tycoon-lite` | simulation, progression, economy | arcade | ui-simulation | keyboard, touch | simulation-management-recipe |
 | `farming-lite` | simulation, world | progression | ui-simulation | keyboard, touch | simulation-management-recipe |
 | `pet-creature` | simulation, progression, simulation-agents | world | ui-simulation | keyboard, touch | simulation-management-recipe |
 | `colony-lite` | simulation, world, simulation-agents | progression | ui-simulation, navigation | keyboard, touch | simulation-management-recipe |
-| `restaurant` | simulation, progression | arcade | ui-simulation | keyboard, touch | simulation-management-recipe |
+| `restaurant` | simulation, progression, economy | arcade | ui-simulation | keyboard, touch | simulation-management-recipe |
 | `aquarium-terrarium` | simulation, simulation-agents | progression | ui-simulation | keyboard, touch | simulation-management-recipe |
 
 ## Narrative / exploration (Phase 7C)

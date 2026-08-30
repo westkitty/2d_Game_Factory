@@ -13,7 +13,12 @@ import {
   type PlayerRosterDocument,
   type StorageDriver,
 } from '@sw2d/contracts';
-import { PLAYER_INPUT_CAPABILITY_ID, validatePlayerRosterDocument } from '@sw2d/contracts';
+import {
+  PLAYER_INPUT_CAPABILITY_ID,
+  WALL_CLOCK_CAPABILITY_ID,
+  validatePlayerRosterDocument,
+  type WallClock,
+} from '@sw2d/contracts';
 import { AccessibilityStateImpl } from '../accessibility/AccessibilityStateImpl.ts';
 import { WebAudioBus } from '../audio/WebAudioBus.ts';
 import { AssetCatalogImpl } from '../content/AssetCatalogImpl.ts';
@@ -24,6 +29,7 @@ import { PointerAdapter } from '../input/PointerAdapter.ts';
 import { SpatialPointerHost } from '../input/SpatialPointerHost.ts';
 import { mergeBindings } from '../input/defaultBindings.ts';
 import { PlayerInputHub } from '../input/PlayerInputHub.ts';
+import { BrowserWallClock } from '../game-support/wallClock.ts';
 import { browserGamepadSource } from '../input/GamepadAdapter.ts';
 import { LocalStorageDriver } from '../persistence/LocalStorageDriver.ts';
 import { SaveStoreImpl } from '../persistence/SaveStoreImpl.ts';
@@ -85,6 +91,15 @@ export interface CreateGameOptions {
    * disconnect can be exercised without unplugging hardware.
    */
   readonly gamepadSource?: GamepadSource;
+  /**
+   * Override the wall clock (Phase 19). Defaults to `BrowserWallClock`
+   * (`Date.now()`). Supplied here rather than overridden after install because
+   * the economy pack captures it at install time - and because a game that
+   * wants a scripted absence must be the thing that decides so, before anything
+   * has read a clock. Automated QA injects a manual clock so a proof can be away
+   * for eight hours without waiting eight hours.
+   */
+  readonly wallClock?: WallClock;
   /** Enables development-only diagnostics. Defaults to import.meta.env.DEV. */
   readonly debug?: boolean;
   /** Override persistence (tests, or an environment with no localStorage). */
@@ -130,6 +145,15 @@ export async function createGame(options: CreateGameOptions): Promise<GameRuntim
    * single-`ActionInput` behaviour it had before this phase - no lobby, no
    * per-player channels, no extra adapters.
    */
+  /**
+   * The wall clock, provided unconditionally (post-ten Phase 19). Unlike the
+   * audio transport - where the runtime genuinely cannot know whether a game
+   * wants the audio clock or a scripted one - every browser has exactly one
+   * epoch clock, so there is nothing for a game to decide. A game that needs a
+   * scripted clock overrides the capability after install.
+   */
+  capabilities.provide(WALL_CLOCK_CAPABILITY_ID, options.wallClock ?? new BrowserWallClock());
+
   const rosterDoc = content.data['players']?.value as PlayerRosterDocument | undefined;
   let players: PlayerInputHub | null = null;
   if (rosterDoc) {

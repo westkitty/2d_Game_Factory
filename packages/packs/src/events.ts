@@ -65,6 +65,15 @@ declare module '@sw2d/contracts' {
     'agents:behaviorCompleted': { readonly agentId: string; readonly behaviorId: string };
     'agents:needLevelChanged': { readonly agentId: string; readonly needId: string; readonly level: string };
     'agents:workOrderCompleted': { readonly orderId: string; readonly agentId: string };
+    'economy:transaction': {
+      readonly itemId: string;
+      readonly side: 'sell' | 'restock';
+      readonly quantity: number;
+      readonly total: number;
+    };
+    'economy:customerLeft': { readonly customerId: string; readonly outcome: string };
+    'economy:prestige': { readonly level: number; readonly multiplier: number };
+    'production:jobCompleted': { readonly jobId: string; readonly recipeId: string };
   }
 }
 

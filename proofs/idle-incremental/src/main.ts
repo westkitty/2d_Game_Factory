@@ -1,9 +1,11 @@
 import './styles.css';
 import { createGame } from '@sw2d/runtime';
+import { ManualWallClock } from '@sw2d/contracts';
 import {
   aiPack,
   arcadePack,
   combatPack,
+  economyPack,
   entityRegistryPack,
   narrativePack,
   progressionPack,
@@ -23,8 +25,18 @@ const touchControls = document.querySelector<HTMLElement>('#touch-controls');
 
 if (!gameRoot) throw new Error('#game-root is missing from index.html');
 
+/**
+ * A scripted wall clock instead of the browser's (post-ten Phase 19).
+ *
+ * Offline catch-up is the one thing here that reads real time. Asserting on it
+ * against `Date.now()` would mean genuinely waiting, so the proof injects the
+ * same interface the browser clock implements and moves it by hand.
+ */
+const wallClock = new ManualWallClock(1_000_000);
+
 const runtime = await createGame({
   definition: GAME_DEFINITION,
+  wallClock,
   content: gameContent,
   parent: gameRoot,
   // Every real @sw2d/packs core is *available* here; content/game.json's
@@ -32,7 +44,7 @@ const runtime = await createGame({
   // only installs what a selection names). Passing all ten plus this game's
   // own shell pack is what lets content/game.json enable any subset of the
   // preset's required/optional packs without editing this file.
-  packs: [combatPack, aiPack, worldPack, entityRegistryPack, progressionPack, arcadePack, puzzlePack, simulationPack, narrativePack, strategyPack, GAME_SPECIFIC_PACK],
+  packs: [combatPack, aiPack, worldPack, entityRegistryPack, progressionPack, arcadePack, puzzlePack, simulationPack, economyPack, narrativePack, strategyPack, GAME_SPECIFIC_PACK],
   // Every pack that declares a configSchemaId is validated before it installs
   // (ADR-0013) - see docs/architecture/adr/0013-composition-root-enforces-pack-declarations.md.
   packConfigValidator,

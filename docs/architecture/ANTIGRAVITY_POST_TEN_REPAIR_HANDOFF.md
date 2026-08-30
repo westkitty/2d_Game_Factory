@@ -25,8 +25,9 @@ for candidate phases.
 | 15 | Local Multiplayer & Gamepad Routing | FOCUSED TESTS PASS | `2670526` | local-party-game (13 steps), pong (input foundation) |
 | 16 | Ball & Paddle Arcade Systems | FOCUSED TESTS PASS | `81a7e12` | breakout (12 steps), pong (12 steps, upgraded) |
 | 17 | Rhythm, Beat & Precision Timing | FOCUSED TESTS PASS | `ed74dc3` | rhythm-action (12 steps), reaction-timing (10 steps) |
-| 18 | Simulation Agents, Needs, Behavior & Schedules | FOCUSED TESTS PASS | this phase | pet-creature (12 steps), colony-lite (12 steps) |
-| 19–36 | see `POST_TEN_PROGRAM_SPEC.md` | NOT STARTED | — | — |
+| 18 | Simulation Agents, Needs, Behavior & Schedules | FOCUSED TESTS PASS | `af73bb5` | pet-creature (12 steps), colony-lite (12 steps) |
+| 19 | Economy, Production & Customer Simulation | FOCUSED TESTS PASS | this phase | shopkeeper (18 steps), idle-incremental (15 steps, upgraded) |
+| 20–36 | see `POST_TEN_PROGRAM_SPEC.md` | NOT STARTED | — | — |
 
 ---
 
@@ -117,19 +118,42 @@ Carried forward every phase until an independent certification pass closes them.
   — the same generator gap Phase 17 recorded for `audio.transport`, for Phase 36 to close.
 
 
+### Phase 19
+
+- **Customers do not walk anywhere.** `navigate` is a timer and `chooseTarget` never asks where
+  anything is; placement validates a reachability *claim* (an access point in an aisle), not a path.
+  A customer can be served at a counter no route reaches.
+- **`unlocks` is a declared prestige reset scope that does nothing.** `progression.state` has no
+  revoke, and reaching into its private state would be worse than recording this. Decide whether it
+  should work or leave the union.
+- Prestige wipes in-flight jobs without refunding their inputs; one queue (`#defaultQueue()`, lowest
+  id) is used implicitly however many the document defines; `arrival.maxConcurrent` skips arrivals
+  rather than backlogging them; `demandMultiplier` moves only when a game moves it.
+- **`simulation.economy` is large** — goods, transactions, customers, queues, offline catch-up and
+  prestige in one capability. Splitting customers out would put the shelf behind a second owner,
+  which is what this phase most wanted to avoid. Worth a decision if Phase 34 wants the customer
+  half without the shop half.
+- `save()`/`resume()` live on the service rather than a persistence seam; there is no `toJSON()`.
+- **Prestige and `progression.runs` know nothing about each other.** `RunResetParticipant` exists and
+  the economy does not register with it, so a game using both has two independent reset systems.
+- Both proofs use a `goOffline` test control (public `save()`/`resume()` plus the injected clock).
+- The generator still does not supply `content/economy.json` for presets requiring `sw2d.economy` —
+  the same gap Phases 17 and 18 recorded, for Phase 36 to close.
+
+
 ---
 
 ## Verified gates at the latest phase boundary
 
-Re-run and re-recorded at each phase; these are the Phase-18 numbers.
+Re-run and re-recorded at each phase; these are the Phase-19 numbers.
 
 | Gate | Result |
 | --- | --- |
 | `npm run typecheck` | PASS, 0 errors |
-| `npx vitest run` | PASS — 172 files / 3017 tests |
-| `npm run validate` | PASS at the Phase-15 boundary (incl. offline check: no external request construct); Phases 16-18 are not tranche gates, so `validate` was not re-run. The next tranche gate is Phase 20 |
-| `npm run qa:proof` | PASS — 36/36 |
-| `npm run qa:workbench` | PASS — 16/16; WB-SECURITY-001 audits 68 endpoints |
+| `npx vitest run` | PASS — 175 files / 3151 tests |
+| `npm run validate` | PASS at the Phase-15 boundary (incl. offline check: no external request construct); Phases 16-19 are not tranche gates, so `validate` was not re-run. **Phase 20 is the next tranche gate** and must run `npm run validate` + `npm run qa:proof` |
+| `npm run qa:proof` | PASS — 37/37 |
+| `npm run qa:workbench` | PASS — 16/16; WB-SECURITY-001 audits 70 endpoints |
 
 ---
 
