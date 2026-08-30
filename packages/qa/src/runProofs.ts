@@ -76,6 +76,9 @@ const PROOF_SPEC_MODULES: Readonly<Record<string, string>> = {
   pong: 'pong',
   // Phase 16 - ball & paddle arcade systems
   breakout: 'breakout',
+  // Phase 17 - rhythm, beat & precision timing
+  'rhythm-action': 'rhythmAction',
+  'reaction-timing': 'reactionTiming',
 };
 
 function proofTargets(): Target[] {

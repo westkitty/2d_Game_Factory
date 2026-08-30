@@ -28,6 +28,7 @@ import runsSchema from '../schemas/runs.schema.json' with { type: 'json' };
 import strategyActionsSchema from '../schemas/strategy-actions.schema.json' with { type: 'json' };
 import playerRosterSchema from '../schemas/player-roster.schema.json' with { type: 'json' };
 import ballPaddleSchema from '../schemas/ball-paddle.schema.json' with { type: 'json' };
+import rhythmSchema from '../schemas/rhythm.schema.json' with { type: 'json' };
 
 /**
  * Ajv-based validation for every schema this package owns.
@@ -65,7 +66,8 @@ export type SchemaName =
   | 'runs'
   | 'strategy-actions'
   | 'player-roster'
-  | 'ball-paddle';
+  | 'ball-paddle'
+  | 'rhythm';
 
 export const SCHEMA_NAMES: readonly SchemaName[] = [
   'action-bindings',
@@ -95,6 +97,7 @@ export const SCHEMA_NAMES: readonly SchemaName[] = [
   'strategy-actions',
   'player-roster',
   'ball-paddle',
+  'rhythm',
 ];
 
 /** One located problem: which document, where in it, and what is wrong. */
@@ -146,6 +149,7 @@ const SCHEMA_DOCUMENTS: Readonly<Record<SchemaName, SchemaDocument>> = {
   'strategy-actions': strategyActionsSchema,
   'player-roster': playerRosterSchema,
   'ball-paddle': ballPaddleSchema,
+  rhythm: rhythmSchema,
 };
 
 // Registration order matters: a schema must be added before anything that
@@ -177,6 +181,7 @@ for (const name of [
   'strategy-actions',
   'player-roster',
   'ball-paddle',
+  'rhythm',
 ] as const) {
   const schema = SCHEMA_DOCUMENTS[name];
   ajv.addSchema(schema, schema.$id);

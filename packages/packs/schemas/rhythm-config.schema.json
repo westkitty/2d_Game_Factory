@@ -1,0 +1,27 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:sw2d:schema:pack-rhythm-config:v1",
+  "title": "RhythmPackConfig",
+  "description": "Mirrors @sw2d/packs' RhythmConfig. All fields optional.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "defaultChartId": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Chart loaded at install. Defaults to the first in content/rhythm.json."
+    },
+    "reaction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["rounds", "minWaitMs", "maxWaitMs", "seed"],
+      "properties": {
+        "rounds": { "type": "integer", "minimum": 1 },
+        "minWaitMs": { "type": "number", "minimum": 0 },
+        "maxWaitMs": { "type": "number", "minimum": 0 },
+        "seed": { "type": "integer", "minimum": 0 },
+        "timeoutMs": { "type": "number", "exclusiveMinimum": 0 }
+      }
+    }
+  }
+}

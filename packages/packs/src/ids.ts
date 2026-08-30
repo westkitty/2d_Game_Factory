@@ -39,6 +39,7 @@ export const PACK_IDS = {
   runs: 'sw2d.runs',
   strategyActions: 'sw2d.strategy-actions',
   ballPaddle: 'sw2d.ball-paddle',
+  rhythm: 'sw2d.rhythm',
 } as const;
 
 export const CAPABILITY_IDS = {
@@ -85,4 +86,14 @@ export const CAPABILITY_IDS = {
   strategyTactics: 'strategy.tactics',
   /** Post-ten Phase 16: ball/paddle arcade simulation (breakout, pong). */
   ballPaddle: 'arcade.ball-paddle',
+  /** Post-ten Phase 17: chart judgement against the audio transport. */
+  rhythm: 'arcade.rhythm',
+  /** Post-ten Phase 17: seeded reaction-test state machine. */
+  reaction: 'arcade.reaction',
+  /**
+   * Post-ten Phase 17: playback position. Provided by the game (the runtime's
+   * browser transport, or a scripted one in QA) and consumed by sw2d.rhythm, so
+   * the chart is judged against the same clock the music plays on.
+   */
+  audioTransport: 'audio.transport',
 } as const;

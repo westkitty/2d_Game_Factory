@@ -124,10 +124,12 @@ export const PUZZLE_ARCADE_PRESETS: readonly PresetDefinition[] = [
     displayName: 'Rhythm Action',
     family: 'puzzle-arcade',
     controllerFamilies: ['ui-simulation'],
-    requiredSystemPacks: [pack(PACK_IDS.arcade)],
-    requiredContentRoles: ['tuning'],
+    // Post-ten Phase 17: charts are judged against the audio transport
+    // (sw2d.rhythm, ADR-0031; proof: proofs/rhythm-action/).
+    requiredSystemPacks: [pack(PACK_IDS.arcade), pack(PACK_IDS.rhythm)],
+    requiredContentRoles: ['tuning', 'rhythm'],
     validationProfile: VALIDATION_PROFILES.puzzleArcade,
-    knownLimitations: ['No deterministic music-beat/audio-synchronization system exists yet.'],
+    knownLimitations: [LIMITATIONS.rhythmTransport],
   }),
 
   definePreset({
@@ -135,10 +137,12 @@ export const PUZZLE_ARCADE_PRESETS: readonly PresetDefinition[] = [
     displayName: 'Reaction Timing',
     family: 'puzzle-arcade',
     controllerFamilies: ['ui-simulation'],
-    requiredSystemPacks: [pack(PACK_IDS.arcade)],
-    requiredContentRoles: ['tuning'],
+    // Post-ten Phase 17: the seeded reaction state machine is reusable
+    // (sw2d.rhythm -> arcade.reaction; proof: proofs/reaction-timing/).
+    requiredSystemPacks: [pack(PACK_IDS.arcade), pack(PACK_IDS.rhythm)],
+    requiredContentRoles: ['tuning', 'rhythm'],
     validationProfile: VALIDATION_PROFILES.puzzleArcade,
-    knownLimitations: ['Arcade timing state exists, but no specialized reaction-test flow is implemented.'],
+    knownLimitations: [LIMITATIONS.rhythmTransport],
   }),
 
   definePreset({

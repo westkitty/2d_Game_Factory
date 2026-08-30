@@ -1,0 +1,84 @@
+{
+  "schemaVersion": 1,
+  "calibrationMs": 0,
+  "charts": [
+    {
+      "schemaVersion": 1,
+      "id": "demo-chart",
+      "audioRole": "music.demo",
+      "bpm": 120,
+      "offsetMs": 1000,
+      "judgementWindows": {
+        "perfectMs": 40,
+        "goodMs": 90,
+        "missMs": 160
+      },
+      "notes": [
+        {
+          "id": "beat-0",
+          "beat": 0,
+          "action": "CONFIRM"
+        },
+        {
+          "id": "beat-1",
+          "beat": 2,
+          "action": "CONFIRM"
+        },
+        {
+          "id": "beat-2",
+          "beat": 4,
+          "action": "CONFIRM"
+        },
+        {
+          "id": "beat-3",
+          "beat": 6,
+          "action": "CONFIRM"
+        },
+        {
+          "id": "beat-4",
+          "beat": 8,
+          "action": "CONFIRM"
+        },
+        {
+          "id": "beat-5",
+          "beat": 10,
+          "action": "CONFIRM"
+        },
+        {
+          "id": "beat-6",
+          "beat": 12,
+          "action": "CONFIRM"
+        },
+        {
+          "id": "beat-7",
+          "beat": 14,
+          "action": "CONFIRM"
+        },
+        {
+          "id": "ms-0",
+          "timeMs": 9000,
+          "action": "PRIMARY_ACTION",
+          "lane": "right"
+        },
+        {
+          "id": "ms-1",
+          "timeMs": 9750,
+          "action": "PRIMARY_ACTION",
+          "lane": "right"
+        },
+        {
+          "id": "ms-2",
+          "timeMs": 10500,
+          "action": "PRIMARY_ACTION",
+          "lane": "right"
+        },
+        {
+          "id": "ms-3",
+          "timeMs": 11250,
+          "action": "PRIMARY_ACTION",
+          "lane": "right"
+        }
+      ]
+    }
+  ]
+}

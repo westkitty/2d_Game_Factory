@@ -23,8 +23,9 @@ for candidate phases.
 | 13 | Run Lifecycle & Roguelite Meta-Progression | FOCUSED TESTS PASS | `69d957d` + repair `7902701` | action-roguelite (20 steps), survivor-like |
 | 14 | Strategy Orders & Tactical Actions | FOCUSED TESTS PASS | `7e46c91` | simple-rts (13 steps), turn-based-tactics (15 steps) |
 | 15 | Local Multiplayer & Gamepad Routing | FOCUSED TESTS PASS | `2670526` | local-party-game (13 steps), pong (input foundation) |
-| 16 | Ball & Paddle Arcade Systems | FOCUSED TESTS PASS | this phase | breakout (12 steps), pong (12 steps, upgraded) |
-| 17–36 | see `POST_TEN_PROGRAM_SPEC.md` | NOT STARTED | — | — |
+| 16 | Ball & Paddle Arcade Systems | FOCUSED TESTS PASS | `81a7e12` | breakout (12 steps), pong (12 steps, upgraded) |
+| 17 | Rhythm, Beat & Precision Timing | FOCUSED TESTS PASS | this phase | rhythm-action (12 steps), reaction-timing (10 steps) |
+| 18–36 | see `POST_TEN_PROGRAM_SPEC.md` | NOT STARTED | — | — |
 
 ---
 
@@ -79,19 +80,35 @@ Carried forward every phase until an independent certification pass closes them.
 - `proofs/breakout` ships a `parkPaddle` test control (guarded: it refuses to run while the ball is
   live).
 
+### Phase 17
+
+- `RhythmNote.holdMs` is modelled and validated but judged as a single tap. Decide whether to judge
+  holds or drop the field.
+- **No audio actually plays** in either proof. "The chart matches what the player hears" is asserted
+  through the transport, never acoustically.
+- `BrowserAudioTransport` is unit-tested (10 tests) and its clock source + state machine are asserted
+  in a real page, but no browser step asserts its position advances in real time — that would
+  reintroduce the timing race the manual transport exists to avoid.
+- `tick()` is on the public interface (unlike Phase 16's `update()`), so a consumer could also call
+  it. It is idempotent, but the asymmetry is worth a decision.
+- The `audio.transport` capability is supplied by the **game**, not the runtime. A preset requiring
+  `sw2d.rhythm` fails at install unless its shell provides one; the generator does not yet do this
+  automatically, which Phase 36's realization pass must address.
+- `reaction-timing` ships a `driveTransport` test control.
+
 ---
 
 ## Verified gates at the latest phase boundary
 
-Re-run and re-recorded at each phase; these are the Phase-16 numbers.
+Re-run and re-recorded at each phase; these are the Phase-17 numbers.
 
 | Gate | Result |
 | --- | --- |
 | `npm run typecheck` | PASS, 0 errors |
-| `npx vitest run` | PASS — 163 files / 2861 tests |
-| `npm run validate` | PASS at the Phase-15 boundary (incl. offline check: no external request construct); Phase 16 is not a tranche gate, so `validate` was not re-run |
-| `npm run qa:proof` | PASS — 32/32 |
-| `npm run qa:workbench` | PASS — 16/16; WB-SECURITY-001 audits 64 endpoints |
+| `npx vitest run` | PASS — 168 files / 2941 tests |
+| `npm run validate` | PASS at the Phase-15 boundary (incl. offline check: no external request construct); Phases 16-17 are not tranche gates, so `validate` was not re-run |
+| `npm run qa:proof` | PASS — 34/34 |
+| `npm run qa:workbench` | PASS — 16/16; WB-SECURITY-001 audits 66 endpoints |
 
 ---
 

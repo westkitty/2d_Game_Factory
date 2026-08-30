@@ -78,8 +78,8 @@ pack/controller selections were actually exercised through, and
 | `pong` | arcade, ball-paddle | - | top-down | keyboard, touch | puzzle-arcade-recipe |
 | `physics-puzzle` | puzzle | - | pointer | keyboard, pointer, touch | puzzle-arcade-recipe |
 | `maze-game` | world, world-entities | arcade | grid | keyboard, touch | puzzle-arcade-recipe |
-| `rhythm-action` | arcade | - | ui-simulation | keyboard, touch | puzzle-arcade-recipe |
-| `reaction-timing` | arcade | - | ui-simulation | keyboard, touch | puzzle-arcade-recipe |
+| `rhythm-action` | arcade, rhythm | - | ui-simulation | keyboard, touch | puzzle-arcade-recipe |
+| `reaction-timing` | arcade, rhythm | - | ui-simulation | keyboard, touch | puzzle-arcade-recipe |
 | `pinball-lite` | arcade | - | ui-simulation | keyboard, touch | puzzle-arcade-recipe |
 
 ## Strategy / defense (Phase 7B)

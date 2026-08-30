@@ -23,6 +23,11 @@ export { DEFAULT_BINDINGS, mergeBindings } from './input/defaultBindings.ts';
 export { GamepadAdapter, browserGamepadSource } from './input/GamepadAdapter.ts';
 export { PlayerInputHub } from './input/PlayerInputHub.ts';
 export {
+  BrowserAudioTransport,
+  ManualAudioTransport,
+  createAudioTransport,
+} from './game-support/audioTransport.ts';
+export {
   DEFAULT_KEYBOARD_PROFILES,
   KEYBOARD_PROFILE_LEFT,
   KEYBOARD_PROFILE_RIGHT,

@@ -57,6 +57,10 @@ declare module '@sw2d/contracts' {
     /** `livesRemaining` is -1 when the definition declares unlimited lives. */
     'ballPaddle:ballLost': { readonly edge: string; readonly livesRemaining: number };
     'ballPaddle:matchComplete': { readonly winnerId: string | null };
+    'rhythm:judged': { readonly noteId: string; readonly judgement: string; readonly deltaMs: number; readonly combo: number };
+    'reaction:stimulus': { readonly round: number };
+    /** `reactionMs` is -1 for a false start or a timeout. */
+    'reaction:round': { readonly round: number; readonly falseStart: boolean; readonly reactionMs: number };
   }
 }
 

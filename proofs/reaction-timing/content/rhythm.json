@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "charts": [
+    {
+      "schemaVersion": 1,
+      "id": "unused",
+      "audioRole": "music.none",
+      "bpm": 120,
+      "offsetMs": 0,
+      "judgementWindows": {
+        "perfectMs": 40,
+        "goodMs": 90,
+        "missMs": 160
+      },
+      "notes": [
+        {
+          "id": "n1",
+          "timeMs": 1000,
+          "action": "CONFIRM"
+        }
+      ]
+    }
+  ]
+}

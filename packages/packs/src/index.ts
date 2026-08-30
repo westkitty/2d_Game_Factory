@@ -111,3 +111,15 @@ export {
   type BallPaddleConfig,
   type BallPaddleService,
 } from './ballPaddle/ballPaddlePack.ts';
+export {
+  rhythmPack,
+  RhythmServiceImpl,
+  ReactionServiceImpl,
+  RHYTHM_CONFIG_SCHEMA_ID,
+  DEFAULT_REACTION,
+  MissingRhythmDocumentError,
+  UnknownChartError,
+  type RhythmConfig,
+  type RhythmService,
+  type ReactionService,
+} from './rhythm/rhythmPack.ts';

@@ -89,6 +89,11 @@ export const LIMITATIONS = {
   // Capability program Phase 14 addition. Order issue/queue/cancel/lifecycle is
   // reusable (sw2d.strategy-actions); what stays starter-specific is the *input*
   // surface that turns a drag rectangle into a set of actor ids.
+  // Post-ten Phase 17 addition, shared by rhythm-action and reaction-timing.
+  // The capability is real; what stays honest to record is that the game must
+  // supply the transport, and that no music-authoring tooling ships with it.
+  rhythmTransport:
+    'Chart judgement, judgement windows, combo/accuracy scoring, bounded calibration and the seeded reaction state machine are reusable through sw2d.rhythm (arcade.rhythm, arcade.reaction). Charts are judged against an audio transport the game supplies (audio.transport); the runtime ships a browser transport reading AudioContext.currentTime, and degrades to the page clock when Web Audio is unavailable. No music-authoring or waveform tooling ships with this - a chart is authored as content/rhythm.json.',
   // Post-ten Phase 15 addition. Local player routing is reusable
   // (sw2d runtime PlayerInputHub, input.players); what stays honest to record is
   // that same-device multi-touch multiplayer was not built.

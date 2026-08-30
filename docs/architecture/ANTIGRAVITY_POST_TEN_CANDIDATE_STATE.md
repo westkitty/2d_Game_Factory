@@ -3,7 +3,7 @@
 First-ten base SHA: `acf802f7a32a3f341273c084931af37cb5461784`
 Candidate branch: `candidate/antigravity-post-ten-program`
 Candidate HEAD: `4055e5ec4842882b34f1396b6166104051c9113b`
-Current candidate phase: Phase 16 (FOCUSED TESTS PASS) — Phase 17 next, per `POST_TEN_PROGRAM_SPEC.md`
+Current candidate phase: Phase 17 (FOCUSED TESTS PASS) — Phase 18 next, per `POST_TEN_PROGRAM_SPEC.md`
 
 ---
 
@@ -750,3 +750,181 @@ None.
 - Confirm the substep bound empirically at the top of the supported speed range on slower hardware.
 - Decide whether the `drainEvents()` buffer needs an explicit bound.
 - Decide the Breakout multi-paddle score-owner question.
+
+## Phase 17 — Rhythm, Beat & Precision Timing
+
+- **Phase:** 17
+- **Capabilities:** `arcade.rhythm` (`RhythmService`), `arcade.reaction` (`ReactionService`)
+- **Status:** FOCUSED TESTS PASS
+- **Starting SHA:** `81a7e12` (`candidate(phase-16)`)
+- **ADR:** `docs/architecture/adr/0031-rhythm-judges-against-a-transport.md` (new; indexed)
+
+### Core decisions
+
+1. **`AudioTransport` is the only authority for what time it is.** `performance.now()` drifts against
+   the audio output clock, keeps running under tab throttling, and knows nothing about a pause - all
+   three silently. `RhythmService.press()` takes **no timestamp**; it reads the transport itself, so
+   a caller cannot judge against a stale or invented time.
+2. **Two guarantees the service owns, not the caller.** A note is judged at most once, ever (one
+   `#commit`, one `judged` flag, every path checks it); and nothing is judged while paused, so a
+   pause can neither farm notes at a frozen time nor silently expire the notes it froze over.
+3. **Beats are content.** A note authors exactly one of `timeMs` or `beat`; both or neither is a
+   content error, so the resolver never guesses. One chart can mix both unambiguously.
+4. **The reaction machine is a separate capability on a separate clock** - simulation time from
+   `update(deltaMs)`, with the wait drawn from the canonical seeded RNG. A press during the wait is a
+   false start; a response past the timeout is a *completed round with no time*, a different outcome.
+5. **Judgement points are fixed in the contract** so a chart cannot inflate its own score.
+
+### Contracts
+
+`packages/contracts/src/rhythm.ts`, exported from `index.ts`: `RHYTHM_CAPABILITY_ID`,
+`REACTION_CAPABILITY_ID`, `TransportState`/`AudioTransport`, `JudgementWindows`, `RhythmNote`,
+`RhythmChart`, `RhythmDocument`, `msPerBeat`/`noteTimeMs`, `Judgement`/`JudgedNote`/
+`RhythmInputOutcome`/`RhythmScore`/`RhythmChartStatus`/`RhythmState`, `RHYTHM_JUDGEMENT_POINTS`,
+`RhythmService`, the reaction types (`ReactionPhase`, `ReactionRoundResult`, `ReactionSummary`,
+`ReactionConfig`, `ReactionState`, `ReactionService`), `validateRhythmDocument`/
+`InvalidRhythmChartError`, `MAX_CALIBRATION_MS`/`clampCalibration`, `classifyDelta`, `reactionWaitMs`.
+
+### Schemas
+
+- `packages/schemas/schemas/rhythm.schema.json` (`urn:sw2d:schema:content-rhythm:v1`), registered as
+  schema name `rhythm` and content document name `rhythm`.
+- `packages/packs/schemas/rhythm-config.schema.json` — `defaultChartId`, `reaction`.
+- Global validation not weakened; the contract's semantic gate runs at install.
+
+### Runtime
+
+`packages/runtime/src/game-support/audioTransport.ts` — `BrowserAudioTransport` (reads
+`AudioContext.currentTime`, clamps a backwards-moving clock to zero, degrades to `performance.now()`
+when Web Audio is absent and reports that through `usingAudioClock`), `ManualAudioTransport` (same
+contract, clock supplied rather than sampled), `createAudioTransport`. Exported from the runtime index.
+
+### Pack
+
+`sw2d.rhythm` (`packages/packs/src/rhythm/rhythmPack.ts`) providing both capabilities.
+`PACK_IDS.rhythm`; `CAPABILITY_IDS.rhythm` / `.reaction` / `.audioTransport`. The transport is
+**required** from the capability registry: a missing one is a construction error, not a silent no-op
+that would judge every note against zero. Events: `rhythm:judged`, `reaction:stimulus`,
+`reaction:round`.
+
+### Presets changed
+
+- `rhythm-action` and `reaction-timing`: `sw2d.rhythm` added as required, content role `rhythm` added.
+- `packages/presets/src/shared.ts`: new shared `LIMITATIONS.rhythmTransport`, replacing both old
+  "does not exist" claims and stating the honest scope (the game supplies the transport; no
+  music-authoring tooling ships).
+- `docs/presets/PRESET_CAPABILITY_MATRIX.md` rows updated for both.
+- Maturity deliberately not promoted, matching the Phases 11-16 precedent.
+
+### Workbench authoring surface
+
+`workbench/server/rhythmLab.ts` + `workbench/src/views/rhythmLab.ts`, mounted in `inspector.ts`;
+routes `POST /beatmap/inspect`, `POST /beatmap/update` (the `/beatmap` path keeps them inside the
+WB-SECURITY-001 audit). Edits tempo, offset, the three windows and the calibration default, and
+**reports every note's resolved absolute time** so a beat-authored chart can be checked against the
+music. **Notes are not edited here** - placing notes against a waveform is a DAW's job, and a numeric
+note grid would be a poor imitation of a tool that already exists.
+
+### Proof consumers
+
+- **`proofs/rhythm-action/` (new)** — primary defining proof, 12 named steps; spec
+  `packages/qa/proof-specs/rhythmAction.ts`. Installs `ManualAudioTransport` so the journey sits at
+  exact chart positions; a rhythm assertion against a free-running clock would be a timing race.
+- **`proofs/reaction-timing/` (new)** — 10 named steps; spec `packages/qa/proof-specs/reactionTiming.ts`.
+  Installs the **real** `BrowserAudioTransport` on a real `AudioContext` and asserts its clock source
+  and state machine. The reaction test never consults it, so that check is free and genuine.
+
+### Tests added
+
+- `packages/contracts/test/rhythm.test.ts` (21 tests) — beat conversion, every window boundary
+  including the exact edges, symmetry of early/late, calibration bounds, the seeded wait's
+  determinism/variation/bounds, and every branch of the semantic validator.
+- `packages/packs/test/rhythm.test.ts` (33 tests) — install/validation, judgement by delta,
+  nearest-note selection, action and lane matching, the once-only guarantee, combo/accuracy, expiry
+  exactly once, chart completion, pause/resume semantics, calibration, lookahead, load/reset, the
+  full reaction machine (seeded wait, false start, response, timeout, rounds, summary, reset), and
+  bus events.
+- `packages/runtime/test/audioTransport.test.ts` (10 tests) — audio-clock reading, pause not
+  advancing, the backwards-clock clamp, restart, the no-Web-Audio fallback, dispose, and the manual
+  transport.
+- `packages/schemas/test/contentDocuments.test.ts` (document registry updated).
+- `proofs/rhythm-action/tests/content.test.ts` and `proofs/reaction-timing/tests/content.test.ts`
+  (8 each).
+
+### Tests run — actual results
+
+- `npm run typecheck` — **PASS**, 0 errors
+- `npx vitest run` — **PASS, 168 files / 2941 tests** (was 163 / 2861 before Phase 17)
+- `npm run qa:workbench` — **PASS, 16/16**; WB-SECURITY-001 now audits **66** endpoints (was 64)
+- `npm run qa:proof` (full suite) — **PASS, 34/34**, including `rhythm-action` 12/12 and
+  `reaction-timing` 10/10, 0 console errors, 0 external requests
+
+### Proof-quality evidence
+
+No unconditional acceptance step exists in either spec. Four sabotages were applied, observed and
+reverted (`grep SABOTAGE` clean afterwards):
+
+| Sabotage | Result |
+| --- | --- |
+| the `judged` flag is ignored when selecting a note | rhythm step 6 FAIL |
+| presses are judged while paused / before start | rhythm steps 2 and 9 FAIL |
+| a press during the wait is ignored instead of a false start | reaction steps 4 and 9 FAIL |
+| the reaction wait is a constant instead of a seeded draw | reaction step 5 FAIL, step 3 PASS |
+
+The last control is instructive: a constant wait still satisfies "inside the authored bounds"
+(step 3), which is precisely why step 5 asserts that two rounds differ.
+
+Two defects were in the **proof**, not the implementation, and both were found by running it:
+`judgedNoteIds` tracked presses only, so an expired note legitimately never appeared there (the shell
+now also exposes the service's own complete record); and `accuracy` is reported rounded to four
+decimal places, which a `1e-6` tolerance could never satisfy.
+
+### Limitations changed
+
+`LIMITATIONS.rhythmTransport` (new, shared by `rhythm-action` and `reaction-timing`) replaces
+"No deterministic music-beat/audio-synchronization system exists yet" and "no specialized
+reaction-test flow is implemented".
+
+### Known failures
+
+None.
+
+### Known shortcuts / characteristics a certifier should look at
+
+1. **`holdMs` is modelled but not judged.** `RhythmNote.holdMs` exists in the contract and schema and
+   is validated, but a hold is judged as a single tap. Recorded rather than hidden.
+2. **No audio actually plays.** The transport is the *position* of music; playing a track is the
+   game's job through the existing audio bus. Neither proof plays a sound, so "the chart matches what
+   the player hears" is asserted only through the transport, not acoustically.
+3. **`BrowserAudioTransport` is only lightly browser-proofed.** Ten unit tests cover its behaviour;
+   the reaction proof asserts it is on the audio clock and that start/pause/resume/stop behave, but
+   no browser step asserts that its reported position advances in real time - that would reintroduce
+   the timing race the manual transport exists to avoid.
+4. **`rhythm.tick()` is called from the pack's `update()` every frame** while `press()` is called by
+   the consumer. Unlike Phase 16, `tick()` is on the service interface, so a consumer *could* also
+   call it. It is idempotent (a judged note is never re-judged), so a double call is harmless - but
+   the asymmetry with Phase 16's stricter single-owner rule is worth a decision.
+5. **No lookahead scheduler ships.** `state().upcoming` reports notes inside a fixed 2000ms window
+   for a renderer to draw; scheduling audio events ahead of time is left to the game. The contract
+   documents that a scheduling callback must never become the authority.
+6. **`reaction-timing` ships a `driveTransport` test control** used only to exercise the real
+   transport's state machine from the proof.
+
+### Architectural concerns
+
+- The `audio.transport` capability is provided by the **game** (via a `GameExtension` in both proofs)
+  rather than by the runtime automatically. That is deliberate - the runtime cannot know whether a
+  game wants the audio clock or a scripted one - but it means a preset requiring `sw2d.rhythm` will
+  fail at install unless its generated shell also supplies a transport. The generator does not yet do
+  that automatically; Phase 36's realization pass will need to.
+- `RhythmService.tick()` returning expired notes *and* mutating state means a caller that ignores the
+  return still gets the mutation. That is intended (the pack drives it) but is a second observation
+  path alongside `judged()`.
+
+### Work required from a later certifier
+
+- Adversarial browser validation of both journeys, especially pause/resume and calibration.
+- Decide whether `holdMs` should be judged as a hold or removed from the model.
+- Decide whether `tick()` should leave the public interface, matching Phase 16's stricter rule.
+- Confirm the generator supplies an `audio.transport` for any preset requiring `sw2d.rhythm`
+  (currently a proof-shell responsibility).

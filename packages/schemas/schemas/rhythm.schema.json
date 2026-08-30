@@ -1,0 +1,69 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:sw2d:schema:content-rhythm:v1",
+  "title": "RhythmDocument",
+  "description": "Mirrors @sw2d/contracts RhythmDocument (rhythm.ts). Content document name 'rhythm'. Charts are judged against the audio transport, never a wall clock.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "charts"],
+  "properties": {
+    "schemaVersion": { "type": "integer", "minimum": 1, "maximum": 1 },
+    "calibrationMs": {
+      "type": "number",
+      "minimum": -200,
+      "maximum": 200,
+      "description": "Bounded player calibration added to every input timestamp."
+    },
+    "charts": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/definitions/chart" }
+    }
+  },
+  "definitions": {
+    "chart": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "id", "audioRole", "bpm", "offsetMs", "judgementWindows", "notes"],
+      "properties": {
+        "schemaVersion": { "type": "integer", "minimum": 1, "maximum": 1 },
+        "id": { "type": "string", "minLength": 1 },
+        "audioRole": { "type": "string", "minLength": 1 },
+        "bpm": { "type": "number", "exclusiveMinimum": 0 },
+        "offsetMs": { "type": "number" },
+        "judgementWindows": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["perfectMs", "goodMs", "missMs"],
+          "properties": {
+            "perfectMs": { "type": "number", "exclusiveMinimum": 0 },
+            "goodMs": { "type": "number", "exclusiveMinimum": 0 },
+            "missMs": { "type": "number", "exclusiveMinimum": 0 }
+          }
+        },
+        "notes": { "type": "array", "items": { "$ref": "#/definitions/note" } }
+      }
+    },
+    "note": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "action"],
+      "description": "Author exactly one of timeMs or beat; the contract's semantic gate rejects both or neither.",
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "timeMs": { "type": "number", "minimum": 0 },
+        "beat": { "type": "number", "minimum": 0 },
+        "action": {
+          "type": "string",
+          "enum": [
+            "MOVE_LEFT", "MOVE_RIGHT", "MOVE_UP", "MOVE_DOWN", "JUMP",
+            "PRIMARY_ACTION", "SECONDARY_ACTION", "DASH", "INTERACT", "PAUSE",
+            "CONFIRM", "CANCEL", "AIM_LEFT", "AIM_RIGHT", "AIM_UP", "AIM_DOWN"
+          ]
+        },
+        "lane": { "type": "string", "minLength": 1 },
+        "holdMs": { "type": "number", "exclusiveMinimum": 0 }
+      }
+    }
+  }
+}

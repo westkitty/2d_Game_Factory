@@ -41,6 +41,7 @@ describe('validateContentBundleData', () => {
       'strategy-actions',
       'players',
       'ball-paddle',
+      'rhythm',
     ]);
   });
 
