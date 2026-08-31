@@ -1,0 +1,30 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:sw2d:schema:content-defense:v1",
+  "title": "DefenseDocument",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion"],
+  "properties": {
+    "schemaVersion": { "type": "integer", "const": 1 },
+    "startingFunds": { "type": "number", "minimum": 0 },
+    "towers": { "type": "array", "items": { "$ref": "#/definitions/tower" } },
+    "zones": { "type": "array", "items": { "$ref": "#/definitions/buildZone" } },
+    "routes": { "type": "array", "items": { "$ref": "#/definitions/route" } },
+    "lanes": { "type": "array", "items": { "$ref": "#/definitions/lane" } },
+    "bases": { "type": "array", "items": { "$ref": "#/definitions/base" } },
+    "captureZones": { "type": "array", "items": { "$ref": "#/definitions/captureZone" } }
+  },
+  "definitions": {
+    "point": { "type": "object", "additionalProperties": false, "required": ["x", "y"], "properties": { "x": { "type": "number" }, "y": { "type": "number" } } },
+    "footprint": { "type": "object", "additionalProperties": false, "required": ["width", "height"], "properties": { "width": { "type": "number", "exclusiveMinimum": 0 }, "height": { "type": "number", "exclusiveMinimum": 0 } } },
+    "upgrade": { "type": "object", "additionalProperties": false, "required": ["id", "cost"], "properties": { "id": { "type": "string", "minLength": 1 }, "cost": { "type": "number", "minimum": 0 }, "weaponId": { "type": "string", "minLength": 1 }, "rangeMultiplier": { "type": "number", "exclusiveMinimum": 0 }, "cooldownMultiplier": { "type": "number", "exclusiveMinimum": 0 }, "damageMultiplier": { "type": "number", "exclusiveMinimum": 0 } } },
+    "tower": { "type": "object", "additionalProperties": false, "required": ["id", "cost", "range", "weaponId", "targetPolicy"], "properties": { "id": { "type": "string", "minLength": 1 }, "displayName": { "type": "string" }, "cost": { "type": "number", "minimum": 0 }, "footprint": { "$ref": "#/definitions/footprint" }, "range": { "type": "number", "exclusiveMinimum": 0 }, "weaponId": { "type": "string", "minLength": 1 }, "targetPolicy": { "enum": ["nearest", "first-on-route", "last-on-route", "lowest-health", "highest-health"] }, "upgrades": { "type": "array", "items": { "$ref": "#/definitions/upgrade" } }, "refundRatio": { "type": "number", "minimum": 0, "maximum": 1 }, "blocking": { "type": "boolean" } } },
+    "buildZone": { "type": "object", "additionalProperties": false, "required": ["id", "kind", "x", "y", "width", "height"], "properties": { "id": { "type": "string", "minLength": 1 }, "kind": { "enum": ["buildable", "blocked"] }, "x": { "type": "number" }, "y": { "type": "number" }, "width": { "type": "number", "exclusiveMinimum": 0 }, "height": { "type": "number", "exclusiveMinimum": 0 } } },
+    "route": { "type": "object", "additionalProperties": false, "required": ["id", "fromX", "fromY", "toX", "toY"], "properties": { "id": { "type": "string", "minLength": 1 }, "fromX": { "type": "number" }, "fromY": { "type": "number" }, "toX": { "type": "number" }, "toY": { "type": "number" } } },
+    "lane": { "type": "object", "additionalProperties": false, "required": ["id", "spawnX", "spawnY", "route", "objectiveId"], "properties": { "id": { "type": "string", "minLength": 1 }, "spawnX": { "type": "number" }, "spawnY": { "type": "number" }, "route": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/point" } }, "objectiveId": { "type": "string", "minLength": 1 }, "encounterId": { "type": "string", "minLength": 1 } } },
+    "base": { "type": "object", "additionalProperties": false, "required": ["id", "maxHealth", "breachDamage"], "properties": { "id": { "type": "string", "minLength": 1 }, "displayName": { "type": "string" }, "maxHealth": { "type": "number", "exclusiveMinimum": 0 }, "breachDamage": { "type": "number", "exclusiveMinimum": 0 } } },
+    "shape": { "oneOf": [ { "type": "object", "additionalProperties": false, "required": ["kind", "x", "y", "width", "height"], "properties": { "kind": { "const": "rect" }, "x": { "type": "number" }, "y": { "type": "number" }, "width": { "type": "number", "exclusiveMinimum": 0 }, "height": { "type": "number", "exclusiveMinimum": 0 } } }, { "type": "object", "additionalProperties": false, "required": ["kind", "x", "y", "radius"], "properties": { "kind": { "const": "circle" }, "x": { "type": "number" }, "y": { "type": "number" }, "radius": { "type": "number", "exclusiveMinimum": 0 } } } ] },
+    "captureZone": { "type": "object", "additionalProperties": false, "required": ["id", "shape", "captureMs"], "properties": { "id": { "type": "string", "minLength": 1 }, "displayName": { "type": "string" }, "shape": { "$ref": "#/definitions/shape" }, "initialOwner": { "type": ["string", "null"] }, "captureMs": { "type": "number", "exclusiveMinimum": 0 }, "decayPerSecond": { "type": "number", "minimum": 0 }, "scorePerSecond": { "type": "number", "minimum": 0 }, "scaleWithOccupants": { "type": "boolean" } } }
+  }
+}

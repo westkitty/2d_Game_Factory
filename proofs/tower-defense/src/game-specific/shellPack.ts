@@ -1,7 +1,7 @@
 import type Phaser from 'phaser';
 import type { InstalledSystemPack } from '@sw2d/contracts';
 import { gridController, ProjectilePool, type SceneContext, type ScenePackDefinition } from '@sw2d/runtime';
-import { CAPABILITY_IDS, type CombatService, type ProgressionService } from '@sw2d/packs';
+import { CAPABILITY_IDS, type CombatService, type DefenseService, type TerritoryService } from '@sw2d/packs';
 
 /**
  * Proof C - tower-defense (Phase 10 deep proof, see ../PROOF_CONTRACT.md).
@@ -33,12 +33,8 @@ const PLACEMENT_CELLS = [
 
 const CURSOR_START = { col: 6, row: 6 };
 
-const TOWER_COST = 40;
-const UPGRADE_COST = 30;
-const TOWER_RANGE = 150;
 const TOWER_FIRE_COOLDOWN_MS = 300;
 const BASE_PROJECTILE_DAMAGE = 10;
-const UPGRADED_PROJECTILE_DAMAGE = 20;
 const PROJECTILE_SPEED = 360;
 
 const ENEMY_MAX_HEALTH = 20;
@@ -66,11 +62,12 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
   id: 'game.grid-shell',
   version: '0.1.0',
   provides: [],
-  dependencies: [CAPABILITY_IDS.progression, CAPABILITY_IDS.combat],
+  dependencies: [CAPABILITY_IDS.defense, CAPABILITY_IDS.territory, CAPABILITY_IDS.combat],
 
   install(context: SceneContext): InstalledSystemPack {
     const scene = context.scene;
-    const progression = context.capabilities.require<ProgressionService>(CAPABILITY_IDS.progression);
+    const defense = context.capabilities.require<DefenseService>(CAPABILITY_IDS.defense);
+    const territory = context.capabilities.require<TerritoryService>(CAPABILITY_IDS.territory);
     const combat = context.capabilities.require<CombatService>(CAPABILITY_IDS.combat);
 
     let cursor: Cell = { ...CURSOR_START };
@@ -84,6 +81,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     let towerPlaced = false;
     let towerUpgraded = false;
     let towerCell: Cell | null = null;
+    let towerId: string | null = null;
     let towerPos: { x: number; y: number } | null = null;
     let towerSprite: Phaser.GameObjects.Sprite | null = null;
     let towerDamage = BASE_PROJECTILE_DAMAGE;
@@ -116,6 +114,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     let lives = ENEMY_SPAWN_TIMES_MS.length;
     let outcome: 'pending' | 'victory' | 'defeat' = 'pending';
     let elapsedMs = 0;
+    let territoryMode: 'empty' | 'red' | 'contested' = 'empty';
 
     function spawnEnemy(): void {
       const id = `enemy-${nextEnemySeq++}`;
@@ -133,13 +132,17 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         placementRejections += 1;
         return;
       }
-      if (progression.currency() < TOWER_COST) {
+      const position = toPixel(cursor);
+      // Preview and commit use the same Phase-21 placement rule. A change
+      // between cursor hover and CONFIRM cannot buy an illegal tower.
+      const placed = defense.place('needle-tower', position.x, position.y);
+      if (!placed.ok || !placed.instanceId) {
         placementRejections += 1;
         return;
       }
-      progression.addCurrency(-TOWER_COST);
       towerCell = { ...cursor };
-      towerPos = toPixel(cursor);
+      towerId = placed.instanceId;
+      towerPos = position;
       towerSprite = scene.add.sprite(towerPos.x, towerPos.y, context.assets.resolve('platform'));
       towerSprite.setTint(0x4a90d9);
       towerPlaced = true;
@@ -150,12 +153,16 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         upgradeRejections += 1;
         return;
       }
-      if (towerUpgraded || !sameCell(cursor, towerCell) || progression.currency() < UPGRADE_COST) {
+      if (towerUpgraded || !sameCell(cursor, towerCell) || !towerId) {
         upgradeRejections += 1;
         return;
       }
-      progression.addCurrency(-UPGRADE_COST);
-      towerDamage = UPGRADED_PROJECTILE_DAMAGE;
+      const upgraded = defense.upgrade(towerId);
+      if (!upgraded.ok) {
+        upgradeRejections += 1;
+        return;
+      }
+      towerDamage = BASE_PROJECTILE_DAMAGE * (defense.tower(towerId)?.damageMultiplier ?? 1);
       towerUpgraded = true;
       towerSprite?.setTint(0xf0c274);
     }
@@ -168,7 +175,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         if (!target) {
           enemy.breached = true;
           breachedTotal += 1;
-          lives -= 1;
+          lives = defense.breach('main')?.health ?? Math.max(0, lives - 1);
           try {
             enemy.sprite.destroy();
           } catch {
@@ -193,16 +200,10 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       towerCooldownRemainingMs -= deltaMs;
       if (towerCooldownRemainingMs > 0) return;
 
-      let closest: Enemy | null = null;
-      let closestDist = Infinity;
-      for (const enemy of enemies) {
-        if (enemy.defeated || enemy.breached) continue;
-        const dist = Math.hypot(enemy.sprite.x - towerPos.x, enemy.sprite.y - towerPos.y);
-        if (dist <= TOWER_RANGE && dist < closestDist) {
-          closest = enemy;
-          closestDist = dist;
-        }
-      }
+      // `sw2d.defense` owns policy and stable tie-breaking. The proof shell
+      // receives a selected id, then only renders the projectile/collision.
+      const selectedId = towerId ? defense.tower(towerId)?.targetId : null;
+      const closest = selectedId ? enemies.find((enemy) => enemy.id === selectedId && !enemy.defeated && !enemy.breached) ?? null : null;
       if (!closest) return;
 
       const dx = closest.sprite.x - towerPos.x;
@@ -243,7 +244,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
 
     const debugHandle = context.debug.contribute('game.grid-shell', () => ({
       cursor,
-      currency: progression.currency(),
+      currency: defense.funds(),
       towerPlaced,
       towerUpgraded,
       towerDamage,
@@ -254,6 +255,13 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       breachedTotal,
       lives,
       outcome,
+      territory: {
+        mode: territoryMode,
+        owner: territory.zone('relay')?.owner ?? null,
+        progress: territory.zone('relay')?.progress ?? 0,
+        contested: territory.zone('relay')?.contested ?? false,
+        redScore: territory.score('red'),
+      },
     }));
 
     let disposed = false;
@@ -282,8 +290,33 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         }
         if (intent.confirmPressed) tryPlaceTower();
         if (context.input.consumePress('SECONDARY_ACTION')) tryUpgradeTower();
+        // Backspace cycles the proof's two teams into the capture zone. It is
+        // semantic CANCEL, not a raw-key special case; the scene owns no input
+        // vocabulary of its own. This exposes enter → capture → contest.
+        if (context.input.consumePress('CANCEL')) {
+          territoryMode = territoryMode === 'empty' ? 'red' : territoryMode === 'red' ? 'contested' : 'empty';
+        }
 
         moveEnemies(deltaMs);
+        defense.setTargets(
+          enemies
+            .filter((enemy) => !enemy.defeated && !enemy.breached && combat.has(enemy.id))
+            .map((enemy) => ({
+              id: enemy.id,
+              x: enemy.sprite.x,
+              y: enemy.sprite.y,
+              health: combat.get(enemy.id).current,
+              maxHealth: combat.get(enemy.id).max,
+              routeProgress: enemy.routeIndex,
+            })),
+        );
+        territory.setOccupants(
+          territoryMode === 'red'
+            ? [{ id: 'red-scout', teamId: 'red', x: 880, y: 96 }]
+            : territoryMode === 'contested'
+              ? [{ id: 'red-scout', teamId: 'red', x: 880, y: 96 }, { id: 'blue-scout', teamId: 'blue', x: 880, y: 96 }]
+              : [],
+        );
         fireTowerIfReady(deltaMs);
         pool.update(deltaMs);
         updateOutcome();

@@ -38,3 +38,4 @@ One short record per decision that constrains later work. No ADR for trivia.
 | [0032](0032-agent-needs-are-authored-vocabulary.md) | Agent needs, behaviours and work orders are authored vocabulary | Post-ten 18 |
 | [0033](0033-one-item-system-one-wallet-one-clock.md) | The economy adds no second item system, no second wallet, and no second clock | Post-ten 19 |
 | [0034](0034-dialogue-is-data-not-a-language.md) | A dialogue is data, not a language - and it owns the script, not the state | Post-ten 20 |
+| [0035](0035-defense-owns-targets-routes-and-territory.md) | Defense owns targeting/routes/territory; weapons own projectile mechanics | Post-ten 21 |

@@ -1,0 +1,34 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:sw2d:schema:pack-defense-config:v1",
+  "title": "DefensePackConfig",
+  "description": "Mirrors @sw2d/packs DefenseConfig. Navigation is optional unless a blocking tower is authored.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "documentName": { "type": "string", "minLength": 1 },
+    "navigationGridId": { "type": "string", "minLength": 1 },
+    "navigationGrid": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "spec"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "spec": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["cols", "rows", "cellSize"],
+          "properties": {
+            "cols": { "type": "integer", "minimum": 1 },
+            "rows": { "type": "integer", "minimum": 1 },
+            "cellSize": { "type": "number", "exclusiveMinimum": 0 },
+            "originX": { "type": "number" },
+            "originY": { "type": "number" },
+            "blocked": { "type": "array", "items": { "type": "array", "minItems": 2, "maxItems": 2, "items": { "type": "integer", "minimum": 0 } } },
+            "costs": { "type": "array", "items": { "type": "array", "minItems": 3, "maxItems": 3, "items": [{ "type": "integer", "minimum": 0 }, { "type": "integer", "minimum": 0 }, { "type": "number", "minimum": 1 }] } }
+          }
+        }
+      }
+    }
+  }
+}

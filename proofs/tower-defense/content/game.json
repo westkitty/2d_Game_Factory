@@ -28,6 +28,14 @@
       "config": {}
     },
     {
+      "packId": "sw2d.navigation",
+      "config": {}
+    },
+    {
+      "packId": "sw2d.defense",
+      "config": {}
+    },
+    {
       "packId": "game.grid-shell",
       "config": {}
     }

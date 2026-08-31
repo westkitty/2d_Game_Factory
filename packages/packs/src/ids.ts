@@ -43,6 +43,8 @@ export const PACK_IDS = {
   simulationAgents: 'sw2d.simulation-agents',
   economy: 'sw2d.economy',
   dialogue: 'sw2d.dialogue',
+  /** Post-ten Phase 21: towers, bases, lane objectives and capture zones. */
+  defense: 'sw2d.defense',
 } as const;
 
 export const CAPABILITY_IDS = {
@@ -126,4 +128,8 @@ export const CAPABILITY_IDS = {
    * choice record a dialogue *writes to* - this owns the script, not the state.
    */
   dialogue: 'narrative.dialogue',
+  /** Post-ten Phase 21: placement, targeting, lanes and base breach state. */
+  defense: 'strategy.defense',
+  /** Post-ten Phase 21: capture ownership and score, separate from turn order. */
+  territory: 'strategy.territory',
 } as const;

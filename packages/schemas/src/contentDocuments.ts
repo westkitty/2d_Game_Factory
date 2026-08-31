@@ -44,6 +44,7 @@ export const CONTENT_DOCUMENTS: Readonly<Record<string, ContentDocumentRegistryE
   agents: { schemaName: 'agents' },
   economy: { schemaName: 'economy' },
   dialogue: { schemaName: 'dialogue' },
+  defense: { schemaName: 'defense' },
 };
 
 export type ContentDocumentName = keyof typeof CONTENT_DOCUMENTS;

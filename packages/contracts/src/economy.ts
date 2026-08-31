@@ -36,6 +36,10 @@
  */
 
 import type { SeededRng } from './generation.ts';
+// Placement geometry is shared with Phase 21's tower placement; it lives in
+// geometry.ts so there is one implementation of "does this fit inside that".
+import { DEFAULT_FOOTPRINT, footprintRect, pointInRect, rectContains, rectsOverlap } from './geometry.ts';
+import type { Footprint, Point, Rect } from './geometry.ts';
 
 export const ECONOMY_CAPABILITY_ID = 'simulation.economy';
 export const PRODUCTION_CAPABILITY_ID = 'simulation.production';
@@ -198,16 +202,6 @@ export interface RecipeDefinition {
   readonly unlock?: readonly UnlockCondition[];
 }
 
-export interface Footprint {
-  readonly width: number;
-  readonly height: number;
-}
-
-export interface Point {
-  readonly x: number;
-  readonly y: number;
-}
-
 export interface StationDefinition {
   readonly id: string;
   readonly type: string;
@@ -314,45 +308,6 @@ export interface PlacementResult {
   readonly reason?: PlacementFailureReason;
   readonly stationId: string;
   readonly position: Point;
-}
-
-export interface Rect {
-  readonly x: number;
-  readonly y: number;
-  readonly width: number;
-  readonly height: number;
-}
-
-export const DEFAULT_FOOTPRINT: Footprint = { width: 1, height: 1 };
-
-/** The axis-aligned rect a station occupies, centred on its position. */
-export function footprintRect(position: Point, footprint: Footprint = DEFAULT_FOOTPRINT): Rect {
-  return {
-    x: position.x - footprint.width / 2,
-    y: position.y - footprint.height / 2,
-    width: footprint.width,
-    height: footprint.height,
-  };
-}
-
-export function rectContains(outer: Rect, inner: Rect): boolean {
-  return (
-    inner.x >= outer.x &&
-    inner.y >= outer.y &&
-    inner.x + inner.width <= outer.x + outer.width &&
-    inner.y + inner.height <= outer.y + outer.height
-  );
-}
-
-export function rectsOverlap(a: Rect, b: Rect): boolean {
-  // Touching edges do not overlap: two stations may sit flush against each other.
-  return a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height;
-}
-
-export function pointInRect(point: Point, rect: Rect): boolean {
-  return (
-    point.x >= rect.x && point.x <= rect.x + rect.width && point.y >= rect.y && point.y <= rect.y + rect.height
-  );
 }
 
 /**

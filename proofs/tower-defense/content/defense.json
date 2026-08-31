@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "startingFunds": 100,
+  "towers": [
+    {
+      "id": "needle-tower",
+      "displayName": "Needle Tower",
+      "cost": 40,
+      "footprint": { "width": 64, "height": 64 },
+      "range": 150,
+      "weaponId": "needle-shot",
+      "targetPolicy": "first-on-route",
+      "refundRatio": 0.5,
+      "upgrades": [{ "id": "sharpen", "cost": 30, "damageMultiplier": 2 }]
+    }
+  ],
+  "zones": [{ "id": "board", "kind": "buildable", "x": 0, "y": 0, "width": 960, "height": 540 }],
+  "routes": [{ "id": "main-lane", "fromX": 32, "fromY": 288, "toX": 800, "toY": 288 }],
+  "bases": [{ "id": "gate", "displayName": "Gate", "maxHealth": 2, "breachDamage": 1 }],
+  "lanes": [{ "id": "main", "spawnX": 32, "spawnY": 288, "route": [{ "x": 800, "y": 288 }], "objectiveId": "gate", "encounterId": "proof-wave" }],
+  "captureZones": [{ "id": "relay", "shape": { "kind": "circle", "x": 880, "y": 96, "radius": 48 }, "captureMs": 750, "decayPerSecond": 0.2, "scorePerSecond": 1 }]
+}

@@ -1578,3 +1578,39 @@ None.
   unit-level witness regression into a browser journey there.
 - Confirm the generator supplies `content/dialogue.json` for any preset requiring `sw2d.dialogue`
   (currently a proof-shell responsibility — the same generator gap Phases 17-19 recorded).
+
+---
+
+## Phase 21 — Defense Objectives, Towers & Territory
+
+**Status:** implemented on `candidate/antigravity-post-ten-program`.
+
+- `packages/contracts/src/defense.ts` owns tower definitions, deterministic target policies,
+  placement failures, lanes, bases, capture zones and semantic validation. Shared placement
+  geometry was extracted from economy so towers and stations cannot disagree on edge contact.
+- `sw2d.defense` publishes `strategy.defense` and `strategy.territory`; blocking placement
+  temporarily mutates the real navigation grid and restores it after checking every required
+  route. It delegates actual firing to the existing weapons capability when installed.
+- `content/defense.json` is registered and schema-validated. The workbench exposes a closed
+  Defense & Territory balance panel; routes/zones remain authored structure rather than a
+  misleading pseudo-map form.
+- `proofs/tower-defense/` now consumes the defense document and service. Its real-browser
+  journey proves reject/commit placement, deterministic first-on-route selection, upgrade,
+  base breach state, red capture/score and blue contest freeze.
+
+### Validation
+
+- `npm run validate` — PASS: 180 files / 3,247 tests, workbench/starter builds, offline check.
+- `node --experimental-strip-types packages/qa/src/runProofs.ts tower-defense` — PASS (1/1).
+- `npm run workbench:build` — PASS. The full workbench browser batch was also started after the
+  change; its result is not recorded here because the runner did not preserve a terminal summary.
+
+### Known boundary
+
+The phase makes one tower-defense proof carry the territory journey. `lane-defense` and
+`base-defense` retain their pre-existing routes as regressions; a later certifier may add
+separate visual shells if broader presentation coverage becomes necessary.
+
+### Next phase
+
+Phase 22 — Autonomous Combat / Auto-Battler.

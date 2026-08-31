@@ -29,6 +29,7 @@ import {
   simulationAgentsPack,
   economyPack,
   dialoguePack,
+  defensePack,
 } from '../src/index.ts';
 
 /**
@@ -71,6 +72,7 @@ const ALL_PACKS = [
   simulationAgentsPack,
   economyPack,
   dialoguePack,
+  defensePack,
 ];
 
 /** `<family>.<service>`: lowercase segments, at least two, dash-separated words allowed after the first. */

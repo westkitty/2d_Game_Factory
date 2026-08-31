@@ -56,6 +56,7 @@ import { inspectRhythm, updateRhythm } from './rhythmLab.ts';
 import { inspectAgents, updateAgents } from './agentsLab.ts';
 import { inspectEconomy, updateEconomy } from './economyLab.ts';
 import { inspectDialogue, updateDialogue } from './dialogueLab.ts';
+import { inspectDefense, updateDefense } from './defenseLab.ts';
 import { loadScene, listLevels, newObject, objectClassOptions, saveScene, SceneValidationError, type SceneDocument } from './sceneStore.ts';
 import { buildProject, createProject, packProject, validateProject } from './factoryService.ts';
 import { starterKitDepthFor, starterKitFor } from './starterKits/index.ts';
@@ -849,6 +850,25 @@ const ROUTES: ReadonlyMap<string, Handler> = new Map<string, Handler>([
       const body = bodyObject(request);
       const gameId = gameIdOf(request, body);
       return ok(updateDialogue(gameId, body['document']));
+    },
+  ],
+
+  [
+    // Phase 21 balance authoring. Closed names keep the workbench API
+    // non-executable; geometry remains content, never a caller-provided path.
+    'POST /defense/inspect',
+    (request) => {
+      const body = bodyObject(request);
+      return ok(inspectDefense(gameIdOf(request, body)));
+    },
+  ],
+
+  [
+    'POST /defense/update',
+    (request) => {
+      const body = bodyObject(request);
+      const gameId = gameIdOf(request, body);
+      return ok(updateDefense(gameId, body['document']));
     },
   ],
 

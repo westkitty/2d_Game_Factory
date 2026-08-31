@@ -45,6 +45,7 @@ describe('validateContentBundleData', () => {
       'agents',
       'economy',
       'dialogue',
+      'defense',
     ]);
   });
 

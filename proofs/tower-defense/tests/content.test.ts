@@ -5,6 +5,7 @@ import gameData from '../content/game.json' with { type: 'json' };
 import tuningData from '../content/tuning.json' with { type: 'json' };
 import themeData from '../content/themes/default/theme.json' with { type: 'json' };
 import rawLevel from '../content/levels/main.json' with { type: 'json' };
+import defenseData from '../content/defense.json' with { type: 'json' };
 describe('generated game content', () => {
   it('content/game.json validates against the GameDefinition schema', () => {
     expect(() => validateDocumentOrThrow('game-definition', 'content/game.json', gameData)).not.toThrow();
@@ -16,7 +17,7 @@ describe('generated game content', () => {
 
   it('content/levels/main.json normalizes and validates as a level document', () => {
     const level = normalizeTiledMap('main', rawLevel);
-    expect(() => validateContentBundleData({ tuning: tuningData, 'levels/main': level })).not.toThrow();
+    expect(() => validateContentBundleData({ tuning: tuningData, 'levels/main': level, defense: defenseData })).not.toThrow();
   });
 
   it('rejects a malformed tuning document with a located error', () => {

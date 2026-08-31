@@ -4,7 +4,7 @@ Frozen before implementation.
 
 ## Preset
 
-`tower-defense` (`packages/presets/src/catalog/strategyDefense.ts`) — controller families `grid` + `pointer`, required packs `sw2d.world`, `sw2d.world-entities`, `sw2d.progression`, `sw2d.combat`, optional `sw2d.ai`. Content roles `tuning`, `levels`. Currently `smoke-validated`. Known limitations (still true, still deferred): spatial placement/hover targeting not implemented; no reusable pathfinding/route/targeting/upgrade system exists yet — all of that stays bounded game-specific code here, same as the Phase 8 demo.
+`tower-defense` (`packages/presets/src/catalog/strategyDefense.ts`) — controller families `grid` + `pointer`, using `sw2d.defense` / `strategy.defense` and `strategy.territory` for placement, deterministic targeting, upgrades, base breaches and capture state. Content roles include `defense`. The shell renders the local proof, but its rules come from the pack rather than duplicated target/upgrade/base state.
 
 Generated via `npm run sw2d -- new proof-tower-defense --preset tower-defense`, moved into this committed `proofs/tower-defense/` tree.
 

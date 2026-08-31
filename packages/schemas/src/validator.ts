@@ -32,6 +32,7 @@ import rhythmSchema from '../schemas/rhythm.schema.json' with { type: 'json' };
 import agentsSchema from '../schemas/agents.schema.json' with { type: 'json' };
 import economySchema from '../schemas/economy.schema.json' with { type: 'json' };
 import dialogueSchema from '../schemas/dialogue.schema.json' with { type: 'json' };
+import defenseSchema from '../schemas/defense.schema.json' with { type: 'json' };
 
 /**
  * Ajv-based validation for every schema this package owns.
@@ -73,7 +74,8 @@ export type SchemaName =
   | 'rhythm'
   | 'agents'
   | 'economy'
-  | 'dialogue';
+  | 'dialogue'
+  | 'defense';
 
 export const SCHEMA_NAMES: readonly SchemaName[] = [
   'action-bindings',
@@ -107,6 +109,7 @@ export const SCHEMA_NAMES: readonly SchemaName[] = [
   'agents',
   'economy',
   'dialogue',
+  'defense',
 ];
 
 /** One located problem: which document, where in it, and what is wrong. */
@@ -162,6 +165,7 @@ const SCHEMA_DOCUMENTS: Readonly<Record<SchemaName, SchemaDocument>> = {
   agents: agentsSchema,
   economy: economySchema,
   dialogue: dialogueSchema,
+  defense: defenseSchema,
 };
 
 // Registration order matters: a schema must be added before anything that
@@ -197,6 +201,7 @@ for (const name of [
   'agents',
   'economy',
   'dialogue',
+  'defense',
 ] as const) {
   const schema = SCHEMA_DOCUMENTS[name];
   ajv.addSchema(schema, schema.$id);

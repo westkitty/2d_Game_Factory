@@ -15,6 +15,7 @@ interface ShellSnap {
   readonly breachedTotal: number;
   readonly lives: number;
   readonly outcome: 'pending' | 'victory' | 'defeat';
+  readonly territory: { readonly mode: 'empty' | 'red' | 'contested'; readonly owner: string | null; readonly progress: number; readonly contested: boolean; readonly redScore: number };
 }
 
 function state(harness: Harness): Promise<ShellSnap> {
@@ -56,6 +57,21 @@ export async function run(harness: Harness): Promise<SmokeOutcome> {
   const towerPlacementProven = afterPlacement.towerPlaced;
   const currencyCostProven = afterPlacement.currency === afterMove.currency - 40;
 
+  // Semantic CANCEL (Backspace) moves red into the relay. It must capture,
+  // accrue score while held, then freeze when blue enters - a majority does
+  // not silently win a contested zone.
+  await harness.keyTap('Backspace');
+  await harness.stepFrames(60);
+  const capturedRelay = await state(harness);
+  await harness.keyTap('Backspace');
+  await harness.stepFrames(12);
+  const contestedRelay = await state(harness);
+  const territoryProven =
+    capturedRelay.territory.owner === 'red' &&
+    capturedRelay.territory.redScore > 0 &&
+    contestedRelay.territory.contested === true &&
+    contestedRelay.territory.owner === 'red';
+
   // Let the first enemy die at base damage (two hits), proving real target
   // selection/damage before the upgrade changes anything.
   let afterFirstKill = afterPlacement;
@@ -84,7 +100,7 @@ export async function run(harness: Harness): Promise<SmokeOutcome> {
   const reachableOutcomeProven = finalShell.outcome === 'victory' && finalShell.breachedTotal === 0 && finalShell.defeatedTotal === 2;
 
   return {
-    passed: invalidPlacementRejected && gridCursorMovementProven && towerPlacementProven && currencyCostProven && firstKillOk && upgradeOk && reachableOutcomeProven,
+    passed: invalidPlacementRejected && gridCursorMovementProven && towerPlacementProven && currencyCostProven && territoryProven && firstKillOk && upgradeOk && reachableOutcomeProven,
     details: {
       spawnShell,
       afterInvalidConfirm,
@@ -97,6 +113,9 @@ export async function run(harness: Harness): Promise<SmokeOutcome> {
       gridCursorMovementProven,
       towerPlacementProven,
       currencyCostProven,
+      capturedRelay,
+      contestedRelay,
+      territoryProven,
       firstKillOk,
       upgradeOk,
       reachableOutcomeProven,

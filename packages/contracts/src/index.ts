@@ -34,6 +34,8 @@ export * from './resources.ts';
 export * from './rhythm.ts';
 export * from './scenes.ts';
 export * from './simulationAgents.ts';
+export * from './geometry.ts';
+export * from './defense.ts';
 export * from './economy.ts';
 export * from './dialogue.ts';
 export * from './spatial.ts';

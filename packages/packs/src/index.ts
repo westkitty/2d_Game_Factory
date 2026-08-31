@@ -154,3 +154,14 @@ export {
   type DialogueDependencies,
   type DialogueService,
 } from './dialogue/dialoguePack.ts';
+export {
+  defensePack,
+  DefenseServiceImpl,
+  TerritoryServiceImpl,
+  MissingDefenseDocumentError,
+  MissingDefenseNavigationError,
+  DEFENSE_CONFIG_SCHEMA_ID,
+  type DefenseConfig,
+  type DefenseService,
+  type TerritoryService,
+} from './defense/defensePack.ts';
