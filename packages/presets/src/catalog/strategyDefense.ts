@@ -60,13 +60,11 @@ export const STRATEGY_DEFENSE_PRESETS: readonly PresetDefinition[] = [
     displayName: 'Auto Battler',
     family: 'strategy-defense',
     controllerFamilies: ['ui-simulation'],
-    requiredSystemPacks: [pack(PACK_IDS.strategy), pack(PACK_IDS.combat), pack(PACK_IDS.ai)],
+    requiredSystemPacks: [pack(PACK_IDS.strategy), pack(PACK_IDS.combat), pack(PACK_IDS.weapons), pack(PACK_IDS.autoCombat)],
     optionalSystemPacks: [pack(PACK_IDS.progression)],
-    requiredContentRoles: ['tuning'],
+    requiredContentRoles: ['tuning', 'weapons', 'auto-combat'],
     validationProfile: VALIDATION_PROFILES.strategyDefense,
-    knownLimitations: [
-      'AI/combat/strategy state foundations exist, and unit orders are reusable (sw2d.strategy-actions), but autonomous combat orchestration is not implemented.',
-    ],
+    knownLimitations: ['The reusable loop handles deployment, targeting and combat resolution; presentation, roster UI and progression remain game-specific.'],
   }),
 
   definePreset({

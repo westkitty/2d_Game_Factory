@@ -88,7 +88,7 @@ pack/controller selections were actually exercised through, and
 |---|---|---|---|---|---|
 | `tower-defense` | world, world-entities, progression, combat | ai, navigation | grid, pointer | keyboard, pointer, touch | strategy-defense-recipe |
 | `lane-defense` | world, world-entities, progression | combat | grid, pointer, navigation | keyboard, pointer, touch | strategy-defense-recipe |
-| `auto-battler` | strategy, combat, ai | progression | ui-simulation | keyboard, touch | strategy-defense-recipe |
+| `auto-battler` | strategy, combat, weapons, auto-combat | progression | ui-simulation | keyboard, touch | strategy-defense-recipe |
 | `simple-rts` | strategy, combat, navigation, strategy-actions | ai, world, world-entities | top-down | keyboard, touch | strategy-defense-recipe |
 | `turn-based-tactics` | strategy, combat, navigation, strategy-actions | ai, world, world-entities | grid, ui-simulation | keyboard, touch | strategy-defense-recipe |
 | `base-defense` | world, world-entities, combat | ai, progression | top-down, encounters | keyboard, touch | strategy-defense-recipe |
@@ -149,6 +149,7 @@ pack/controller selections were actually exercised through, and
 | simulation | `sw2d.simulation` | `simulation.resources` | 9 | 10 |
 | narrative | `sw2d.narrative` | `narrative.state` | 4 | 8 |
 | strategy | `sw2d.strategy` | `strategy.turns` | 4 | 4 |
+| auto-combat | `sw2d.auto-combat` | `strategy.auto-combat` | 1 | 1 |
 | items | `sw2d.items` | `items.state` | 1 | 1 |
 | weapons | `sw2d.weapons` | `combat.weapons` | 7 | 7 |
 | encounters | `sw2d.encounters` | `combat.encounters` | 4 | 5 |

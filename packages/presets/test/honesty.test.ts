@@ -120,7 +120,7 @@ describe('required knownLimitations (MASTER_PROJECT.md section 12)', () => {
     { id: 'tower-defense', pattern: /keyboard grid cursor/ },
     { id: 'tower-defense', pattern: /route-following pathfinding is reusable/ },
     { id: 'lane-defense', pattern: /Lane-spawn scheduling and combat resolution are still starter-specific/ },
-    { id: 'auto-battler', pattern: /autonomous combat orchestration is not implemented/ },
+    { id: 'auto-battler', pattern: /presentation, roster UI and progression remain game-specific/ },
     { id: 'simple-rts', pattern: /box-select drag input and a command-card UI are still starter-specific/ },
     { id: 'turn-based-tactics', pattern: /Line-of-fire occlusion and multi-unit turn ordering are still starter-specific/ },
     { id: 'base-defense', pattern: /base-damage\/target-priority/ },

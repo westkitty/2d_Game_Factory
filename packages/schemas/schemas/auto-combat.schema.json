@@ -1,0 +1,29 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:sw2d:schema:content-auto-combat:v1",
+  "title": "AutoCombatDocument",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "archetypes", "slots"],
+  "properties": {
+    "schemaVersion": { "type": "integer", "const": 1 },
+    "archetypes": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/archetype" } },
+    "slots": { "type": "array", "minItems": 2, "items": { "$ref": "#/definitions/slot" } }
+  },
+  "definitions": {
+    "archetype": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "teamId", "weaponId", "range", "moveSpeed", "maxHealth", "targetPolicy"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 }, "teamId": { "type": "string", "minLength": 1 }, "weaponId": { "type": "string", "minLength": 1 },
+        "range": { "type": "number", "minimum": 0 }, "moveSpeed": { "type": "number", "minimum": 0 }, "maxHealth": { "type": "number", "exclusiveMinimum": 0 },
+        "targetPolicy": { "enum": ["nearest", "lowest-health", "highest-threat", "preferred-role"] },
+        "roleTags": { "type": "array", "items": { "type": "string", "minLength": 1 } }, "threat": { "type": "number" }, "reassessMs": { "type": "number", "exclusiveMinimum": 0 }
+      }
+    },
+    "slot": {
+      "type": "object", "additionalProperties": false, "required": ["id", "teamId", "x", "y"],
+      "properties": { "id": { "type": "string", "minLength": 1 }, "teamId": { "type": "string", "minLength": 1 }, "x": { "type": "number" }, "y": { "type": "number" } }
+    }
+  }
+}

@@ -45,6 +45,7 @@ export const PACK_IDS = {
   dialogue: 'sw2d.dialogue',
   /** Post-ten Phase 21: towers, bases, lane objectives and capture zones. */
   defense: 'sw2d.defense',
+  autoCombat: 'sw2d.auto-combat',
 } as const;
 
 export const CAPABILITY_IDS = {
@@ -132,4 +133,5 @@ export const CAPABILITY_IDS = {
   defense: 'strategy.defense',
   /** Post-ten Phase 21: capture ownership and score, separate from turn order. */
   territory: 'strategy.territory',
+  autoCombat: 'strategy.auto-combat',
 } as const;

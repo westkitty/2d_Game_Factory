@@ -46,6 +46,7 @@ describe('validateContentBundleData', () => {
       'economy',
       'dialogue',
       'defense',
+      'auto-combat',
     ]);
   });
 

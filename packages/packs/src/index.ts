@@ -165,3 +165,4 @@ export {
   type DefenseService,
   type TerritoryService,
 } from './defense/defensePack.ts';
+export { autoCombatPack, AutoCombatServiceImpl, MissingAutoCombatDocumentError, AUTO_COMBAT_CONFIG_SCHEMA_ID, type AutoCombatConfig } from './autoCombat/autoCombatPack.ts';

@@ -30,6 +30,7 @@ import {
   economyPack,
   dialoguePack,
   defensePack,
+  autoCombatPack,
 } from '../src/index.ts';
 
 /**
@@ -73,6 +74,7 @@ const ALL_PACKS = [
   economyPack,
   dialoguePack,
   defensePack,
+  autoCombatPack,
 ];
 
 /** `<family>.<service>`: lowercase segments, at least two, dash-separated words allowed after the first. */

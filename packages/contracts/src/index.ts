@@ -8,6 +8,7 @@
 export * from './accessibility.ts';
 export * from './actions.ts';
 export * from './advancedPhysics.ts';
+export * from './autoCombat.ts';
 export * from './audio.ts';
 export * from './ballPaddle.ts';
 export * from './climbing.ts';
