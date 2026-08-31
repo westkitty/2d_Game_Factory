@@ -46,6 +46,7 @@ export const PACK_IDS = {
   /** Post-ten Phase 21: towers, bases, lane objectives and capture zones. */
   defense: 'sw2d.defense',
   autoCombat: 'sw2d.auto-combat',
+  farming: 'sw2d.farming',
 } as const;
 
 export const CAPABILITY_IDS = {
@@ -134,4 +135,5 @@ export const CAPABILITY_IDS = {
   /** Post-ten Phase 21: capture ownership and score, separate from turn order. */
   territory: 'strategy.territory',
   autoCombat: 'strategy.auto-combat',
+  farming: 'simulation.farming',
 } as const;

@@ -74,11 +74,11 @@ export const SIMULATION_MANAGEMENT_PRESETS: readonly PresetDefinition[] = [
     displayName: 'Farming Lite',
     family: 'simulation-management',
     controllerFamilies: ['ui-simulation'],
-    requiredSystemPacks: [pack(PACK_IDS.simulation), pack(PACK_IDS.world)],
+    requiredSystemPacks: [pack(PACK_IDS.simulation), pack(PACK_IDS.world), pack(PACK_IDS.items), pack(PACK_IDS.farming)],
     optionalSystemPacks: [pack(PACK_IDS.progression)],
-    requiredContentRoles: ['tuning'],
+    requiredContentRoles: ['tuning', 'items', 'farming'],
     validationProfile: VALIDATION_PROFILES.simulationManagement,
-    knownLimitations: ['No reusable crop-growth/season/plot-interaction system exists.'],
+    knownLimitations: ['Crop plots, calendar and canonical harvest items are reusable; animals, farm layout and visual planting presentation remain game-specific.'],
   }),
 
   definePreset({

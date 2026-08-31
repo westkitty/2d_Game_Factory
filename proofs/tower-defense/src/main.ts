@@ -15,6 +15,8 @@ import {
   defensePack,
   weaponsPack,
   autoCombatPack,
+  itemsPack,
+  farmingPack,
 } from '@sw2d/packs';
 import { packConfigValidator } from '@sw2d/schemas';
 import { gameContent } from './content.ts';
@@ -36,7 +38,7 @@ const runtime = await createGame({
   // only installs what a selection names). Passing all ten plus this game's
   // own shell pack is what lets content/game.json enable any subset of the
   // preset's required/optional packs without editing this file.
-  packs: [combatPack, aiPack, worldPack, entityRegistryPack, progressionPack, arcadePack, puzzlePack, simulationPack, narrativePack, strategyPack, navigationPack, weaponsPack, defensePack, autoCombatPack, GAME_SPECIFIC_PACK],
+  packs: [combatPack, aiPack, worldPack, entityRegistryPack, progressionPack, arcadePack, puzzlePack, simulationPack, narrativePack, strategyPack, navigationPack, itemsPack, weaponsPack, defensePack, autoCombatPack, farmingPack, GAME_SPECIFIC_PACK],
   // Every pack that declares a configSchemaId is validated before it installs
   // (ADR-0013) - see docs/architecture/adr/0013-composition-root-enforces-pack-declarations.md.
   packConfigValidator,

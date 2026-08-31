@@ -17,6 +17,7 @@ interface ShellSnap {
   readonly outcome: 'pending' | 'victory' | 'defeat';
   readonly territory: { readonly mode: 'empty' | 'red' | 'contested'; readonly owner: string | null; readonly progress: number; readonly contested: boolean; readonly redScore: number };
   readonly autoCombat: { readonly phase: string; readonly winner: string | null; readonly units: readonly unknown[] };
+  readonly farming: { readonly seeds: number; readonly turnips: number; readonly plot: { readonly phase: string } };
 }
 
 function state(harness: Harness): Promise<ShellSnap> {
@@ -108,9 +109,10 @@ export async function run(harness: Harness): Promise<SmokeOutcome> {
     autoBattle = await state(harness);
   }
   const autonomousCombatProven = autoBattle.autoCombat.phase === 'resolve' && autoBattle.autoCombat.winner === 'red';
+  const farmingProven = autoBattle.farming.seeds === 0 && autoBattle.farming.turnips === 2 && autoBattle.farming.plot.phase === 'tilled';
 
   return {
-    passed: invalidPlacementRejected && gridCursorMovementProven && towerPlacementProven && currencyCostProven && territoryProven && firstKillOk && upgradeOk && reachableOutcomeProven && autonomousCombatProven,
+    passed: invalidPlacementRejected && gridCursorMovementProven && towerPlacementProven && currencyCostProven && territoryProven && firstKillOk && upgradeOk && reachableOutcomeProven && autonomousCombatProven && farmingProven,
     details: {
       spawnShell,
       afterInvalidConfirm,
@@ -131,6 +133,7 @@ export async function run(harness: Harness): Promise<SmokeOutcome> {
       reachableOutcomeProven,
       autoBattle,
       autonomousCombatProven,
+      farmingProven,
     },
   };
 }

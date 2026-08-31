@@ -1,7 +1,7 @@
 import type Phaser from 'phaser';
 import type { InstalledSystemPack } from '@sw2d/contracts';
 import { gridController, ProjectilePool, type SceneContext, type ScenePackDefinition } from '@sw2d/runtime';
-import { CAPABILITY_IDS, type AutoCombatService, type CombatService, type DefenseService, type TerritoryService } from '@sw2d/packs';
+import { CAPABILITY_IDS, type AutoCombatService, type CombatService, type DefenseService, type FarmingService, type ItemsService, type TerritoryService } from '@sw2d/packs';
 
 /**
  * Proof C - tower-defense (Phase 10 deep proof, see ../PROOF_CONTRACT.md).
@@ -62,7 +62,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
   id: 'game.grid-shell',
   version: '0.1.0',
   provides: [],
-  dependencies: [CAPABILITY_IDS.defense, CAPABILITY_IDS.territory, CAPABILITY_IDS.combat, CAPABILITY_IDS.autoCombat],
+  dependencies: [CAPABILITY_IDS.defense, CAPABILITY_IDS.territory, CAPABILITY_IDS.combat, CAPABILITY_IDS.autoCombat, CAPABILITY_IDS.farming, CAPABILITY_IDS.items],
 
   install(context: SceneContext): InstalledSystemPack {
     const scene = context.scene;
@@ -73,6 +73,9 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     autoCombat.deploy('red-duelist', 'red-slot');
     autoCombat.deploy('blue-guard', 'blue-slot');
     autoCombat.start();
+    const farming = context.capabilities.require<FarmingService>(CAPABILITY_IDS.farming);
+    const items = context.capabilities.require<ItemsService>(CAPABILITY_IDS.items);
+    items.grant('turnip-seed'); farming.till('proof-plot'); farming.plant('proof-plot', 'turnip'); farming.water('proof-plot');
 
     let cursor: Cell = { ...CURSOR_START };
     const cursorSprite = scene.add.sprite(...(Object.values(toPixel(cursor)) as [number, number]), context.assets.resolve('checkpoint'));
@@ -267,6 +270,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         redScore: territory.score('red'),
       },
       autoCombat: { phase: autoCombat.phase(), winner: autoCombat.winner(), units: autoCombat.units() },
+      farming: { calendar: farming.calendar(), plot: farming.plots()[0], seeds: items.count('turnip-seed'), turnips: items.count('turnip') },
     }));
 
     let disposed = false;
@@ -277,6 +281,9 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       update(deltaMs: number): void {
         if (disposed) return;
         elapsedMs += deltaMs;
+        // One proof day per second: the live service remains authoritative and
+        // water is intentionally re-applied before each required growth day.
+        if (Math.floor((elapsedMs - deltaMs) / 1000) !== Math.floor(elapsedMs / 1000)) { farming.water('proof-plot'); farming.advanceDays(1); if (farming.plots()[0]?.phase === 'harvestable') farming.harvest('proof-plot'); }
 
         for (let i = 0; i < ENEMY_SPAWN_TIMES_MS.length; i++) {
           if (elapsedMs >= ENEMY_SPAWN_TIMES_MS[i]! && spawnedTotal === i) {

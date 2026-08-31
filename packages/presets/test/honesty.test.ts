@@ -134,7 +134,7 @@ describe('required knownLimitations (MASTER_PROJECT.md section 12)', () => {
     // Phase 19 gave the restaurant its customer/order/economy foundation; the
     // cooking action sequence itself is Phase 34 and is still stated as absent.
     { id: 'restaurant', pattern: /the cooking action sequence itself .* is not implemented yet/ },
-    { id: 'farming-lite', pattern: /No reusable crop-growth\/season\/plot-interaction system/ },
+    { id: 'farming-lite', pattern: /animals, farm layout and visual planting presentation remain game-specific/ },
     { id: 'pet-creature', pattern: /utility-scored behaviour, schedules, relationships and work-order reservations are reusable/ },
     { id: 'virtual-pet', pattern: /utility-scored behaviour, schedules, relationships and work-order reservations are reusable/ },
     { id: 'aquarium-terrarium', pattern: /utility-scored behaviour, schedules, relationships and work-order reservations are reusable/ },

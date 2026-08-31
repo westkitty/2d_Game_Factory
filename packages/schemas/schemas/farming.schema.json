@@ -1,0 +1,16 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:sw2d:schema:content-farming:v1",
+  "type": "object", "additionalProperties": false,
+  "required": ["schemaVersion", "daysPerSeason", "plots", "crops"],
+  "properties": {
+    "schemaVersion": { "const": 1 }, "daysPerSeason": { "type": "integer", "exclusiveMinimum": 0 },
+    "plots": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+    "crops": { "type": "array", "items": { "$ref": "#/definitions/crop" } }
+  },
+  "definitions": {
+    "crop": { "type": "object", "additionalProperties": false, "required": ["id", "displayName", "seedItemId", "growthStages", "validSeasons", "requiresWater", "harvestItems"], "properties": { "id": { "type": "string", "minLength": 1 }, "displayName": { "type": "string", "minLength": 1 }, "seedItemId": { "type": "string", "minLength": 1 }, "growthStages": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/stage" } }, "validSeasons": { "type": "array", "minItems": 1, "items": { "enum": ["spring", "summer", "autumn", "winter"] } }, "requiresWater": { "type": "boolean" }, "harvestItems": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/output" } }, "regrowStage": { "type": "integer", "minimum": 0 } } },
+    "stage": { "type": "object", "additionalProperties": false, "required": ["id", "durationDays"], "properties": { "id": { "type": "string", "minLength": 1 }, "durationDays": { "type": "number", "exclusiveMinimum": 0 }, "assetRole": { "type": "string" } } },
+    "output": { "type": "object", "additionalProperties": false, "required": ["itemId", "quantity"], "properties": { "itemId": { "type": "string", "minLength": 1 }, "quantity": { "type": "integer", "exclusiveMinimum": 0 } } }
+  }
+}

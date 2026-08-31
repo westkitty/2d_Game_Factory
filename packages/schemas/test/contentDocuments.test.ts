@@ -47,6 +47,7 @@ describe('validateContentBundleData', () => {
       'dialogue',
       'defense',
       'auto-combat',
+      'farming',
     ]);
   });
 

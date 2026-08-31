@@ -1,0 +1,1 @@
+{"schemaVersion":1,"daysPerSeason":7,"plots":["proof-plot"],"crops":[{"id":"turnip","displayName":"Turnip","seedItemId":"turnip-seed","growthStages":[{"id":"sprout","durationDays":1},{"id":"ripe","durationDays":1}],"validSeasons":["spring"],"requiresWater":true,"harvestItems":[{"itemId":"turnip","quantity":2}]}]}

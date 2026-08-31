@@ -27,6 +27,7 @@
       "packId": "sw2d.combat",
       "config": {}
     },
+    { "packId": "sw2d.items", "config": {} },
     {
       "packId": "sw2d.weapons",
       "config": {}
@@ -43,6 +44,7 @@
       "packId": "sw2d.auto-combat",
       "config": {}
     },
+    { "packId": "sw2d.farming", "config": {} },
     {
       "packId": "game.grid-shell",
       "config": {}
