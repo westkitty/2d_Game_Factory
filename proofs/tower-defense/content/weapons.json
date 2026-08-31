@@ -1,0 +1,1 @@
+{"schemaVersion":1,"weapons":[{"id":"red-dart","displayName":"Red Dart","cooldownMs":100,"fireMode":"single","team":"red","projectile":{"speed":1,"lifetimeMs":1,"damage":3}},{"id":"blue-dart","displayName":"Blue Dart","cooldownMs":100,"fireMode":"single","team":"blue","projectile":{"speed":1,"lifetimeMs":1,"damage":2}}]}

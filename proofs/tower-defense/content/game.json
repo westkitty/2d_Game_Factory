@@ -28,11 +28,19 @@
       "config": {}
     },
     {
+      "packId": "sw2d.weapons",
+      "config": {}
+    },
+    {
       "packId": "sw2d.navigation",
       "config": {}
     },
     {
       "packId": "sw2d.defense",
+      "config": {}
+    },
+    {
+      "packId": "sw2d.auto-combat",
       "config": {}
     },
     {

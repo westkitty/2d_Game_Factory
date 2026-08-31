@@ -16,6 +16,7 @@ interface ShellSnap {
   readonly lives: number;
   readonly outcome: 'pending' | 'victory' | 'defeat';
   readonly territory: { readonly mode: 'empty' | 'red' | 'contested'; readonly owner: string | null; readonly progress: number; readonly contested: boolean; readonly redScore: number };
+  readonly autoCombat: { readonly phase: string; readonly winner: string | null; readonly units: readonly unknown[] };
 }
 
 function state(harness: Harness): Promise<ShellSnap> {
@@ -99,8 +100,17 @@ export async function run(harness: Harness): Promise<SmokeOutcome> {
   }
   const reachableOutcomeProven = finalShell.outcome === 'victory' && finalShell.breachedTotal === 0 && finalShell.defeatedTotal === 2;
 
+  // The auto-battler runs in this same browser runtime from authored content;
+  // do not accept a source-only unit-test result as proof of composition.
+  let autoBattle = finalShell;
+  for (let i = 0; i < 160 && autoBattle.autoCombat.phase !== 'resolve'; i++) {
+    await harness.stepFrames(5);
+    autoBattle = await state(harness);
+  }
+  const autonomousCombatProven = autoBattle.autoCombat.phase === 'resolve' && autoBattle.autoCombat.winner === 'red';
+
   return {
-    passed: invalidPlacementRejected && gridCursorMovementProven && towerPlacementProven && currencyCostProven && territoryProven && firstKillOk && upgradeOk && reachableOutcomeProven,
+    passed: invalidPlacementRejected && gridCursorMovementProven && towerPlacementProven && currencyCostProven && territoryProven && firstKillOk && upgradeOk && reachableOutcomeProven && autonomousCombatProven,
     details: {
       spawnShell,
       afterInvalidConfirm,
@@ -119,6 +129,8 @@ export async function run(harness: Harness): Promise<SmokeOutcome> {
       firstKillOk,
       upgradeOk,
       reachableOutcomeProven,
+      autoBattle,
+      autonomousCombatProven,
     },
   };
 }

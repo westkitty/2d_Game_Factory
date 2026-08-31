@@ -1,7 +1,7 @@
 import type Phaser from 'phaser';
 import type { InstalledSystemPack } from '@sw2d/contracts';
 import { gridController, ProjectilePool, type SceneContext, type ScenePackDefinition } from '@sw2d/runtime';
-import { CAPABILITY_IDS, type CombatService, type DefenseService, type TerritoryService } from '@sw2d/packs';
+import { CAPABILITY_IDS, type AutoCombatService, type CombatService, type DefenseService, type TerritoryService } from '@sw2d/packs';
 
 /**
  * Proof C - tower-defense (Phase 10 deep proof, see ../PROOF_CONTRACT.md).
@@ -62,13 +62,17 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
   id: 'game.grid-shell',
   version: '0.1.0',
   provides: [],
-  dependencies: [CAPABILITY_IDS.defense, CAPABILITY_IDS.territory, CAPABILITY_IDS.combat],
+  dependencies: [CAPABILITY_IDS.defense, CAPABILITY_IDS.territory, CAPABILITY_IDS.combat, CAPABILITY_IDS.autoCombat],
 
   install(context: SceneContext): InstalledSystemPack {
     const scene = context.scene;
     const defense = context.capabilities.require<DefenseService>(CAPABILITY_IDS.defense);
     const territory = context.capabilities.require<TerritoryService>(CAPABILITY_IDS.territory);
     const combat = context.capabilities.require<CombatService>(CAPABILITY_IDS.combat);
+    const autoCombat = context.capabilities.require<AutoCombatService>(CAPABILITY_IDS.autoCombat);
+    autoCombat.deploy('red-duelist', 'red-slot');
+    autoCombat.deploy('blue-guard', 'blue-slot');
+    autoCombat.start();
 
     let cursor: Cell = { ...CURSOR_START };
     const cursorSprite = scene.add.sprite(...(Object.values(toPixel(cursor)) as [number, number]), context.assets.resolve('checkpoint'));
@@ -262,6 +266,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         contested: territory.zone('relay')?.contested ?? false,
         redScore: territory.score('red'),
       },
+      autoCombat: { phase: autoCombat.phase(), winner: autoCombat.winner(), units: autoCombat.units() },
     }));
 
     let disposed = false;
