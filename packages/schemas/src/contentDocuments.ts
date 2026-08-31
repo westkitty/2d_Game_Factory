@@ -47,6 +47,7 @@ export const CONTENT_DOCUMENTS: Readonly<Record<string, ContentDocumentRegistryE
   defense: { schemaName: 'defense' },
   'auto-combat': { schemaName: 'auto-combat' },
   farming: { schemaName: 'farming' },
+  construction: { schemaName: 'construction' },
 };
 
 export type ContentDocumentName = keyof typeof CONTENT_DOCUMENTS;

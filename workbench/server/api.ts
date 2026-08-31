@@ -58,6 +58,7 @@ import { inspectEconomy, updateEconomy } from './economyLab.ts';
 import { inspectDialogue, updateDialogue } from './dialogueLab.ts';
 import { inspectDefense, updateDefense } from './defenseLab.ts';
 import { inspectFarming, updateFarming } from './farmingLab.ts';
+import { inspectConstruction, updateConstruction } from './constructionLab.ts';
 import { loadScene, listLevels, newObject, objectClassOptions, saveScene, SceneValidationError, type SceneDocument } from './sceneStore.ts';
 import { buildProject, createProject, packProject, validateProject } from './factoryService.ts';
 import { starterKitDepthFor, starterKitFor } from './starterKits/index.ts';
@@ -874,6 +875,8 @@ const ROUTES: ReadonlyMap<string, Handler> = new Map<string, Handler>([
   ],
   ['POST /farming/inspect', (request) => { const body = bodyObject(request); return ok(inspectFarming(gameIdOf(request, body))); }],
   ['POST /farming/update', (request) => { const body = bodyObject(request); return ok(updateFarming(gameIdOf(request, body), body['document'])); }],
+  ['POST /construction/inspect', (request) => { const body = bodyObject(request); return ok(inspectConstruction(gameIdOf(request, body))); }],
+  ['POST /construction/update', (request) => { const body = bodyObject(request); return ok(updateConstruction(gameIdOf(request, body), body['document'])); }],
 
   [
     'POST /theme/synthesize',

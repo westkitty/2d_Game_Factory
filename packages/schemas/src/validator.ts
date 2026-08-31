@@ -35,6 +35,7 @@ import dialogueSchema from '../schemas/dialogue.schema.json' with { type: 'json'
 import defenseSchema from '../schemas/defense.schema.json' with { type: 'json' };
 import autoCombatSchema from '../schemas/auto-combat.schema.json' with { type: 'json' };
 import farmingSchema from '../schemas/farming.schema.json' with { type: 'json' };
+import constructionSchema from '../schemas/construction.schema.json' with { type: 'json' };
 
 /**
  * Ajv-based validation for every schema this package owns.
@@ -79,7 +80,8 @@ export type SchemaName =
   | 'dialogue'
   | 'defense'
   | 'auto-combat'
-  | 'farming';
+  | 'farming'
+  | 'construction';
 
 export const SCHEMA_NAMES: readonly SchemaName[] = [
   'action-bindings',
@@ -116,6 +118,7 @@ export const SCHEMA_NAMES: readonly SchemaName[] = [
   'defense',
   'auto-combat',
   'farming',
+  'construction',
 ];
 
 /** One located problem: which document, where in it, and what is wrong. */
@@ -174,6 +177,7 @@ const SCHEMA_DOCUMENTS: Readonly<Record<SchemaName, SchemaDocument>> = {
   defense: defenseSchema,
   'auto-combat': autoCombatSchema,
   farming: farmingSchema,
+  construction: constructionSchema,
 };
 
 // Registration order matters: a schema must be added before anything that
@@ -212,6 +216,7 @@ for (const name of [
   'defense',
   'auto-combat',
   'farming',
+  'construction',
 ] as const) {
   const schema = SCHEMA_DOCUMENTS[name];
   ajv.addSchema(schema, schema.$id);

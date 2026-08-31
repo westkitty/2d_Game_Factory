@@ -45,6 +45,7 @@
       "config": {}
     },
     { "packId": "sw2d.farming", "config": {} },
+    { "packId": "sw2d.construction", "config": {} },
     {
       "packId": "game.grid-shell",
       "config": {}

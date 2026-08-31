@@ -10,6 +10,7 @@ import autoCombatData from '../content/auto-combat.json' with { type: 'json' };
 import weaponsData from '../content/weapons.json' with { type: 'json' };
 import farmingData from '../content/farming.json' with { type: 'json' };
 import itemsData from '../content/items.json' with { type: 'json' };
+import constructionData from '../content/construction.json' with { type: 'json' };
 describe('generated game content', () => {
   it('content/game.json validates against the GameDefinition schema', () => {
     expect(() => validateDocumentOrThrow('game-definition', 'content/game.json', gameData)).not.toThrow();
@@ -21,7 +22,7 @@ describe('generated game content', () => {
 
   it('content/levels/main.json normalizes and validates as a level document', () => {
     const level = normalizeTiledMap('main', rawLevel);
-    expect(() => validateContentBundleData({ tuning: tuningData, 'levels/main': level, defense: defenseData, weapons: weaponsData, 'auto-combat': autoCombatData, farming: farmingData, items: itemsData })).not.toThrow();
+    expect(() => validateContentBundleData({ tuning: tuningData, 'levels/main': level, defense: defenseData, weapons: weaponsData, 'auto-combat': autoCombatData, farming: farmingData, items: itemsData, construction: constructionData })).not.toThrow();
   });
 
   it('rejects a malformed tuning document with a located error', () => {

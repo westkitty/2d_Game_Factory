@@ -1,0 +1,1 @@
+{"schemaVersion":1,"startingResources":20,"buildables":[{"id":"hut","footprint":{"width":32,"height":32},"cost":10,"durationMs":500,"resultArchetype":"hut","refundRatio":0.5}],"zones":[{"id":"yard","kind":"buildable","x":0,"y":420,"width":400,"height":120}]}

@@ -167,3 +167,4 @@ export {
 } from './defense/defensePack.ts';
 export { autoCombatPack, AutoCombatServiceImpl, MissingAutoCombatDocumentError, AUTO_COMBAT_CONFIG_SCHEMA_ID, type AutoCombatConfig, type AutoCombatService } from './autoCombat/autoCombatPack.ts';
 export { farmingPack, FarmingServiceImpl, type FarmingService } from './farming/farmingPack.ts';
+export { constructionPack, ConstructionServiceImpl, type ConstructionService } from './construction/constructionPack.ts';

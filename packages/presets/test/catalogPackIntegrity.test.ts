@@ -32,6 +32,7 @@ import {
   defensePack,
   autoCombatPack,
   farmingPack,
+  constructionPack,
 } from '@sw2d/packs';
 import { resolveInstallOrder } from '@sw2d/runtime/composition';
 import { PRESETS } from '../src/index.ts';
@@ -84,6 +85,7 @@ const REAL_PACKS = [
   defensePack,
   autoCombatPack,
   farmingPack,
+  constructionPack,
 ];
 
 const REGISTRY = new Map(REAL_PACKS.map((definition) => [definition.id, definition]));

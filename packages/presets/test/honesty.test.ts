@@ -138,7 +138,7 @@ describe('required knownLimitations (MASTER_PROJECT.md section 12)', () => {
     { id: 'pet-creature', pattern: /utility-scored behaviour, schedules, relationships and work-order reservations are reusable/ },
     { id: 'virtual-pet', pattern: /utility-scored behaviour, schedules, relationships and work-order reservations are reusable/ },
     { id: 'aquarium-terrarium', pattern: /utility-scored behaviour, schedules, relationships and work-order reservations are reusable/ },
-    { id: 'colony-lite', pattern: /construction placement is not - that is a later phase/ },
+    { id: 'colony-lite', pattern: /visual buildings, terrain semantics and worker travel presentation remain game-specific/ },
     { id: 'visual-novel', pattern: /reusable through sw2d\.dialogue \(narrative\.dialogue\)/ },
     { id: 'point-and-click', pattern: /closed unions rather than an expression language/ },
     { id: 'interactive-fiction-hybrid', pattern: /No dedicated parser\/text-command system/ },

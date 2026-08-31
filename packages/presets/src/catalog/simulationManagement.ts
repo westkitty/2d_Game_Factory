@@ -102,12 +102,12 @@ export const SIMULATION_MANAGEMENT_PRESETS: readonly PresetDefinition[] = [
     controllerFamilies: ['ui-simulation'],
     // Post-ten Phase 18: needs, schedules and work-order reservations are
     // reusable now (sw2d.simulation-agents, ADR-0032; proof: proofs/colony-lite/).
-    requiredSystemPacks: [pack(PACK_IDS.simulation), pack(PACK_IDS.world), pack(PACK_IDS.simulationAgents)],
+    requiredSystemPacks: [pack(PACK_IDS.simulation), pack(PACK_IDS.world), pack(PACK_IDS.simulationAgents), pack(PACK_IDS.construction)],
     optionalSystemPacks: [pack(PACK_IDS.progression), pack(PACK_IDS.navigation)],
-    requiredContentRoles: ['tuning', 'agents'],
+    requiredContentRoles: ['tuning', 'agents', 'construction'],
     validationProfile: VALIDATION_PROFILES.simulationManagement,
     knownLimitations: [
-      'Colonist pathfinding is reusable (sw2d.navigation, optional) and needs / schedules / work-order assignment are reusable (sw2d.simulation-agents); construction placement is not - that is a later phase.',
+      'Construction blueprints and single-policy refunds are reusable; visual buildings, terrain semantics and worker travel presentation remain game-specific.',
     ],
   }),
 

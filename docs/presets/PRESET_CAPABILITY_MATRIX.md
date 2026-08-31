@@ -103,7 +103,7 @@ pack/controller selections were actually exercised through, and
 | `tycoon-lite` | simulation, progression, economy | arcade | ui-simulation | keyboard, touch | simulation-management-recipe |
 | `farming-lite` | simulation, world, items, farming | progression | ui-simulation | keyboard, touch | simulation-management-recipe |
 | `pet-creature` | simulation, progression, simulation-agents | world | ui-simulation | keyboard, touch | simulation-management-recipe |
-| `colony-lite` | simulation, world, simulation-agents | progression | ui-simulation, navigation | keyboard, touch | simulation-management-recipe |
+| `colony-lite` | simulation, world, simulation-agents, construction | progression | ui-simulation, navigation | keyboard, touch | simulation-management-recipe |
 | `restaurant` | simulation, progression, economy | arcade | ui-simulation | keyboard, touch | simulation-management-recipe |
 | `aquarium-terrarium` | simulation, simulation-agents | progression | ui-simulation | keyboard, touch | simulation-management-recipe |
 
@@ -148,6 +148,7 @@ pack/controller selections were actually exercised through, and
 | puzzle-rules | `sw2d.puzzle-rules` | `puzzle.rules` | 2 | 2 |
 | simulation | `sw2d.simulation` | `simulation.resources` | 9 | 10 |
 | farming | `sw2d.farming` | `simulation.farming` | 1 | 1 |
+| construction | `sw2d.construction` | `simulation.construction` | 1 | 1 |
 | narrative | `sw2d.narrative` | `narrative.state` | 4 | 8 |
 | strategy | `sw2d.strategy` | `strategy.turns` | 4 | 4 |
 | auto-combat | `sw2d.auto-combat` | `strategy.auto-combat` | 1 | 1 |

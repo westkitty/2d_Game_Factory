@@ -1,7 +1,7 @@
 import type Phaser from 'phaser';
 import type { InstalledSystemPack } from '@sw2d/contracts';
 import { gridController, ProjectilePool, type SceneContext, type ScenePackDefinition } from '@sw2d/runtime';
-import { CAPABILITY_IDS, type AutoCombatService, type CombatService, type DefenseService, type FarmingService, type ItemsService, type TerritoryService } from '@sw2d/packs';
+import { CAPABILITY_IDS, type AutoCombatService, type CombatService, type ConstructionService, type DefenseService, type FarmingService, type ItemsService, type TerritoryService } from '@sw2d/packs';
 
 /**
  * Proof C - tower-defense (Phase 10 deep proof, see ../PROOF_CONTRACT.md).
@@ -62,7 +62,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
   id: 'game.grid-shell',
   version: '0.1.0',
   provides: [],
-  dependencies: [CAPABILITY_IDS.defense, CAPABILITY_IDS.territory, CAPABILITY_IDS.combat, CAPABILITY_IDS.autoCombat, CAPABILITY_IDS.farming, CAPABILITY_IDS.items],
+  dependencies: [CAPABILITY_IDS.defense, CAPABILITY_IDS.territory, CAPABILITY_IDS.combat, CAPABILITY_IDS.autoCombat, CAPABILITY_IDS.farming, CAPABILITY_IDS.items, CAPABILITY_IDS.construction],
 
   install(context: SceneContext): InstalledSystemPack {
     const scene = context.scene;
@@ -76,6 +76,9 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     const farming = context.capabilities.require<FarmingService>(CAPABILITY_IDS.farming);
     const items = context.capabilities.require<ItemsService>(CAPABILITY_IDS.items);
     items.grant('turnip-seed'); farming.till('proof-plot'); farming.plant('proof-plot', 'turnip'); farming.water('proof-plot');
+    const construction = context.capabilities.require<ConstructionService>(CAPABILITY_IDS.construction);
+    const constructionSite = construction.place('hut', { x: 32, y: 452 });
+    if (constructionSite.ok && constructionSite.siteId) construction.assign(constructionSite.siteId, 'proof-worker');
 
     let cursor: Cell = { ...CURSOR_START };
     const cursorSprite = scene.add.sprite(...(Object.values(toPixel(cursor)) as [number, number]), context.assets.resolve('checkpoint'));
@@ -271,6 +274,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       },
       autoCombat: { phase: autoCombat.phase(), winner: autoCombat.winner(), units: autoCombat.units() },
       farming: { calendar: farming.calendar(), plot: farming.plots()[0], seeds: items.count('turnip-seed'), turnips: items.count('turnip') },
+      construction: { resources: construction.resources(), sites: construction.sites() },
     }));
 
     let disposed = false;

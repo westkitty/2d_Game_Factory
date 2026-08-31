@@ -10,6 +10,7 @@ import autoCombatData from '../content/auto-combat.json' with { type: 'json' };
 import weaponsData from '../content/weapons.json' with { type: 'json' };
 import farmingData from '../content/farming.json' with { type: 'json' };
 import itemsData from '../content/items.json' with { type: 'json' };
+import constructionData from '../content/construction.json' with { type: 'json' };
 
 /**
  * The generated game's content source.
@@ -35,7 +36,7 @@ export const gameContent: ContentSource = {
   id: (gameData as { id: string }).id,
   load: async (): Promise<ContentBundle> => {
     const normalizedLevel = normalizeTiledMap('main', rawLevel);
-    const data = validateContentBundleData({ tuning: tuningData, 'levels/main': normalizedLevel, defense: defenseData, weapons: weaponsData, 'auto-combat': autoCombatData, items: itemsData, farming: farmingData });
+    const data = validateContentBundleData({ tuning: tuningData, 'levels/main': normalizedLevel, defense: defenseData, weapons: weaponsData, 'auto-combat': autoCombatData, items: itemsData, farming: farmingData, construction: constructionData });
 
     const assets: readonly AssetDescriptor[] = theme.assets;
     const ui: Partial<UiCopy> | undefined = theme.ui;

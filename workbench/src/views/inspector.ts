@@ -31,6 +31,7 @@ import { renderEconomyLab } from './economyLab.ts';
 import { renderDialogueLab } from './dialogueLab.ts';
 import { renderDefenseLab } from './defenseLab.ts';
 import { renderFarmingLab } from './farmingLab.ts';
+import { renderConstructionLab } from './constructionLab.ts';
 import { thumbnailFor } from '../image/clientImage.ts';
 import { ROLE_LABELS, type AssetRecord, type Provenance, type RoleAssignment } from '../../shared/types.ts';
 import { classifyFrames } from '../../shared/spritePresentation.ts';
@@ -65,6 +66,7 @@ export function renderInspector(host: HTMLElement): () => void {
   const dialogueHost = el('div', { class: 'pane__body', style: { 'border-top': '1px solid var(--line, #2a2a2a)' } });
   const defenseHost = el('div', { class: 'pane__body', style: { 'border-top': '1px solid var(--line, #2a2a2a)' } });
   const farmingHost = el('div', { class: 'pane__body', style: { 'border-top': '1px solid var(--line, #2a2a2a)' } });
+  const constructionHost = el('div', { class: 'pane__body', style: { 'border-top': '1px solid var(--line, #2a2a2a)' } });
   let genLabGameId: string | null = null;
   let disposeGenLab: (() => void) | null = null;
   let disposeWorldGraphLab: (() => void) | null = null;
@@ -82,6 +84,7 @@ export function renderInspector(host: HTMLElement): () => void {
   let disposeDialogueLab: (() => void) | null = null;
   let disposeDefenseLab: (() => void) | null = null;
   let disposeFarmingLab: (() => void) | null = null;
+  let disposeConstructionLab: (() => void) | null = null;
 
   function roleRow(assignment: RoleAssignment, state: AppState): HTMLElement {
     const current = state.current!;
@@ -337,6 +340,8 @@ export function renderInspector(host: HTMLElement): () => void {
     disposeDefenseLab = null;
     disposeFarmingLab?.();
     disposeFarmingLab = null;
+    disposeConstructionLab?.();
+    disposeConstructionLab = null;
     replace(genLabHost);
     replace(worldGraphHost);
     replace(physicsHost);
@@ -353,6 +358,7 @@ export function renderInspector(host: HTMLElement): () => void {
     replace(dialogueHost);
     replace(defenseHost);
     replace(farmingHost);
+    replace(constructionHost);
     if (gameId) {
       disposeGenLab = renderGenerationLab(genLabHost, gameId);
       disposeWorldGraphLab = renderWorldGraphLab(worldGraphHost, gameId);
@@ -370,6 +376,7 @@ export function renderInspector(host: HTMLElement): () => void {
       disposeDialogueLab = renderDialogueLab(dialogueHost, gameId);
       disposeDefenseLab = renderDefenseLab(defenseHost, gameId);
       disposeFarmingLab = renderFarmingLab(farmingHost, gameId);
+      disposeConstructionLab = renderConstructionLab(constructionHost, gameId);
     }
   }
 
@@ -410,7 +417,7 @@ export function renderInspector(host: HTMLElement): () => void {
     );
   }
 
-  replace(host, head, body, genLabHost, worldGraphHost, physicsHost, racingHost, perceptionHost, climbingHost, runsHost, strategyActionsHost, playersHost, ballPaddleHost, rhythmHost, agentsHost, economyHost, dialogueHost, defenseHost, farmingHost);
+  replace(host, head, body, genLabHost, worldGraphHost, physicsHost, racingHost, perceptionHost, climbingHost, runsHost, strategyActionsHost, playersHost, ballPaddleHost, rhythmHost, agentsHost, economyHost, dialogueHost, defenseHost, farmingHost, constructionHost);
   paint(getState());
   const unsubscribe = subscribe(paint);
   return () => {
@@ -424,6 +431,7 @@ export function renderInspector(host: HTMLElement): () => void {
     disposeRunsLab?.();
     disposeDefenseLab?.();
     disposeFarmingLab?.();
+    disposeConstructionLab?.();
   };
 }
 

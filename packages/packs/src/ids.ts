@@ -47,6 +47,7 @@ export const PACK_IDS = {
   defense: 'sw2d.defense',
   autoCombat: 'sw2d.auto-combat',
   farming: 'sw2d.farming',
+  construction: 'sw2d.construction',
 } as const;
 
 export const CAPABILITY_IDS = {
@@ -136,4 +137,5 @@ export const CAPABILITY_IDS = {
   territory: 'strategy.territory',
   autoCombat: 'strategy.auto-combat',
   farming: 'simulation.farming',
+  construction: 'simulation.construction',
 } as const;

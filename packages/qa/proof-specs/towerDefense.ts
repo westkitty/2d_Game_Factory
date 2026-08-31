@@ -18,6 +18,7 @@ interface ShellSnap {
   readonly territory: { readonly mode: 'empty' | 'red' | 'contested'; readonly owner: string | null; readonly progress: number; readonly contested: boolean; readonly redScore: number };
   readonly autoCombat: { readonly phase: string; readonly winner: string | null; readonly units: readonly unknown[] };
   readonly farming: { readonly seeds: number; readonly turnips: number; readonly plot: { readonly phase: string } };
+  readonly construction: { readonly resources: number; readonly sites: readonly { readonly phase: string }[] };
 }
 
 function state(harness: Harness): Promise<ShellSnap> {
@@ -110,9 +111,10 @@ export async function run(harness: Harness): Promise<SmokeOutcome> {
   }
   const autonomousCombatProven = autoBattle.autoCombat.phase === 'resolve' && autoBattle.autoCombat.winner === 'red';
   const farmingProven = autoBattle.farming.seeds === 0 && autoBattle.farming.turnips === 2 && autoBattle.farming.plot.phase === 'tilled';
+  const constructionProven = autoBattle.construction.resources === 10 && autoBattle.construction.sites[0]?.phase === 'complete';
 
   return {
-    passed: invalidPlacementRejected && gridCursorMovementProven && towerPlacementProven && currencyCostProven && territoryProven && firstKillOk && upgradeOk && reachableOutcomeProven && autonomousCombatProven && farmingProven,
+    passed: invalidPlacementRejected && gridCursorMovementProven && towerPlacementProven && currencyCostProven && territoryProven && firstKillOk && upgradeOk && reachableOutcomeProven && autonomousCombatProven && farmingProven && constructionProven,
     details: {
       spawnShell,
       afterInvalidConfirm,
@@ -134,6 +136,7 @@ export async function run(harness: Harness): Promise<SmokeOutcome> {
       autoBattle,
       autonomousCombatProven,
       farmingProven,
+      constructionProven,
     },
   };
 }

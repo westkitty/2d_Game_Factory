@@ -32,6 +32,7 @@ import {
   defensePack,
   autoCombatPack,
   farmingPack,
+  constructionPack,
 } from '../src/index.ts';
 
 /**
@@ -77,6 +78,7 @@ const ALL_PACKS = [
   defensePack,
   autoCombatPack,
   farmingPack,
+  constructionPack,
 ];
 
 /** `<family>.<service>`: lowercase segments, at least two, dash-separated words allowed after the first. */
