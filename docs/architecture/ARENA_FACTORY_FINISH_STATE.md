@@ -88,29 +88,88 @@ maturity describes the preset), `docs/presets/PRESET_CATALOG.md`,
   `qa:proof` run before promotion.
 - Accepted commit: recorded in git log after this commit.
 
-### Wave 2 — destroy integration debt in the generated top-down shell — PLANNED
-1. `bindStarterEncounters` added to `@sw2d/runtime` game-support: when a
-   generated game installs `sw2d.combat` + `sw2d.weapons` + `sw2d.encounters`,
-   the shell now spawns real enemies from `content/encounters.json`, fires
-   their patterns through the projectile runtime at the player, lets the
-   player kill them (combat resolution both ways), tracks kills/deaths, and
-   respawns the player on death (survival loop). Inert when packs absent.
-2. Generated top-down shell consumes spatial pointer aim: with no digital
-   `AIM_*` held, the mouse aims the starter weapon via `aimFromPointer`.
-3. `horizontal-shmup` / `vertical-shmup` now require `sw2d.encounters`
-   (their defining mechanic), limitation text updated to what remains true.
-4. Limitations narrowed where they became false; honesty tests updated.
-- Status: planned.
-- Accepted commit: none yet.
+### Wave 2 — destroy integration debt in the generated top-down shell — COMPLETE
+1. `bindStarterEncounters` added to `@sw2d/runtime` game-support
+   (`packages/runtime/src/game-support/starterEncounters.ts`, exported from
+   the package index): when a generated game installs `sw2d.combat` +
+   `sw2d.weapons` + `sw2d.encounters`, the shell spawns real enemies from
+   `content/encounters.json`, fires their patterns through the projectile
+   runtime at the player, resolves combat both ways, tracks
+   kills/deaths/waves, respawns the player on death, and restarts the
+   encounter for a survival loop. Inert when the packs are absent.
+2. Generated top-down shell consumes spatial pointer aim
+   (`topDownShellPack.ts` template): digital `AIM_*` keys win, otherwise the
+   mouse aims via `aimFromPointer` when the pointer is inside the arena,
+   otherwise movement direction. Fire = `primaryPressed` or held
+   `PRIMARY_ACTION` (J/X).
+3. Generator content upgrades (`contentDocuments.ts` / `generate.ts`):
+   `enemy-blaster` weapon (team `enemy`) in the weapon catalog when
+   encounters are required; `starter-skirmish` encounter is now two-phase
+   (wave-1 chasers, wave-2 mixed) instead of a single trivial wave.
+4. Pack-set truth: `horizontal-shmup`, `vertical-shmup`, `arena-combat` now
+   require `[combat, weapons, encounters]`; `twin-stick-shooter` requires
+   `[combat, weapons]` with `encounters` optional plus one honest
+   limitation. Stale limitations deleted (`LIMITATIONS.spatialAim` removed
+   entirely; shmups now state the true remaining gap: no scrolling shmup
+   camera).
+5. Generated games announce their genre: `generateUiCopy` in
+   `contentDocuments.ts` derives title/subtitle/playHint from the preset's
+   primary controller family + required packs, emitted through
+   `theme.json`'s schema-legal `ui` field. A vertical-shmup HUD now reads
+   "MOVE WASD/ARROWS - AIM WITH MOUSE - FIRE J/X - SURVIVE THE WAVES"
+   instead of the platformer's "MOVE / JUMP".
+6. Docs regenerated mechanically from live `PRESETS`
+   (`PRESET_CAPABILITY_MATRIX.md` all nine family tables + coverage table;
+   `PRESET_CATALOG.md` limitations section), and `docsSync.test.ts` gained
+   two drift guards (exact maturity cell per row; first knownLimitation
+   verbatim per row) so the docs cannot silently drift again.
+- Gameplay proof (real browser, this session): generated `vertical-shmup`
+  game played end-to-end twice (before and after the UI-copy change) via the
+  QA harness — enemies spawned and chased, pointer-aim + KeyJ fired real
+  projectiles (86-93 spawned per session), kills registered, player died to
+  contact damage and respawned with the survival loop intact, HUD showed the
+  new genre-correct hint; zero console errors, zero external requests.
+  Screenshots of title and mid-fight inspected visually.
+- Validation: typecheck PASS; `npm test` 2567/2567; `qa:matrix` 45/45
+  generated games really entered play; `qa:smoke` 14/14; `qa:proof` 23/23;
+  workbench build PASS.
+- Accepted commit: recorded in git log after this commit.
 
-### Wave 3 — Workbench preset health surface — PLANNED
-Preset browser now surfaces repository-derived evidence per preset: proof /
-demo / starter-kit existence (derived server-side from the real preset data,
-not hand-maintained), known limitations on the detail card, and honest
-maturity counts. No new panels; progressive disclosure inside the existing
-browser view.
-- Status: planned.
-- Accepted commit: none yet.
+### Wave 3 — Workbench preset evidence surface — COMPLETE
+Preset browser now surfaces repository-derived evidence per preset, with no
+new panels (progressive disclosure inside the existing detail modal):
+1. `workbench/server/presetEvidence.ts` (new): scans `proofs/` and `demos/`
+   for `<preset-id>/package.json` at request time — the same evidence source
+   `packages/presets/test/proofEvidence.test.ts` pins the catalogue against.
+   Offline, no LLM, nothing hand-maintained; cached per process.
+2. `listPresetSummaries` now carries `hasProofGame` / `hasDemoGame`; the
+   detail modal gained an "Evidence on disk" section that states exactly
+   which committed artifacts exist — or states honestly that none do and the
+   maturity label rests on the generated starter alone.
+3. `workbench/test/presetEvidence.test.ts` (new drift guards): every
+   proof-validated preset must show a proof game *and only those* (F15 in
+   both directions); demo count pinned to the 12 committed demos; unknown
+   preset ids yield no evidence without throwing.
+- Verified in a real browser against the production workbench build: four
+  evidence cases rendered and read back (proof+demo: twin-stick-shooter,
+  tower-defense; demo only: stealth-game; none: survivor-like), zero page
+  errors. Screenshot of the detail modal inspected visually.
+- Accepted commit: same commit as Wave 2 (below).
+
+### Adversarial sweep A (during Waves 2-3, this session)
+Attack: "does the generated playHint fabricate controls the shell never
+reads?" Three real bugs found and fixed before commit:
+1. Top-down no-weapons hint claimed "INTERACT E" — no generated shell reads
+   INTERACT. Hint corrected; `packages/cli/test/uiCopy.test.ts` (new) now
+   forbids INTERACT/DRAG/GAMEPAD claims for every preset, requires JUMP only
+   on the platform family, and pins the grid/vehicle/menu hints to the real
+   default bindings (UNDO Backspace, RESET K, ENTER confirms).
+2. Grid/vehicle/ui-sim hints used internal action names (CANCEL, SECONDARY,
+   CONFIRM) instead of the keys players actually press; reworded to real keys.
+3. `add-theme` dropped the ui copy: a second theme generated by
+   `generateTheme` carried no `ui` field, so switching themes silently
+   reverted a shooter's HUD to "MOVE / JUMP". `addTheme.ts` now inherits the
+   default theme's `ui` block.
 
 ### Wave 4 — adversarial sweep + full ladder — PLANNED
 Planned: run after Waves 1-3 land.

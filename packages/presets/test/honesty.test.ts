@@ -127,11 +127,10 @@ describe('input-mode honesty', () => {
 
 describe('required knownLimitations (MASTER_PROJECT.md section 12)', () => {
   const cases: ReadonlyArray<{ id: string; pattern: RegExp }> = [
-    { id: 'twin-stick-shooter', pattern: /spatial\/analog aim/ },
     { id: 'stealth-game', pattern: /vision cones, awareness geometry, noise propagation and hiding are not implemented/ },
     { id: 'heist-game', pattern: /vision cones, awareness geometry, noise propagation and hiding are not implemented/ },
-    { id: 'horizontal-shmup', pattern: /does not wire enemy formations/ },
-    { id: 'vertical-shmup', pattern: /does not wire enemy formations/ },
+    { id: 'horizontal-shmup', pattern: /scrolling-stage camera movement/ },
+    { id: 'vertical-shmup', pattern: /scrolling-stage camera movement/ },
     { id: 'bullet-hell', pattern: /Per-bullet GPU-scale pooling/ },
     { id: 'run-and-gun', pattern: /Enemy encounter orchestration/ },
     { id: 'boss-rush', pattern: /Sequencing multiple bosses/ },

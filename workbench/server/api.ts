@@ -48,6 +48,7 @@ import { inspectPhysics } from './physicsLab.ts';
 import { inspectRacing } from './racingLab.ts';
 import { loadScene, listLevels, newObject, objectClassOptions, saveScene, SceneValidationError, type SceneDocument } from './sceneStore.ts';
 import { buildProject, createProject, packProject, validateProject } from './factoryService.ts';
+import { presetEvidenceFor } from './presetEvidence.ts';
 import { starterKitDepthFor, starterKitFor } from './starterKits/index.ts';
 import {
   acquirePack,
@@ -157,13 +158,16 @@ function provenanceOf(value: unknown): Provenance {
 // --- project state ---------------------------------------------------------
 
 function presetSummaries(): ReturnType<typeof listPresetSummaries> {
-  return listPresetSummaries((presetId) => {
-    try {
-      return starterKitDepthFor(presetId, getPreset(presetId).maturity);
-    } catch {
-      return 'generated-shell';
-    }
-  });
+  return listPresetSummaries(
+    (presetId) => {
+      try {
+        return starterKitDepthFor(presetId, getPreset(presetId).maturity);
+      } catch {
+        return 'generated-shell';
+      }
+    },
+    (presetId) => presetEvidenceFor(presetId),
+  );
 }
 
 /** Everything the UI needs to render a project in one round trip - opening a project should not be six requests. */

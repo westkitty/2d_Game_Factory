@@ -2,7 +2,7 @@
 
 Project: **Stinky Weasel 2D Browser Game Factory** (`sw2d`)
 Repository: `westkitty/2d_Game_Factory`
-State revision: **15**
+State revision: **16**
 Updated: 2026-09-09
 
 Read this before doing anything. Governing spec: [`MASTER_PROJECT.md`](MASTER_PROJECT.md).
@@ -773,6 +773,38 @@ adjudicated individually in the Phase 12 acceptance document):
   gitignored; Phase 12 added no exception.
 
 ## Revision history
+
+### Revision 28 - 2026-09-09 (Arena finish program, Waves 2+3) - GENERATED SHELL CONSUMES THE COMBAT STACK; PRESET EVIDENCE SURFACE
+
+**The generated top-down shell now plays as a real action game when its preset requires the
+combat stack.** New runtime game-support binding `bindStarterEncounters`
+(`packages/runtime/src/game-support/starterEncounters.ts`): with `sw2d.combat` + `sw2d.weapons` +
+`sw2d.encounters` installed, generated games spawn real enemies from `content/encounters.json`,
+resolve combat both ways, track kills/deaths/waves, respawn the player, and loop the encounter
+(survival). The shell template also consumes spatial pointer aim (`aimFromPointer`, digital
+`AIM_*` still wins) and the generator now emits an `enemy-blaster` weapon plus a two-phase
+`starter-skirmish` encounter. Pack-set truth restated: both shmups and `arena-combat` require
+`[combat, weapons, encounters]`; `twin-stick-shooter` keeps `encounters` optional with an honest
+limitation; the stale `spatialAim` limitation is deleted. `generateUiCopy` (new) derives
+title/subtitle/playHint from the preset's controller family + required packs via `theme.json`'s
+`ui` field — a shmup no longer tells the player to jump. Docs regenerated mechanically from live
+`PRESETS`; `docsSync.test.ts` gained two drift guards. Proven by actually playing a generated
+`vertical-shmup` in a real browser (pointer aim, kills, death, respawn, genre-correct HUD; zero
+console errors/external requests).
+
+Wave 3: the workbench preset browser surfaces repository-derived evidence per preset —
+`workbench/server/presetEvidence.ts` scans `proofs/` and `demos/` (the same source
+`proofEvidence.test.ts` pins the catalogue against), `hasProofGame`/`hasDemoGame` flow through
+`listPresetSummaries`, and the detail modal's new "Evidence on disk" section names the committed
+artifacts or states honestly that none exist. Verified in a real browser against the production
+build (four evidence cases read back, zero page errors); `workbench/test/presetEvidence.test.ts`
+guards F15 in both directions. An adversarial sweep of the new playHint surface found and fixed
+three bugs pre-commit (fabricated INTERACT control; internal action names leaking into hints;
+`add-theme` silently dropping ui copy), now pinned by `packages/cli/test/uiCopy.test.ts`.
+
+Validation: typecheck PASS, `npm test` 2573/2573, `qa:matrix` 45/45, `qa:smoke` 14/14,
+`qa:proof` 23/23, workbench build PASS. Durable ledger:
+[`docs/architecture/ARENA_FACTORY_FINISH_STATE.md`](docs/architecture/ARENA_FACTORY_FINISH_STATE.md).
 
 ### Revision 27 - 2026-09-09 (Arena finish program, Wave 1) - PROOF-EVIDENCE CATALOG RECONCILIATION
 

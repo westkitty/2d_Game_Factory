@@ -23,6 +23,25 @@ describe('docs/presets/PRESET_CATALOG.md stays in sync with the catalog', () => 
       expect(catalogDoc, preset.id).toContain(preset.displayName);
     }
   });
+
+  it('states every preset maturity truthfully in its table row', () => {
+    // The Arena finish program found the maturity column had drifted 18
+    // presets behind the catalog. Guard the exact cell, not just the word.
+    for (const preset of PRESETS) {
+      const row = catalogDoc.split('\n').find((line) => line.startsWith(`| \`${preset.id}\` |`));
+      expect(row, `no table row for ${preset.id}`).toBeDefined();
+      expect(row!, preset.id).toContain(`| ${preset.maturity} |`);
+    }
+  });
+
+  it('states every preset\'s first known limitation verbatim (or "(none stated)")', () => {
+    // Same drift-guard for the "Key limitations by recipe" section, which had
+    // fallen a whole capability program behind the live catalog.
+    for (const preset of PRESETS) {
+      const expected = preset.knownLimitations[0] ?? '(none stated)';
+      expect(catalogDoc, preset.id).toContain(`| \`${preset.id}\` | ${expected} |`);
+    }
+  });
 });
 
 describe('docs/presets/PRESET_CAPABILITY_MATRIX.md stays in sync with the catalog', () => {

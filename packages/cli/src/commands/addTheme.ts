@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { validateDocumentOrThrow } from '@sw2d/schemas';
 import { generateTheme } from '../generator/contentDocuments.ts';
 import { GAMES_ROOT, TargetExistsError, assertDoesNotExist, resolveUnder } from '../paths.ts';
@@ -41,7 +41,21 @@ export async function run(args: readonly string[]): Promise<number> {
     throw error;
   }
 
-  const theme = generateTheme(themeId, themeId.charAt(0).toUpperCase() + themeId.slice(1));
+  // Carry the default theme's ui copy forward: switching a shooter's palette
+  // must not silently revert its HUD back to the runtime's neutral copy
+  // (Wave 2's generateUiCopy work would otherwise be lost on add-theme).
+  let inheritedUi: Record<string, string> | undefined;
+  const defaultThemePath = `${themesDir}/default/theme.json`;
+  if (existsSync(defaultThemePath)) {
+    try {
+      const defaultTheme = JSON.parse(readFileSync(defaultThemePath, 'utf8')) as { ui?: Record<string, string> };
+      inheritedUi = defaultTheme.ui;
+    } catch {
+      /* unreadable default theme: the new theme simply carries no ui copy */
+    }
+  }
+
+  const theme = generateTheme(themeId, themeId.charAt(0).toUpperCase() + themeId.slice(1), inheritedUi);
   validateDocumentOrThrow('theme-manifest', `content/themes/${themeId}/theme.json`, theme);
 
   mkdirSync(themeDir, { recursive: true });

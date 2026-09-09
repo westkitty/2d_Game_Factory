@@ -52,10 +52,15 @@ export const TOP_DOWN_ACTION_PRESETS: readonly PresetDefinition[] = [
     family: 'top-down-action',
     controllerFamilies: ['top-down'],
     requiredSystemPacks: [pack(PACK_IDS.combat), pack(PACK_IDS.weapons)],
-    optionalSystemPacks: [pack(PACK_IDS.world), pack(PACK_IDS.worldEntities), pack(PACK_IDS.arcade)],
+    optionalSystemPacks: [pack(PACK_IDS.world), pack(PACK_IDS.worldEntities), pack(PACK_IDS.arcade), pack(PACK_IDS.encounters)],
     requiredContentRoles: ['tuning', 'levels'],
     validationProfile: VALIDATION_PROFILES.topDown,
-    knownLimitations: [LIMITATIONS.spatialAim],
+    // Spatial pointer aim is consumed by the generated top-down shell as of
+    // the Arena finish program's Wave 2 (aimFromPointer fallback when no
+    // digital AIM_* is held - the contract proofs/twin-stick-shooter proves).
+    knownLimitations: [
+      'The generated starter ships no enemy waves out of the box: sw2d.encounters is optional for this recipe, so opposition is added by enabling that pack or authoring game-specific spawns (the committed proof game demonstrates the latter).',
+    ],
   }),
 
   definePreset({
@@ -67,7 +72,10 @@ export const TOP_DOWN_ACTION_PRESETS: readonly PresetDefinition[] = [
     optionalSystemPacks: [pack(PACK_IDS.arcade), pack(PACK_IDS.world)],
     requiredContentRoles: ['tuning'],
     validationProfile: VALIDATION_PROFILES.topDown,
-    knownLimitations: ['Endless difficulty scaling / meta-progression between runs is not a reusable system; the encounter capability (sw2d.encounters, Phase 4) drives finite waves.'],
+    // The generated shell now loops content/encounters.json as survival waves
+    // (bindStarterEncounters, Arena finish Wave 2); what is still missing is
+    // escalation between loops.
+    knownLimitations: ['Endless difficulty scaling / meta-progression between runs is not a reusable system; the starter survival loop repeats the authored encounter without escalating it.'],
   }),
 
   definePreset({
@@ -132,11 +140,15 @@ export const TOP_DOWN_ACTION_PRESETS: readonly PresetDefinition[] = [
     displayName: 'Arena Combat',
     family: 'top-down-action',
     controllerFamilies: ['top-down'],
-    requiredSystemPacks: [pack(PACK_IDS.combat), pack(PACK_IDS.weapons)],
+    // sw2d.encounters became required in the Arena finish program's Wave 2:
+    // fighting content-driven waves in a fixed arena is this preset's whole
+    // genre, and the generated top-down shell now wires it for real
+    // (bindStarterEncounters).
+    requiredSystemPacks: [pack(PACK_IDS.combat), pack(PACK_IDS.weapons), pack(PACK_IDS.encounters)],
     optionalSystemPacks: [pack(PACK_IDS.ai), pack(PACK_IDS.arcade)],
     requiredContentRoles: ['tuning', 'levels'],
     validationProfile: VALIDATION_PROFILES.topDown,
-    knownLimitations: ['The reusable encounter capability (sw2d.encounters, ADR-0021) exists; this starter does not wire it into its shell yet.'],
+    knownLimitations: ['Melee weapons/knockback are not reusable capabilities; the starter arena fight is ranged (projectile) combat.'],
   }),
 
   definePreset({

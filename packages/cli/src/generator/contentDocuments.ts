@@ -70,22 +70,34 @@ export function generateItemCatalog(hasItemsRole: boolean): Record<string, unkno
  * gets a one-weapon starter catalog so its generated shell equips and fires a
  * real projectile through the reusable runtime, others get an empty catalog.
  */
-export function generateWeaponCatalog(hasWeaponsPack: boolean): Record<string, unknown> {
+export function generateWeaponCatalog(hasWeaponsPack: boolean, hasEncountersPack = false): Record<string, unknown> {
   if (!hasWeaponsPack) return { schemaVersion: 1, weapons: [] };
-  return {
-    schemaVersion: 1,
-    weapons: [
-      {
-        id: 'sidearm',
-        displayName: 'Sidearm',
-        team: 'player',
-        cooldownMs: 220,
-        fireMode: 'single',
-        muzzleOffset: 18,
-        projectile: { assetRole: 'pickup', speed: 460, lifetimeMs: 1200, size: 8, damage: 10 },
-      },
-    ],
-  };
+  const weapons: Record<string, unknown>[] = [
+    {
+      id: 'sidearm',
+      displayName: 'Sidearm',
+      team: 'player',
+      cooldownMs: 220,
+      fireMode: 'single',
+      muzzleOffset: 18,
+      projectile: { assetRole: 'pickup', speed: 460, lifetimeMs: 1200, size: 8, damage: 10 },
+    },
+  ];
+  if (hasEncountersPack) {
+    // The starter encounter's enemies fire this (content/encounters.json
+    // references it by id). Slower and weaker than the player's weapon so the
+    // out-of-the-box fight is winnable.
+    weapons.push({
+      id: 'enemy-blaster',
+      displayName: 'Enemy Blaster',
+      team: 'enemy',
+      cooldownMs: 900,
+      fireMode: 'single',
+      muzzleOffset: 14,
+      projectile: { assetRole: 'hazard', speed: 220, lifetimeMs: 2400, size: 8, damage: 6 },
+    });
+  }
+  return { schemaVersion: 1, weapons };
 }
 
 /**
@@ -94,6 +106,11 @@ export function generateWeaponCatalog(hasWeaponsPack: boolean): Record<string, u
  */
 export function generateEncounterCatalog(hasEncountersPack: boolean): Record<string, unknown> {
   if (!hasEncountersPack) return { schemaVersion: 1, encounters: [] };
+  // A real two-phase starter fight, not a placeholder: wave 1 is three
+  // chasing grunts, wave 2 adds shooters carrying the enemy-blaster emitter
+  // (generateWeaponCatalog ships that weapon whenever encounters are on).
+  // The generated shell's bindStarterEncounters loops the encounter as
+  // survival waves once both phases clear.
   return {
     schemaVersion: 1,
     encounters: [
@@ -103,6 +120,24 @@ export function generateEncounterCatalog(hasEncountersPack: boolean): Record<str
           {
             id: 'wave-1',
             spawns: [{ archetype: 'grunt', count: 3, at: { kind: 'edge', edge: 'top' }, intervalMs: 500, health: 20 }],
+            completeWhen: { kind: 'spawns-cleared' },
+          },
+          {
+            id: 'wave-2',
+            spawns: [
+              { archetype: 'grunt', count: 2, at: { kind: 'edge', edge: 'left' }, intervalMs: 600, health: 20 },
+              {
+                archetype: 'shooter',
+                count: 2,
+                at: { kind: 'edge', edge: 'top' },
+                intervalMs: 900,
+                health: 30,
+                emitterIds: ['aimed-shot'],
+              },
+            ],
+            emitters: [
+              { id: 'aimed-shot', weaponId: 'enemy-blaster', pattern: { kind: 'aimed' }, everyMs: 1400, startDelayMs: 800 },
+            ],
             completeWhen: { kind: 'spawns-cleared' },
           },
         ],
@@ -388,13 +423,69 @@ export function generateTuning(): Record<string, unknown> {
   };
 }
 
-/** content/themes/<themeId>/theme.json - a ThemeManifest. Colours vary slightly by themeId so add-theme's second theme is visually distinguishable, without claiming any real design system. */
-export function generateTheme(themeId: string, displayName: string): Record<string, unknown> {
+/**
+ * Genre-appropriate UiCopy for a generated game (Arena finish program, Wave
+ * 2). Before this, every generated game's title screen said "foundation
+ * slice" and its HUD said "MOVE / JUMP" - a bullet-hell told the player to
+ * jump. Derived from the same two facts the generator already keys
+ * everything else on (primary controller family + required pack ids), so it
+ * stays deterministic and honest: the hint names only controls the shell
+ * actually reads.
+ */
+export function generateUiCopy(options: {
+  readonly displayName: string;
+  readonly presetDisplayName: string;
+  readonly primaryControllerFamily: string;
+  readonly requiredPackIds: readonly string[];
+}): Record<string, string> {
+  const { displayName, presetDisplayName, primaryControllerFamily, requiredPackIds } = options;
+  const has = (id: string) => requiredPackIds.includes(id);
+  let playHint = 'MOVE  -  PAUSE TO STOP';
+  switch (primaryControllerFamily) {
+    case 'platform':
+      playHint = has('sw2d.weapons') ? 'MOVE / JUMP  -  FIRE J/X  -  PAUSE TO STOP' : 'MOVE / JUMP  -  PAUSE TO STOP';
+      break;
+    case 'top-down':
+      playHint = has('sw2d.encounters')
+        ? 'MOVE WASD/ARROWS  -  AIM WITH MOUSE  -  FIRE J/X  -  SURVIVE THE WAVES'
+        : has('sw2d.weapons')
+          ? 'MOVE WASD/ARROWS  -  AIM WITH MOUSE  -  FIRE J/X'
+          : 'MOVE WASD/ARROWS  -  PAUSE TO STOP';
+      break;
+    case 'vehicle':
+      playHint = has('sw2d.racing')
+        ? 'STEER / THROTTLE WASD/ARROWS  -  ENTER STARTS THE RACE'
+        : 'STEER / THROTTLE WASD/ARROWS  -  PAUSE TO STOP';
+      break;
+    case 'grid':
+      playHint = has('sw2d.puzzle-rules')
+        ? 'MOVE / PUSH WASD/ARROWS  -  UNDO BACKSPACE  -  RESET K'
+        : 'MOVE WASD/ARROWS  -  PAUSE TO STOP';
+      break;
+    case 'pointer':
+      playHint = 'POINT AT THINGS  -  CLICK TO ACT  -  PAUSE TO STOP';
+      break;
+    case 'ui-simulation':
+      playHint = 'ARROWS CHANGE THE SELECTION  -  ENTER CONFIRMS  -  PAUSE TO STOP';
+      break;
+    default:
+      break;
+  }
+  return {
+    title: displayName.toUpperCase(),
+    subtitle: presetDisplayName,
+    playHint,
+  };
+}
+
+/** content/themes/<themeId>/theme.json - a ThemeManifest. Colours vary slightly by themeId so add-theme's second theme is visually distinguishable, without claiming any real design system. Pass `ui` (generateUiCopy) so the generated game announces its own genre instead of the runtime's neutral fallback copy. */
+export function generateTheme(themeId: string, displayName: string, ui?: Record<string, string>): Record<string, unknown> {
   const palette = paletteFor(themeId);
   return {
     schemaVersion: 1,
     id: themeId,
     displayName,
+    ...(ui !== undefined ? { ui } : {}),
     assets: [
       { role: 'player', key: `theme/${themeId}/player`, spec: { kind: 'generated', width: 28, height: 44, fill: palette.player, stroke: '#0b0d13', strokeWidth: 2, cornerRadius: 6 } },
       { role: 'enemy', key: `theme/${themeId}/enemy`, spec: { kind: 'generated', width: 26, height: 26, fill: palette.enemy, stroke: '#3a0010', strokeWidth: 2 } },

@@ -17,6 +17,7 @@ import {
   generateTiledLevel,
   generateTheme,
   generateTuning,
+  generateUiCopy,
 } from './contentDocuments.ts';
 import { generatePackConfig } from './packConfig.ts';
 import { generateReadme } from './readme.ts';
@@ -75,7 +76,23 @@ export function buildGameFiles(gameId: string, preset: PresetDefinition): Map<st
     ) + '\n',
   );
   files.set('content/tuning.json', JSON.stringify(generateTuning(), null, 2) + '\n');
-  files.set('content/themes/default/theme.json', JSON.stringify(generateTheme('default', 'Default'), null, 2) + '\n');
+  files.set(
+    'content/themes/default/theme.json',
+    JSON.stringify(
+      generateTheme(
+        'default',
+        'Default',
+        generateUiCopy({
+          displayName,
+          presetDisplayName: preset.displayName,
+          primaryControllerFamily: preset.controllerFamilies[0]!,
+          requiredPackIds,
+        }),
+      ),
+      null,
+      2,
+    ) + '\n',
+  );
   files.set('content/levels/main.json', JSON.stringify(generateTiledLevel(), null, 2) + '\n');
   files.set(
     'content/items.json',
@@ -83,7 +100,11 @@ export function buildGameFiles(gameId: string, preset: PresetDefinition): Map<st
   );
   files.set(
     'content/weapons.json',
-    JSON.stringify(generateWeaponCatalog(requiredPackIds.includes('sw2d.weapons')), null, 2) + '\n',
+    JSON.stringify(
+      generateWeaponCatalog(requiredPackIds.includes('sw2d.weapons'), requiredPackIds.includes('sw2d.encounters')),
+      null,
+      2,
+    ) + '\n',
   );
   files.set(
     'content/encounters.json',

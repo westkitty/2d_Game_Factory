@@ -61,8 +61,6 @@ export const POINTER_INPUT_MODES: readonly InputMode[] = ['keyboard', 'pointer',
 
 /** Recorded, reused verbatim wherever more than one recipe shares the same real gap. Keeps wording from drifting across recipes that share a limitation. */
 export const LIMITATIONS = {
-  spatialAim:
-    'Independent spatial/analog aim is not wired into this starter. The digital AIM_* axis (ADR-0016) is the aim path; the spatial pointer (ADR-0018) can supply an optional aim fallback but the generated top-down shell does not consume it.',
   stealthAi:
     'AI state exists, but full vision cones, awareness geometry, noise propagation and hiding are not implemented. Patrol/chase navigation can use sw2d.navigation (Phase 5).',
   weaponsProjectiles:
@@ -73,6 +71,8 @@ export const LIMITATIONS = {
     "Standard puzzle kinds (sokoban, switch/sequence) are now content-authorable through the sw2d.puzzle-rules capability and content/puzzles.json (ADR-0023). This recipe's board rules are not one of those built-in kinds, so it still uses the code seam: sw2d.puzzle declares configSource: 'code' (ADR-0017) and a generated game supplies createInitialState/isSolved from src/game-specific/packConfig.ts (shipped with a working placeholder to replace) - the pack really installs, but this puzzle's own rules stay game-specific TypeScript, not content.",
   chasePressure:
     'A reusable chase/pursuit-pressure system does not exist yet; it must be authored as game-specific code, the same pattern starter/src/game-specific/ demonstrates.',
+  scrollingShmupCamera:
+    'Continuous scrolling-stage camera movement (the terrain streaming past a fixed ship) is not a reusable capability; the generated starter fights its encounter waves in a fixed arena.',
   // Phase 7B additions - each reused by two or more recipes; a recipe-specific gap gets an
   // inline string in its own catalog file instead (see platforming.ts's own comment on why:
   // sharing text is a decision, not laziness, and inline is correct when nothing else repeats it).

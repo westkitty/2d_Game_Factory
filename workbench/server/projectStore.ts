@@ -266,6 +266,10 @@ export interface PresetSummary {
   readonly requiredContentRoles: readonly string[];
   readonly knownLimitations: readonly string[];
   readonly starterKitDepth: 'rich-proof-kit' | 'rich-starter-kit' | 'smoke-kit' | 'generated-shell';
+  /** Repository-derived (workbench/server/presetEvidence.ts): a committed proofs/<id>/ game exists. */
+  readonly hasProofGame: boolean;
+  /** Repository-derived: a committed demos/<id>/ game exists. */
+  readonly hasDemoGame: boolean;
 }
 
 /**
@@ -274,19 +278,29 @@ export interface PresetSummary {
  * `maturity` and `knownLimitations` are passed through verbatim from the
  * catalogue. The workbench never upgrades a `recipe` preset's presentation to
  * look like a proven one - that is failure condition F15, and the honest
- * label is the whole point of the field.
+ * label is the whole point of the field. `hasProofGame`/`hasDemoGame` go the
+ * other way: they let the browser show the *artifacts* behind a maturity
+ * claim, derived from the repository rather than asserted by anyone.
  */
-export function listPresetSummaries(starterKitDepth: (presetId: string) => PresetSummary['starterKitDepth']): readonly PresetSummary[] {
-  return listPresets().map((preset) => ({
-    id: preset.id,
-    displayName: preset.displayName,
-    family: preset.family,
-    maturity: preset.maturity,
-    controllerFamilies: preset.controllerFamilies,
-    inputModes: preset.supportedInputModes,
-    requiredPackIds: preset.requiredSystemPacks.map((selection) => selection.packId),
-    requiredContentRoles: preset.requiredContentRoles,
-    knownLimitations: preset.knownLimitations,
-    starterKitDepth: starterKitDepth(preset.id),
-  }));
+export function listPresetSummaries(
+  starterKitDepth: (presetId: string) => PresetSummary['starterKitDepth'],
+  evidence: (presetId: string) => { readonly proofGame: boolean; readonly demoGame: boolean },
+): readonly PresetSummary[] {
+  return listPresets().map((preset) => {
+    const found = evidence(preset.id);
+    return {
+      id: preset.id,
+      displayName: preset.displayName,
+      family: preset.family,
+      maturity: preset.maturity,
+      controllerFamilies: preset.controllerFamilies,
+      inputModes: preset.supportedInputModes,
+      requiredPackIds: preset.requiredSystemPacks.map((selection) => selection.packId),
+      requiredContentRoles: preset.requiredContentRoles,
+      knownLimitations: preset.knownLimitations,
+      starterKitDepth: starterKitDepth(preset.id),
+      hasProofGame: found.proofGame,
+      hasDemoGame: found.demoGame,
+    };
+  });
 }

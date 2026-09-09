@@ -23,11 +23,15 @@ export const SHOOTER_PRESETS: readonly PresetDefinition[] = [
     displayName: 'Horizontal Shmup',
     family: 'shooter',
     controllerFamilies: ['top-down'],
-    requiredSystemPacks: [pack(PACK_IDS.combat), pack(PACK_IDS.weapons)],
+    // sw2d.encounters became required in the Arena finish program's Wave 2:
+    // enemy formations are a shmup's defining mechanic, and the generated
+    // top-down shell now wires content/encounters.json into a real fight
+    // (bindStarterEncounters) whenever combat+weapons+encounters are present.
+    requiredSystemPacks: [pack(PACK_IDS.combat), pack(PACK_IDS.weapons), pack(PACK_IDS.encounters)],
     optionalSystemPacks: [pack(PACK_IDS.arcade)],
     requiredContentRoles: ['tuning'],
     validationProfile: VALIDATION_PROFILES.shooter,
-    knownLimitations: ['The reusable encounter capability (sw2d.encounters, ADR-0021) exists; this starter does not wire enemy formations into its shell yet.'],
+    knownLimitations: [LIMITATIONS.scrollingShmupCamera],
   }),
 
   definePreset({
@@ -35,11 +39,12 @@ export const SHOOTER_PRESETS: readonly PresetDefinition[] = [
     displayName: 'Vertical Shmup',
     family: 'shooter',
     controllerFamilies: ['top-down'],
-    requiredSystemPacks: [pack(PACK_IDS.combat), pack(PACK_IDS.weapons)],
+    // Same Wave 2 change as horizontal-shmup: formations are the genre.
+    requiredSystemPacks: [pack(PACK_IDS.combat), pack(PACK_IDS.weapons), pack(PACK_IDS.encounters)],
     optionalSystemPacks: [pack(PACK_IDS.arcade)],
     requiredContentRoles: ['tuning'],
     validationProfile: VALIDATION_PROFILES.shooter,
-    knownLimitations: ['The reusable encounter capability (sw2d.encounters, ADR-0021) exists; this starter does not wire enemy formations into its shell yet.'],
+    knownLimitations: [LIMITATIONS.scrollingShmupCamera],
   }),
 
   definePreset({
