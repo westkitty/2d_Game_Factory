@@ -344,5 +344,7 @@ already stated per-preset in `knownLimitations`.
   than faked; Category C capabilities remain unbuilt by design and are
   stated per-preset; the five Category B descopes above are deliberate.
 - **Merge verdict: MERGE.** The branch is behavior-improving, fully
-  validated, and leaves the catalog more honest than it found it. No PR
-  opened — left to the repository owner's discretion.
+  validated, and leaves the catalog more honest than it found it. PR
+  opened: https://github.com/westkitty/2d_Game_Factory/pull/6 (base
+  `main`, reported MERGEABLE at creation). Merging is the repository
+  owner's call.
