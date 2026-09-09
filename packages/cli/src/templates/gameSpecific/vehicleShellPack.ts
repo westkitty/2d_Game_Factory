@@ -88,11 +88,23 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
 
         if (vehicleSvc) {
           const st = vehicleSvc.update(deltaMs, intent);
-          vehicle.setPosition(st.x, st.y);
-          vehicle.setRotation(st.heading);
+          // The vehicle service integrates its own position, so Arcade's
+          // world-bounds collision never sees this movement - without a
+          // check the car can drive off the world forever (found by playing
+          // the generated starter: y reached -881). Racing convention: going
+          // off the world resets you to spawn; the race state (expected
+          // checkpoint, lap, clock) is deliberately untouched, so the reset
+          // costs time but not progress.
+          const margin = 48;
+          if (st.x < -margin || st.x > width + margin || st.y < -margin || st.y > height + margin) {
+            vehicleSvc.reset();
+          }
+          const now = vehicleSvc.state();
+          vehicle.setPosition(now.x, now.y);
+          vehicle.setRotation(now.heading);
           if (raceSvc) {
             const cp = raceSvc.expectedCheckpoint();
-            if (cp && Math.hypot(st.x - cp.x, st.y - cp.y) <= cp.radius) raceSvc.checkpointEntered(cp.id);
+            if (cp && Math.hypot(now.x - cp.x, now.y - cp.y) <= cp.radius) raceSvc.checkpointEntered(cp.id);
           }
         } else {
           vehicle.angle += intent.steering * 3;

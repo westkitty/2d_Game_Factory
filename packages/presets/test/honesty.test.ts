@@ -10,42 +10,67 @@ import { PRESETS } from '../src/index.ts';
  */
 
 /**
- * Phase 10's five deep proof games (proofs/<preset-id>/, docs/proofs/PROOF_MATRIX.md),
- * each with a committed PROOF_CONTRACT.md, a real generated composition, and a
- * dedicated real-browser proof spec (packages/qa/proof-specs/*.ts, `npm run qa:proof`)
- * satisfying MASTER_PROJECT.md section 24's stricter per-proof acceptance bar - see
- * docs/architecture/PHASE10_PROOF_HANDOFF.md. Only these five may claim
- * 'proof-validated'.
+ * Every preset here has a committed, frozen proof game under `proofs/<id>/`
+ * (PROOF_CONTRACT.md + real generated composition) and a dedicated
+ * real-browser proof spec in `packages/qa/proof-specs/*.ts`, wired into
+ * `npm run qa:proof` (23/23 as of this revision). Phase 10 established the
+ * first five; the capability-completion program (Phases 1-10, ADR-0018..0027)
+ * added the other eighteen. The Arena finish program reconciled the catalog
+ * with this evidence one preset at a time - see
+ * docs/architecture/ARENA_FACTORY_FINISH_STATE.md. Only these twenty-three
+ * may claim 'proof-validated'.
  */
-const PROOF_VALIDATED_IDS = ['chase-platformer', 'twin-stick-shooter', 'tower-defense', 'sokoban', 'idle-incremental'].sort();
+const PROOF_VALIDATED_IDS = [
+  'chase-platformer',
+  'twin-stick-shooter',
+  'tower-defense',
+  'sokoban',
+  'idle-incremental',
+  // Capability program proof consumers, promoted after per-preset evidence
+  // reconciliation (each name below is literally a proofs/<id>/ directory).
+  'gallery-shooter',
+  'point-and-click',
+  'collectathon-platformer',
+  'top-down-adventure',
+  'run-and-gun',
+  'bullet-hell',
+  'boss-rush',
+  'turn-based-tactics',
+  'lane-defense',
+  'puzzle-platformer',
+  'endless-runner',
+  'dungeon-crawler',
+  'metroidvania',
+  'exploration-game',
+  'grappling-platformer',
+  'physics-toy',
+  'top-down-racer',
+  'time-trial-racer',
+].sort();
 
 /**
  * Phase 8's remaining representative demos (demos/<preset-id>/), each with a
  * real, committed browser smoke test (packages/qa/specs/*.ts) that passed
  * against system Chrome - see docs/architecture/PHASE8_OPUS_GATE_B_HANDOFF.md.
- * Five of the original twelve graduated to 'proof-validated' in Phase 10
- * (above); the other seven stay 'smoke-validated'. Every other preset stays
- * 'recipe' until it earns the same real evidence.
+ * Everything that has since earned a committed proof game graduated to
+ * 'proof-validated' (above); these three still have demo-level evidence only.
+ * Every other preset stays 'recipe' until it earns the same real evidence.
  */
 const SMOKE_VALIDATED_IDS = [
   'traditional-platformer',
-  'metroidvania',
   'stealth-game',
-  'bullet-hell',
-  'top-down-racer',
-  'turn-based-tactics',
   'visual-novel',
 ].sort();
 
 describe('maturity honesty', () => {
-  it('exactly Phase 10\'s five deep-proof presets are "proof-validated", nothing else', () => {
+  it('exactly the twenty-three presets with committed passing proof games are "proof-validated", nothing else', () => {
     const actual = PRESETS.filter((p) => p.maturity === 'proof-validated')
       .map((p) => p.id)
       .sort();
     expect(actual).toEqual(PROOF_VALIDATED_IDS);
   });
 
-  it('exactly the remaining seven Phase 8 demo presets are "smoke-validated", nothing else', () => {
+  it('exactly the remaining three Phase 8 demo presets are "smoke-validated", nothing else', () => {
     const actual = PRESETS.filter((p) => p.maturity === 'smoke-validated')
       .map((p) => p.id)
       .sort();
@@ -70,11 +95,11 @@ describe('maturity honesty', () => {
     }
   });
 
-  it('exactly 5 proof-validated, 7 smoke-validated and 62 recipe presets out of the full 74-preset catalog', () => {
+  it('exactly 23 proof-validated, 3 smoke-validated and 48 recipe presets out of the full 74-preset catalog', () => {
     expect(PRESETS.length).toBe(74);
-    expect(PRESETS.filter((p) => p.maturity === 'proof-validated').length).toBe(5);
-    expect(PRESETS.filter((p) => p.maturity === 'smoke-validated').length).toBe(7);
-    expect(PRESETS.filter((p) => p.maturity === 'recipe').length).toBe(62);
+    expect(PRESETS.filter((p) => p.maturity === 'proof-validated').length).toBe(23);
+    expect(PRESETS.filter((p) => p.maturity === 'smoke-validated').length).toBe(3);
+    expect(PRESETS.filter((p) => p.maturity === 'recipe').length).toBe(48);
   });
 });
 
@@ -102,11 +127,10 @@ describe('input-mode honesty', () => {
 
 describe('required knownLimitations (MASTER_PROJECT.md section 12)', () => {
   const cases: ReadonlyArray<{ id: string; pattern: RegExp }> = [
-    { id: 'twin-stick-shooter', pattern: /spatial\/analog aim/ },
     { id: 'stealth-game', pattern: /vision cones, awareness geometry, noise propagation and hiding are not implemented/ },
     { id: 'heist-game', pattern: /vision cones, awareness geometry, noise propagation and hiding are not implemented/ },
-    { id: 'horizontal-shmup', pattern: /does not wire enemy formations/ },
-    { id: 'vertical-shmup', pattern: /does not wire enemy formations/ },
+    { id: 'horizontal-shmup', pattern: /scrolling-stage camera movement/ },
+    { id: 'vertical-shmup', pattern: /scrolling-stage camera movement/ },
     { id: 'bullet-hell', pattern: /Per-bullet GPU-scale pooling/ },
     { id: 'run-and-gun', pattern: /Enemy encounter orchestration/ },
     { id: 'boss-rush', pattern: /Sequencing multiple bosses/ },

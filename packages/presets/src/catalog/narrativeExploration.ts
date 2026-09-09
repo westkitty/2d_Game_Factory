@@ -24,6 +24,7 @@ import { LIMITATIONS, POINTER_INPUT_MODES, VALIDATION_PROFILES, definePreset, pa
 export const NARRATIVE_EXPLORATION_PRESETS: readonly PresetDefinition[] = [
   definePreset({
     id: 'exploration-game',
+    maturity: 'proof-validated',
     displayName: 'Exploration Game',
     family: 'narrative-exploration',
     controllerFamilies: ['top-down'],
@@ -53,6 +54,7 @@ export const NARRATIVE_EXPLORATION_PRESETS: readonly PresetDefinition[] = [
 
   definePreset({
     id: 'point-and-click',
+    maturity: 'proof-validated',
     displayName: 'Point and Click',
     family: 'narrative-exploration',
     controllerFamilies: ['pointer', 'ui-simulation'],

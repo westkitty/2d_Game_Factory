@@ -1,8 +1,9 @@
 import Phaser from 'phaser';
 import type { InstalledSystemPack, WorldGraphService } from '@sw2d/contracts';
-import { WORLD_GRAPH_CAPABILITY_ID } from '@sw2d/contracts';
+import { WORLD_GRAPH_CAPABILITY_ID, aimFromPointer } from '@sw2d/contracts';
 import {
   bindCollectiblePickups,
+  bindStarterEncounters,
   bindStarterWeapon,
   createRoomTransitionRuntime,
   createWorldMapOverlay,
@@ -83,8 +84,15 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     // Data-driven item pickups (capability program Phase 2). Inert unless the
     // game installs sw2d.items - see platformShellPack.ts's note.
     const pickups = bindCollectiblePickups(context, player, level);
-    // Weapons (capability program Phase 3). Inert unless sw2d.weapons is installed.
-    const weapon = bindStarterWeapon(context);
+    // Encounters (capability program Phase 4): when sw2d.combat + sw2d.weapons
+    // + sw2d.encounters are all installed, content/encounters.json drives real
+    // enemy waves that chase and shoot; the player fights back with the
+    // catalog weapon and respawns on death. Inert otherwise.
+    const battle = bindStarterEncounters(context, player);
+    // Weapons (capability program Phase 3). Inert unless sw2d.weapons is
+    // installed. When the encounter binding is active it owns the weapon and
+    // its projectile runtime, so the plain starter weapon stays inert too.
+    const weapon = battle.active ? null : bindStarterWeapon(context);
     // World graph / rooms / transitions / map (capability program Phase 8).
     // Inert unless sw2d.world-graph is installed.
     const worldGraph = context.capabilities.get<WorldGraphService>(WORLD_GRAPH_CAPABILITY_ID);
@@ -113,7 +121,8 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       vy: Math.round(player.body.velocity.y),
       items: pickups.inventory(),
       pickupsRemaining: pickups.remaining(),
-      weapon: weapon.snapshot(),
+      weapon: weapon?.snapshot() ?? null,
+      ...(battle.active ? { battle: battle.snapshot() } : {}),
       ...(generationManifest ? { generation: generationManifest } : {}),
       ...(worldGraph
         ? { worldGraph: { current: worldGraph.currentNode().id, ...worldGraph.mapState(), mapOpen: worldMap?.isOpen ?? false, transitions: rooms?.transitions ?? 0 } }
@@ -132,14 +141,28 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         player.setVelocityX(intent.moveX * tuning.moveSpeed);
         player.setVelocityY(intent.moveY * tuning.moveSpeed);
         if (intent.aimMagnitude > 0) {
+          // Digital AIM_* stays authoritative (ADR-0016).
           facingX = intent.aimX;
           facingY = intent.aimY;
+        } else if (context.spatialPointer.state.inside) {
+          // Spatial pointer aim (ADR-0018): with no digital aim held, the
+          // mouse/touch position aims - the same optional-fallback contract
+          // proofs/twin-stick-shooter proves.
+          const aim = aimFromPointer(player.x, player.y, context.spatialPointer.state.worldX, context.spatialPointer.state.worldY);
+          if (aim.aimMagnitude > 0) {
+            facingX = aim.aimX;
+            facingY = aim.aimY;
+          }
         } else if (intent.moveMagnitude > 0) {
           facingX = intent.moveX;
           facingY = intent.moveY;
         }
-        weapon.update(deltaMs, nowMs);
-        if (intent.primaryPressed) weapon.fire(nowMs, facingX, facingY, { x: player.x, y: player.y });
+        weapon?.update(deltaMs, nowMs);
+        battle.update(deltaMs, nowMs);
+        const firing = intent.primaryPressed || (battle.active && context.input.isDown('PRIMARY_ACTION'));
+        if (firing) {
+          (weapon ?? battle).fire(nowMs, facingX, facingY, { x: player.x, y: player.y });
+        }
         if (worldGraph && rooms) {
           rooms.tick();
           if (context.input.consumePress('SECONDARY_ACTION')) worldMap?.toggle();
@@ -155,7 +178,8 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         disposed = true;
         debugHandle.dispose();
         pickups.dispose();
-        weapon.dispose();
+        battle.dispose();
+        weapon?.dispose();
         rooms?.dispose();
         worldMap?.dispose();
         try {

@@ -6,19 +6,21 @@ strategy/defense, 22 more), and Phase 7C (simulation/management, narrative/explo
 party/toy/weird, the final 25). This completes the catalog MASTER_PROJECT.md section 21
 names - no further families remain. A recipe is a composition of real controller
 families and real `@sw2d/packs` system packs - never an engine fork (MASTER_PROJECT.md
-section 3.1). Twelve presets - one representative per genre family - earned
-`maturity: "smoke-validated"` in Phase 8: each has a real, generated demo game
-(`demos/<preset-id>/`) with a committed real-browser smoke test that passed against
-system Chrome (see [`DEMO_MATRIX.md`](../demos/DEMO_MATRIX.md) and
-[`PHASE8_OPUS_GATE_B_HANDOFF.md`](../architecture/PHASE8_OPUS_GATE_B_HANDOFF.md)). Five of
-those twelve - `chase-platformer`, `twin-stick-shooter`, `tower-defense`, `sokoban`,
-`idle-incremental` - cleared Phase 10's deeper end-to-end bar and are now
-`maturity: "proof-validated"`: each has a committed proof game under `proofs/<preset-id>/`
-with a frozen `PROOF_CONTRACT.md` and a dedicated real-browser proof test
-(see [`PROOF_MATRIX.md`](../proofs/PROOF_MATRIX.md) and
-[`PHASE10_PROOF_HANDOFF.md`](../architecture/PHASE10_PROOF_HANDOFF.md)). The remaining seven
-stay `maturity: "smoke-validated"`. The other 62 remain `maturity: "recipe"`: no functional
-demo yet.
+section 3.1). Twenty-three presets are `maturity: "proof-validated"`: each has a
+committed proof game under `proofs/<preset-id>/` with a frozen `PROOF_CONTRACT.md`
+and a dedicated real-browser proof test wired into `npm run qa:proof` (23/23; see
+[`PROOF_MATRIX.md`](../proofs/PROOF_MATRIX.md)). Phase 10 established the first five
+(`chase-platformer`, `twin-stick-shooter`, `tower-defense`, `sokoban`,
+`idle-incremental`); the capability-completion program (ADR-0018..0027) built the
+other eighteen proof games, and the Arena finish program reconciled the catalog
+with that evidence one preset at a time
+(docs/architecture/ARENA_FACTORY_FINISH_STATE.md). Three presets
+(`traditional-platformer`, `stealth-game`, `visual-novel`) remain
+`maturity: "smoke-validated"` - Phase 8 demo-level evidence only
+(`demos/<preset-id>/`; see [`DEMO_MATRIX.md`](../demos/DEMO_MATRIX.md)). The other
+48 remain `maturity: "recipe"`: no committed per-preset browser journey yet
+(the generated-runtime matrix still proves every one of them generates, builds
+and enters play).
 
 Source of truth: `packages/presets/src/catalog/*.ts`. This file is mechanically checked
 against the catalog by `packages/presets/test/catalog.test.ts` (exact id/count/family
@@ -34,29 +36,29 @@ controller/input-mode breakdown and full pack-consumer coverage.
 |---|---|---|---|---|
 | `traditional-platformer` | Traditional Platformer | platform | tuning, levels | smoke-validated |
 | `chase-platformer` | Chase Platformer | platform | tuning, levels | proof-validated |
-| `endless-runner` | Endless Runner | platform | tuning, levels | recipe |
+| `endless-runner` | Endless Runner | platform | tuning, levels | proof-validated |
 | `precision-platformer` | Precision Platformer | platform | tuning, levels | recipe |
-| `metroidvania` | Metroidvania | platform | tuning, levels | smoke-validated |
-| `puzzle-platformer` | Puzzle Platformer | platform, grid | tuning, levels | recipe |
+| `metroidvania` | Metroidvania | platform | tuning, levels | proof-validated |
+| `puzzle-platformer` | Puzzle Platformer | platform, grid | tuning, levels | proof-validated |
 | `auto-runner` | Auto Runner | platform | tuning, levels | recipe |
 | `climbing-game` | Climbing Game | platform | tuning, levels | recipe |
-| `grappling-platformer` | Grappling Platformer | platform | tuning, levels | recipe |
-| `collectathon-platformer` | Collectathon Platformer | platform | tuning, levels, items | recipe |
+| `grappling-platformer` | Grappling Platformer | platform | tuning, levels | proof-validated |
+| `collectathon-platformer` | Collectathon Platformer | platform | tuning, levels, items | proof-validated |
 
 ## Top-down action (Phase 7A)
 
 | id | display name | controller(s) | content roles | maturity |
 |---|---|---|---|---|
-| `top-down-adventure` | Top-Down Adventure | top-down | tuning, levels | recipe |
+| `top-down-adventure` | Top-Down Adventure | top-down | tuning, levels | proof-validated |
 | `action-adventure` | Action Adventure | top-down | tuning, levels | recipe |
 | `twin-stick-shooter` | Twin-Stick Shooter | top-down | tuning, levels | proof-validated |
 | `survivor-like` | Survivor-Like | top-down | tuning | recipe |
-| `dungeon-crawler` | Dungeon Crawler | top-down | tuning, levels | recipe |
+| `dungeon-crawler` | Dungeon Crawler | top-down | tuning, levels | proof-validated |
 | `action-roguelite` | Action Roguelite | top-down | tuning, levels | recipe |
 | `stealth-game` | Stealth Game | top-down | tuning, levels | smoke-validated |
 | `heist-game` | Heist Game | top-down | tuning, levels | recipe |
 | `arena-combat` | Arena Combat | top-down | tuning, levels | recipe |
-| `boss-rush` | Boss Rush | top-down | tuning, levels | recipe |
+| `boss-rush` | Boss Rush | top-down | tuning, levels | proof-validated |
 
 ## Shooter (Phase 7A)
 
@@ -64,19 +66,19 @@ controller/input-mode breakdown and full pack-consumer coverage.
 |---|---|---|---|---|
 | `horizontal-shmup` | Horizontal Shmup | top-down | tuning | recipe |
 | `vertical-shmup` | Vertical Shmup | top-down | tuning | recipe |
-| `bullet-hell` | Bullet Hell | top-down | tuning | smoke-validated |
+| `bullet-hell` | Bullet Hell | top-down | tuning | proof-validated |
 | `asteroids-shooter` | Asteroids Shooter | vehicle | tuning | recipe |
-| `gallery-shooter` | Gallery Shooter | pointer | tuning | recipe |
-| `run-and-gun` | Run and Gun | platform | tuning, levels | recipe |
+| `gallery-shooter` | Gallery Shooter | pointer | tuning | proof-validated |
+| `run-and-gun` | Run and Gun | platform | tuning, levels | proof-validated |
 | `rail-shooter` | Rail Shooter | pointer | tuning | recipe |
 
 ## Vehicle / movement (Phase 7B)
 
 | id | display name | controller(s) | content roles | maturity |
 |---|---|---|---|---|
-| `top-down-racer` | Top-Down Racer | vehicle | tuning, levels | smoke-validated |
+| `top-down-racer` | Top-Down Racer | vehicle | tuning, levels | proof-validated |
 | `kart-racer` | Kart Racer | vehicle | tuning, levels | recipe |
-| `time-trial-racer` | Time Trial Racer | vehicle | tuning, levels | recipe |
+| `time-trial-racer` | Time Trial Racer | vehicle | tuning, levels | proof-validated |
 | `endless-driving` | Endless Driving | vehicle | tuning | recipe |
 | `boat-flight-racer` | Boat / Flight Racer | vehicle | tuning, levels | recipe |
 
@@ -100,10 +102,10 @@ controller/input-mode breakdown and full pack-consumer coverage.
 | id | display name | controller(s) | content roles | maturity |
 |---|---|---|---|---|
 | `tower-defense` | Tower Defense | grid, pointer | tuning, levels | proof-validated |
-| `lane-defense` | Lane Defense | grid, pointer | tuning, levels | recipe |
+| `lane-defense` | Lane Defense | grid, pointer | tuning, levels | proof-validated |
 | `auto-battler` | Auto Battler | ui-simulation | tuning | recipe |
 | `simple-rts` | Simple RTS | top-down | tuning, levels | recipe |
-| `turn-based-tactics` | Turn-Based Tactics | grid, ui-simulation | tuning, levels | smoke-validated |
+| `turn-based-tactics` | Turn-Based Tactics | grid, ui-simulation | tuning, levels | proof-validated |
 | `base-defense` | Base Defense | top-down | tuning, levels | recipe |
 | `territory-control` | Territory Control | top-down | tuning, levels | recipe |
 
@@ -124,9 +126,9 @@ controller/input-mode breakdown and full pack-consumer coverage.
 
 | id | display name | controller(s) | content roles | maturity |
 |---|---|---|---|---|
-| `exploration-game` | Exploration Game | top-down | tuning, levels | recipe |
+| `exploration-game` | Exploration Game | top-down | tuning, levels | proof-validated |
 | `visual-novel` | Visual Novel | ui-simulation | tuning, dialogue | smoke-validated |
-| `point-and-click` | Point and Click | pointer, ui-simulation | tuning, levels, dialogue | recipe |
+| `point-and-click` | Point and Click | pointer, ui-simulation | tuning, levels, dialogue | proof-validated |
 | `interactive-fiction-hybrid` | Interactive Fiction Hybrid | ui-simulation | tuning, dialogue | recipe |
 | `investigation-game` | Investigation Game | top-down, pointer | tuning, levels, dialogue | recipe |
 | `museum-exhibit` | Museum Exhibit | top-down, pointer | tuning, levels, exhibits | recipe |
@@ -138,7 +140,7 @@ controller/input-mode breakdown and full pack-consumer coverage.
 |---|---|---|---|---|
 | `microgame-collection` | Microgame Collection | ui-simulation | tuning, microgames | recipe |
 | `local-party-game` | Local Party Game | ui-simulation | tuning | recipe |
-| `physics-toy` | Physics Toy | pointer | tuning | recipe |
+| `physics-toy` | Physics Toy | pointer | tuning | proof-validated |
 | `virtual-pet` | Virtual Pet | ui-simulation | tuning | recipe |
 | `dress-up-character-toy` | Dress-Up Character Toy | pointer, ui-simulation | tuning, characters | recipe |
 | `sandbox-playground` | Sandbox Playground | pointer, ui-simulation | tuning, levels | recipe |
@@ -149,79 +151,80 @@ controller/input-mode breakdown and full pack-consumer coverage.
 
 ## Key limitations by recipe
 
-Every recipe with a real, currently-missing capability states it explicitly - this is
-not an exhaustive changelog, just the one limitation most defines what the recipe cannot
-do yet. See each recipe's `knownLimitations` in source for the complete list.
+Regenerated mechanically from the live catalog (the Arena finish program found the previous
+hand-maintained version had drifted badly behind the capability program). Each row is the
+recipe's *first* stated limitation; see `knownLimitations` in
+`packages/presets/src/catalog/*.ts` for the complete per-recipe list.
 
 | id | most important current limitation |
 |---|---|
 | `traditional-platformer` | (none stated) |
 | `chase-platformer` | A reusable chase/pursuit-pressure system does not exist yet; it must be authored as game-specific code, the same pattern starter/src/game-specific/ demonstrates. |
-| `endless-runner` | No procedural level/segment generation exists yet; only hand-authored Tiled levels (Phase 6) are supported. |
+| `endless-runner` | (none stated) |
 | `precision-platformer` | (none stated) |
-| `metroidvania` | A world graph, room transitions and a map system are not yet implemented; only flat single-level Tiled maps plus world flags/checkpoints exist (Phase 6). |
-| `puzzle-platformer` | puzzlePack's config (createInitialState/isSolved) is functions, not JSON-serializable data, so puzzle definitions are not content-authorable through a schema. The pack declares configSource: 'code' (ADR-0017) and a generated game supplies it from src/game-specific/packConfig.ts, which ships with a small working placeholder to replace - so the pack really installs, but the puzzle's own rules are game-specific TypeScript, not content. |
-| `auto-runner` | No procedural level/segment generation exists yet; only hand-authored Tiled levels (Phase 6) are supported. |
+| `metroidvania` | (none stated) |
+| `puzzle-platformer` | (none stated) |
+| `auto-runner` | (none stated) |
 | `climbing-game` | Wall-slide, wall-jump and ledge-grab movement mechanics are not yet implemented as reusable capabilities (MASTER_PROJECT.md section 9.2); vertical movement must be authored as game-specific code, the same pattern starter/src/game-specific/ demonstrates. |
-| `grappling-platformer` | No advanced rope/constraint/grappling physics exists yet. |
+| `grappling-platformer` | (none stated) |
 | `collectathon-platformer` | (none stated) |
 | `top-down-adventure` | (none stated) |
-| `action-adventure` | Melee/knockback combat and reusable encounter orchestration are not yet implemented. |
-| `twin-stick-shooter` | Independent spatial/analog aim is not wired into this starter. The digital AIM_* axis (ADR-0016) is the aim path; the spatial pointer (ADR-0018) can supply an optional aim fallback but the generated top-down shell does not consume it. |
-| `survivor-like` | Wave-spawning orchestration is not yet a reusable capability. |
-| `dungeon-crawler` | No procedural level/segment generation exists yet; only hand-authored Tiled levels (Phase 6) are supported. |
-| `action-roguelite` | No procedural level/segment generation exists yet; only hand-authored Tiled levels (Phase 6) are supported. |
-| `stealth-game` | AI state exists, but full vision cones, awareness geometry, noise propagation, hiding, and patrol navigation are not implemented. |
-| `heist-game` | AI state exists, but full vision cones, awareness geometry, noise propagation, hiding, and patrol navigation are not implemented. |
-| `arena-combat` | Wave/encounter orchestration is not yet a reusable capability (Phase 4). |
-| `boss-rush` | AI/combat state foundations exist, but reusable boss-phase orchestration is not yet a production system. |
-| `horizontal-shmup` | Enemy formations and bullet-pattern choreography are not yet a reusable capability (Phase 4). |
-| `vertical-shmup` | Enemy formations and bullet-pattern choreography are not yet a reusable capability (Phase 4). |
-| `bullet-hell` | Dense bullet-pattern choreography and boss-phase orchestration are not yet a reusable capability. |
-| `asteroids-shooter` | The reusable weapon/projectile capability (sw2d.weapons, ADR-0020) exists; this starter's shell does not wire it yet. / vehicleController supplies arcade steering/throttle intent only, not rotational-inertia physics. |
+| `action-adventure` | Melee / knockback combat is not a reusable capability. Encounter orchestration (sw2d.encounters, Phase 4) is reusable but this recipe does not install it. |
+| `twin-stick-shooter` | The generated starter ships no enemy waves out of the box: sw2d.encounters is optional for this recipe, so opposition is added by enabling that pack or authoring game-specific spawns (the committed proof game demonstrates the latter). |
+| `survivor-like` | Endless difficulty scaling / meta-progression between runs is not a reusable system; the starter survival loop repeats the authored encounter without escalating it. |
+| `dungeon-crawler` | The room graph places Enemy objects, but the generated top-down shell does not yet wire them into sw2d.combat / sw2d.ai - enemy behaviour is game-specific code. |
+| `action-roguelite` | Run-based meta-progression/permadeath state is not yet a reusable capability beyond sw2d.progression. |
+| `stealth-game` | AI state exists, but full vision cones, awareness geometry, noise propagation and hiding are not implemented. Patrol/chase navigation can use sw2d.navigation (Phase 5). |
+| `heist-game` | AI state exists, but full vision cones, awareness geometry, noise propagation and hiding are not implemented. Patrol/chase navigation can use sw2d.navigation (Phase 5). |
+| `arena-combat` | Melee weapons/knockback are not reusable capabilities; the starter arena fight is ranged (projectile) combat. |
+| `boss-rush` | Sequencing multiple bosses across a run is starter-specific; sw2d.encounters drives one boss encounter at a time. |
+| `horizontal-shmup` | Continuous scrolling-stage camera movement (the terrain streaming past a fixed ship) is not a reusable capability; the generated starter fights its encounter waves in a fixed arena. |
+| `vertical-shmup` | Continuous scrolling-stage camera movement (the terrain streaming past a fixed ship) is not a reusable capability; the generated starter fights its encounter waves in a fixed arena. |
+| `bullet-hell` | Per-bullet GPU-scale pooling for thousands of simultaneous bullets is not tuned; patterns are bounded. |
+| `asteroids-shooter` | The reusable weapon/projectile capability (sw2d.weapons, ADR-0020) exists; this starter's shell does not wire it yet. |
 | `gallery-shooter` | The reusable weapon/projectile capability (sw2d.weapons, ADR-0020) exists; this starter's shell does not wire it yet. |
-| `run-and-gun` | Enemy encounter orchestration is not yet a reusable capability (Phase 4). |
-| `rail-shooter` | The reusable weapon/projectile capability (sw2d.weapons, ADR-0020) exists; this starter's shell does not wire it yet. / Fixed-path/rail camera movement is not yet a reusable capability. |
-| `top-down-racer` | The vehicle controller supplies steering/throttle/brake intent only; no reusable vehicle-physics/drift/handling system exists. |
-| `kart-racer` | The vehicle controller supplies steering/throttle/brake intent only; no reusable vehicle-physics/drift/handling system exists. |
-| `time-trial-racer` | The vehicle controller supplies steering/throttle/brake intent only; no reusable vehicle-physics/drift/handling system exists. |
-| `endless-driving` | The vehicle controller supplies steering/throttle/brake intent only; no reusable vehicle-physics/drift/handling system exists. |
-| `boat-flight-racer` | The vehicle controller supplies steering/throttle/brake intent only; no reusable vehicle-physics/drift/handling system exists. |
-| `sokoban` | puzzlePack's config (createInitialState/isSolved) is functions, not JSON-serializable data, so puzzle definitions are not content-authorable through a schema. The pack declares configSource: 'code' (ADR-0017) and a generated game supplies it from src/game-specific/packConfig.ts, which ships with a small working placeholder to replace - so the pack really installs, but the puzzle's own rules are game-specific TypeScript, not content. |
-| `match-puzzle` | puzzlePack's config (createInitialState/isSolved) is functions, not JSON-serializable data, so puzzle definitions are not content-authorable through a schema. The pack declares configSource: 'code' (ADR-0017) and a generated game supplies it from src/game-specific/packConfig.ts, which ships with a small working placeholder to replace - so the pack really installs, but the puzzle's own rules are game-specific TypeScript, not content. |
-| `falling-block-puzzle` | puzzlePack's config (createInitialState/isSolved) is functions, not JSON-serializable data, so puzzle definitions are not content-authorable through a schema. The pack declares configSource: 'code' (ADR-0017) and a generated game supplies it from src/game-specific/packConfig.ts, which ships with a small working placeholder to replace - so the pack really installs, but the puzzle's own rules are game-specific TypeScript, not content. |
+| `run-and-gun` | Enemy encounter orchestration (sw2d.encounters, Phase 4, ADR-0021) is reusable now, but this recipe does not install it - its enemy waves/patterns would be authored as game-specific code or by adding that pack. |
+| `rail-shooter` | The reusable weapon/projectile capability (sw2d.weapons, ADR-0020) exists; this starter's shell does not wire it yet. |
+| `top-down-racer` | (none stated) |
+| `kart-racer` | Holding and firing a kart item on demand (a shell, an on-use boost pickup) is game-specific code; item boxes grant canonical sw2d.items entries (Phase 2), and drift / handling are the reusable sw2d.vehicles kart profile. |
+| `time-trial-racer` | (none stated) |
+| `endless-driving` | (none stated) |
+| `boat-flight-racer` | The boat and flight profiles are bounded arcade handling (momentum, drag, lateral grip, and for flight a 2D altitude band) - not fluid or aerodynamic simulation. |
+| `sokoban` | (none stated) |
+| `match-puzzle` | Standard puzzle kinds (sokoban, switch/sequence) are now content-authorable through the sw2d.puzzle-rules capability and content/puzzles.json (ADR-0023). This recipe's board rules are not one of those built-in kinds, so it still uses the code seam: sw2d.puzzle declares configSource: 'code' (ADR-0017) and a generated game supplies createInitialState/isSolved from src/game-specific/packConfig.ts (shipped with a working placeholder to replace) - the pack really installs, but this puzzle's own rules stay game-specific TypeScript, not content. |
+| `falling-block-puzzle` | Standard puzzle kinds (sokoban, switch/sequence) are now content-authorable through the sw2d.puzzle-rules capability and content/puzzles.json (ADR-0023). This recipe's board rules are not one of those built-in kinds, so it still uses the code seam: sw2d.puzzle declares configSource: 'code' (ADR-0017) and a generated game supplies createInitialState/isSolved from src/game-specific/packConfig.ts (shipped with a working placeholder to replace) - the pack really installs, but this puzzle's own rules stay game-specific TypeScript, not content. |
 | `breakout` | No reusable ball/paddle collision-and-bounce system exists yet. |
 | `pong` | No reusable ball/paddle collision-and-bounce system exists yet. |
-| `physics-puzzle` | puzzlePack's config (createInitialState/isSolved) is functions, not JSON-serializable data, so puzzle definitions are not content-authorable through a schema. The pack declares configSource: 'code' (ADR-0017) and a generated game supplies it from src/game-specific/packConfig.ts, which ships with a small working placeholder to replace - so the pack really installs, but the puzzle's own rules are game-specific TypeScript, not content. |
+| `physics-puzzle` | Standard puzzle kinds (sokoban, switch/sequence) are now content-authorable through the sw2d.puzzle-rules capability and content/puzzles.json (ADR-0023). This recipe's board rules are not one of those built-in kinds, so it still uses the code seam: sw2d.puzzle declares configSource: 'code' (ADR-0017) and a generated game supplies createInitialState/isSolved from src/game-specific/packConfig.ts (shipped with a working placeholder to replace) - the pack really installs, but this puzzle's own rules stay game-specific TypeScript, not content. |
 | `maze-game` | (none stated) |
 | `rhythm-action` | No deterministic music-beat/audio-synchronization system exists yet. |
 | `reaction-timing` | Arcade timing state exists, but no specialized reaction-test flow is implemented. |
-| `pinball-lite` | Optional advanced rigid-body/constraint physics has not been implemented. |
-| `tower-defense` | Spatial placement/hover targeting is not implemented. |
-| `lane-defense` | No reusable lane-spawn/route/combat-resolution system exists yet. |
+| `pinball-lite` | A full pinball table (flippers, bumpers, scoring lanes) is game-specific code on top of the Matter ball + static collision the shell provides. |
+| `tower-defense` | Spatial hover placement via the pointer shell is available but this starter uses the keyboard grid cursor. |
+| `lane-defense` | Lane-spawn scheduling and combat resolution are still starter-specific. |
 | `auto-battler` | AI/combat/strategy state foundations exist, but autonomous combat orchestration is not implemented. |
-| `simple-rts` | Spatial selection/command targeting and pathfinding are not implemented. |
-| `turn-based-tactics` | Grid/strategy foundations exist, but movement range, attack range, pathfinding, and turn-action resolution are not reusable systems yet. |
-| `base-defense` | Wave spawning/targeting/base-damage orchestration is not a reusable system yet. |
+| `simple-rts` | Unit pathfinding is reusable (sw2d.navigation, optional); box-select and command-queue UI are not implemented. |
+| `turn-based-tactics` | Attack-range/line-of-fire resolution and a full turn-action state machine are still starter-specific. |
+| `base-defense` | Wave spawning is reusable (sw2d.encounters, Phase 4, optional); base-damage/target-priority resolution is still starter-specific. |
 | `territory-control` | Reusable capture-zone/territory ownership/scoring mechanics do not exist yet. |
 | `idle-incremental` | The simulation/resource core exists, but full offline-progress/catch-up, prestige, and large economy balancing are not production systems. |
 | `shopkeeper` | No complete customer AI, demand/economy model, queue/placement UI, or content-authored production chain exists. |
 | `tycoon-lite` | No complete customer AI, demand/economy model, queue/placement UI, or content-authored production chain exists. |
 | `farming-lite` | No reusable crop-growth/season/plot-interaction system exists. |
 | `pet-creature` | No reusable needs/behavior/relationship/creature simulation exists beyond foundational resources/state. |
-| `colony-lite` | No colonist needs, assignment AI, pathfinding, construction placement, or colony simulation exists. |
+| `colony-lite` | Colonist pathfinding is reusable (sw2d.navigation, optional); needs, assignment AI, construction placement and colony simulation are not. |
 | `restaurant` | No complete customer AI, demand/economy model, queue/placement UI, or content-authored production chain exists. |
 | `aquarium-terrarium` | No reusable needs/behavior/relationship/creature simulation exists beyond foundational resources/state. |
-| `exploration-game` | A world graph, room transitions and a map system are not yet implemented; only flat single-level Tiled maps plus world flags/checkpoints exist (Phase 6). |
+| `exploration-game` | (none stated) |
 | `visual-novel` | Narrative state exists, but no full content-authored branching dialogue renderer/portrait presentation system exists. |
 | `point-and-click` | Narrative state exists, but no full content-authored branching dialogue renderer/portrait presentation system exists. |
 | `interactive-fiction-hybrid` | No dedicated parser/text-command system exists. |
 | `investigation-game` | No evidence-board/deduction/linking system exists. |
 | `museum-exhibit` | No dedicated exhibit/codex presentation framework exists beyond general world/narrative/UI foundations. |
-| `escape-room` | puzzlePack's config (createInitialState/isSolved) is functions, not JSON-serializable data, so puzzle definitions are not content-authorable through a schema. The pack declares configSource: 'code' (ADR-0017) and a generated game supplies it from src/game-specific/packConfig.ts, which ships with a small working placeholder to replace - so the pack really installs, but the puzzle's own rules are game-specific TypeScript, not content. / No content-authored escape-room puzzle grammar exists yet. |
+| `escape-room` | Standard puzzle kinds (sokoban, switch/sequence) are now content-authorable through the sw2d.puzzle-rules capability and content/puzzles.json (ADR-0023). This recipe's board rules are not one of those built-in kinds, so it still uses the code seam: sw2d.puzzle declares configSource: 'code' (ADR-0017) and a generated game supplies createInitialState/isSolved from src/game-specific/packConfig.ts (shipped with a working placeholder to replace) - the pack really installs, but this puzzle's own rules stay game-specific TypeScript, not content. |
 | `microgame-collection` | No microgame scheduler/rotation/meta-framework exists. |
 | `local-party-game` | No multi-player/local multi-device input routing exists. |
-| `physics-toy` | Optional advanced rigid-body/constraint physics has not been implemented. |
+| `physics-toy` | (none stated) |
 | `virtual-pet` | No reusable needs/behavior/relationship/creature simulation exists beyond foundational resources/state. |
 | `dress-up-character-toy` | No wardrobe/attachment system is built on the drag/drop capability (ADR-0018) yet. |
 | `sandbox-playground` | No generalized authoring/editing sandbox exists. |

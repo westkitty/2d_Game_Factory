@@ -105,7 +105,7 @@ export function createGame(request: CreateGameRequest): CreateGameResult {
 }
 
 export { buildGameFiles, findUnresolvedTokens, writeGameFiles } from './generator/generate.ts';
-export { generateGameManifest, generateResourceManifest, generateTheme, generateTiledLevel, generateTuning } from './generator/contentDocuments.ts';
+export { generateGameManifest, generateResourceManifest, generateTheme, generateTiledLevel, generateTuning, generateUiCopy } from './generator/contentDocuments.ts';
 export { GAMES_ROOT, REPO_ROOT, PathEscapeError, TargetExistsError, assertDoesNotExist, resolveUnder } from './paths.ts';
 export { InvalidSlugError, assertValidSlug } from './slug.ts';
 export { WORKSPACE_REQUIRED_PATHS, ensureWorkspaceInstalled } from './workspace.ts';

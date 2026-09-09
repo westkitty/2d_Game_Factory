@@ -11,9 +11,9 @@ and theme packs, so a new game is a *composition* rather than a fork.
 > **Status: the 12-phase core is complete and accepted, and the Asset-Driven
 > Game Factory Workbench is built on top of it.**
 >
-> The core - runtime, ten system-pack cores, 74 genre presets (5
-> proof-validated / 7 smoke-validated / 62 recipe), a real factory CLI with a
-> release packer, twelve smoke-validated demos, five deep proof games, a 6/6
+> The core - runtime, ten system-pack cores, 74 genre presets (23
+> proof-validated / 3 smoke-validated / 48 recipe), a real factory CLI with a
+> release packer, twelve committed demo games, twenty-three deep proof games, a 6/6
 > release-verification matrix, a 19-surface responsive suite and a 40-target
 > generated-runtime matrix - is recorded in
 > [`docs/architecture/PHASE12_FINAL_ACCEPTANCE.md`](docs/architecture/PHASE12_FINAL_ACCEPTANCE.md).
@@ -69,8 +69,8 @@ packages/cli/             @sw2d/cli              `npm run sw2d -- <command>`: do
 packages/qa/              @sw2d/qa               real-browser (system Chrome) smoke-test harness.
 workbench/                @sw2d/workbench        the visual asset-driven game factory (the product).
 starter/                  @sw2d/starter          the Phase 1 vertical slice, kept as engine evidence.
-demos/                                            twelve real, smoke-validated demo games (one per genre family).
-proofs/                                            five deep, end-to-end proof-validated games.
+demos/                                            twelve real, committed demo games (one per genre family).
+proofs/                                            twenty-three deep, end-to-end proof-validated games.
 docs/                                             architecture, ADRs, QA evidence, agent workflow.
 tools/scripts/                                    repository checks.
 ```
@@ -222,7 +222,7 @@ for exactly that case.
 
 As of the workbench build that recorded next bounded action is **none**: the initial master
 project is complete and the corrective workbench product is accepted. Anything further - a device lab, gamepad support, real performance measurement, spatial
-pointer, deeper mechanics for any of the 62 `recipe` presets, or a licensing and distribution
+pointer, deeper mechanics for any of the 48 `recipe` presets, or a licensing and distribution
 decision - is new work needing its own scope and its own acceptance contract, not a continuation of
 this plan.
 

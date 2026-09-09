@@ -31,6 +31,10 @@ export interface PresetSummary {
   readonly requiredContentRoles: readonly string[];
   readonly knownLimitations: readonly string[];
   readonly starterKitDepth: string;
+  /** Repository-derived on the server: a committed proofs/<id>/ game exists. */
+  readonly hasProofGame: boolean;
+  /** Repository-derived on the server: a committed demos/<id>/ game exists. */
+  readonly hasDemoGame: boolean;
 }
 
 export interface ProjectPresetInfo {

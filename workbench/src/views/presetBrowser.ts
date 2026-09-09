@@ -30,6 +30,19 @@ export function renderPresetBrowser(host: HTMLElement): () => void {
   const results = el('div');
   const counts = el('div', { class: 'faint', style: { 'font-size': '12px', margin: '0 0 12px' } });
 
+  function evidenceLine(preset: PresetSummary): string {
+    // Derived from the repository on the server (proofs/ and demos/ scans),
+    // never asserted by hand - the same evidence source the honesty tests
+    // pin the catalogue against.
+    const parts: string[] = [];
+    if (preset.hasProofGame) parts.push(`a committed proof game (proofs/${preset.id}/, exercised in a real browser by qa:proof)`);
+    if (preset.hasDemoGame) parts.push(`a committed demo game (demos/${preset.id}/)`);
+    if (parts.length === 0) {
+      return 'No committed proof or demo game exists for this preset yet. Its maturity label rests on the generated starter alone.';
+    }
+    return `This repository contains ${parts.join(' and ')}.`;
+  }
+
   function detail(preset: PresetSummary): void {
     openModal({
       title: preset.displayName,
@@ -46,6 +59,8 @@ export function renderPresetBrowser(host: HTMLElement): () => void {
           ...preset.inputModes.map((entry) => el('span', { class: 'badge', text: entry })),
         ),
         el('p', { class: 'muted', text: depthExplanation(preset.starterKitDepth) }),
+        el('h3', { class: 'section-title', text: 'Evidence on disk' }),
+        el('p', { class: 'muted', text: evidenceLine(preset) }),
         el('h3', { class: 'section-title', text: 'Required system packs' }),
         el('div', { class: 'row row--wrap', style: { 'margin-bottom': '12px' } }, ...preset.requiredPackIds.map((id) => el('span', { class: 'badge mono', text: id }))),
         el('h3', { class: 'section-title', text: 'Required content' }),

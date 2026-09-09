@@ -14,9 +14,11 @@ revision.
 | `proofs/point-and-click/` | `point-and-click` | `SceneContext.interaction` (hover enter/leave, click, drag→drop, pointer capture), `phaserBoundsShape` (live bounds), drop-zone resolution | A lever (hover state + click-to-pull) and a key dragged onto a chest drop-zone | Start; hover enter/leave on the lever; click pulls it; drag the key (captured while the pointer leaves its bounds) onto the chest; drop sets `keyInChest`; restart reinstalls | PASS |
 | `proofs/twin-stick-shooter/` (upgraded) | `twin-stick-shooter` | `aimFromPointer` as an **optional** aim source | Existing wave/projectile proof + step 1b: with no digital `AIM_*` held, the mouse position yields `aimX>0, aimY<0` without firing; steps 2-5 prove digital aim still overrides and is independent | PASS |
 
-The two new proof games' presets are left at `maturity: 'recipe'` for now — the frozen proofs
-exist and pass `qa:proof`, but the formal `proof-validated` promotion (and its 5/7/62 catalog
-count bookkeeping in `honesty.test.ts` / `OPERATIONAL_STATE.md`) is a dedicated catalog pass, not
+The formal `proof-validated` promotion for every preset in this matrix landed in the Arena
+finish program's catalog reconciliation (docs/architecture/ARENA_FACTORY_FINISH_STATE.md):
+the catalog is now 23 proof-validated / 3 smoke-validated / 48 recipe, matching the 23
+committed proof games exactly. The paragraph below records why promotion was originally
+deferred during the capability program, not
 folded into a capability phase.
 
 ## Capability program — Phase 2: data-driven items / effects / pickups (ADR-0019)
@@ -106,5 +108,9 @@ shared `readShellState()` helper reads, the same mechanism every Phase 8 smoke s
 none of the five reaches into private state a real player interaction couldn't also observe.
 
 "Maturity result" reflects `packages/presets/src/catalog/*.ts`'s live `maturity` field, mechanically
-checked against this claim by `packages/presets/test/honesty.test.ts` (exactly these five ids may
-claim `proof-validated`; every other preset is `smoke-validated` or `recipe`, never overstated).
+checked against this claim by `packages/presets/test/honesty.test.ts` (exactly the twenty-three
+preset ids with committed proof games in this matrix may claim `proof-validated`; every other
+preset is `smoke-validated` or `recipe`, never overstated). `packages/presets/test/proofEvidence.test.ts`
+additionally derives the proof set mechanically from the `proofs/` directory itself, so a
+proof-validated claim without a committed proof game (or a proof game whose preset id was never
+promoted) fails the suite.

@@ -39,6 +39,25 @@ const MATURITY_SCORE: Readonly<Record<string, number>> = {
   experimental: 5,
 };
 
+/**
+ * Kit depth is scored separately from maturity. Until the Arena finish
+ * program's Wave 1, maturity was an accidental proxy for depth (the only
+ * proof-validated presets were the five rich-proof kits), so the ranking
+ * comment's promise - "recommending a well-covered but unproven recipe over
+ * a proven kit would be optimising the score rather than the user's
+ * outcome" - held for free. Once 23 presets honestly claimed
+ * proof-validated, that proxy broke and a one-object starter level could
+ * outrank a thirteen-object designed one. A seed is a recommendation to
+ * press one button and get something meaningfully playable; the depth of
+ * the material behind that button is exactly what this term measures.
+ */
+const DEPTH_SCORE: Readonly<Record<string, number>> = {
+  'rich-proof-kit': 30,
+  'rich-starter-kit': 15,
+  'smoke-kit': 5,
+  'generated-shell': 0,
+};
+
 export interface SeedInput {
   readonly assets: AssetsDocument;
   /** What the user said the image is for. `unsure` means "suggest" and biases nothing. */
@@ -96,10 +115,12 @@ export function rankPresets(assets: AssetsDocument, mode?: SingleImageMode): rea
     .map((preset) => {
       const coverage = assetCoverageScore(preset, covered);
       const maturity = MATURITY_SCORE[preset.maturity] ?? 0;
+      const depth = DEPTH_SCORE[starterKitDepthFor(preset.id, preset.maturity)] ?? 0;
       // Maturity dominates: recommending a well-covered but unproven recipe
       // over a proven kit would be optimising the score rather than the user's
-      // outcome. Coverage and mode break ties within a maturity tier.
-      const score = maturity + coverage * 30 + modeBonus(preset, mode, covered);
+      // outcome. Kit depth breaks ties within a maturity tier (see
+      // DEPTH_SCORE); coverage and mode break the remaining ties.
+      const score = maturity + depth + coverage * 30 + modeBonus(preset, mode, covered);
       return { preset, score, coverage };
     })
     .sort((a, b) => b.score - a.score || a.preset.id.localeCompare(b.preset.id));

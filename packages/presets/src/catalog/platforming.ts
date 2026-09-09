@@ -46,6 +46,7 @@ export const PLATFORMING_PRESETS: readonly PresetDefinition[] = [
 
   definePreset({
     id: 'endless-runner',
+    maturity: 'proof-validated',
     displayName: 'Endless Runner',
     family: 'platforming',
     controllerFamilies: ['platform'],
@@ -71,7 +72,7 @@ export const PLATFORMING_PRESETS: readonly PresetDefinition[] = [
 
   definePreset({
     id: 'metroidvania',
-    maturity: 'smoke-validated',
+    maturity: 'proof-validated',
     displayName: 'Metroidvania',
     family: 'platforming',
     controllerFamilies: ['platform'],
@@ -86,6 +87,7 @@ export const PLATFORMING_PRESETS: readonly PresetDefinition[] = [
 
   definePreset({
     id: 'puzzle-platformer',
+    maturity: 'proof-validated',
     displayName: 'Puzzle Platformer',
     family: 'platforming',
     controllerFamilies: ['platform', 'grid'],
@@ -126,6 +128,7 @@ export const PLATFORMING_PRESETS: readonly PresetDefinition[] = [
 
   definePreset({
     id: 'grappling-platformer',
+    maturity: 'proof-validated',
     displayName: 'Grappling Platformer',
     family: 'platforming',
     controllerFamilies: ['platform'],
@@ -141,6 +144,7 @@ export const PLATFORMING_PRESETS: readonly PresetDefinition[] = [
 
   definePreset({
     id: 'collectathon-platformer',
+    maturity: 'proof-validated',
     displayName: 'Collectathon Platformer',
     family: 'platforming',
     controllerFamilies: ['platform'],

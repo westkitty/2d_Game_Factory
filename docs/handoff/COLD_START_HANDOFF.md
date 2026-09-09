@@ -128,7 +128,7 @@ Full explanation of what each proves and does not: `docs/qa/QA_MATRIX.md`.
 
 ## 8. Current maturity state
 
-74 total presets: **5 `proof-validated`, 7 `smoke-validated`, 62 `recipe`, 0 `experimental`**.
+74 total presets: **23 `proof-validated`, 3 `smoke-validated`, 48 `recipe`, 0 `experimental`** (reconciled by the Arena finish program - docs/architecture/ARENA_FACTORY_FINISH_STATE.md).
 Mechanically enforced by `packages/presets/test/honesty.test.ts` - a maturity label cannot drift
 from real evidence without a test failing. Detail: `docs/presets/PRESET_CATALOG.md`,
 `docs/presets/PRESET_CAPABILITY_MATRIX.md`, `docs/demos/DEMO_MATRIX.md`, `docs/proofs/PROOF_MATRIX.md`.
@@ -200,7 +200,7 @@ licensing is granted - see §10 and §11 above, which are still current and stil
 
 If you have arrived here intending to "continue the project": there is nothing left to continue
 under this plan. Scope the new work explicitly, with its own acceptance contract, and do not treat
-the 62 `recipe` presets' `knownLimitations` as a backlog that the master project left unfinished -
+the 48 `recipe` presets' `knownLimitations` as a backlog that the master project left unfinished -
 they are recorded scope boundaries, not debt.
 
 `OPERATIONAL_STATE.md`'s "Next bounded action" section remains the live, authoritative statement of
