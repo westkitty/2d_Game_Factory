@@ -88,3 +88,4 @@ export { racingPack, RACING_SAVE_SLOT, type RacingConfig, type RaceService } fro
 export { economyPack, type EconomyService } from './economy/economyPack.ts';
 export { needsPack, type NeedsService } from './needs/needsPack.ts';
 export { dialoguePack, type DialogueService } from './dialogue/dialoguePack.ts';
+export { perceptionPack, type PerceptionService } from './perception/perceptionPack.ts';

@@ -62,7 +62,7 @@ export const POINTER_INPUT_MODES: readonly InputMode[] = ['keyboard', 'pointer',
 /** Recorded, reused verbatim wherever more than one recipe shares the same real gap. Keeps wording from drifting across recipes that share a limitation. */
 export const LIMITATIONS = {
   stealthAi:
-    'AI state exists, but full vision cones, awareness geometry, noise propagation and hiding are not implemented. Patrol/chase navigation can use sw2d.navigation (Phase 5).',
+    'Vision cones, occlusion, suspicion, noise and hiding are reusable (sw2d.perception); patrol pathfinding, takedowns and full stealth AI are not.',
   weaponsProjectiles:
     'The reusable weapon/projectile capability (sw2d.weapons, ADR-0020) exists; this starter\'s shell does not wire it yet.',
   climbingMechanics:

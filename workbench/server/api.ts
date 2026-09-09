@@ -49,6 +49,7 @@ import { inspectRacing } from './racingLab.ts';
 import { inspectEconomy } from './economyLab.ts';
 import { inspectNeeds } from './needsLab.ts';
 import { inspectDialogue } from './dialogueLab.ts';
+import { inspectPerception } from './perceptionLab.ts';
 import { loadScene, listLevels, newObject, objectClassOptions, saveScene, SceneValidationError, type SceneDocument } from './sceneStore.ts';
 import { buildProject, createProject, packProject, validateProject } from './factoryService.ts';
 import { presetEvidenceFor } from './presetEvidence.ts';
@@ -703,6 +704,16 @@ const ROUTES: ReadonlyMap<string, Handler> = new Map<string, Handler>([
     (request) => {
       const body = bodyObject(request);
       return ok(inspectDialogue(gameIdOf(request, body)));
+    },
+  ],
+
+  [
+    // Perception surface (Category-C Wave 4). Reports content/perception.json
+    // (mode, observers, cover, loot). Live suspicion belongs in-game.
+    'POST /perception/inspect',
+    (request) => {
+      const body = bodyObject(request);
+      return ok(inspectPerception(gameIdOf(request, body)));
     },
   ],
 

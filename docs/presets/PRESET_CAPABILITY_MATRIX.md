@@ -39,8 +39,8 @@ pack/controller selections were actually exercised through, and
 | `survivor-like` | combat, ai, progression, weapons, encounters | arcade, world | top-down | keyboard, touch | top-down-action-recipe |
 | `dungeon-crawler` | world, world-entities, combat, generation | ai, progression | top-down | keyboard, touch | top-down-action-recipe |
 | `action-roguelite` | combat, progression, generation | ai, world, world-entities | top-down | keyboard, touch | top-down-action-recipe |
-| `stealth-game` | ai, combat, world | world-entities, navigation | top-down | keyboard, touch | top-down-action-recipe |
-| `heist-game` | ai, combat, world | world-entities, progression, navigation | top-down | keyboard, touch | top-down-action-recipe |
+| `stealth-game` | ai, combat, world, perception | world-entities, navigation | top-down | keyboard, touch | top-down-action-recipe |
+| `heist-game` | ai, combat, world, perception | world-entities, progression, navigation | top-down | keyboard, touch | top-down-action-recipe |
 | `arena-combat` | combat, weapons, encounters | ai, arcade | top-down | keyboard, touch | top-down-action-recipe |
 | `boss-rush` | combat, ai, weapons, encounters | arcade | top-down | keyboard, touch | top-down-action-recipe |
 ## Shooter (Phase 7A)
@@ -151,8 +151,9 @@ pack/controller selections were actually exercised through, and
 | economy | `sw2d.economy` | `simulation.economy` | 3 | 3 |
 | needs | `sw2d.needs` | `simulation.needs` | 3 | 3 |
 | dialogue | `sw2d.dialogue` | `narrative.dialogue` | 2 | 2 |
+| perception | `sw2d.perception` | `ai.perception` | 2 | 2 |
 
-**All twenty-two current packs have at least one preset consumer.** `sw2d.items` (capability
+**All twenty-three current packs have at least one preset consumer.** `sw2d.items` (capability
 program Phase 2) is required by `collectathon-platformer`, whose generated starter consumes
 the reusable item/effect service through the shared platform shell. `sw2d.puzzle-rules`
 (capability program Phase 6) is required by `sokoban` and `puzzle-platformer`, whose

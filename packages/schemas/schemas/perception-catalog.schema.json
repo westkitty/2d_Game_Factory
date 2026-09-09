@@ -1,0 +1,96 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:sw2d:schema:content-perception-catalog:v1",
+  "title": "PerceptionCatalog",
+  "description": "Mirrors @sw2d/contracts PerceptionCatalog (perception.ts). Validated as a ContentBundle.data document (document name 'perception'). Bounded infiltrate/heist awareness - no patrol AI or takedowns.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "mode", "start", "playerRadius", "hiddenMultiplier", "observers"],
+  "properties": {
+    "schemaVersion": { "type": "integer", "minimum": 1 },
+    "mode": { "type": "string", "enum": ["infiltrate", "heist"] },
+    "start": { "$ref": "#/definitions/vec" },
+    "playerRadius": { "type": "number", "minimum": 1 },
+    "hiddenMultiplier": { "type": "number", "minimum": 0, "maximum": 1 },
+    "observers": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/observer" }
+    },
+    "occluders": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/occluder" }
+    },
+    "cover": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/cover" }
+    },
+    "objectives": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/marker" }
+    },
+    "exits": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/marker" }
+    }
+  },
+  "definitions": {
+    "vec": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y"],
+      "properties": {
+        "x": { "type": "number" },
+        "y": { "type": "number" }
+      }
+    },
+    "observer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "x", "y", "facingDeg", "fovDeg", "range", "suspicionRisePerSecond", "suspicionDecayPerSecond"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "x": { "type": "number" },
+        "y": { "type": "number" },
+        "facingDeg": { "type": "number" },
+        "fovDeg": { "type": "number", "exclusiveMinimum": 0, "maximum": 360 },
+        "range": { "type": "number", "exclusiveMinimum": 0 },
+        "suspicionRisePerSecond": { "type": "number", "minimum": 0 },
+        "suspicionDecayPerSecond": { "type": "number", "minimum": 0 }
+      }
+    },
+    "occluder": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "x", "y", "width", "height"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "x": { "type": "number" },
+        "y": { "type": "number" },
+        "width": { "type": "number", "exclusiveMinimum": 0 },
+        "height": { "type": "number", "exclusiveMinimum": 0 }
+      }
+    },
+    "cover": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "x", "y", "radius"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "x": { "type": "number" },
+        "y": { "type": "number" },
+        "radius": { "type": "number", "exclusiveMinimum": 0 }
+      }
+    },
+    "marker": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "x", "y", "radius"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "x": { "type": "number" },
+        "y": { "type": "number" },
+        "radius": { "type": "number", "exclusiveMinimum": 0 }
+      }
+    }
+  }
+}

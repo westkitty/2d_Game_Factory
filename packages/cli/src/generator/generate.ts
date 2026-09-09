@@ -16,6 +16,7 @@ import {
   generateEconomyCatalog,
   generateNeedsCatalog,
   generateDialogueCatalog,
+  generatePerceptionCatalog,
   generateResourceManifest,
   generateTiledLevel,
   generateTheme,
@@ -205,6 +206,20 @@ export function buildGameFiles(gameId: string, preset: PresetDefinition): Map<st
           ? preset.id === 'point-and-click'
             ? 'adventure'
             : 'novel'
+          : 'none',
+      ),
+      null,
+      2,
+    ) + '\n',
+  );
+  files.set(
+    'content/perception.json',
+    JSON.stringify(
+      generatePerceptionCatalog(
+        requiredPackIds.includes('sw2d.perception')
+          ? preset.id === 'heist-game'
+            ? 'heist'
+            : 'infiltrate'
           : 'none',
       ),
       null,

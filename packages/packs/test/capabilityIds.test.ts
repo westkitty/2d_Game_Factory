@@ -13,6 +13,7 @@ import {
   economyPack,
   needsPack,
   dialoguePack,
+  perceptionPack,
   aiPack,
   arcadePack,
   combatPack,
@@ -59,6 +60,7 @@ const ALL_PACKS = [
   economyPack,
   needsPack,
   dialoguePack,
+  perceptionPack,
 ];
 
 /** `<family>.<service>`: lowercase segments, at least two, dash-separated words allowed after the first. */

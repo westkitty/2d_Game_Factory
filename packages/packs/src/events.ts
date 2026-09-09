@@ -43,6 +43,9 @@ declare module '@sw2d/contracts' {
     'needs:failed': { readonly subjectId: string };
     'dialogue:nodeChanged': { readonly nodeId: string | null; readonly conversationId: string | null };
     'dialogue:ended': { readonly ending: string; readonly conversationId: string };
+    'perception:spotted': { readonly hidden: boolean };
+    'perception:alerted': { readonly mode: string };
+    'perception:escaped': { readonly mode: string; readonly alarm: boolean };
   }
 }
 

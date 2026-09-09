@@ -127,8 +127,8 @@ describe('input-mode honesty', () => {
 
 describe('required knownLimitations (MASTER_PROJECT.md section 12)', () => {
   const cases: ReadonlyArray<{ id: string; pattern: RegExp }> = [
-    { id: 'stealth-game', pattern: /vision cones, awareness geometry, noise propagation and hiding are not implemented/ },
-    { id: 'heist-game', pattern: /vision cones, awareness geometry, noise propagation and hiding are not implemented/ },
+    { id: 'stealth-game', pattern: /Vision cones, occlusion, suspicion, noise and hiding are reusable/ },
+    { id: 'heist-game', pattern: /Vision cones, occlusion, suspicion, noise and hiding are reusable/ },
     { id: 'horizontal-shmup', pattern: /scrolling-stage camera movement/ },
     { id: 'vertical-shmup', pattern: /scrolling-stage camera movement/ },
     { id: 'bullet-hell', pattern: /Per-bullet GPU-scale pooling/ },

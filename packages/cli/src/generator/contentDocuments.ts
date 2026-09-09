@@ -592,6 +592,46 @@ export function generateDialogueCatalog(kind: 'novel' | 'adventure' | 'none'): R
 }
 
 /**
+ * content/perception.json - a PerceptionCatalog (Category-C Wave 4). Always
+ * emitted; empty/inert unless the preset installs `sw2d.perception`. Two
+ * bounded starter modes match the two consumers: infiltrate (fail on sight)
+ * and heist (loot makes noise; alarm does not fail).
+ */
+export function generatePerceptionCatalog(kind: 'infiltrate' | 'heist' | 'none'): Record<string, unknown> {
+  const empty = {
+    schemaVersion: 1,
+    mode: 'infiltrate',
+    start: { x: 0, y: 0 },
+    playerRadius: 14,
+    hiddenMultiplier: 0.2,
+    observers: [],
+  };
+  if (kind === 'none') return empty;
+  const shared = {
+    schemaVersion: 1,
+    start: { x: 120, y: 270 },
+    playerRadius: 14,
+    hiddenMultiplier: 0.15,
+    observers: [
+      {
+        id: 'guard',
+        x: 520,
+        y: 270,
+        facingDeg: 180,
+        fovDeg: 50,
+        range: 220,
+        suspicionRisePerSecond: 2,
+        suspicionDecayPerSecond: 0.5,
+      },
+    ],
+    cover: [{ id: 'crate', x: 400, y: 180, radius: 36 }],
+    objectives: [{ id: 'intel', x: 790, y: 140, radius: 42 }],
+    exits: [{ id: 'vent', x: 110, y: 90, radius: 48 }],
+  };
+  return { ...shared, mode: kind === 'heist' ? 'heist' : 'infiltrate' };
+}
+
+/**
  * content/races.json - a RaceCatalog (capability program Phase 10). Always
  * emitted; empty unless the preset installs `sw2d.racing`, then one starter
  * race: a small four-corner track, `time-trial` mode for the time-trial
@@ -651,11 +691,13 @@ export function generateUiCopy(options: {
       playHint = has('sw2d.weapons') ? 'MOVE / JUMP  -  FIRE J/X  -  PAUSE TO STOP' : 'MOVE / JUMP  -  PAUSE TO STOP';
       break;
     case 'top-down':
-      playHint = has('sw2d.encounters')
-        ? 'MOVE WASD/ARROWS  -  AIM WITH MOUSE  -  FIRE J/X  -  SURVIVE THE WAVES'
-        : has('sw2d.weapons')
-          ? 'MOVE WASD/ARROWS  -  AIM WITH MOUSE  -  FIRE J/X'
-          : 'MOVE WASD/ARROWS  -  PAUSE TO STOP';
+      playHint = has('sw2d.perception')
+        ? 'MOVE WASD/ARROWS  -  AVOID THE CONE  -  HIDE IN COVER'
+        : has('sw2d.encounters')
+          ? 'MOVE WASD/ARROWS  -  AIM WITH MOUSE  -  FIRE J/X  -  SURVIVE THE WAVES'
+          : has('sw2d.weapons')
+            ? 'MOVE WASD/ARROWS  -  AIM WITH MOUSE  -  FIRE J/X'
+            : 'MOVE WASD/ARROWS  -  PAUSE TO STOP';
       break;
     case 'vehicle':
       playHint = has('sw2d.racing')

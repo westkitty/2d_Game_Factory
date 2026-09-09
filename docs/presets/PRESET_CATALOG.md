@@ -174,8 +174,8 @@ recipe's *first* stated limitation; see `knownLimitations` in
 | `survivor-like` | Endless difficulty scaling / meta-progression between runs is not a reusable system; the starter survival loop repeats the authored encounter without escalating it. |
 | `dungeon-crawler` | The room graph places Enemy objects, but the generated top-down shell does not yet wire them into sw2d.combat / sw2d.ai - enemy behaviour is game-specific code. |
 | `action-roguelite` | Run-based meta-progression/permadeath state is not yet a reusable capability beyond sw2d.progression. |
-| `stealth-game` | AI state exists, but full vision cones, awareness geometry, noise propagation and hiding are not implemented. Patrol/chase navigation can use sw2d.navigation (Phase 5). |
-| `heist-game` | AI state exists, but full vision cones, awareness geometry, noise propagation and hiding are not implemented. Patrol/chase navigation can use sw2d.navigation (Phase 5). |
+| `stealth-game` | Vision cones, occlusion, suspicion, noise and hiding are reusable (sw2d.perception); patrol pathfinding, takedowns and full stealth AI are not. |
+| `heist-game` | Vision cones, occlusion, suspicion, noise and hiding are reusable (sw2d.perception); patrol pathfinding, takedowns and full stealth AI are not. |
 | `arena-combat` | Melee weapons/knockback are not reusable capabilities; the starter arena fight is ranged (projectile) combat. |
 | `boss-rush` | Sequencing multiple bosses across a run is starter-specific; sw2d.encounters drives one boss encounter at a time. |
 | `horizontal-shmup` | Continuous scrolling-stage camera movement (the terrain streaming past a fixed ship) is not a reusable capability; the generated starter fights its encounter waves in a fixed arena. |

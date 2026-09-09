@@ -41,11 +41,23 @@ export interface Harness {
 
 /** Launches the system-installed Chrome via playwright-core - never a bundled/downloaded browser (packages/qa/src/browserPath.ts). Throws NoBrowserAvailableError if none is found. */
 export async function launchHarness(): Promise<Harness> {
-  const executablePath = findSystemChrome();
-  if (!executablePath) throw new NoBrowserAvailableError();
-
-  const browser: Browser = await chromium.launch({ executablePath, headless: true });
-  const page = await browser.newPage({ viewport: { width: 1024, height: 768 } });
+  const cdpUrl = process.env.PLAYWRIGHT_CDP_URL;
+  let browser: Browser;
+  const usingCdp = Boolean(cdpUrl);
+  if (cdpUrl) {
+    // Sandbox / lambda Chromium often SIGTRAPs on Playwright's
+    // `--remote-debugging-pipe` launch path but serves CDP on a TCP port.
+    browser = await chromium.connectOverCDP(cdpUrl);
+  } else {
+    const executablePath = findSystemChrome();
+    if (!executablePath) throw new NoBrowserAvailableError();
+    browser = await chromium.launch({ executablePath, headless: true });
+  }
+  const existing = browser.contexts()[0];
+  const page: Page = existing
+    ? (existing.pages()[0] ?? (await existing.newPage()))
+    : await browser.newPage({ viewport: { width: 1024, height: 768 } });
+  await page.setViewportSize({ width: 1024, height: 768 });
 
   const consoleErrorMessages: string[] = [];
   page.on('console', (message: ConsoleMessage) => {
@@ -156,6 +168,10 @@ export async function launchHarness(): Promise<Harness> {
   }
 
   async function close(): Promise<void> {
+    if (usingCdp) {
+      // Leave the shared CDP Chromium running for the next spec.
+      return;
+    }
     await browser.close();
   }
 

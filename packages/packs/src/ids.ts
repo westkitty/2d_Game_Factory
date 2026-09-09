@@ -37,6 +37,7 @@ export const PACK_IDS = {
   economy: 'sw2d.economy',
   needs: 'sw2d.needs',
   dialogue: 'sw2d.dialogue',
+  perception: 'sw2d.perception',
 } as const;
 
 export const CAPABILITY_IDS = {
@@ -75,4 +76,6 @@ export const CAPABILITY_IDS = {
   needs: 'simulation.needs',
   /** Category-C Wave 3: branching dialogue graphs, choices, flags and endings. */
   dialogue: 'narrative.dialogue',
+  /** Category-C Wave 4: FOV cones, occlusion, suspicion, noise and hiding. */
+  perception: 'ai.perception',
 } as const;

@@ -16,6 +16,7 @@ import racesData from '../content/races.json' with { type: 'json' };
 import economyData from '../content/economy.json' with { type: 'json' };
 import needsData from '../content/needs.json' with { type: 'json' };
 import dialogueData from '../content/dialogue.json' with { type: 'json' };
+import perceptionData from '../content/perception.json' with { type: 'json' };
 
 /**
  * The generated game's content source.
@@ -41,7 +42,7 @@ export const gameContent: ContentSource = {
   id: (gameData as { id: string }).id,
   load: async (): Promise<ContentBundle> => {
     const normalizedLevel = normalizeTiledMap('main', rawLevel);
-    const data = validateContentBundleData({ tuning: tuningData, 'levels/main': normalizedLevel, items: itemsData, weapons: weaponsData, encounters: encountersData, puzzles: puzzlesData, generation: generationData, 'world-graph': worldGraphData, vehicles: vehiclesData, races: racesData, economy: economyData, needs: needsData, dialogue: dialogueData });
+    const data = validateContentBundleData({ tuning: tuningData, 'levels/main': normalizedLevel, items: itemsData, weapons: weaponsData, encounters: encountersData, puzzles: puzzlesData, generation: generationData, 'world-graph': worldGraphData, vehicles: vehiclesData, races: racesData, economy: economyData, needs: needsData, dialogue: dialogueData, perception: perceptionData });
 
     const assets: readonly AssetDescriptor[] = theme.assets;
     const ui: Partial<UiCopy> | undefined = theme.ui;

@@ -14,7 +14,7 @@ export type TopDownStarterVariant =
 function shellSource(variant: TopDownStarterVariant): string {
   return String.raw`import Phaser from 'phaser';
 import type { InstalledSystemPack, NormalizedLevel } from '@sw2d/contracts';
-import { topDownController, type SceneContext, type ScenePackDefinition } from '@sw2d/runtime';
+import { bindStarterPerception, topDownController, type SceneContext, type ScenePackDefinition } from '@sw2d/runtime';
 import { ActorPresentation, addBackground } from './presentation.ts';
 
 const VARIANT = ${JSON.stringify(variant)} as const;
@@ -46,6 +46,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     player.body.setAllowGravity(false);
     player.setCollideWorldBounds(true);
     const presentation = new ActorPresentation(player, { idleBob: false, lean: false, squash: true, shadow: false });
+    const perception = bindStarterPerception(context, { hud: false });
 
     const enemies: Enemy[] = [];
     const decorative: Phaser.GameObjects.GameObject[] = [];
@@ -153,6 +154,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     }
 
     function collectNearby(allowSurvivorUpgrade: boolean): void {
+      if (perception.active && (VARIANT === 'stealth-game' || VARIANT === 'heist-game')) return;
       if (objectiveSprite && objectiveSprite.visible && Phaser.Math.Distance.Between(player.x, player.y, objectiveSprite.x, objectiveSprite.y) < 42) {
         objectiveCollected = true;
         objectiveSprite.setVisible(false);
@@ -255,6 +257,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     configureVariant();
 
     function updateGuard(): void {
+      if (perception.active) return;
       if (VARIANT !== 'stealth-game' && VARIANT !== 'heist-game') return;
       const guard = enemies[0];
       if (!guard) return;
@@ -388,6 +391,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       runResets,
       lastAction,
       elapsedMs: Math.round(elapsedMs),
+      ...(perception.active ? { perception: perception.snapshot() } : {}),
     }));
 
     let disposed = false;
@@ -402,6 +406,18 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
           if (intent.primaryPressed && VARIANT !== 'stealth-game' && VARIANT !== 'heist-game') attack();
           if (intent.interactPressed || intent.primaryPressed) collectNearby(VARIANT !== 'survivor-like' || intent.interactPressed);
           collectNearby(VARIANT !== 'survivor-like');
+          if (perception.active && (VARIANT === 'stealth-game' || VARIANT === 'heist-game')) {
+            perception.setPlayer(player.x, player.y);
+            perception.tick(deltaMs);
+            const snap = perception.snapshot();
+            guardSeesPlayer = snap.seen;
+            alarm = snap.alarm;
+            objectiveCollected = snap.objectiveCollected;
+            if (snap.lastResult === 'looted') lastAction = 'objective';
+            if (snap.outcome === 'failed') outcome = 'failed';
+            if (snap.outcome === 'complete') outcome = 'victory';
+            if (objectiveSprite) objectiveSprite.setVisible(!snap.objectiveCollected);
+          }
           updateGuard();
           updateEnemyPressure(deltaMs);
           contactDamage();
@@ -417,6 +433,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         if (disposed) return;
         disposed = true;
         debugHandle.dispose();
+        perception.dispose();
         presentation.dispose();
         try {
           background?.destroy();

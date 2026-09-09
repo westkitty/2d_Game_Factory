@@ -4,6 +4,7 @@ import { WORLD_GRAPH_CAPABILITY_ID, aimFromPointer } from '@sw2d/contracts';
 import {
   bindCollectiblePickups,
   bindStarterEncounters,
+  bindStarterPerception,
   bindStarterWeapon,
   createRoomTransitionRuntime,
   createWorldMapOverlay,
@@ -89,6 +90,11 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     // enemy waves that chase and shoot; the player fights back with the
     // catalog weapon and respawns on death. Inert otherwise.
     const battle = bindStarterEncounters(context, player);
+    // Perception (Category-C Wave 4). Inert unless sw2d.perception is
+    // installed with a non-empty catalog. Then FOV cones, cover, loot and
+    // exit replace the dummy wander.
+    const perception = bindStarterPerception(context);
+    if (perception.active) player.setPosition(perception.startX(), perception.startY());
     // Weapons (capability program Phase 3). Inert unless sw2d.weapons is
     // installed. When the encounter binding is active it owns the weapon and
     // its projectile runtime, so the plain starter weapon stays inert too.
@@ -123,6 +129,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       pickupsRemaining: pickups.remaining(),
       weapon: weapon?.snapshot() ?? null,
       ...(battle.active ? { battle: battle.snapshot() } : {}),
+      ...(perception.active ? { perception: perception.snapshot() } : {}),
       ...(generationManifest ? { generation: generationManifest } : {}),
       ...(worldGraph
         ? { worldGraph: { current: worldGraph.currentNode().id, ...worldGraph.mapState(), mapOpen: worldMap?.isOpen ?? false, transitions: rooms?.transitions ?? 0 } }
@@ -159,8 +166,12 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         }
         weapon?.update(deltaMs, nowMs);
         battle.update(deltaMs, nowMs);
+        if (perception.active) {
+          perception.setPlayer(player.x, player.y);
+          perception.tick(deltaMs);
+        }
         const firing = intent.primaryPressed || (battle.active && context.input.isDown('PRIMARY_ACTION'));
-        if (firing) {
+        if (firing && !perception.active) {
           (weapon ?? battle).fire(nowMs, facingX, facingY, { x: player.x, y: player.y });
         }
         if (worldGraph && rooms) {
@@ -180,6 +191,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         pickups.dispose();
         battle.dispose();
         weapon?.dispose();
+        perception.dispose();
         rooms?.dispose();
         worldMap?.dispose();
         try {

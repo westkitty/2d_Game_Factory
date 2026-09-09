@@ -76,5 +76,7 @@ describe('generateUiCopy (generated games announce their genre honestly)', () =>
     expect(copyFor('restaurant').playHint).toContain('K RESTOCKS OR COOKS');
     expect(copyFor('pet-creature').playHint).toContain('J FEEDS');
     expect(copyFor('virtual-pet').playHint).toContain('J FEEDS');
+    expect(copyFor('stealth-game').playHint).toContain('AVOID THE CONE');
+    expect(copyFor('heist-game').playHint).toContain('AVOID THE CONE');
   });
 });

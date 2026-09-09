@@ -56,6 +56,7 @@ export { createGrappleService } from './game-support/grappleService.ts';
 export { bindStarterEconomy, type StarterEconomyBinding, type StarterEconomySnapshot } from './game-support/starterEconomy.ts';
 export { bindStarterNeeds, type StarterNeedsBinding, type StarterNeedsSnapshot } from './game-support/starterNeeds.ts';
 export { bindStarterDialogue, type StarterDialogueBinding, type StarterDialogueSnapshot } from './game-support/starterDialogue.ts';
+export { bindStarterPerception, type StarterPerceptionBinding, type StarterPerceptionSnapshot } from './game-support/starterPerception.ts';
 
 export { LocalStorageDriver, MemoryStorageDriver } from './persistence/LocalStorageDriver.ts';
 export { SaveStoreImpl } from './persistence/SaveStoreImpl.ts';

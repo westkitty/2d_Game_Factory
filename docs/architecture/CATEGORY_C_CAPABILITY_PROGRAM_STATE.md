@@ -25,7 +25,7 @@ Highest-leverage clusters, from `packages/presets/src/shared.ts` LIMITATIONS + p
 | 1 | Customer / demand / transaction / production | shopkeeper, restaurant, tycoon-lite | **Wave 1 implemented and played** (`sw2d.economy` / `simulation.economy`, ADR-0028). Residual: layout, walking customers, prestige, offline catch-up. |
 | 2 | Creature needs / behavior / relationship | pet-creature, aquarium-terrarium, virtual-pet (colony-lite only if the contract genuinely fits — it currently does not) | **Wave 2 implemented and played** (`sw2d.needs` / `simulation.needs`, ADR-0029). Residual: full creature behaviour AI, relationship graphs, colony assignment. |
 | 3 | Branching dialogue / narrative presentation | visual-novel, point-and-click; investigation/museum only if the contract fits | **Wave 3 implemented and played** (`sw2d.dialogue` / `narrative.dialogue`, ADR-0030). Residual: portraits, scene composition, parser IF, evidence-board deduction. |
-| 4 | Stealth perception / suspicion / noise / hiding | stealth-game, heist-game | backlog |
+| 4 | Stealth perception / suspicion / noise / hiding | stealth-game, heist-game | **Wave 4 complete** (`sw2d.perception` / `ai.perception`, ADR-0031). Residual: patrol pathfinding, takedowns, full stealth AI. |
 | 5 | Ball / paddle / rebound | breakout, pong | backlog |
 | 6 | Melee / knockback / hit-stun | action-adventure, arena-combat; run-and-gun only if it still needs it | backlog |
 | 7 | Local multiplayer input ownership | local-party-game, pong | backlog |
@@ -272,4 +272,45 @@ High-contrast Phaser HUD (mode, speaker, line/choices, last result, `ENTER ADVAN
 - Catalog maturity unchanged (`visual-novel` smoke-validated, `point-and-click` proof-validated on the frozen proof).
 - Chrome wrapper is session-local under `/tmp`.
 - Do not commit `package-lock.json` workspace links for gitignored `games/wave*`.
-- Next wave: stealth perception / suspicion / noise / hiding (stealth-game, heist-game) unless a re-audit finds a higher multiplicative cluster.
+- Next wave: **done** — Wave 4 stealth perception (see below).
+
+## Wave 4 — `sw2d.perception`
+
+### Problem
+
+Stealth-game and heist-game needed real FOV cones, occlusion, suspicion, noise and hiding. Patrol pathfinding and takedowns are not shared.
+
+### Consumers
+
+- `stealth-game` — mode `infiltrate` (uncovered cone sight fails; northern bypass loots and escapes).
+- `heist-game` — mode `heist` (loot sets alarm without failing; exit still requires the objective).
+
+Materially different: fail-on-sight vs loot-alarm escape.
+
+### ValidationPlan
+
+1. Contract + schema (`PerceptionCatalog` / `perception-catalog`) reject unknown modes.
+2. Pack unit tests: corridor fail, northern bypass, cover, heist loot-alarm, occlusion AABB, duplicate ids, missing document inert, dispose, reset, noise.
+3. Generator: all 74 emit schema-valid `content/perception.json`; the two consumers enable `sw2d.perception` and a non-empty catalog; `src/content.ts` passes `perception: perceptionData`; `main.ts` installs `perceptionPack`.
+4. Generated top-down shell binds `bindStarterPerception` and feeds `setPlayer`/`tick`.
+5. Honesty / docsSync / catalogPackIntegrity / uiCopy allowlist stay green.
+6. Workbench `POST /api/perception/inspect`.
+7. Expanded stealth/heist kits drive the same service (`hud: false`) while keeping overlay debug fields (`alarm` / `guardSeesPlayer` / `objectiveCollected`).
+8. Real-browser journeys against generated games + starter-kit overlays. Committed `proofs/` + maturity promotion still deferred.
+
+### CompletionContract
+
+- [x] Reusable pack in `@sw2d/packs`, renderer-neutral.
+- [x] Content authority `content/perception.json`.
+- [x] ≥2 materially different generated consumers (2 wired).
+- [x] Focused unit/integration tests.
+- [x] Honest residual limitation.
+- [x] ADR-0031.
+- [x] Real-browser play of factory-generated `wave4-stealth-game` / `wave4-heist-game` (`tools/scripts/play-perception-wave4.ts`, 2/2 PASS, 0 console errors, 0 external requests).
+- [x] Overlay QA (`qa-expanded-starter-kits.ts stealth-game` PASS; `qa-expanded-starter-kits-p3c.ts heist-game` PASS).
+- [ ] Committed proofs + maturity promotion. **Not done — evidence rule.**
+
+### Bugs found and fixed during Wave 4 play
+
+- Generated `src/main.ts` listed `perceptionPack` in the `packs` array but did not import it (`perceptionPack is not defined` at boot). The template import list now includes `perceptionPack`.
+- Overlay stealth/heist rectangle `updateGuard` and INTERACT collect would have raced the reusable service; both skip while `perception.active`.

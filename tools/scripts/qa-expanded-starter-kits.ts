@@ -548,4 +548,4 @@ async function main(): Promise<number> {
   return failed.length === 0 && lockfileClean ? 0 : 1;
 }
 
-process.exitCode = await main();
+process.exit(await main());

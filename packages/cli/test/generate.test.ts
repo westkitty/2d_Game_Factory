@@ -125,6 +125,12 @@ describe('all 74 presets generate valid, token-free, schema-valid source', () =>
       expect(() => validateContentBundleData({ dialogue: dialogueJson })).not.toThrow();
     });
 
+    it(`${preset.id}'s generated content/perception.json validates as a perception catalog`, () => {
+      const files = buildGameFiles('matrix-game', preset);
+      const perceptionJson: unknown = JSON.parse(files.get('content/perception.json')!);
+      expect(() => validateContentBundleData({ perception: perceptionJson })).not.toThrow();
+    });
+
     it(`${preset.id} selects a real, resolvable shell template for its primary controller family`, () => {
       const files = buildGameFiles('matrix-game', preset);
       expect(files.has('src/game-specific/shellPack.ts')).toBe(true);
@@ -329,7 +335,7 @@ describe('generated dialogue games consume sw2d.dialogue', () => {
     expect(shell).toContain('bindStarterDialogue(context)');
     expect(shell).toContain('dialogue.choose()');
     expect(buildGameFiles('dialogue-probe', vn).get('src/content.ts')).toContain('dialogue: dialogueData');
-    expect(buildGameFiles('dialogue-probe', vn).get('src/main.ts')).toContain('dialoguePack, GAME_SPECIFIC_PACK');
+    expect(buildGameFiles('dialogue-probe', vn).get('src/main.ts')).toContain('perceptionPack');
   });
 
   it('the generated pointer shell binds adventure hotspots', () => {
@@ -348,6 +354,29 @@ describe('generated dialogue games consume sw2d.dialogue', () => {
       const doc = JSON.parse(files.get('content/dialogue.json')!) as { mode: string; conversations: unknown[] };
       expect(doc.mode, id).toBe(id === 'point-and-click' ? 'adventure' : 'novel');
       expect(doc.conversations.length, id).toBeGreaterThan(0);
+    }
+  });
+});
+
+describe('generated perception games consume sw2d.perception', () => {
+  it('the generated top-down shell binds bindStarterPerception', () => {
+    const stealth = PRESETS.find((candidate) => candidate.id === 'stealth-game')!;
+    const shell = buildGameFiles('perception-probe', stealth).get('src/game-specific/shellPack.ts')!;
+    expect(shell).toContain('bindStarterPerception(context)');
+    expect(shell).toContain('perception.tick(');
+    expect(buildGameFiles('perception-probe', stealth).get('src/content.ts')).toContain('perception: perceptionData');
+    expect(buildGameFiles('perception-probe', stealth).get('src/main.ts')).toContain('perceptionPack');
+  });
+
+  it('stealth-game and heist-game enable sw2d.perception and emit a non-empty catalog', () => {
+    for (const id of ['stealth-game', 'heist-game'] as const) {
+      const preset = PRESETS.find((candidate) => candidate.id === id)!;
+      const files = buildGameFiles('perception-probe', preset);
+      const gameJson = JSON.parse(files.get('content/game.json')!) as { systemPacks: Array<{ packId: string }> };
+      expect(gameJson.systemPacks.map((s) => s.packId), id).toContain('sw2d.perception');
+      const doc = JSON.parse(files.get('content/perception.json')!) as { mode: string; observers: unknown[] };
+      expect(doc.mode, id).toBe(id === 'heist-game' ? 'heist' : 'infiltrate');
+      expect(doc.observers.length, id).toBeGreaterThan(0);
     }
   });
 });

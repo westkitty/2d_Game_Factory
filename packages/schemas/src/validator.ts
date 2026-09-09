@@ -25,6 +25,7 @@ import raceCatalogSchema from '../schemas/race-catalog.schema.json' with { type:
 import economyCatalogSchema from '../schemas/economy-catalog.schema.json' with { type: 'json' };
 import needsCatalogSchema from '../schemas/needs-catalog.schema.json' with { type: 'json' };
 import dialogueCatalogSchema from '../schemas/dialogue-catalog.schema.json' with { type: 'json' };
+import perceptionCatalogSchema from '../schemas/perception-catalog.schema.json' with { type: 'json' };
 
 /**
  * Ajv-based validation for every schema this package owns.
@@ -59,7 +60,8 @@ export type SchemaName =
   | 'race-catalog'
   | 'economy-catalog'
   | 'needs-catalog'
-  | 'dialogue-catalog';
+  | 'dialogue-catalog'
+  | 'perception-catalog';
 
 export const SCHEMA_NAMES: readonly SchemaName[] = [
   'action-bindings',
@@ -86,6 +88,7 @@ export const SCHEMA_NAMES: readonly SchemaName[] = [
   'economy-catalog',
   'needs-catalog',
   'dialogue-catalog',
+  'perception-catalog',
 ];
 
 /** One located problem: which document, where in it, and what is wrong. */
@@ -134,6 +137,7 @@ const SCHEMA_DOCUMENTS: Readonly<Record<SchemaName, SchemaDocument>> = {
   'economy-catalog': economyCatalogSchema,
   'needs-catalog': needsCatalogSchema,
   'dialogue-catalog': dialogueCatalogSchema,
+  'perception-catalog': perceptionCatalogSchema,
 };
 
 // Registration order matters: a schema must be added before anything that
@@ -162,6 +166,7 @@ for (const name of [
   'economy-catalog',
   'needs-catalog',
   'dialogue-catalog',
+  'perception-catalog',
 ] as const) {
   const schema = SCHEMA_DOCUMENTS[name];
   ajv.addSchema(schema, schema.$id);

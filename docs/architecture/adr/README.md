@@ -34,3 +34,4 @@ One short record per decision that constrains later work. No ADR for trivia.
 | [0028](0028-customer-demand-transaction-production-economy.md) | Customer demand, stock, transactions and production jobs are one reusable economy capability | Category-C Wave 1 |
 | [0029](0029-creature-habitat-companion-needs.md) | Creature, habitat and companion needs are one reusable care capability | Category-C Wave 2 |
 | [0030](0030-branching-dialogue-graphs.md) | Branching dialogue graphs, choices, flags and endings are one reusable narrative-presentation capability | Category-C Wave 3 |
+| [0031](0031-stealth-perception-suspicion-hiding.md) | Vision cones, suspicion, noise and hiding are one reusable perception capability | Category-C Wave 4 |
