@@ -37,12 +37,11 @@ export const TOP_DOWN_ACTION_PRESETS: readonly PresetDefinition[] = [
     displayName: 'Action Adventure',
     family: 'top-down-action',
     controllerFamilies: ['top-down'],
-    requiredSystemPacks: [pack(PACK_IDS.world), pack(PACK_IDS.worldEntities), pack(PACK_IDS.combat), pack(PACK_IDS.weapons)],
+    requiredSystemPacks: [pack(PACK_IDS.world), pack(PACK_IDS.worldEntities), pack(PACK_IDS.combat), pack(PACK_IDS.weapons), pack(PACK_IDS.melee)],
     optionalSystemPacks: [pack(PACK_IDS.ai), pack(PACK_IDS.progression)],
-    requiredContentRoles: ['tuning', 'levels'],
+    requiredContentRoles: ['tuning', 'levels', 'melee'],
     validationProfile: VALIDATION_PROFILES.topDown,
-    // Weapons/projectiles are reusable now (Phase 3).
-    knownLimitations: ['Melee / knockback combat is not a reusable capability. Encounter orchestration (sw2d.encounters, Phase 4) is reusable but this recipe does not install it.'],
+    knownLimitations: [LIMITATIONS.meleeCombat],
   }),
 
   definePreset({
@@ -144,11 +143,11 @@ export const TOP_DOWN_ACTION_PRESETS: readonly PresetDefinition[] = [
     // fighting content-driven waves in a fixed arena is this preset's whole
     // genre, and the generated top-down shell now wires it for real
     // (bindStarterEncounters).
-    requiredSystemPacks: [pack(PACK_IDS.combat), pack(PACK_IDS.weapons), pack(PACK_IDS.encounters)],
+    requiredSystemPacks: [pack(PACK_IDS.combat), pack(PACK_IDS.weapons), pack(PACK_IDS.encounters), pack(PACK_IDS.melee)],
     optionalSystemPacks: [pack(PACK_IDS.ai), pack(PACK_IDS.arcade)],
-    requiredContentRoles: ['tuning', 'levels'],
+    requiredContentRoles: ['tuning', 'levels', 'melee'],
     validationProfile: VALIDATION_PROFILES.topDown,
-    knownLimitations: ['Melee weapons/knockback are not reusable capabilities; the starter arena fight is ranged (projectile) combat.'],
+    knownLimitations: [LIMITATIONS.meleeCombat],
   }),
 
   definePreset({

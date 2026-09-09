@@ -5,6 +5,7 @@ import {
   bindCollectiblePickups,
   bindStarterEncounters,
   bindStarterBallPaddle,
+  bindStarterMelee,
   bindStarterPerception,
   bindStarterWeapon,
   createRoomTransitionRuntime,
@@ -105,6 +106,11 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       player.setVelocity(0, 0);
       walls.setVisible(false);
     }
+    // Melee (Category-C Wave 6). Inert unless sw2d.melee is installed with
+    // a non-empty catalog. Then strike / knockback / contact replace dummy
+    // wander fire, and encounters stay parked.
+    const melee = bindStarterMelee(context);
+    if (melee.active) player.setPosition(melee.startX(), melee.startY());
     // Weapons (capability program Phase 3). Inert unless sw2d.weapons is
     // installed. When the encounter binding is active it owns the weapon and
     // its projectile runtime, so the plain starter weapon stays inert too.
@@ -141,6 +147,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       ...(battle.active ? { battle: battle.snapshot() } : {}),
       ...(perception.active ? { perception: perception.snapshot() } : {}),
       ...(table.active ? { ballPaddle: table.snapshot() } : {}),
+      ...(melee.active ? { melee: melee.snapshot() } : {}),
       ...(generationManifest ? { generation: generationManifest } : {}),
       ...(worldGraph
         ? { worldGraph: { current: worldGraph.currentNode().id, ...worldGraph.mapState(), mapOpen: worldMap?.isOpen ?? false, transitions: rooms?.transitions ?? 0 } }
@@ -165,6 +172,13 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         }
         player.setVelocityX(intent.moveX * tuning.moveSpeed);
         player.setVelocityY(intent.moveY * tuning.moveSpeed);
+        if (melee.active) {
+          melee.setPlayer(player.x, player.y);
+          if (intent.primaryPressed) melee.strike(nowMs);
+          melee.tick(deltaMs, nowMs);
+          if (melee.snapshot().outcome !== 'playing') player.setVelocity(0, 0);
+          return;
+        }
         if (intent.aimMagnitude > 0) {
           // Digital AIM_* stays authoritative (ADR-0016).
           facingX = intent.aimX;
@@ -211,6 +225,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         weapon?.dispose();
         perception.dispose();
         table.dispose();
+        melee.dispose();
         rooms?.dispose();
         worldMap?.dispose();
         try {

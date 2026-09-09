@@ -25,6 +25,7 @@ import {
   dialoguePack,
   perceptionPack,
   ballPaddlePack,
+  meleePack,
 } from '@sw2d/packs';
 import { resolveInstallOrder } from '@sw2d/runtime/composition';
 import { PRESETS } from '../src/index.ts';
@@ -70,6 +71,7 @@ const REAL_PACKS = [
   dialoguePack,
   perceptionPack,
   ballPaddlePack,
+  meleePack,
 ];
 
 const REGISTRY = new Map(REAL_PACKS.map((definition) => [definition.id, definition]));

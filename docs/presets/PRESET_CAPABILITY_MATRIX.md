@@ -34,14 +34,14 @@ pack/controller selections were actually exercised through, and
 | id | required packs | optional packs | controller(s) | input modes | validation profile |
 |---|---|---|---|---|---|
 | `top-down-adventure` | world, world-entities | narrative, progression | top-down | keyboard, touch | top-down-action-recipe |
-| `action-adventure` | world, world-entities, combat, weapons | ai, progression | top-down | keyboard, touch | top-down-action-recipe |
+| `action-adventure` | world, world-entities, combat, weapons, melee | ai, progression | top-down | keyboard, touch | top-down-action-recipe |
 | `twin-stick-shooter` | combat, weapons | world, world-entities, arcade, encounters | top-down | keyboard, touch | top-down-action-recipe |
 | `survivor-like` | combat, ai, progression, weapons, encounters | arcade, world | top-down | keyboard, touch | top-down-action-recipe |
 | `dungeon-crawler` | world, world-entities, combat, generation | ai, progression | top-down | keyboard, touch | top-down-action-recipe |
 | `action-roguelite` | combat, progression, generation | ai, world, world-entities | top-down | keyboard, touch | top-down-action-recipe |
 | `stealth-game` | ai, combat, world, perception | world-entities, navigation | top-down | keyboard, touch | top-down-action-recipe |
 | `heist-game` | ai, combat, world, perception | world-entities, progression, navigation | top-down | keyboard, touch | top-down-action-recipe |
-| `arena-combat` | combat, weapons, encounters | ai, arcade | top-down | keyboard, touch | top-down-action-recipe |
+| `arena-combat` | combat, weapons, encounters, melee | ai, arcade | top-down | keyboard, touch | top-down-action-recipe |
 | `boss-rush` | combat, ai, weapons, encounters | arcade | top-down | keyboard, touch | top-down-action-recipe |
 ## Shooter (Phase 7A)
 
@@ -153,8 +153,9 @@ pack/controller selections were actually exercised through, and
 | dialogue | `sw2d.dialogue` | `narrative.dialogue` | 2 | 2 |
 | perception | `sw2d.perception` | `ai.perception` | 2 | 2 |
 | ball-paddle | `sw2d.ball-paddle` | `arcade.ball` | 2 | 2 |
+| melee | `sw2d.melee` | `combat.melee` | 2 | 2 |
 
-**All twenty-four current packs have at least one preset consumer.** `sw2d.items` (capability
+**All twenty-five current packs have at least one preset consumer.** `sw2d.items` (capability
 program Phase 2) is required by `collectathon-platformer`, whose generated starter consumes
 the reusable item/effect service through the shared platform shell. `sw2d.puzzle-rules`
 (capability program Phase 6) is required by `sokoban` and `puzzle-platformer`, whose
@@ -176,4 +177,6 @@ Nine, one per registered family (MASTER_PROJECT.md section 14/6/8 - a bounded se
 one per recipe): `platform-recipe`, `top-down-action-recipe`, `shooter-recipe` (Phase 7A),
 `vehicle-movement-recipe`, `puzzle-arcade-recipe`, `strategy-defense-recipe` (Phase 7B),
 `simulation-management-recipe`, `narrative-exploration-recipe`, `party-toy-weird-recipe`
+(Phase 7C).
+ipe`, `party-toy-weird-recipe`
 (Phase 7C).

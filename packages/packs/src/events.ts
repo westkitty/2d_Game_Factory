@@ -53,6 +53,11 @@ declare module '@sw2d/contracts' {
     'ballPaddle:drained': Record<string, never>;
     'ballPaddle:scored': { readonly side: 'player' | 'opponent'; readonly player: number; readonly opponent: number };
     'ballPaddle:matchOver': { readonly outcome: 'complete' | 'failed' };
+    'melee:struck': { readonly attackerId: string; readonly foeId: string };
+    'melee:missed': { readonly attackerId: string };
+    'melee:contact': { readonly foeId: string; readonly health: number };
+    'melee:cleared': { readonly mode: string };
+    'melee:downed': Record<string, never>;
   }
 }
 

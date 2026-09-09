@@ -27,6 +27,7 @@ import needsCatalogSchema from '../schemas/needs-catalog.schema.json' with { typ
 import dialogueCatalogSchema from '../schemas/dialogue-catalog.schema.json' with { type: 'json' };
 import perceptionCatalogSchema from '../schemas/perception-catalog.schema.json' with { type: 'json' };
 import ballPaddleCatalogSchema from '../schemas/ball-paddle-catalog.schema.json' with { type: 'json' };
+import meleeCatalogSchema from '../schemas/melee-catalog.schema.json' with { type: 'json' };
 
 /**
  * Ajv-based validation for every schema this package owns.
@@ -63,7 +64,8 @@ export type SchemaName =
   | 'needs-catalog'
   | 'dialogue-catalog'
   | 'perception-catalog'
-  | 'ball-paddle-catalog';
+  | 'ball-paddle-catalog'
+  | 'melee-catalog';
 
 export const SCHEMA_NAMES: readonly SchemaName[] = [
   'action-bindings',
@@ -92,6 +94,7 @@ export const SCHEMA_NAMES: readonly SchemaName[] = [
   'dialogue-catalog',
   'perception-catalog',
   'ball-paddle-catalog',
+  'melee-catalog',
 ];
 
 /** One located problem: which document, where in it, and what is wrong. */
@@ -142,6 +145,7 @@ const SCHEMA_DOCUMENTS: Readonly<Record<SchemaName, SchemaDocument>> = {
   'dialogue-catalog': dialogueCatalogSchema,
   'perception-catalog': perceptionCatalogSchema,
   'ball-paddle-catalog': ballPaddleCatalogSchema,
+  'melee-catalog': meleeCatalogSchema,
 };
 
 // Registration order matters: a schema must be added before anything that
@@ -172,6 +176,7 @@ for (const name of [
   'dialogue-catalog',
   'perception-catalog',
   'ball-paddle-catalog',
+  'melee-catalog',
 ] as const) {
   const schema = SCHEMA_DOCUMENTS[name];
   ajv.addSchema(schema, schema.$id);

@@ -137,6 +137,8 @@ describe('required knownLimitations (MASTER_PROJECT.md section 12)', () => {
     // Phase 7B (MASTER_PROJECT.md section 9)
     { id: 'match-puzzle', pattern: /match-detection\/cascade board rules are consumed by this recipe/ },
     { id: 'falling-block-puzzle', pattern: /No reusable falling-piece\/line-clear board engine/ },
+    { id: 'action-adventure', pattern: /Melee strike, knockback, hit-stun and contact damage are reusable/ },
+    { id: 'arena-combat', pattern: /Melee strike, knockback, hit-stun and contact damage are reusable/ },
     { id: 'breakout', pattern: /Ball, paddle, rebound, brick-clear and first-to-N scoring are reusable/ },
     { id: 'pong', pattern: /Ball, paddle, rebound, brick-clear and first-to-N scoring are reusable/ },
     { id: 'rhythm-action', pattern: /No deterministic music-beat\/audio-synchronization system/ },

@@ -39,6 +39,7 @@ export const PACK_IDS = {
   dialogue: 'sw2d.dialogue',
   perception: 'sw2d.perception',
   ballPaddle: 'sw2d.ball-paddle',
+  melee: 'sw2d.melee',
 } as const;
 
 export const CAPABILITY_IDS = {
@@ -81,4 +82,6 @@ export const CAPABILITY_IDS = {
   perception: 'ai.perception',
   /** Category-C Wave 5: arcade ball / paddle / rebound. */
   ballPaddle: 'arcade.ball',
+  /** Category-C Wave 6: melee strike, knockback, hit-stun (composes with combat.health). */
+  melee: 'combat.melee',
 } as const;

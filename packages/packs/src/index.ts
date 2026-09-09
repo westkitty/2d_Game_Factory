@@ -90,3 +90,4 @@ export { needsPack, type NeedsService } from './needs/needsPack.ts';
 export { dialoguePack, type DialogueService } from './dialogue/dialoguePack.ts';
 export { perceptionPack, type PerceptionService } from './perception/perceptionPack.ts';
 export { ballPaddlePack, type BallPaddleService } from './ballPaddle/ballPaddlePack.ts';
+export { meleePack, type MeleeService } from './melee/meleePack.ts';

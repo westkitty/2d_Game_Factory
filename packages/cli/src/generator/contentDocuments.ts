@@ -715,6 +715,47 @@ export function generateBallPaddleCatalog(kind: 'breakout' | 'pong' | 'none'): R
 }
 
 /**
+ * content/melee.json - a MeleeCatalog (Category-C Wave 6). Always
+ * emitted; empty/inert unless the preset installs `sw2d.melee`. Two
+ * bounded starter modes match the two consumers: skirmish (one elite
+ * foe) and arena (three fodder). Constants match the expanded overlay
+ * shells so factory and overlay stay aligned.
+ */
+export function generateMeleeCatalog(kind: 'skirmish' | 'arena' | 'none'): Record<string, unknown> {
+  const empty = {
+    schemaVersion: 1,
+    mode: 'skirmish',
+    player: { id: 'player', x: 120, y: 270, radius: 16, health: 5 },
+    foes: [] as const,
+    strike: { range: 145, damage: 1, cooldownMs: 0, knockback: 8, stunMs: 80 },
+    contact: { range: 34, damage: 1, cooldownMs: 650 },
+  };
+  if (kind === 'none') return empty;
+  if (kind === 'skirmish') {
+    return {
+      schemaVersion: 1,
+      mode: 'skirmish',
+      player: { id: 'player', x: 120, y: 270, radius: 16, health: 5 },
+      foes: [{ id: 'foe-0', x: 470, y: 270, radius: 17, health: 3 }],
+      strike: { range: 145, damage: 1, cooldownMs: 0, knockback: 8, stunMs: 80 },
+      contact: { range: 34, damage: 1, cooldownMs: 650 },
+    };
+  }
+  return {
+    schemaVersion: 1,
+    mode: 'arena',
+    player: { id: 'player', x: 120, y: 270, radius: 16, health: 5 },
+    foes: [
+      { id: 'foe-0', x: 420, y: 160, radius: 17, health: 2 },
+      { id: 'foe-1', x: 560, y: 270, radius: 17, health: 2 },
+      { id: 'foe-2', x: 420, y: 380, radius: 17, health: 2 },
+    ],
+    strike: { range: 145, damage: 1, cooldownMs: 0, knockback: 8, stunMs: 80 },
+    contact: { range: 34, damage: 1, cooldownMs: 650 },
+  };
+}
+
+/**
  * content/races.json - a RaceCatalog (capability program Phase 10). Always
  * emitted; empty unless the preset installs `sw2d.racing`, then one starter
  * race: a small four-corner track, `time-trial` mode for the time-trial
@@ -778,11 +819,13 @@ export function generateUiCopy(options: {
         ? 'MOVE WASD/ARROWS  -  RETURN THE BALL'
         : has('sw2d.perception')
         ? 'MOVE WASD/ARROWS  -  AVOID THE CONE  -  HIDE IN COVER'
-        : has('sw2d.encounters')
-          ? 'MOVE WASD/ARROWS  -  AIM WITH MOUSE  -  FIRE J/X  -  SURVIVE THE WAVES'
-          : has('sw2d.weapons')
-            ? 'MOVE WASD/ARROWS  -  AIM WITH MOUSE  -  FIRE J/X'
-            : 'MOVE WASD/ARROWS  -  PAUSE TO STOP';
+        : has('sw2d.melee')
+          ? 'MOVE WASD/ARROWS  -  STRIKE J/X'
+          : has('sw2d.encounters')
+            ? 'MOVE WASD/ARROWS  -  AIM WITH MOUSE  -  FIRE J/X  -  SURVIVE THE WAVES'
+            : has('sw2d.weapons')
+              ? 'MOVE WASD/ARROWS  -  AIM WITH MOUSE  -  FIRE J/X'
+              : 'MOVE WASD/ARROWS  -  PAUSE TO STOP';
       break;
     case 'vehicle':
       playHint = has('sw2d.racing')

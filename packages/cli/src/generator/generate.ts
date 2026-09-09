@@ -18,6 +18,7 @@ import {
   generateDialogueCatalog,
   generatePerceptionCatalog,
   generateBallPaddleCatalog,
+  generateMeleeCatalog,
   generateResourceManifest,
   generateTiledLevel,
   generateTheme,
@@ -232,6 +233,16 @@ export function buildGameFiles(gameId: string, preset: PresetDefinition): Map<st
     JSON.stringify(
       generateBallPaddleCatalog(
         requiredPackIds.includes('sw2d.ball-paddle') ? (preset.id === 'pong' ? 'pong' : 'breakout') : 'none',
+      ),
+      null,
+      2,
+    ) + '\n',
+  );
+  files.set(
+    'content/melee.json',
+    JSON.stringify(
+      generateMeleeCatalog(
+        requiredPackIds.includes('sw2d.melee') ? (preset.id === 'arena-combat' ? 'arena' : 'skirmish') : 'none',
       ),
       null,
       2,

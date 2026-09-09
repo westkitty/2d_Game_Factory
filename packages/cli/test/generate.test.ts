@@ -137,6 +137,12 @@ describe('all 74 presets generate valid, token-free, schema-valid source', () =>
       expect(() => validateContentBundleData({ 'ball-paddle': tableJson })).not.toThrow();
     });
 
+    it(`${preset.id}'s generated content/melee.json validates as a melee catalog`, () => {
+      const files = buildGameFiles('matrix-game', preset);
+      const meleeJson: unknown = JSON.parse(files.get('content/melee.json')!);
+      expect(() => validateContentBundleData({ melee: meleeJson })).not.toThrow();
+    });
+
     it(`${preset.id} selects a real, resolvable shell template for its primary controller family`, () => {
       const files = buildGameFiles('matrix-game', preset);
       expect(files.has('src/game-specific/shellPack.ts')).toBe(true);
@@ -395,7 +401,7 @@ describe('generated ball-paddle games consume sw2d.ball-paddle', () => {
     expect(shell).toContain('table.tick(');
     expect(buildGameFiles('ball-paddle-probe', breakout).get('src/content.ts')).toContain("'ball-paddle': ballPaddleData");
     expect(buildGameFiles('ball-paddle-probe', breakout).get('src/main.ts')).toContain(
-      'perceptionPack, ballPaddlePack, GAME_SPECIFIC_PACK',
+      'ballPaddlePack, meleePack, GAME_SPECIFIC_PACK',
     );
   });
 
@@ -409,6 +415,31 @@ describe('generated ball-paddle games consume sw2d.ball-paddle', () => {
       expect(doc.mode, id).toBe(id);
       if (id === 'breakout') expect(doc.bricks.length, id).toBeGreaterThan(0);
       else expect(doc.pong, id).toBeDefined();
+    }
+  });
+});
+
+describe('generated melee games consume sw2d.melee', () => {
+  it('the generated top-down shell binds bindStarterMelee', () => {
+    const adventure = PRESETS.find((candidate) => candidate.id === 'action-adventure')!;
+    const shell = buildGameFiles('melee-probe', adventure).get('src/game-specific/shellPack.ts')!;
+    expect(shell).toContain('bindStarterMelee(context)');
+    expect(shell).toContain('melee.strike(');
+    expect(buildGameFiles('melee-probe', adventure).get('src/content.ts')).toContain('melee: meleeData');
+    expect(buildGameFiles('melee-probe', adventure).get('src/main.ts')).toContain(
+      'ballPaddlePack, meleePack, GAME_SPECIFIC_PACK',
+    );
+  });
+
+  it('action-adventure and arena-combat enable sw2d.melee and emit a non-empty catalog', () => {
+    for (const id of ['action-adventure', 'arena-combat'] as const) {
+      const preset = PRESETS.find((candidate) => candidate.id === id)!;
+      const files = buildGameFiles('melee-probe', preset);
+      const gameJson = JSON.parse(files.get('content/game.json')!) as { systemPacks: Array<{ packId: string }> };
+      expect(gameJson.systemPacks.map((s) => s.packId), id).toContain('sw2d.melee');
+      const doc = JSON.parse(files.get('content/melee.json')!) as { mode: string; foes: unknown[] };
+      expect(doc.mode, id).toBe(id === 'arena-combat' ? 'arena' : 'skirmish');
+      expect(doc.foes.length, id).toBeGreaterThan(0);
     }
   });
 });

@@ -27,7 +27,7 @@ Highest-leverage clusters, from `packages/presets/src/shared.ts` LIMITATIONS + p
 | 3 | Branching dialogue / narrative presentation | visual-novel, point-and-click; investigation/museum only if the contract fits | **Wave 3 implemented and played** (`sw2d.dialogue` / `narrative.dialogue`, ADR-0030). Residual: portraits, scene composition, parser IF, evidence-board deduction. |
 | 4 | Stealth perception / suspicion / noise / hiding | stealth-game, heist-game | **Wave 4 complete** (`sw2d.perception` / `ai.perception`, ADR-0031). Residual: patrol pathfinding, takedowns, full stealth AI. |
 | 5 | Ball / paddle / rebound | breakout, pong | **Wave 5 implemented** (`sw2d.ball-paddle` / `arcade.ball`, ADR-0032). Residual: pinball table, local multiplayer input routing. |
-| 6 | Melee / knockback / hit-stun | action-adventure, arena-combat; run-and-gun only if it still needs it | backlog |
+| 6 | Melee / knockback / hit-stun | action-adventure, arena-combat | **Wave 6 implemented** (`sw2d.melee` / `combat.melee`, ADR-0033). Residual: combos, directional attacks, targeting UI. Run-and-gun stays projectile. |
 | 7 | Local multiplayer input ownership | local-party-game, pong | backlog |
 | — | Tier 3 (rail camera, territory, chase, climbing, run-meta, falling-block, match consumption, crop/season) | re-audit before sharing | backlog |
 | — | Tier 4 specialized (rhythm, parser IF, fishing, cooking, photography, wardrobe, drawing, microgame scheduler, sandbox authoring) | prefer game-specific seam until a second consumer is real | backlog |
@@ -387,3 +387,75 @@ High-contrast Phaser HUD (BREAKOUT / PONG title, score/bricks/lives or you/opp, 
 - Chrome wrapper is session-local under `/tmp`.
 - Do not commit `package-lock.json` workspace links for gitignored `games/wave*`.
 - Next wave: melee / knockback / hit-stun (action-adventure, arena-combat) — re-audit before sharing.
+
+## Wave 6 — `sw2d.melee`
+
+### Problem
+
+Action-adventure and arena-combat needed strike windows, nearest-foe hit, knockback, hit-stun and contact damage. Combos, directional attacks and targeting UI are not shared. Run-and-gun stays a frozen projectile proof.
+
+### Consumers
+
+- `action-adventure` — mode `skirmish` (one elite HP 3, overlay then loots/exits).
+- `arena-combat` — mode `arena` (three fodder HP 2, clear-to-win).
+
+Materially different: 1×3 skirmish + objective overlay vs 3×2 arena clear. Damage goes through `combat.health`.
+
+### ValidationPlan
+
+1. Contract + schema (`MeleeCatalog` / `melee-catalog`) reject unknown modes.
+2. Pack unit tests: in-range hit + knockback + stun, three-hit clear, miss, cooldown, arena 3×2, contact cadence, last-hit fail, duplicate ids, missing document inert, dispose, reset.
+3. Generator: all 74 emit schema-valid `content/melee.json`; the two consumers enable `sw2d.melee` and a non-empty catalog; `src/content.ts` passes `melee: meleeData`; `main.ts` installs `meleePack`.
+4. Generated top-down shell binds `bindStarterMelee` and feeds `setPlayer`/`strike`/`tick`.
+5. Honesty / docsSync / catalogPackIntegrity / uiCopy allowlist stay green.
+6. Workbench `POST /api/melee/inspect`.
+7. Expanded action-adventure / arena-combat kits drive the same service (`hud: false`) while keeping overlay debug fields (`lastAction === 'attack'`).
+8. Real-browser journeys against generated games + starter-kit overlays. Committed `proofs/` + maturity promotion still deferred.
+
+### CompletionContract
+
+- [x] Reusable pack in `@sw2d/packs`, renderer-neutral, composes with `combat.health`.
+- [x] Content authority `content/melee.json`.
+- [x] ≥2 materially different generated consumers (2 wired).
+- [x] Focused unit/integration tests.
+- [x] Honest residual limitation.
+- [x] ADR-0033.
+- [x] Real-browser play of factory-generated `wave6-action-adventure` / `wave6-arena-combat` (`tools/scripts/play-melee-wave6.ts`, 2/2 PASS, 0 console errors, 0 external requests).
+- [x] Overlay QA (`qa-expanded-starter-kits-p2b.ts action-adventure arena-combat` 2/2 PASS).
+- [ ] Committed proofs + maturity promotion. **Not done — evidence rule.**
+
+### Implementation notes
+
+- Capability id `combat.melee`. Pack id `sw2d.melee`. Depends on `combat.health`. Not folded into `sw2d.combat`.
+- Overlay-matching constants live in generated `content/melee.json`. Strike cooldown **0**. Knockback 8 / stun 80 ms so three skirmish hits stay inside range 145.
+- Overlay maps strike `hit` → debug `lastAction = 'attack'` so P2-B stays stable. Overlay adventure keeps local objective/exit; overlay arena wins on `snap.outcome === 'complete'`.
+- Factory parks weapons/encounters while `melee.active` (walk + strike remain). Overlay skips local `attack()` / `contactDamage()` while melee is active.
+- Empty foe list is inert. Duplicate foe ids throw.
+
+### Browser journeys (executed)
+
+Factory-generated (top-down shell HUD):
+
+- Action-adventure skirmish: 1 foe HP 3 → approach x≈355 → three strikes, foesAlive 0, lastResult=hit, outcome=complete, playerHealth 5.
+- Arena-combat: 3 foes HP 2 → north-east first kill (2 alive) → mid kill (1 alive) → third in range, foesAlive 0, outcome=complete, playerHealth 5.
+
+Starter-kit overlays (`game.expanded-starter`): action-adventure (clear + loot + exit victory) PASS; arena-combat (three fodder, victory) PASS.
+
+### Visual inspection
+
+High-contrast Phaser HUD (`SKIRMISH` / `ARENA`, hp / foes / last strike, `MOVE WASD/ARROWS   STRIKE J/X`). Dummy wander fire hidden when melee is active. Confirmed via debug snapshots, not screenshots.
+
+### Bugs found and fixed this wave
+
+- Knockback originally wrote velocity only, so a strike did not move the foe until `tick` (unit test `x > 470` failed). Hit now also displaces immediately.
+- Knockback 12 pushed the elite out of range 145 on the third tap. Catalog knockback is 8.
+- Overlay still ran local `contactDamage()` after syncing HP from the pack (double-count). Skipped while `melee.active`.
+- Factory shell omitted `melee.dispose()`.
+- Unused `this.nowMs` failed `tsc` (`noUnusedLocals`).
+
+### Remaining blockers / unknowns
+
+- No committed `proofs/` for action-adventure or arena-combat; catalog maturity stays `recipe`.
+- Chrome wrapper is session-local under `/tmp`.
+- Do not commit `package-lock.json` workspace links for gitignored `games/wave*`.
+- Next wave: local multiplayer input ownership (local-party-game, pong) — re-audit before sharing.

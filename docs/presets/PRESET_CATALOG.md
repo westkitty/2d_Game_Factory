@@ -50,14 +50,14 @@ controller/input-mode breakdown and full pack-consumer coverage.
 | id | display name | controller(s) | content roles | maturity |
 |---|---|---|---|---|
 | `top-down-adventure` | Top-Down Adventure | top-down | tuning, levels | proof-validated |
-| `action-adventure` | Action Adventure | top-down | tuning, levels | recipe |
+| `action-adventure` | Action Adventure | top-down | tuning, levels, melee | recipe |
 | `twin-stick-shooter` | Twin-Stick Shooter | top-down | tuning, levels | proof-validated |
 | `survivor-like` | Survivor-Like | top-down | tuning | recipe |
 | `dungeon-crawler` | Dungeon Crawler | top-down | tuning, levels | proof-validated |
 | `action-roguelite` | Action Roguelite | top-down | tuning, levels | recipe |
 | `stealth-game` | Stealth Game | top-down | tuning, levels | smoke-validated |
 | `heist-game` | Heist Game | top-down | tuning, levels | recipe |
-| `arena-combat` | Arena Combat | top-down | tuning, levels | recipe |
+| `arena-combat` | Arena Combat | top-down | tuning, levels, melee | recipe |
 | `boss-rush` | Boss Rush | top-down | tuning, levels | proof-validated |
 
 ## Shooter (Phase 7A)
@@ -169,14 +169,14 @@ recipe's *first* stated limitation; see `knownLimitations` in
 | `grappling-platformer` | (none stated) |
 | `collectathon-platformer` | (none stated) |
 | `top-down-adventure` | (none stated) |
-| `action-adventure` | Melee / knockback combat is not a reusable capability. Encounter orchestration (sw2d.encounters, Phase 4) is reusable but this recipe does not install it. |
+| `action-adventure` | Melee strike, knockback, hit-stun and contact damage are reusable (sw2d.melee); combo strings, directional attacks and targeting UI are not. |
 | `twin-stick-shooter` | The generated starter ships no enemy waves out of the box: sw2d.encounters is optional for this recipe, so opposition is added by enabling that pack or authoring game-specific spawns (the committed proof game demonstrates the latter). |
 | `survivor-like` | Endless difficulty scaling / meta-progression between runs is not a reusable system; the starter survival loop repeats the authored encounter without escalating it. |
 | `dungeon-crawler` | The room graph places Enemy objects, but the generated top-down shell does not yet wire them into sw2d.combat / sw2d.ai - enemy behaviour is game-specific code. |
 | `action-roguelite` | Run-based meta-progression/permadeath state is not yet a reusable capability beyond sw2d.progression. |
 | `stealth-game` | Vision cones, occlusion, suspicion, noise and hiding are reusable (sw2d.perception); patrol pathfinding, takedowns and full stealth AI are not. |
 | `heist-game` | Vision cones, occlusion, suspicion, noise and hiding are reusable (sw2d.perception); patrol pathfinding, takedowns and full stealth AI are not. |
-| `arena-combat` | Melee weapons/knockback are not reusable capabilities; the starter arena fight is ranged (projectile) combat. |
+| `arena-combat` | Melee strike, knockback, hit-stun and contact damage are reusable (sw2d.melee); combo strings, directional attacks and targeting UI are not. |
 | `boss-rush` | Sequencing multiple bosses across a run is starter-specific; sw2d.encounters drives one boss encounter at a time. |
 | `horizontal-shmup` | Continuous scrolling-stage camera movement (the terrain streaming past a fixed ship) is not a reusable capability; the generated starter fights its encounter waves in a fixed arena. |
 | `vertical-shmup` | Continuous scrolling-stage camera movement (the terrain streaming past a fixed ship) is not a reusable capability; the generated starter fights its encounter waves in a fixed arena. |
