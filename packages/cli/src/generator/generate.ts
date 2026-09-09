@@ -19,6 +19,7 @@ import {
   generatePerceptionCatalog,
   generateBallPaddleCatalog,
   generateMeleeCatalog,
+  generateLocalPlayCatalog,
   generateResourceManifest,
   generateTiledLevel,
   generateTheme,
@@ -243,6 +244,16 @@ export function buildGameFiles(gameId: string, preset: PresetDefinition): Map<st
     JSON.stringify(
       generateMeleeCatalog(
         requiredPackIds.includes('sw2d.melee') ? (preset.id === 'arena-combat' ? 'arena' : 'skirmish') : 'none',
+      ),
+      null,
+      2,
+    ) + '\n',
+  );
+  files.set(
+    'content/local-play.json',
+    JSON.stringify(
+      generateLocalPlayCatalog(
+        requiredPackIds.includes('sw2d.local-play') ? (preset.id === 'pong' ? 'versus' : 'hotseat') : 'none',
       ),
       null,
       2,

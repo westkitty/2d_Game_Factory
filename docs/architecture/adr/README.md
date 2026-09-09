@@ -35,3 +35,6 @@ One short record per decision that constrains later work. No ADR for trivia.
 | [0029](0029-creature-habitat-companion-needs.md) | Creature, habitat and companion needs are one reusable care capability | Category-C Wave 2 |
 | [0030](0030-branching-dialogue-graphs.md) | Branching dialogue graphs, choices, flags and endings are one reusable narrative-presentation capability | Category-C Wave 3 |
 | [0031](0031-stealth-perception-suspicion-hiding.md) | Vision cones, suspicion, noise and hiding are one reusable perception capability | Category-C Wave 4 |
+| [0032](0032-arcade-ball-paddle-rebound.md) | Ball, paddle, rebound, brick-clear and first-to-N scoring are one reusable arcade capability | Category-C Wave 5 |
+| [0033](0033-combat-melee-knockback.md) | Melee strike, knockback and hit-stun are one reusable close-combat capability | Category-C Wave 6 |
+| [0034](0034-local-multiplayer-input-ownership.md) | Local hot-seat and versus seats are one reusable input-ownership capability | Category-C Wave 7 |

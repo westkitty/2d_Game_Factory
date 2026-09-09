@@ -59,6 +59,7 @@ export { bindStarterDialogue, type StarterDialogueBinding, type StarterDialogueS
 export { bindStarterPerception, type StarterPerceptionBinding, type StarterPerceptionSnapshot } from './game-support/starterPerception.ts';
 export { bindStarterBallPaddle, type StarterBallPaddleBinding, type StarterBallPaddleSnapshot } from './game-support/starterBallPaddle.ts';
 export { bindStarterMelee, type StarterMeleeBinding, type StarterMeleeSnapshot } from './game-support/starterMelee.ts';
+export { bindStarterLocalPlay, type StarterLocalPlayBinding, type StarterLocalPlaySnapshot } from './game-support/starterLocalPlay.ts';
 
 export { LocalStorageDriver, MemoryStorageDriver } from './persistence/LocalStorageDriver.ts';
 export { SaveStoreImpl } from './persistence/SaveStoreImpl.ts';

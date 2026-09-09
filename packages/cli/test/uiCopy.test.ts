@@ -79,7 +79,8 @@ describe('generateUiCopy (generated games announce their genre honestly)', () =>
     expect(copyFor('stealth-game').playHint).toContain('AVOID THE CONE');
     expect(copyFor('heist-game').playHint).toContain('AVOID THE CONE');
     expect(copyFor('breakout').playHint).toContain('RETURN THE BALL');
-    expect(copyFor('pong').playHint).toContain('RETURN THE BALL');
+    expect(copyFor('pong').playHint).toContain('P1 ARROWS');
+    expect(copyFor('local-party-game').playHint).toContain('PASS THE KEYBOARD');
     expect(copyFor('action-adventure').playHint).toContain('STRIKE J/X');
     expect(copyFor('arena-combat').playHint).toContain('STRIKE J/X');
   });

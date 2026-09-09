@@ -52,6 +52,7 @@ import { inspectDialogue } from './dialogueLab.ts';
 import { inspectPerception } from './perceptionLab.ts';
 import { inspectBallPaddle } from './ballPaddleLab.ts';
 import { inspectMelee } from './meleeLab.ts';
+import { inspectLocalPlay } from './localPlayLab.ts';
 import { loadScene, listLevels, newObject, objectClassOptions, saveScene, SceneValidationError, type SceneDocument } from './sceneStore.ts';
 import { buildProject, createProject, packProject, validateProject } from './factoryService.ts';
 import { presetEvidenceFor } from './presetEvidence.ts';
@@ -736,6 +737,16 @@ const ROUTES: ReadonlyMap<string, Handler> = new Map<string, Handler>([
     (request) => {
       const body = bodyObject(request);
       return ok(inspectMelee(gameIdOf(request, body)));
+    },
+  ],
+
+  [
+    // Local-play surface (Category-C Wave 7). Reports content/local-play.json
+    // (mode, seats). Live axes/scores belong in-game.
+    'POST /local-play/inspect',
+    (request) => {
+      const body = bodyObject(request);
+      return ok(inspectLocalPlay(gameIdOf(request, body)));
     },
   ],
 

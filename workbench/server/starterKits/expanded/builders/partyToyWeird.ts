@@ -16,7 +16,7 @@ export type PartyToyStarterVariant =
 function shellSource(variant: PartyToyStarterVariant): string {
   return String.raw`import Phaser from 'phaser';
 import type { InstalledSystemPack } from '@sw2d/contracts';
-import { bindStarterNeeds, gridController, topDownController, uiSimulationController, type SceneContext, type ScenePackDefinition } from '@sw2d/runtime';
+import { bindStarterNeeds, bindStarterLocalPlay, gridController, topDownController, uiSimulationController, type SceneContext, type ScenePackDefinition } from '@sw2d/runtime';
 import { addBackground } from './presentation.ts';
 
 const VARIANT = ${JSON.stringify(variant)} as const;
@@ -66,6 +66,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     if (wardrobeLabels) objects.push(wardrobeLabels);
 
     const needs = bindStarterNeeds(context, { hud: false });
+    const seats = bindStarterLocalPlay(context, { hud: false });
 
     let elapsedMs = 0;
     let outcome: 'playing' | 'complete' | 'failed' = 'playing';
@@ -195,6 +196,20 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     }
 
     function updateParty(): void {
+      if (seats.active) {
+        if (context.input.justPressed('PRIMARY_ACTION') || context.input.justPressed('CONFIRM')) {
+          seats.act();
+          lastAction = 'party-turn';
+        }
+        const snap = seats.snapshot();
+        currentPlayer = snap.currentPlayer;
+        partyScores[0] = snap.scores[0] ?? 0;
+        partyScores[1] = snap.scores[1] ?? 0;
+        partyTurns = snap.turns;
+        winner = snap.winner;
+        if (snap.outcome !== 'playing') outcome = snap.outcome as typeof outcome;
+        return;
+      }
       if (!context.input.justPressed('PRIMARY_ACTION') && !context.input.justPressed('CONFIRM')) return;
       const power = 1 + (partyTurns % 3);
       partyScores[currentPlayer] = (partyScores[currentPlayer] ?? 0) + power;
@@ -337,7 +352,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         else updatePhoto(deltaMs);
         render();
       },
-      dispose(): void { if (disposed) return; disposed = true; debugHandle.dispose(); needs.dispose(); try { background?.destroy(); hero.destroy(); status.destroy(); hint.destroy(); for (const object of objects) object.destroy(); } catch { /* scene teardown */ } },
+      dispose(): void { if (disposed) return; disposed = true; debugHandle.dispose(); needs.dispose(); seats.dispose(); try { background?.destroy(); hero.destroy(); status.destroy(); hint.destroy(); for (const object of objects) object.destroy(); } catch { /* scene teardown */ } },
     };
   },
 };

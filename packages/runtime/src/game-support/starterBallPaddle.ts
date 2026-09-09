@@ -17,6 +17,7 @@ export interface StarterBallPaddleSnapshot {
   readonly mode: string | null;
   readonly paddleX: number;
   readonly paddleY: number;
+  readonly opponentY: number | null;
   readonly ballX: number;
   readonly ballY: number;
   readonly ballVx: number;
@@ -34,6 +35,7 @@ export interface StarterBallPaddleSnapshot {
 export interface StarterBallPaddleBinding {
   readonly active: boolean;
   setPaddleAxis(axis: number): void;
+  setOpponentAxis(axis: number | null): void;
   tick(deltaMs: number): void;
   snapshot(): StarterBallPaddleSnapshot;
   render(): void;
@@ -46,12 +48,14 @@ export interface StarterBallPaddleBinding {
 const INERT: StarterBallPaddleBinding = {
   active: false,
   setPaddleAxis: () => undefined,
+  setOpponentAxis: () => undefined,
   tick: () => undefined,
   snapshot: () => ({
     active: false,
     mode: null,
     paddleX: 0,
     paddleY: 0,
+    opponentY: null,
     ballX: 0,
     ballY: 0,
     ballVx: 0,
@@ -121,6 +125,7 @@ export function bindStarterBallPaddle(context: SceneContext, options?: { readonl
       mode: table.mode(),
       paddleX: pad.x,
       paddleY: pad.y,
+      opponentY: table.opponent()?.y ?? null,
       ballX: b.x,
       ballY: b.y,
       ballVx: b.vx,
@@ -169,6 +174,9 @@ export function bindStarterBallPaddle(context: SceneContext, options?: { readonl
     active: true,
     setPaddleAxis(axis: number): void {
       table.setPaddleAxis(axis);
+    },
+    setOpponentAxis(axis: number | null): void {
+      table.setOpponentAxis(axis);
     },
     tick(deltaMs: number): void {
       table.tick(deltaMs);

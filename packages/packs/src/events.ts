@@ -58,6 +58,9 @@ declare module '@sw2d/contracts' {
     'melee:contact': { readonly foeId: string; readonly health: number };
     'melee:cleared': { readonly mode: string };
     'melee:downed': Record<string, never>;
+    'localPlay:acted': { readonly playerIndex: number; readonly turns: number };
+    'localPlay:turnChanged': { readonly playerIndex: number; readonly turns: number };
+    'localPlay:completed': { readonly winner: number };
   }
 }
 

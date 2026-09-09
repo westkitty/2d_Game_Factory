@@ -715,6 +715,40 @@ export function generateBallPaddleCatalog(kind: 'breakout' | 'pong' | 'none'): R
 }
 
 /**
+ * content/local-play.json - a LocalPlayCatalog (Category-C Wave 7). Always
+ * emitted; empty/inert unless the preset installs `sw2d.local-play`. Two
+ * bounded starter modes match the two consumers: hotseat (pass-and-play
+ * turns) and versus (disjoint axes for pong).
+ */
+export function generateLocalPlayCatalog(kind: 'hotseat' | 'versus' | 'none'): Record<string, unknown> {
+  const empty = {
+    schemaVersion: 1,
+    mode: 'hotseat',
+    players: [] as const,
+  };
+  if (kind === 'none') return empty;
+  if (kind === 'hotseat') {
+    return {
+      schemaVersion: 1,
+      mode: 'hotseat',
+      players: [
+        { id: 'p1', label: 'P1' },
+        { id: 'p2', label: 'P2' },
+      ],
+      hotseat: { turns: 6, pointsCycle: [1, 2, 3] },
+    };
+  }
+  return {
+    schemaVersion: 1,
+    mode: 'versus',
+    players: [
+      { id: 'p1', label: 'P1', negative: ['ArrowUp'], positive: ['ArrowDown'] },
+      { id: 'p2', label: 'P2', negative: ['KeyW'], positive: ['KeyS'] },
+    ],
+  };
+}
+
+/**
  * content/melee.json - a MeleeCatalog (Category-C Wave 6). Always
  * emitted; empty/inert unless the preset installs `sw2d.melee`. Two
  * bounded starter modes match the two consumers: skirmish (one elite
@@ -815,7 +849,9 @@ export function generateUiCopy(options: {
       playHint = has('sw2d.weapons') ? 'MOVE / JUMP  -  FIRE J/X  -  PAUSE TO STOP' : 'MOVE / JUMP  -  PAUSE TO STOP';
       break;
     case 'top-down':
-      playHint = has('sw2d.ball-paddle')
+      playHint = has('sw2d.local-play') && has('sw2d.ball-paddle')
+        ? 'P1 ARROWS  -  P2 WASD  -  FIRST TO 3'
+        : has('sw2d.ball-paddle')
         ? 'MOVE WASD/ARROWS  -  RETURN THE BALL'
         : has('sw2d.perception')
         ? 'MOVE WASD/ARROWS  -  AVOID THE CONE  -  HIDE IN COVER'
@@ -849,7 +885,9 @@ export function generateUiCopy(options: {
           ? 'J FEEDS  -  K PLAYS OR REFRESHES  -  KEEP NEEDS UP'
           : has('sw2d.dialogue')
             ? 'ENTER ADVANCES  -  ARROWS CHOOSE'
-            : 'ARROWS CHANGE THE SELECTION  -  ENTER CONFIRMS  -  PAUSE TO STOP';
+            : has('sw2d.local-play')
+              ? 'J ACTS  -  PASS THE KEYBOARD  -  SIX TURNS'
+              : 'ARROWS CHANGE THE SELECTION  -  ENTER CONFIRMS  -  PAUSE TO STOP';
       break;
     default:
       break;

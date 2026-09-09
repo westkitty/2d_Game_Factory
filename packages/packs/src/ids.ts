@@ -40,6 +40,7 @@ export const PACK_IDS = {
   perception: 'sw2d.perception',
   ballPaddle: 'sw2d.ball-paddle',
   melee: 'sw2d.melee',
+  localPlay: 'sw2d.local-play',
 } as const;
 
 export const CAPABILITY_IDS = {
@@ -84,4 +85,6 @@ export const CAPABILITY_IDS = {
   ballPaddle: 'arcade.ball',
   /** Category-C Wave 6: melee strike, knockback, hit-stun (composes with combat.health). */
   melee: 'combat.melee',
+  /** Category-C Wave 7: local hot-seat / versus seats (one keyboard). */
+  localPlay: 'arcade.seats',
 } as const;

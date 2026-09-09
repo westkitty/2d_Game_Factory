@@ -77,7 +77,9 @@ export const LIMITATIONS = {
   // inline string in its own catalog file instead (see platforming.ts's own comment on why:
   // sharing text is a decision, not laziness, and inline is correct when nothing else repeats it).
   ballPaddleSystem:
-    'Ball, paddle, rebound, brick-clear and first-to-N scoring are reusable (sw2d.ball-paddle); a full pinball table and local multiplayer input routing are not.',
+    'Ball, paddle, rebound, brick-clear and first-to-N scoring are reusable (sw2d.ball-paddle); a full pinball table is not.',
+  localPlaySeats:
+    'Local hot-seat turns and simultaneous versus axes are reusable (sw2d.local-play); netcode, gamepads, split-screen cameras and more than two seats are not.',
   // Phase 7C additions - same "two or more recipes" bar as Phase 7B's four.
   customerEconomy:
     'Customer demand, queue, stock, transactions and production jobs are reusable (sw2d.economy); shop layout, walking customers, prestige and offline catch-up are not.',

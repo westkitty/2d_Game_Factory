@@ -82,10 +82,10 @@ export const PUZZLE_ARCADE_PRESETS: readonly PresetDefinition[] = [
     displayName: 'Pong',
     family: 'puzzle-arcade',
     controllerFamilies: ['top-down'],
-    requiredSystemPacks: [pack(PACK_IDS.arcade), pack(PACK_IDS.ballPaddle)],
-    requiredContentRoles: ['tuning', 'ball-paddle'],
+    requiredSystemPacks: [pack(PACK_IDS.arcade), pack(PACK_IDS.ballPaddle), pack(PACK_IDS.localPlay)],
+    requiredContentRoles: ['tuning', 'ball-paddle', 'local-play'],
     validationProfile: VALIDATION_PROFILES.puzzleArcade,
-    knownLimitations: [LIMITATIONS.ballPaddleSystem, 'Pong does not yet have a proven multi-player input-routing abstraction.'],
+    knownLimitations: [LIMITATIONS.ballPaddleSystem, LIMITATIONS.localPlaySeats],
   }),
 
   definePreset({

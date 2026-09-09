@@ -28,6 +28,7 @@ export * from './dialogue.ts';
 export * from './perception.ts';
 export * from './ballPaddle.ts';
 export * from './melee.ts';
+export * from './localPlay.ts';
 export * from './persistence.ts';
 export * from './presets.ts';
 export * from './racing.ts';

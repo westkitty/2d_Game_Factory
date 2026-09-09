@@ -143,6 +143,12 @@ describe('all 74 presets generate valid, token-free, schema-valid source', () =>
       expect(() => validateContentBundleData({ melee: meleeJson })).not.toThrow();
     });
 
+    it(`${preset.id}'s generated content/local-play.json validates as a local-play catalog`, () => {
+      const files = buildGameFiles('matrix-game', preset);
+      const seatsJson: unknown = JSON.parse(files.get('content/local-play.json')!);
+      expect(() => validateContentBundleData({ 'local-play': seatsJson })).not.toThrow();
+    });
+
     it(`${preset.id} selects a real, resolvable shell template for its primary controller family`, () => {
       const files = buildGameFiles('matrix-game', preset);
       expect(files.has('src/game-specific/shellPack.ts')).toBe(true);
@@ -401,7 +407,7 @@ describe('generated ball-paddle games consume sw2d.ball-paddle', () => {
     expect(shell).toContain('table.tick(');
     expect(buildGameFiles('ball-paddle-probe', breakout).get('src/content.ts')).toContain("'ball-paddle': ballPaddleData");
     expect(buildGameFiles('ball-paddle-probe', breakout).get('src/main.ts')).toContain(
-      'ballPaddlePack, meleePack, GAME_SPECIFIC_PACK',
+      'ballPaddlePack, meleePack, localPlayPack, GAME_SPECIFIC_PACK',
     );
   });
 
@@ -427,7 +433,7 @@ describe('generated melee games consume sw2d.melee', () => {
     expect(shell).toContain('melee.strike(');
     expect(buildGameFiles('melee-probe', adventure).get('src/content.ts')).toContain('melee: meleeData');
     expect(buildGameFiles('melee-probe', adventure).get('src/main.ts')).toContain(
-      'ballPaddlePack, meleePack, GAME_SPECIFIC_PACK',
+      'ballPaddlePack, meleePack, localPlayPack, GAME_SPECIFIC_PACK',
     );
   });
 
@@ -440,6 +446,38 @@ describe('generated melee games consume sw2d.melee', () => {
       const doc = JSON.parse(files.get('content/melee.json')!) as { mode: string; foes: unknown[] };
       expect(doc.mode, id).toBe(id === 'arena-combat' ? 'arena' : 'skirmish');
       expect(doc.foes.length, id).toBeGreaterThan(0);
+    }
+  });
+});
+
+describe('generated local-play games consume sw2d.local-play', () => {
+  it('the generated ui-simulation shell binds bindStarterLocalPlay', () => {
+    const party = PRESETS.find((candidate) => candidate.id === 'local-party-game')!;
+    const shell = buildGameFiles('local-play-probe', party).get('src/game-specific/shellPack.ts')!;
+    expect(shell).toContain('bindStarterLocalPlay(context)');
+    expect(shell).toContain('seats.act()');
+    expect(buildGameFiles('local-play-probe', party).get('src/content.ts')).toContain("'local-play': localPlayData");
+    expect(buildGameFiles('local-play-probe', party).get('src/main.ts')).toContain(
+      'ballPaddlePack, meleePack, localPlayPack, GAME_SPECIFIC_PACK',
+    );
+  });
+
+  it('the generated top-down shell pumps versus seats into the pong table', () => {
+    const pong = PRESETS.find((candidate) => candidate.id === 'pong')!;
+    const shell = buildGameFiles('local-play-probe', pong).get('src/game-specific/shellPack.ts')!;
+    expect(shell).toContain('bindStarterLocalPlay(context, { hud: false })');
+    expect(shell).toContain('table.setOpponentAxis(seats.axis(1))');
+  });
+
+  it('local-party-game and pong enable sw2d.local-play and emit a non-empty catalog', () => {
+    for (const id of ['local-party-game', 'pong'] as const) {
+      const preset = PRESETS.find((candidate) => candidate.id === id)!;
+      const files = buildGameFiles('local-play-probe', preset);
+      const gameJson = JSON.parse(files.get('content/game.json')!) as { systemPacks: Array<{ packId: string }> };
+      expect(gameJson.systemPacks.map((s) => s.packId), id).toContain('sw2d.local-play');
+      const doc = JSON.parse(files.get('content/local-play.json')!) as { mode: string; players: unknown[] };
+      expect(doc.mode, id).toBe(id === 'pong' ? 'versus' : 'hotseat');
+      expect(doc.players.length, id).toBeGreaterThanOrEqual(2);
     }
   });
 });

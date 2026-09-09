@@ -16,6 +16,7 @@ import {
   perceptionPack,
   ballPaddlePack,
   meleePack,
+  localPlayPack,
   aiPack,
   arcadePack,
   combatPack,
@@ -65,6 +66,7 @@ const ALL_PACKS = [
   perceptionPack,
   ballPaddlePack,
   meleePack,
+  localPlayPack,
 ];
 
 /** `<family>.<service>`: lowercase segments, at least two, dash-separated words allowed after the first. */

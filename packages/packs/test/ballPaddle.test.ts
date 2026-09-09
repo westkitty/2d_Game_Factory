@@ -245,6 +245,20 @@ describe('sw2d.ball-paddle - pong', () => {
     table.tick(300);
     expect(table.opponent()!.y).toBeGreaterThan(before);
   });
+
+  it('setOpponentAxis drives the human paddle and null restores lerp', () => {
+    const catalog: BallPaddleCatalog = {
+      ...PONG,
+      ball: { x: 480, y: 400, vx: 0, vy: 0, radius: 18 },
+    };
+    const { table } = install(catalog);
+    table.setOpponentAxis(-1);
+    table.tick(10_000);
+    expect(table.opponent()!.y).toBe(70);
+    table.setOpponentAxis(null);
+    table.tick(300);
+    expect(table.opponent()!.y).toBeGreaterThan(70);
+  });
 });
 
 describe('sw2d.ball-paddle - lifecycle', () => {

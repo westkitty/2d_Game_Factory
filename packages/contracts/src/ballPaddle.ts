@@ -110,6 +110,11 @@ export interface BallPaddleService {
   /** False when the catalog has no bricks and no pong table (inert empty document). */
   active(): boolean;
   setPaddleAxis(axis: number): void;
+  /**
+   * Wave 7: human opponent axis. `null` restores lerp AI (Wave 5 overlay).
+   * Versus factory pong feeds this from `sw2d.local-play`.
+   */
+  setOpponentAxis(axis: number | null): void;
   tick(deltaMs: number): void;
   paddle(): { readonly x: number; readonly y: number; readonly width: number; readonly height: number };
   opponent(): { readonly x: number; readonly y: number; readonly width: number; readonly height: number } | null;

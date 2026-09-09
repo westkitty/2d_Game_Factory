@@ -32,11 +32,11 @@ export const PARTY_TOY_WEIRD_PRESETS: readonly PresetDefinition[] = [
     displayName: 'Local Party Game',
     family: 'party-toy-weird',
     controllerFamilies: ['ui-simulation'],
-    requiredSystemPacks: [pack(PACK_IDS.arcade)],
+    requiredSystemPacks: [pack(PACK_IDS.arcade), pack(PACK_IDS.localPlay)],
     optionalSystemPacks: [pack(PACK_IDS.combat)],
-    requiredContentRoles: ['tuning'],
+    requiredContentRoles: ['tuning', 'local-play'],
     validationProfile: VALIDATION_PROFILES.partyToyWeird,
-    knownLimitations: ['No multi-player/local multi-device input routing exists.'],
+    knownLimitations: [LIMITATIONS.localPlaySeats],
   }),
 
   definePreset({

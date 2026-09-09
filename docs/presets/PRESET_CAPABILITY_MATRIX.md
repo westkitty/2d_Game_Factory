@@ -71,7 +71,7 @@ pack/controller selections were actually exercised through, and
 | `match-puzzle` | puzzle | arcade | grid | keyboard, touch | puzzle-arcade-recipe |
 | `falling-block-puzzle` | puzzle | arcade | grid, ui-simulation | keyboard, touch | puzzle-arcade-recipe |
 | `breakout` | arcade, ball-paddle | - | top-down | keyboard, touch | puzzle-arcade-recipe |
-| `pong` | arcade, ball-paddle | - | top-down | keyboard, touch | puzzle-arcade-recipe |
+| `pong` | arcade, ball-paddle, local-play | - | top-down | keyboard, touch | puzzle-arcade-recipe |
 | `physics-puzzle` | puzzle | - | pointer | keyboard, pointer, touch | puzzle-arcade-recipe |
 | `maze-game` | world, world-entities | arcade | grid | keyboard, touch | puzzle-arcade-recipe |
 | `rhythm-action` | arcade | - | ui-simulation | keyboard, touch | puzzle-arcade-recipe |
@@ -116,7 +116,7 @@ pack/controller selections were actually exercised through, and
 | id | required packs | optional packs | controller(s) | input modes | validation profile |
 |---|---|---|---|---|---|
 | `microgame-collection` | arcade | progression | ui-simulation | keyboard, touch | party-toy-weird-recipe |
-| `local-party-game` | arcade | combat | ui-simulation | keyboard, touch | party-toy-weird-recipe |
+| `local-party-game` | arcade, local-play | combat | ui-simulation | keyboard, touch | party-toy-weird-recipe |
 | `physics-toy` | - | puzzle | pointer | keyboard, pointer, touch | party-toy-weird-recipe |
 | `virtual-pet` | simulation, progression, needs | world | ui-simulation | keyboard, touch | party-toy-weird-recipe |
 | `dress-up-character-toy` | - | progression | pointer, ui-simulation | keyboard, pointer, touch | party-toy-weird-recipe |
@@ -154,8 +154,9 @@ pack/controller selections were actually exercised through, and
 | perception | `sw2d.perception` | `ai.perception` | 2 | 2 |
 | ball-paddle | `sw2d.ball-paddle` | `arcade.ball` | 2 | 2 |
 | melee | `sw2d.melee` | `combat.melee` | 2 | 2 |
+| local-play | `sw2d.local-play` | `arcade.seats` | 2 | 2 |
 
-**All twenty-five current packs have at least one preset consumer.** `sw2d.items` (capability
+**All twenty-six current packs have at least one preset consumer.** `sw2d.items` (capability
 program Phase 2) is required by `collectathon-platformer`, whose generated starter consumes
 the reusable item/effect service through the shared platform shell. `sw2d.puzzle-rules`
 (capability program Phase 6) is required by `sokoban` and `puzzle-platformer`, whose
@@ -176,7 +177,4 @@ intent into car/kart/boat/flight motion and runs an ordered-checkpoint race from
 Nine, one per registered family (MASTER_PROJECT.md section 14/6/8 - a bounded set, not
 one per recipe): `platform-recipe`, `top-down-action-recipe`, `shooter-recipe` (Phase 7A),
 `vehicle-movement-recipe`, `puzzle-arcade-recipe`, `strategy-defense-recipe` (Phase 7B),
-`simulation-management-recipe`, `narrative-exploration-recipe`, `party-toy-weird-recipe`
-(Phase 7C).
-ipe`, `party-toy-weird-recipe`
-(Phase 7C).
+`simulation-management-recipe`, `narrative-exploration-rec

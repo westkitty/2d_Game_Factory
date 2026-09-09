@@ -26,7 +26,7 @@ Highest-leverage clusters, from `packages/presets/src/shared.ts` LIMITATIONS + p
 | 2 | Creature needs / behavior / relationship | pet-creature, aquarium-terrarium, virtual-pet (colony-lite only if the contract genuinely fits — it currently does not) | **Wave 2 implemented and played** (`sw2d.needs` / `simulation.needs`, ADR-0029). Residual: full creature behaviour AI, relationship graphs, colony assignment. |
 | 3 | Branching dialogue / narrative presentation | visual-novel, point-and-click; investigation/museum only if the contract fits | **Wave 3 implemented and played** (`sw2d.dialogue` / `narrative.dialogue`, ADR-0030). Residual: portraits, scene composition, parser IF, evidence-board deduction. |
 | 4 | Stealth perception / suspicion / noise / hiding | stealth-game, heist-game | **Wave 4 complete** (`sw2d.perception` / `ai.perception`, ADR-0031). Residual: patrol pathfinding, takedowns, full stealth AI. |
-| 5 | Ball / paddle / rebound | breakout, pong | **Wave 5 implemented** (`sw2d.ball-paddle` / `arcade.ball`, ADR-0032). Residual: pinball table, local multiplayer input routing. |
+| 5 | Ball / paddle / rebound | breakout, pong | **Wave 5 implemented** (`sw2d.ball-paddle` / `arcade.ball`, ADR-0032). Residual: pinball table. Factory pong versus axes are Wave 7. |
 | 6 | Melee / knockback / hit-stun | action-adventure, arena-combat | **Wave 6 implemented** (`sw2d.melee` / `combat.melee`, ADR-0033). Residual: combos, directional attacks, targeting UI. Run-and-gun stays projectile. |
 | 7 | Local multiplayer input ownership | local-party-game, pong | backlog |
 | — | Tier 3 (rail camera, territory, chase, climbing, run-meta, falling-block, match consumption, crop/season) | re-audit before sharing | backlog |
@@ -458,4 +458,78 @@ High-contrast Phaser HUD (`SKIRMISH` / `ARENA`, hp / foes / last strike, `MOVE W
 - No committed `proofs/` for action-adventure or arena-combat; catalog maturity stays `recipe`.
 - Chrome wrapper is session-local under `/tmp`.
 - Do not commit `package-lock.json` workspace links for gitignored `games/wave*`.
-- Next wave: local multiplayer input ownership (local-party-game, pong) — re-audit before sharing.
+- Next wave: **done** — Wave 7 local multiplayer input ownership (see below).
+
+## Wave 7 — `sw2d.local-play`
+
+### Problem
+
+Local-party-game needed pass-and-play turns and scores on one keyboard.
+Pong needed a second human axis without rewriting ActionInputHost (WASD
+and arrows already share `MOVE_*`). Netcode, gamepads and split-screen
+are not shared. Overlay pong keeps Wave 5 lerp AI.
+
+### Consumers
+
+- `local-party-game` — mode `hotseat` (six acts, `pointsCycle` `[1,2,3]`, tie awards seat 0).
+- `pong` — mode `versus` (P1 arrows / P2 WASD; factory feeds `setOpponentAxis`).
+
+Materially different: sequential hot-seat scoring vs simultaneous disjoint axes composed with `sw2d.ball-paddle`. Overlay pong was **not** wired (AI + `forceOpponentWin` stay).
+
+### ValidationPlan
+
+1. Contract + schema (`LocalPlayCatalog` / `local-play-catalog`) reject unknown modes.
+2. Pack unit tests: six-act 6–6 tie, seventh ignored, versus disjoint axes, versus `act()` no-op, duplicate ids, missing document inert, `<2` players inert, dispose, reset.
+3. Generator: all 74 emit schema-valid `content/local-play.json`; the two consumers enable `sw2d.local-play` and a non-empty catalog; `src/content.ts` passes `'local-play': localPlayData`; `main.ts` installs `localPlayPack`.
+4. Generated ui-simulation shell binds `bindStarterLocalPlay` and acts on J/ENTER. Generated top-down shell pumps versus seats into `setOpponentAxis`.
+5. Honesty / docsSync / catalogPackIntegrity / uiCopy allowlist stay green.
+6. Workbench `POST /api/local-play/inspect`. Inspector also disposes melee (pre-existing miss).
+7. Expanded local-party-game kit drives the same service (`hud: false`) while keeping overlay debug fields.
+8. Real-browser journeys against factory-generated games. Committed `proofs/` + maturity promotion still deferred.
+
+### CompletionContract
+
+- [x] Reusable pack in `@sw2d/packs`, renderer-neutral.
+- [x] Content authority `content/local-play.json`.
+- [x] ≥2 materially different generated consumers (2 wired).
+- [x] Focused unit/integration tests.
+- [x] Honest residual limitation.
+- [x] ADR-0034.
+- [x] Real-browser play of factory-generated `wave7-local-party-game` / `wave7-pong` (`tools/scripts/play-local-play-wave7.ts`, 2/2 PASS, 0 console errors, 0 external requests).
+- [x] `npm run sw2d -- validate` on those two games (schema + tsc + vite build + boot smoke) PASS (CDP hang after printed success, as before).
+- [ ] Overlay P3-G re-run. **Not done this wave** — overlay party is wired; p3g still uses `process.exitCode` and validate-hangs.
+- [ ] Committed proofs + maturity promotion. **Not done — evidence rule.**
+
+### Implementation notes
+
+- Capability id `arcade.seats`. Pack id `sw2d.local-play`. Not folded into `sw2d.arcade`.
+- Pack has no window listeners; `bindStarterLocalPlay` pumps `KeyboardEvent.code` into `setHeld`. Tests inject codes.
+- Versus does not remap ActionInputHost. Factory pong never shares `intent.moveY` when seats are active.
+- `setOpponentAxis(null)` restores lerp AI (Wave 5 overlay).
+- Empty / `<2` players is inert. Duplicate player ids throw.
+
+### Browser journeys (executed)
+
+Factory-generated:
+
+- Local-party-game: hotseat turns 0 → 6× KeyJ → scores 6–6, winner 0, outcome=complete.
+- Pong: versus; ArrowDown axis0=1 paddleY 270→357; KeyW axis1=-1 opponentY 270→183. Axes stay disjoint.
+
+### Visual inspection
+
+High-contrast Phaser HUD (`PLAYER N` / `VERSUS`, scores or axes, `J/ENTER ACTS` / `P1 ARROWS P2 WASD`). Dummy picker hidden when seats are active. Confirmed via debug snapshots, not screenshots.
+
+### Bugs found and fixed this wave
+
+- Generated `src/main.ts` imported `localPlayPack` but the packs array omit was the same class of miss as Waves 4–5. Template now includes `localPlayPack`; generate tests assert the full tail.
+- `SCHEMA_DOCUMENTS` listed `local-play-catalog` in `SCHEMA_NAMES` but the Ajv addSchema loop omitted it (would throw at load).
+- Inspector melee dispose was missing on teardown (pre-existing); local-play host + both disposes added.
+- `bindStarterBallPaddle` advertised `setOpponentAxis` on the type before the live return object implemented it.
+
+### Remaining blockers / unknowns
+
+- No committed `proofs/` for local-party-game or pong; catalog maturity stays `recipe`.
+- Overlay pong stays AI. Netcode / gamepads / split-screen stay out of contract.
+- Chrome wrapper is session-local under `/tmp`.
+- Do not commit `package-lock.json` workspace links for gitignored `games/wave*`.
+- Residual Category-C: combos, pinball, Tier 3/4, committed proofs.

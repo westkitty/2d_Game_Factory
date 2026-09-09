@@ -90,7 +90,7 @@ controller/input-mode breakdown and full pack-consumer coverage.
 | `match-puzzle` | Match Puzzle | grid | tuning | recipe |
 | `falling-block-puzzle` | Falling Block Puzzle | grid, ui-simulation | tuning | recipe |
 | `breakout` | Breakout | top-down | tuning, ball-paddle | recipe |
-| `pong` | Pong | top-down | tuning, ball-paddle | recipe |
+| `pong` | Pong | top-down | tuning, ball-paddle, local-play | recipe |
 | `physics-puzzle` | Physics Puzzle | pointer | tuning | recipe |
 | `maze-game` | Maze Game | grid | tuning, levels | recipe |
 | `rhythm-action` | Rhythm Action | ui-simulation | tuning | recipe |
@@ -139,7 +139,7 @@ controller/input-mode breakdown and full pack-consumer coverage.
 | id | display name | controller(s) | content roles | maturity |
 |---|---|---|---|---|
 | `microgame-collection` | Microgame Collection | ui-simulation | tuning, microgames | recipe |
-| `local-party-game` | Local Party Game | ui-simulation | tuning | recipe |
+| `local-party-game` | Local Party Game | ui-simulation | tuning, local-play | recipe |
 | `physics-toy` | Physics Toy | pointer | tuning | proof-validated |
 | `virtual-pet` | Virtual Pet | ui-simulation | tuning, needs | recipe |
 | `dress-up-character-toy` | Dress-Up Character Toy | pointer, ui-simulation | tuning, characters | recipe |
@@ -193,8 +193,8 @@ recipe's *first* stated limitation; see `knownLimitations` in
 | `sokoban` | (none stated) |
 | `match-puzzle` | Standard puzzle kinds (sokoban, switch/sequence) are now content-authorable through the sw2d.puzzle-rules capability and content/puzzles.json (ADR-0023). This recipe's board rules are not one of those built-in kinds, so it still uses the code seam: sw2d.puzzle declares configSource: 'code' (ADR-0017) and a generated game supplies createInitialState/isSolved from src/game-specific/packConfig.ts (shipped with a working placeholder to replace) - the pack really installs, but this puzzle's own rules stay game-specific TypeScript, not content. |
 | `falling-block-puzzle` | Standard puzzle kinds (sokoban, switch/sequence) are now content-authorable through the sw2d.puzzle-rules capability and content/puzzles.json (ADR-0023). This recipe's board rules are not one of those built-in kinds, so it still uses the code seam: sw2d.puzzle declares configSource: 'code' (ADR-0017) and a generated game supplies createInitialState/isSolved from src/game-specific/packConfig.ts (shipped with a working placeholder to replace) - the pack really installs, but this puzzle's own rules stay game-specific TypeScript, not content. |
-| `breakout` | Ball, paddle, rebound, brick-clear and first-to-N scoring are reusable (sw2d.ball-paddle); a full pinball table and local multiplayer input routing are not. |
-| `pong` | Ball, paddle, rebound, brick-clear and first-to-N scoring are reusable (sw2d.ball-paddle); a full pinball table and local multiplayer input routing are not. |
+| `breakout` | Ball, paddle, rebound, brick-clear and first-to-N scoring are reusable (sw2d.ball-paddle); a full pinball table is not. |
+| `pong` | Ball, paddle, rebound, brick-clear and first-to-N scoring are reusable (sw2d.ball-paddle); a full pinball table is not. |
 | `physics-puzzle` | Standard puzzle kinds (sokoban, switch/sequence) are now content-authorable through the sw2d.puzzle-rules capability and content/puzzles.json (ADR-0023). This recipe's board rules are not one of those built-in kinds, so it still uses the code seam: sw2d.puzzle declares configSource: 'code' (ADR-0017) and a generated game supplies createInitialState/isSolved from src/game-specific/packConfig.ts (shipped with a working placeholder to replace) - the pack really installs, but this puzzle's own rules stay game-specific TypeScript, not content. |
 | `maze-game` | (none stated) |
 | `rhythm-action` | No deterministic music-beat/audio-synchronization system exists yet. |
@@ -223,7 +223,7 @@ recipe's *first* stated limitation; see `knownLimitations` in
 | `museum-exhibit` | No dedicated exhibit/codex presentation framework exists beyond general world/narrative/UI foundations. |
 | `escape-room` | Standard puzzle kinds (sokoban, switch/sequence) are now content-authorable through the sw2d.puzzle-rules capability and content/puzzles.json (ADR-0023). This recipe's board rules are not one of those built-in kinds, so it still uses the code seam: sw2d.puzzle declares configSource: 'code' (ADR-0017) and a generated game supplies createInitialState/isSolved from src/game-specific/packConfig.ts (shipped with a working placeholder to replace) - the pack really installs, but this puzzle's own rules stay game-specific TypeScript, not content. |
 | `microgame-collection` | No microgame scheduler/rotation/meta-framework exists. |
-| `local-party-game` | No multi-player/local multi-device input routing exists. |
+| `local-party-game` | Local hot-seat turns and simultaneous versus axes are reusable (sw2d.local-play); netcode, gamepads, split-screen cameras and more than two seats are not. |
 | `physics-toy` | (none stated) |
 | `virtual-pet` | Needs, decay, care actions, affinity and wellbeing hold/fail are reusable (sw2d.needs); full creature behaviour AI, relationship graphs and colony assignment are not. |
 | `dress-up-character-toy` | No wardrobe/attachment system is built on the drag/drop capability (ADR-0018) yet. |

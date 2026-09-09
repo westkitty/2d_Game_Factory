@@ -60,6 +60,7 @@ class BallPaddleServiceImpl implements BallPaddleService {
   private paddleX: number;
   private paddleY: number;
   private paddleAxis = 0;
+  private opponentAxis: number | null = null;
   private ballX: number;
   private ballY: number;
   private ballVx: number;
@@ -103,6 +104,10 @@ class BallPaddleServiceImpl implements BallPaddleService {
 
   setPaddleAxis(axis: number): void {
     this.paddleAxis = axis === 0 ? 0 : axis > 0 ? 1 : -1;
+  }
+
+  setOpponentAxis(axis: number | null): void {
+    this.opponentAxis = axis === null ? null : axis === 0 ? 0 : axis > 0 ? 1 : -1;
   }
 
   paddle() {
@@ -214,6 +219,11 @@ class BallPaddleServiceImpl implements BallPaddleService {
   private moveOpponent(dt: number): void {
     const pong = this.catalog.pong;
     if (!pong) return;
+    if (this.opponentAxis !== null) {
+      const { speed, min, max } = this.catalog.paddle;
+      this.opponentY = clamp(this.opponentY + this.opponentAxis * speed * (dt / 1000), min, max);
+      return;
+    }
     const t = Math.min(1, dt / pong.lerpMs);
     this.opponentY = this.opponentY + (this.ballY - this.opponentY) * t;
   }

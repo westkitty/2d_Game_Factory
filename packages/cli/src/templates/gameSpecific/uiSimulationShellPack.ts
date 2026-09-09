@@ -3,6 +3,7 @@ import {
   bindStarterEconomy,
   bindStarterNeeds,
   bindStarterDialogue,
+  bindStarterLocalPlay,
   createAdvancedPhysics,
   mutedStyle,
   uiSimulationController,
@@ -41,6 +42,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     const economy = bindStarterEconomy(context);
     const needs = bindStarterNeeds(context);
     const dialogue = bindStarterDialogue(context);
+    const seats = bindStarterLocalPlay(context);
 
     // Optional advanced physics (capability program Phase 9). Inert unless
     // content/game.json sets physicsProfile: 'matter'. Then a ball drops onto a
@@ -54,7 +56,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         })()
       : null;
 
-    const label = economy.active || needs.active || dialogue.active
+    const label = economy.active || needs.active || dialogue.active || seats.active
       ? null
       : scene.add
           .text(width * 0.5, height * 0.5, '', mutedStyle(20))
@@ -74,6 +76,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       ...(economy.active ? { economy: economy.snapshot() } : {}),
       ...(needs.active ? { needs: needs.snapshot() } : {}),
       ...(dialogue.active ? { dialogue: dialogue.snapshot() } : {}),
+      ...(seats.active ? { localPlay: seats.snapshot() } : {}),
       ...(physics ? { physics: { enabled: physics.enabled, bodyCount: physics.bodyCount, ball: ball ? physics.bodyState(ball) : null } } : {}),
     }));
 
@@ -116,6 +119,11 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
           dialogue.render();
           return;
         }
+        if (seats.active) {
+          if (intent.confirmPressed || intent.primaryPressed) seats.act();
+          seats.render();
+          return;
+        }
         if (intent.navigateLeftPressed) {
           selectionIndex = (selectionIndex - 1 + OPTIONS.length) % OPTIONS.length;
           confirmed = false;
@@ -139,6 +147,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         economy.dispose();
         needs.dispose();
         dialogue.dispose();
+        seats.dispose();
         physics?.dispose();
         try {
           label?.destroy();

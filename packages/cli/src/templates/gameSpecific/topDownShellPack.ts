@@ -6,6 +6,7 @@ import {
   bindStarterEncounters,
   bindStarterBallPaddle,
   bindStarterMelee,
+  bindStarterLocalPlay,
   bindStarterPerception,
   bindStarterWeapon,
   createRoomTransitionRuntime,
@@ -111,6 +112,10 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     // wander fire, and encounters stay parked.
     const melee = bindStarterMelee(context);
     if (melee.active) player.setPosition(melee.startX(), melee.startY());
+    // Local seats (Category-C Wave 7). Inert unless sw2d.local-play is
+    // installed with two seats. Versus pong feeds P2 axis into the table
+    // instead of lerp AI. HUD stays on the table.
+    const seats = bindStarterLocalPlay(context, { hud: false });
     // Weapons (capability program Phase 3). Inert unless sw2d.weapons is
     // installed. When the encounter binding is active it owns the weapon and
     // its projectile runtime, so the plain starter weapon stays inert too.
@@ -148,6 +153,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       ...(perception.active ? { perception: perception.snapshot() } : {}),
       ...(table.active ? { ballPaddle: table.snapshot() } : {}),
       ...(melee.active ? { melee: melee.snapshot() } : {}),
+      ...(seats.active ? { localPlay: seats.snapshot() } : {}),
       ...(generationManifest ? { generation: generationManifest } : {}),
       ...(worldGraph
         ? { worldGraph: { current: worldGraph.currentNode().id, ...worldGraph.mapState(), mapOpen: worldMap?.isOpen ?? false, transitions: rooms?.transitions ?? 0 } }
@@ -164,8 +170,14 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         nowMs += deltaMs;
         const intent = topDownController.read(context.input);
         if (table.active) {
-          const axis = table.mode() === 'pong' ? intent.moveY : intent.moveX;
-          table.setPaddleAxis(axis);
+          if (seats.active && seats.mode() === 'versus' && table.mode() === 'pong') {
+            seats.pump();
+            table.setPaddleAxis(seats.axis(0));
+            table.setOpponentAxis(seats.axis(1));
+          } else {
+            const axis = table.mode() === 'pong' ? intent.moveY : intent.moveX;
+            table.setPaddleAxis(axis);
+          }
           table.tick(deltaMs);
           player.setVelocity(0, 0);
           return;
@@ -226,6 +238,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         perception.dispose();
         table.dispose();
         melee.dispose();
+        seats.dispose();
         rooms?.dispose();
         worldMap?.dispose();
         try {
