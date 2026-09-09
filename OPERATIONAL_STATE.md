@@ -2,7 +2,7 @@
 
 Project: **Stinky Weasel 2D Browser Game Factory** (`sw2d`)
 Repository: `westkitty/2d_Game_Factory`
-State revision: **18**
+State revision: **19**
 Updated: 2026-09-09
 
 Read this before doing anything. Governing spec: [`MASTER_PROJECT.md`](MASTER_PROJECT.md).
@@ -773,6 +773,17 @@ adjudicated individually in the Phase 12 acceptance document):
   gitignored; Phase 12 added no exception.
 
 ## Revision history
+
+### Revision 31 - 2026-09-09 (Arena finish program) - FINAL HANDOFF: PASS, MERGE VERDICT
+
+The Arena factory-finish program is complete. Final ladder re-run green on HEAD e42cf87:
+typecheck, test 2580/2580, validate, check:offline, qa:workbench 16/16, qa:smoke 14/14,
+qa:proof 23/23, qa:matrix 45/45, qa:responsive 19/19, qa:starter-kits 14/14 tranches
+(359 PASS / 0 FAIL), release:verify all families. Maturity 5/7/62 -> 23/3/48. Eight gameplay
+bugs found by actually playing generated games in a real browser, all fixed and
+regression-protected. Five deliberate Category-B descopes documented with reasons. Full report:
+[`docs/architecture/ARENA_FACTORY_FINISH_STATE.md`](docs/architecture/ARENA_FACTORY_FINISH_STATE.md)
+"Final handoff report" section. Verdict: MERGE.
 
 ### Revision 30 - 2026-09-09 (Arena finish program, sweep C) - VEHICLE AND SURVIVAL-LOOP GAMEPLAY BUGS FIXED
 

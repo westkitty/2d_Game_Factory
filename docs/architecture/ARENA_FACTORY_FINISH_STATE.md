@@ -262,7 +262,87 @@ Validation after the two fixes: typecheck PASS, `npm test` 2580/2580
 (2578 + 2 pins), qa:matrix 45/45, qa:smoke 14/14, qa:proof 23/23,
 release:verify PASS (all controller-shell families), workbench build PASS.
 
+## Category B residue — explicit descope decisions
+
+Five presets keep integration debt on purpose. Each was weighed against the
+program's "least sufficient architecture" rule; wiring them would have meant
+speculative shell surgery without a played proof to anchor it. All five state
+the exact gap in `knownLimitations` today (pinned by `docsSync.test.ts`), so
+the catalog is honest even where it is not finished:
+
+- `gallery-shooter` — pointer shell consumes spatial click targeting
+  (ADR-0018, proof passes); weapons/projectiles remain unconsumed. The
+  pointer shell has no fire loop to hang them on; adding one is a
+  differentiation pass on the pointer family, not an integration fix.
+- `rail-shooter` — same pointer-shell situation plus a genuinely missing
+  capability (fixed-path rail camera, Category C). Blocked on C, not B.
+- `action-adventure` — requires the weapons pack but its top-down starter
+  is melee-flavored; `sw2d.encounters` is deliberately not installed.
+  Wiring ranged encounters would make it a worse arena-combat clone
+  instead of an action-adventure. Its real gap is melee/knockback
+  (Category C), stated verbatim in the limitation.
+- `base-defense` — wave spawning is reusable (`sw2d.encounters`, optional
+  pack) but base-damage/target-priority resolution is starter-specific;
+  consuming encounters without a base-HP sink would spawn waves that
+  attack nothing.
+- `tower-defense` (placement) — spatial hover placement via the pointer
+  shell exists and is stated as available; the starter keeps the keyboard
+  grid cursor because the committed proof (`proofs/tower-defense/`,
+  passing) is contracted against it. Swapping input schemes under a frozen
+  proof contract is a differentiation decision, not debt removal.
+
 ## Remaining blockers
 
 None external. Remaining work is the honest Category C backlog above, each
 already stated per-preset in `knownLimitations`.
+
+## Final handoff report — PASS
+
+- **Verdict: PASS.** Every wave complete, every ladder rung green on the
+  final HEAD, every gameplay claim backed by a session actually played in a
+  real browser this program.
+- Branch: `arena/01a0842f-2d-game-factory`. Starting `origin/main` SHA:
+  `acf802f7a32a3f341273c084931af37cb5461784`. Final HEAD: `e42cf87`
+  (plus this ledger-only handoff commit). `main` untouched; no merges; the
+  docs branch untouched.
+- Commits, in order: `51ed496` (Wave 1 catalog truth), `c235549`
+  (Waves 2-3 integration + evidence surface + sweep A), `e4ce833`
+  (Wave 4 sweep B + full ladder), `e42cf87` (sweep C gameplay fixes).
+- Maturity before → after: 5 proof-validated / 7 smoke-validated / 62
+  recipe → **23 / 3 / 48** (74 total). Every promotion is evidenced by a
+  committed proof game whose spec passed in this session, and
+  `proofEvidence.test.ts` pins catalog-vs-disk both directions.
+- Integration debt destroyed: generated top-down shell consumes spatial
+  pointer aim + the full combat/weapons/encounters stack
+  (`bindStarterEncounters`); shmup/arena pack-sets tell the truth;
+  generated games announce their genre in the HUD; docs regenerate
+  mechanically and are drift-guarded.
+- Capabilities added: only `bindStarterEncounters` (runtime game-support,
+  consumers: all six battle-active presets' generated games) and the
+  workbench `presetEvidence` scanner (consumers: preset browser + drift
+  tests). No speculative frameworks.
+- Journeys actually played (real Chromium, QA harness, zero console errors
+  in every session): generated vertical-shmup (twice), bullet-hell,
+  arena-combat (twice — bug then fix), time-trial-racer (twice — bug then
+  fix: countdown, checkpoint credit, pause, pause-restart), sokoban attack
+  set, plus 16 workbench journeys, 45 matrix entries, 14 smoke demos,
+  23 proofs, 19 responsive surfaces per run of the respective suites.
+- Bugs found by playing and fixed (8 total, each root-caused and
+  regression-protected): playHint fabrications (3, sweep A); arena
+  world-bounds reset by physics group, theme-synthesis clobbering,
+  seed depth-ranking loss (3, sweep B); racer off-world escape,
+  survival-loop stall under held fire (2, sweep C).
+- Final validation on HEAD (all real, this session, after the last code
+  change): typecheck PASS; `npm test` **2580/2580** (136 files);
+  `npm run validate` PASS; `check:offline` PASS; `qa:workbench` 16/16;
+  `qa:smoke` 14/14; `qa:proof` 23/23; `qa:matrix` 45/45; `qa:responsive`
+  19/19; `qa:starter-kits` all 14 tranches (359 PASS / 0 FAIL,
+  package-lock unchanged in all 14); `release:verify` PASS for all
+  controller-shell families.
+- Honest limits: qa:responsive is emulated viewport/touch, not device
+  hardware (the suite itself says so); gamepad claims were removed rather
+  than faked; Category C capabilities remain unbuilt by design and are
+  stated per-preset; the five Category B descopes above are deliberate.
+- **Merge verdict: MERGE.** The branch is behavior-improving, fully
+  validated, and leaves the catalog more honest than it found it. No PR
+  opened — left to the repository owner's discretion.
