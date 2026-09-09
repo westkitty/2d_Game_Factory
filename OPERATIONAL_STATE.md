@@ -2,7 +2,7 @@
 
 Project: **Stinky Weasel 2D Browser Game Factory** (`sw2d`)
 Repository: `westkitty/2d_Game_Factory`
-State revision: **17**
+State revision: **18**
 Updated: 2026-09-09
 
 Read this before doing anything. Governing spec: [`MASTER_PROJECT.md`](MASTER_PROJECT.md).
@@ -773,6 +773,21 @@ adjudicated individually in the Phase 12 acceptance document):
   gitignored; Phase 12 added no exception.
 
 ## Revision history
+
+### Revision 30 - 2026-09-09 (Arena finish program, sweep C) - VEHICLE AND SURVIVAL-LOOP GAMEPLAY BUGS FIXED
+
+Two more real gameplay bugs found by playing generated games in a real browser, both fixed and
+pinned (`packages/cli/test/shellSafety.test.ts`): (1) the generated racer's car could drive off
+the world forever - the vehicle service integrates its own position so Arcade world bounds never
+apply; the shell now resets an off-world vehicle to spawn (costs time, never race progress).
+Re-played: containment, countdown, checkpoint credit, pause and pause-restart all proven.
+(2) the starter survival loop never advanced waves for a player holding the fire button - the
+restart gate required zero live projectiles and the player's own shots kept it above zero; the
+gate is now cleared-enemies only. Re-played arena-combat with fire held throughout: wave 2
+spawned. Sokoban sweep (undo-at-zero, held-key slide, spam interleave, edges) and racing
+CONFIRM-spam found nothing. Validation: typecheck PASS, test 2580/2580, qa:matrix 45/45,
+qa:smoke 14/14, qa:proof 23/23, release:verify PASS, workbench build PASS. Durable ledger:
+[`docs/architecture/ARENA_FACTORY_FINISH_STATE.md`](docs/architecture/ARENA_FACTORY_FINISH_STATE.md).
 
 ### Revision 29 - 2026-09-09 (Arena finish program, Wave 4) - ADVERSARIAL SWEEP + FULL VALIDATION LADDER
 

@@ -239,8 +239,14 @@ export function bindStarterEncounters(
         else enemy.sprite.setVelocity(0, 0);
       }
       // Survival loop: when the wave content is exhausted and the field is
-      // clear, run the same content again as the next wave.
-      if (encounter.completed && enemies.size === 0 && projectiles.liveCount === 0) {
+      // clear of enemies, run the same content again as the next wave. Only
+      // enemies gate the restart - the original `projectiles.liveCount === 0`
+      // condition stalled the loop forever for a player who simply held the
+      // fire button (their own shots kept liveCount > 0), found by playing
+      // the generated arena-combat starter. In-flight shots crossing a wave
+      // boundary are fine: combat entries are removed on death, so the fresh
+      // wave's re-registered ids resolve cleanly.
+      if (encounter.completed && enemies.size === 0) {
         wavesCleared += 1;
         encounter.start(encounterId);
       }

@@ -227,6 +227,41 @@ simultaneously. Zero console errors in every attack.
 - `release:verify`: PASS for all controller-shell families
 - `check:offline`: PASS
 
+### Adversarial sweep C (after Wave 4, this session) — COMPLETE
+
+Third and fourth consumer families played in a real browser: generated
+`time-trial-racer` (vehicle) and `sokoban` (grid/puzzle-rules), plus a third
+battle consumer (`arena-combat`). Two real gameplay bugs found by playing,
+fixed, regression-pinned in `packages/cli/test/shellSafety.test.ts`:
+
+1. **The race car could drive off the world forever** (y reached -881 while
+   playing). The vehicle service integrates its own x/y and the shell copies
+   them with `setPosition`, so Arcade's `setCollideWorldBounds` never sees
+   the movement. Fix: the vehicle shell resets the vehicle to spawn when it
+   leaves the viewport plus a 48px margin — racing convention: the reset
+   costs time, never race progress (checkpoint/lap/clock untouched).
+   Re-played: escape attempt contained (x,y = 110,356), countdown → racing →
+   checkpoint credit (cp-1 at index 1) all proven; pause respects the
+   countdown clock; pause-restart resets to idle at spawn cleanly.
+2. **The survival loop stalled forever for a player who held the fire
+   button.** The wave-restart gate required `projectiles.liveCount === 0`,
+   but the player's own held-fire shots keep liveCount above zero
+   permanently (seen playing arena-combat: encounterComplete=true,
+   enemiesAlive=0, wavesCleared stuck at 0 for 188 spawned shots). Fix: the
+   restart gates on cleared enemies only; in-flight shots crossing a wave
+   boundary resolve cleanly because combat entries are removed on death.
+   Re-played with fire held the whole session: wavesCleared advanced.
+
+Attacks that found no bugs: sokoban undo-at-zero-history, held-key
+grid-slide (bounded single-step repeat, not 60/s), undo/reset/move spam
+interleave, all four grid edges (actor stayed in bounds); racing
+CONFIRM-spam after start (no double-start, countdown monotonic); pre-race
+driving credits no checkpoints. Zero console errors in every session.
+
+Validation after the two fixes: typecheck PASS, `npm test` 2580/2580
+(2578 + 2 pins), qa:matrix 45/45, qa:smoke 14/14, qa:proof 23/23,
+release:verify PASS (all controller-shell families), workbench build PASS.
+
 ## Remaining blockers
 
 None external. Remaining work is the honest Category C backlog above, each
