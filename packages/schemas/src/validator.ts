@@ -26,6 +26,7 @@ import economyCatalogSchema from '../schemas/economy-catalog.schema.json' with {
 import needsCatalogSchema from '../schemas/needs-catalog.schema.json' with { type: 'json' };
 import dialogueCatalogSchema from '../schemas/dialogue-catalog.schema.json' with { type: 'json' };
 import perceptionCatalogSchema from '../schemas/perception-catalog.schema.json' with { type: 'json' };
+import ballPaddleCatalogSchema from '../schemas/ball-paddle-catalog.schema.json' with { type: 'json' };
 
 /**
  * Ajv-based validation for every schema this package owns.
@@ -61,7 +62,8 @@ export type SchemaName =
   | 'economy-catalog'
   | 'needs-catalog'
   | 'dialogue-catalog'
-  | 'perception-catalog';
+  | 'perception-catalog'
+  | 'ball-paddle-catalog';
 
 export const SCHEMA_NAMES: readonly SchemaName[] = [
   'action-bindings',
@@ -89,6 +91,7 @@ export const SCHEMA_NAMES: readonly SchemaName[] = [
   'needs-catalog',
   'dialogue-catalog',
   'perception-catalog',
+  'ball-paddle-catalog',
 ];
 
 /** One located problem: which document, where in it, and what is wrong. */
@@ -138,6 +141,7 @@ const SCHEMA_DOCUMENTS: Readonly<Record<SchemaName, SchemaDocument>> = {
   'needs-catalog': needsCatalogSchema,
   'dialogue-catalog': dialogueCatalogSchema,
   'perception-catalog': perceptionCatalogSchema,
+  'ball-paddle-catalog': ballPaddleCatalogSchema,
 };
 
 // Registration order matters: a schema must be added before anything that
@@ -167,6 +171,7 @@ for (const name of [
   'needs-catalog',
   'dialogue-catalog',
   'perception-catalog',
+  'ball-paddle-catalog',
 ] as const) {
   const schema = SCHEMA_DOCUMENTS[name];
   ajv.addSchema(schema, schema.$id);

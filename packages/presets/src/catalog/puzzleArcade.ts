@@ -8,8 +8,8 @@ import { LIMITATIONS, POINTER_INPUT_MODES, VALIDATION_PROFILES, definePreset, pa
  * The smallest honest controller per recipe (MASTER_PROJECT.md section 7),
  * not a uniform default: discrete board/cell recipes get `grid`, timing/
  * confirm-driven recipes get `ui-simulation`, ball-and-paddle recipes reuse
- * `top-down`'s continuous axis for paddle movement only (not for the ball -
- * there is no reusable ball/paddle system, see `LIMITATIONS.ballPaddleSystem`),
+ * `top-down`'s continuous axis for paddle movement (ball motion is
+ * `sw2d.ball-paddle`, see `LIMITATIONS.ballPaddleSystem`),
  * and the one recipe that is genuinely about pointer interaction
  * (`physics-puzzle`) gets `pointer`, honestly limited to press-style actions.
  *
@@ -71,8 +71,8 @@ export const PUZZLE_ARCADE_PRESETS: readonly PresetDefinition[] = [
     displayName: 'Breakout',
     family: 'puzzle-arcade',
     controllerFamilies: ['top-down'],
-    requiredSystemPacks: [pack(PACK_IDS.arcade)],
-    requiredContentRoles: ['tuning'],
+    requiredSystemPacks: [pack(PACK_IDS.arcade), pack(PACK_IDS.ballPaddle)],
+    requiredContentRoles: ['tuning', 'ball-paddle'],
     validationProfile: VALIDATION_PROFILES.puzzleArcade,
     knownLimitations: [LIMITATIONS.ballPaddleSystem],
   }),
@@ -82,8 +82,8 @@ export const PUZZLE_ARCADE_PRESETS: readonly PresetDefinition[] = [
     displayName: 'Pong',
     family: 'puzzle-arcade',
     controllerFamilies: ['top-down'],
-    requiredSystemPacks: [pack(PACK_IDS.arcade)],
-    requiredContentRoles: ['tuning'],
+    requiredSystemPacks: [pack(PACK_IDS.arcade), pack(PACK_IDS.ballPaddle)],
+    requiredContentRoles: ['tuning', 'ball-paddle'],
     validationProfile: VALIDATION_PROFILES.puzzleArcade,
     knownLimitations: [LIMITATIONS.ballPaddleSystem, 'Pong does not yet have a proven multi-player input-routing abstraction.'],
   }),

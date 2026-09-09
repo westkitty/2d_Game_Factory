@@ -4,6 +4,7 @@ import { WORLD_GRAPH_CAPABILITY_ID, aimFromPointer } from '@sw2d/contracts';
 import {
   bindCollectiblePickups,
   bindStarterEncounters,
+  bindStarterBallPaddle,
   bindStarterPerception,
   bindStarterWeapon,
   createRoomTransitionRuntime,
@@ -95,6 +96,15 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     // exit replace the dummy wander.
     const perception = bindStarterPerception(context);
     if (perception.active) player.setPosition(perception.startX(), perception.startY());
+    // Ball / paddle (Category-C Wave 5). Inert unless sw2d.ball-paddle is
+    // installed with a non-empty catalog. Then the table owns motion and
+    // the dummy wander is hidden.
+    const table = bindStarterBallPaddle(context);
+    if (table.active) {
+      player.setVisible(false);
+      player.setVelocity(0, 0);
+      walls.setVisible(false);
+    }
     // Weapons (capability program Phase 3). Inert unless sw2d.weapons is
     // installed. When the encounter binding is active it owns the weapon and
     // its projectile runtime, so the plain starter weapon stays inert too.
@@ -130,6 +140,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       weapon: weapon?.snapshot() ?? null,
       ...(battle.active ? { battle: battle.snapshot() } : {}),
       ...(perception.active ? { perception: perception.snapshot() } : {}),
+      ...(table.active ? { ballPaddle: table.snapshot() } : {}),
       ...(generationManifest ? { generation: generationManifest } : {}),
       ...(worldGraph
         ? { worldGraph: { current: worldGraph.currentNode().id, ...worldGraph.mapState(), mapOpen: worldMap?.isOpen ?? false, transitions: rooms?.transitions ?? 0 } }
@@ -145,6 +156,13 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         if (disposed) return;
         nowMs += deltaMs;
         const intent = topDownController.read(context.input);
+        if (table.active) {
+          const axis = table.mode() === 'pong' ? intent.moveY : intent.moveX;
+          table.setPaddleAxis(axis);
+          table.tick(deltaMs);
+          player.setVelocity(0, 0);
+          return;
+        }
         player.setVelocityX(intent.moveX * tuning.moveSpeed);
         player.setVelocityY(intent.moveY * tuning.moveSpeed);
         if (intent.aimMagnitude > 0) {
@@ -192,6 +210,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         battle.dispose();
         weapon?.dispose();
         perception.dispose();
+        table.dispose();
         rooms?.dispose();
         worldMap?.dispose();
         try {

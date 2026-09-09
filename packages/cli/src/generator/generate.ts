@@ -17,6 +17,7 @@ import {
   generateNeedsCatalog,
   generateDialogueCatalog,
   generatePerceptionCatalog,
+  generateBallPaddleCatalog,
   generateResourceManifest,
   generateTiledLevel,
   generateTheme,
@@ -221,6 +222,16 @@ export function buildGameFiles(gameId: string, preset: PresetDefinition): Map<st
             ? 'heist'
             : 'infiltrate'
           : 'none',
+      ),
+      null,
+      2,
+    ) + '\n',
+  );
+  files.set(
+    'content/ball-paddle.json',
+    JSON.stringify(
+      generateBallPaddleCatalog(
+        requiredPackIds.includes('sw2d.ball-paddle') ? (preset.id === 'pong' ? 'pong' : 'breakout') : 'none',
       ),
       null,
       2,

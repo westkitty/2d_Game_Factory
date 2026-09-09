@@ -38,6 +38,7 @@ export const CONTENT_DOCUMENTS: Readonly<Record<string, ContentDocumentRegistryE
   needs: { schemaName: 'needs-catalog' },
   dialogue: { schemaName: 'dialogue-catalog' },
   perception: { schemaName: 'perception-catalog' },
+  'ball-paddle': { schemaName: 'ball-paddle-catalog' },
 };
 
 export type ContentDocumentName = keyof typeof CONTENT_DOCUMENTS;

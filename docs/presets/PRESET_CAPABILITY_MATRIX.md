@@ -70,8 +70,8 @@ pack/controller selections were actually exercised through, and
 | `sokoban` | puzzle-rules | - | grid | keyboard, touch | puzzle-arcade-recipe |
 | `match-puzzle` | puzzle | arcade | grid | keyboard, touch | puzzle-arcade-recipe |
 | `falling-block-puzzle` | puzzle | arcade | grid, ui-simulation | keyboard, touch | puzzle-arcade-recipe |
-| `breakout` | arcade | - | top-down | keyboard, touch | puzzle-arcade-recipe |
-| `pong` | arcade | - | top-down | keyboard, touch | puzzle-arcade-recipe |
+| `breakout` | arcade, ball-paddle | - | top-down | keyboard, touch | puzzle-arcade-recipe |
+| `pong` | arcade, ball-paddle | - | top-down | keyboard, touch | puzzle-arcade-recipe |
 | `physics-puzzle` | puzzle | - | pointer | keyboard, pointer, touch | puzzle-arcade-recipe |
 | `maze-game` | world, world-entities | arcade | grid | keyboard, touch | puzzle-arcade-recipe |
 | `rhythm-action` | arcade | - | ui-simulation | keyboard, touch | puzzle-arcade-recipe |
@@ -152,8 +152,9 @@ pack/controller selections were actually exercised through, and
 | needs | `sw2d.needs` | `simulation.needs` | 3 | 3 |
 | dialogue | `sw2d.dialogue` | `narrative.dialogue` | 2 | 2 |
 | perception | `sw2d.perception` | `ai.perception` | 2 | 2 |
+| ball-paddle | `sw2d.ball-paddle` | `arcade.ball` | 2 | 2 |
 
-**All twenty-three current packs have at least one preset consumer.** `sw2d.items` (capability
+**All twenty-four current packs have at least one preset consumer.** `sw2d.items` (capability
 program Phase 2) is required by `collectathon-platformer`, whose generated starter consumes
 the reusable item/effect service through the shared platform shell. `sw2d.puzzle-rules`
 (capability program Phase 6) is required by `sokoban` and `puzzle-platformer`, whose

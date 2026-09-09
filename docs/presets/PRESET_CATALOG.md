@@ -89,8 +89,8 @@ controller/input-mode breakdown and full pack-consumer coverage.
 | `sokoban` | Sokoban | grid | tuning | proof-validated |
 | `match-puzzle` | Match Puzzle | grid | tuning | recipe |
 | `falling-block-puzzle` | Falling Block Puzzle | grid, ui-simulation | tuning | recipe |
-| `breakout` | Breakout | top-down | tuning | recipe |
-| `pong` | Pong | top-down | tuning | recipe |
+| `breakout` | Breakout | top-down | tuning, ball-paddle | recipe |
+| `pong` | Pong | top-down | tuning, ball-paddle | recipe |
 | `physics-puzzle` | Physics Puzzle | pointer | tuning | recipe |
 | `maze-game` | Maze Game | grid | tuning, levels | recipe |
 | `rhythm-action` | Rhythm Action | ui-simulation | tuning | recipe |
@@ -193,8 +193,8 @@ recipe's *first* stated limitation; see `knownLimitations` in
 | `sokoban` | (none stated) |
 | `match-puzzle` | Standard puzzle kinds (sokoban, switch/sequence) are now content-authorable through the sw2d.puzzle-rules capability and content/puzzles.json (ADR-0023). This recipe's board rules are not one of those built-in kinds, so it still uses the code seam: sw2d.puzzle declares configSource: 'code' (ADR-0017) and a generated game supplies createInitialState/isSolved from src/game-specific/packConfig.ts (shipped with a working placeholder to replace) - the pack really installs, but this puzzle's own rules stay game-specific TypeScript, not content. |
 | `falling-block-puzzle` | Standard puzzle kinds (sokoban, switch/sequence) are now content-authorable through the sw2d.puzzle-rules capability and content/puzzles.json (ADR-0023). This recipe's board rules are not one of those built-in kinds, so it still uses the code seam: sw2d.puzzle declares configSource: 'code' (ADR-0017) and a generated game supplies createInitialState/isSolved from src/game-specific/packConfig.ts (shipped with a working placeholder to replace) - the pack really installs, but this puzzle's own rules stay game-specific TypeScript, not content. |
-| `breakout` | No reusable ball/paddle collision-and-bounce system exists yet. |
-| `pong` | No reusable ball/paddle collision-and-bounce system exists yet. |
+| `breakout` | Ball, paddle, rebound, brick-clear and first-to-N scoring are reusable (sw2d.ball-paddle); a full pinball table and local multiplayer input routing are not. |
+| `pong` | Ball, paddle, rebound, brick-clear and first-to-N scoring are reusable (sw2d.ball-paddle); a full pinball table and local multiplayer input routing are not. |
 | `physics-puzzle` | Standard puzzle kinds (sokoban, switch/sequence) are now content-authorable through the sw2d.puzzle-rules capability and content/puzzles.json (ADR-0023). This recipe's board rules are not one of those built-in kinds, so it still uses the code seam: sw2d.puzzle declares configSource: 'code' (ADR-0017) and a generated game supplies createInitialState/isSolved from src/game-specific/packConfig.ts (shipped with a working placeholder to replace) - the pack really installs, but this puzzle's own rules stay game-specific TypeScript, not content. |
 | `maze-game` | (none stated) |
 | `rhythm-action` | No deterministic music-beat/audio-synchronization system exists yet. |

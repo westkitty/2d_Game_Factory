@@ -38,6 +38,7 @@ export const PACK_IDS = {
   needs: 'sw2d.needs',
   dialogue: 'sw2d.dialogue',
   perception: 'sw2d.perception',
+  ballPaddle: 'sw2d.ball-paddle',
 } as const;
 
 export const CAPABILITY_IDS = {
@@ -78,4 +79,6 @@ export const CAPABILITY_IDS = {
   dialogue: 'narrative.dialogue',
   /** Category-C Wave 4: FOV cones, occlusion, suspicion, noise and hiding. */
   perception: 'ai.perception',
+  /** Category-C Wave 5: arcade ball / paddle / rebound. */
+  ballPaddle: 'arcade.ball',
 } as const;

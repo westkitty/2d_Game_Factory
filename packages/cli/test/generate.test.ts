@@ -131,6 +131,12 @@ describe('all 74 presets generate valid, token-free, schema-valid source', () =>
       expect(() => validateContentBundleData({ perception: perceptionJson })).not.toThrow();
     });
 
+    it(`${preset.id}'s generated content/ball-paddle.json validates as a ball-paddle catalog`, () => {
+      const files = buildGameFiles('matrix-game', preset);
+      const tableJson: unknown = JSON.parse(files.get('content/ball-paddle.json')!);
+      expect(() => validateContentBundleData({ 'ball-paddle': tableJson })).not.toThrow();
+    });
+
     it(`${preset.id} selects a real, resolvable shell template for its primary controller family`, () => {
       const files = buildGameFiles('matrix-game', preset);
       expect(files.has('src/game-specific/shellPack.ts')).toBe(true);
@@ -335,7 +341,7 @@ describe('generated dialogue games consume sw2d.dialogue', () => {
     expect(shell).toContain('bindStarterDialogue(context)');
     expect(shell).toContain('dialogue.choose()');
     expect(buildGameFiles('dialogue-probe', vn).get('src/content.ts')).toContain('dialogue: dialogueData');
-    expect(buildGameFiles('dialogue-probe', vn).get('src/main.ts')).toContain('perceptionPack');
+    expect(buildGameFiles('dialogue-probe', vn).get('src/main.ts')).toContain('dialoguePack');
   });
 
   it('the generated pointer shell binds adventure hotspots', () => {
@@ -377,6 +383,32 @@ describe('generated perception games consume sw2d.perception', () => {
       const doc = JSON.parse(files.get('content/perception.json')!) as { mode: string; observers: unknown[] };
       expect(doc.mode, id).toBe(id === 'heist-game' ? 'heist' : 'infiltrate');
       expect(doc.observers.length, id).toBeGreaterThan(0);
+    }
+  });
+});
+
+describe('generated ball-paddle games consume sw2d.ball-paddle', () => {
+  it('the generated top-down shell binds bindStarterBallPaddle', () => {
+    const breakout = PRESETS.find((candidate) => candidate.id === 'breakout')!;
+    const shell = buildGameFiles('ball-paddle-probe', breakout).get('src/game-specific/shellPack.ts')!;
+    expect(shell).toContain('bindStarterBallPaddle(context)');
+    expect(shell).toContain('table.tick(');
+    expect(buildGameFiles('ball-paddle-probe', breakout).get('src/content.ts')).toContain("'ball-paddle': ballPaddleData");
+    expect(buildGameFiles('ball-paddle-probe', breakout).get('src/main.ts')).toContain(
+      'perceptionPack, ballPaddlePack, GAME_SPECIFIC_PACK',
+    );
+  });
+
+  it('breakout and pong enable sw2d.ball-paddle and emit a non-empty catalog', () => {
+    for (const id of ['breakout', 'pong'] as const) {
+      const preset = PRESETS.find((candidate) => candidate.id === id)!;
+      const files = buildGameFiles('ball-paddle-probe', preset);
+      const gameJson = JSON.parse(files.get('content/game.json')!) as { systemPacks: Array<{ packId: string }> };
+      expect(gameJson.systemPacks.map((s) => s.packId), id).toContain('sw2d.ball-paddle');
+      const doc = JSON.parse(files.get('content/ball-paddle.json')!) as { mode: string; bricks: unknown[]; pong?: unknown };
+      expect(doc.mode, id).toBe(id);
+      if (id === 'breakout') expect(doc.bricks.length, id).toBeGreaterThan(0);
+      else expect(doc.pong, id).toBeDefined();
     }
   });
 });

@@ -14,6 +14,7 @@ import {
   needsPack,
   dialoguePack,
   perceptionPack,
+  ballPaddlePack,
   aiPack,
   arcadePack,
   combatPack,
@@ -61,6 +62,7 @@ const ALL_PACKS = [
   needsPack,
   dialoguePack,
   perceptionPack,
+  ballPaddlePack,
 ];
 
 /** `<family>.<service>`: lowercase segments, at least two, dash-separated words allowed after the first. */

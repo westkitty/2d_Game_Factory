@@ -632,6 +632,89 @@ export function generatePerceptionCatalog(kind: 'infiltrate' | 'heist' | 'none')
 }
 
 /**
+ * content/ball-paddle.json - a BallPaddleCatalog (Category-C Wave 5). Always
+ * emitted; empty/inert unless the preset installs `sw2d.ball-paddle`. Two
+ * bounded starter modes match the two consumers: breakout (bricks + lives)
+ * and pong (chasing opponent, first-to-3). Constants match the expanded
+ * overlay shells so factory and overlay stay aligned.
+ */
+export function generateBallPaddleCatalog(kind: 'breakout' | 'pong' | 'none'): Record<string, unknown> {
+  const empty = {
+    schemaVersion: 1,
+    mode: 'breakout',
+    court: { width: 960, height: 540 },
+    paddle: { x: 480, y: 485, width: 150, height: 22, speed: 0, axis: 'x', min: 85, max: 875, hitHalf: 86 },
+    ball: { x: 480, y: 270, vx: 0, vy: 0, radius: 18 },
+    walls: { insetX: 12, top: 50, bottom: 522 },
+    bricks: [] as const,
+    lives: 0,
+  };
+  if (kind === 'none') return empty;
+  if (kind === 'breakout') {
+    const bricks = [];
+    for (let row = 0; row < 2; row++) {
+      for (let col = 0; col < 6; col++) {
+        bricks.push({
+          id: `brick-${row}-${col}`,
+          x: 260 + col * 82,
+          y: 105 + row * 38,
+          halfWidth: 42,
+          halfHeight: 22,
+        });
+      }
+    }
+    return {
+      schemaVersion: 1,
+      mode: 'breakout',
+      court: { width: 960, height: 540 },
+      paddle: { x: 480, y: 485, width: 150, height: 22, speed: 340, axis: 'x', min: 85, max: 875, hitHalf: 86 },
+      ball: { x: 480, y: 270, vx: 180, vy: -180, radius: 18 },
+      walls: { insetX: 12, top: 50, bottom: 522 },
+      bricks,
+      lives: 3,
+      breakout: {
+        contactDivisor: 65,
+        contactScale: 72,
+        moveScale: 24,
+        minSpeedX: 105,
+        maxSpeedX: 220,
+        parkOffset: 24,
+        serveSpeed: 180,
+        contactNear: 25,
+        contactFar: 12,
+        brickScore: 10,
+      },
+    };
+  }
+  return {
+    schemaVersion: 1,
+    mode: 'pong',
+    court: { width: 960, height: 540 },
+    paddle: { x: 55, y: 270, width: 22, height: 110, speed: 260, axis: 'y', min: 70, max: 470, hitHalf: 70 },
+    ball: { x: 480, y: 270, vx: 210, vy: 145, radius: 18 },
+    walls: { insetX: 0, top: 18, bottom: 522 },
+    bricks: [],
+    lives: 0,
+    pong: {
+      opponentX: 905,
+      opponentY: 270,
+      opponentWidth: 22,
+      opponentHeight: 110,
+      opponentHitHalf: 70,
+      lerpMs: 300,
+      playerMinX: 35,
+      playerMaxX: 75,
+      opponentMinX: 885,
+      opponentMaxX: 925,
+      speedBump: 8,
+      serveSpeed: 210,
+      scorePast: 20,
+      winScore: 3,
+    },
+  };
+}
+
+/**
  * content/races.json - a RaceCatalog (capability program Phase 10). Always
  * emitted; empty unless the preset installs `sw2d.racing`, then one starter
  * race: a small four-corner track, `time-trial` mode for the time-trial
@@ -691,7 +774,9 @@ export function generateUiCopy(options: {
       playHint = has('sw2d.weapons') ? 'MOVE / JUMP  -  FIRE J/X  -  PAUSE TO STOP' : 'MOVE / JUMP  -  PAUSE TO STOP';
       break;
     case 'top-down':
-      playHint = has('sw2d.perception')
+      playHint = has('sw2d.ball-paddle')
+        ? 'MOVE WASD/ARROWS  -  RETURN THE BALL'
+        : has('sw2d.perception')
         ? 'MOVE WASD/ARROWS  -  AVOID THE CONE  -  HIDE IN COVER'
         : has('sw2d.encounters')
           ? 'MOVE WASD/ARROWS  -  AIM WITH MOUSE  -  FIRE J/X  -  SURVIVE THE WAVES'

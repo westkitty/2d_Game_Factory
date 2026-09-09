@@ -26,7 +26,7 @@ Highest-leverage clusters, from `packages/presets/src/shared.ts` LIMITATIONS + p
 | 2 | Creature needs / behavior / relationship | pet-creature, aquarium-terrarium, virtual-pet (colony-lite only if the contract genuinely fits — it currently does not) | **Wave 2 implemented and played** (`sw2d.needs` / `simulation.needs`, ADR-0029). Residual: full creature behaviour AI, relationship graphs, colony assignment. |
 | 3 | Branching dialogue / narrative presentation | visual-novel, point-and-click; investigation/museum only if the contract fits | **Wave 3 implemented and played** (`sw2d.dialogue` / `narrative.dialogue`, ADR-0030). Residual: portraits, scene composition, parser IF, evidence-board deduction. |
 | 4 | Stealth perception / suspicion / noise / hiding | stealth-game, heist-game | **Wave 4 complete** (`sw2d.perception` / `ai.perception`, ADR-0031). Residual: patrol pathfinding, takedowns, full stealth AI. |
-| 5 | Ball / paddle / rebound | breakout, pong | backlog |
+| 5 | Ball / paddle / rebound | breakout, pong | **Wave 5 implemented** (`sw2d.ball-paddle` / `arcade.ball`, ADR-0032). Residual: pinball table, local multiplayer input routing. |
 | 6 | Melee / knockback / hit-stun | action-adventure, arena-combat; run-and-gun only if it still needs it | backlog |
 | 7 | Local multiplayer input ownership | local-party-game, pong | backlog |
 | — | Tier 3 (rail camera, territory, chase, climbing, run-meta, falling-block, match consumption, crop/season) | re-audit before sharing | backlog |
@@ -314,3 +314,76 @@ Materially different: fail-on-sight vs loot-alarm escape.
 
 - Generated `src/main.ts` listed `perceptionPack` in the `packs` array but did not import it (`perceptionPack is not defined` at boot). The template import list now includes `perceptionPack`.
 - Overlay stealth/heist rectangle `updateGuard` and INTERACT collect would have raced the reusable service; both skip while `perception.active`.
+
+## Wave 5 — `sw2d.ball-paddle`
+
+### Problem
+
+Breakout and pong needed serve, paddle rebound, wall bounce, brick-clear / first-to-N and miss/reset. Pinball tables and local multiplayer input routing are not shared.
+
+### Consumers
+
+- `breakout` — mode `breakout` (2×6 bricks, three lives, paddle-return, clear-or-drain).
+- `pong` — mode `pong` (player paddle, lerp opponent, first to 3).
+
+Materially different: brick-clear + lives vs two-paddle score-to-N. Pinball-lite stays Matter. Pong multiplayer stays a limitation.
+
+### ValidationPlan
+
+1. Contract + schema (`BallPaddleCatalog` / `ball-paddle-catalog`) reject unknown modes.
+2. Pack unit tests: paddle return, brick break, drain/serve, last-life fail, clear complete, pong player/opponent return, score/win, lerp, clamp, duplicate ids, missing document inert, dispose, reset.
+3. Generator: all 74 emit schema-valid `content/ball-paddle.json`; the two consumers enable `sw2d.ball-paddle` and a non-empty catalog; `src/content.ts` passes `'ball-paddle': ballPaddleData`; `main.ts` installs `ballPaddlePack`.
+4. Generated top-down shell binds `bindStarterBallPaddle` and feeds `setPaddleAxis`/`tick`.
+5. Honesty / docsSync / catalogPackIntegrity / uiCopy allowlist stay green.
+6. Workbench `POST /api/ball-paddle/inspect`.
+7. Expanded breakout/pong kits drive the same service (`hud: false`) while keeping overlay debug fields.
+8. Real-browser journeys against generated games + starter-kit overlays. Committed `proofs/` + maturity promotion still deferred.
+
+### CompletionContract
+
+- [x] Reusable pack in `@sw2d/packs`, renderer-neutral.
+- [x] Content authority `content/ball-paddle.json`.
+- [x] ≥2 materially different generated consumers (2 wired).
+- [x] Focused unit/integration tests.
+- [x] Honest residual limitation.
+- [x] ADR-0032.
+- [x] Real-browser play of factory-generated `wave5-breakout` / `wave5-pong` (`tools/scripts/play-ball-paddle-wave5.ts`, 2/2 PASS, 0 console errors, 0 external requests).
+- [x] Overlay QA (`qa-expanded-starter-kits-p2b.ts breakout` PASS; `qa-expanded-starter-kits-p3e.ts` 3/3 PASS including pong).
+- [ ] Committed proofs + maturity promotion. **Not done — evidence rule.**
+
+### Implementation notes
+
+- Capability id `arcade.ball`. Pack id `sw2d.ball-paddle`. Not folded into `sw2d.arcade`.
+- Overlay-matching constants live in generated `content/ball-paddle.json`.
+- Opponent AI is the machine; local multiplayer is not.
+- Empty catalog (no bricks, no pong table) is inert.
+- Overlay breakout syncs brick sprites by catalog index against `table.bricks()[i].alive`. Overlay pong drives `setPaddleAxis` / `tick` / `snapshot`. Pinball-lite stays Matter.
+
+### Browser journeys (executed)
+
+Factory-generated (top-down shell HUD):
+
+- Breakout: 12 bricks, 3 lives → paddle-track 9 returns → bricks 0, score 120, lives 3, outcome=complete.
+- Pong: first-to-3; player-return (vx 210→226, ballX increases); dodge until opponentScore=3, playerScore=0, outcome=failed.
+
+Starter-kit overlays (`game.expanded-starter`): breakout mechanic proof PASS; pong mechanic proof PASS. Match-puzzle / falling-block-puzzle still pass (binding is inert there).
+
+### Visual inspection
+
+High-contrast Phaser HUD (BREAKOUT / PONG title, score/bricks/lives or you/opp, `MOVE WASD/ARROWS   RETURN THE BALL`). Dummy wander hidden when the table is active. Confirmed via debug snapshots, not screenshots.
+
+### Bugs found and fixed this wave
+
+- Generated `src/main.ts` imported `ballPaddlePack` but did not put it in `createGame({ packs })` — same class of miss as Wave 4's `perceptionPack`. The template packs array now includes `ballPaddlePack`. The generate test asserts `perceptionPack, ballPaddlePack, GAME_SPECIFIC_PACK`.
+- `SCHEMA_DOCUMENTS` listed `'ball-paddle-catalog'` in `SCHEMA_NAMES` / Ajv registration but omitted the document map entry (tsc).
+- `catalogPackIntegrity` imported `ballPaddlePack` without `REAL_PACKS` (`noUnusedLocals`).
+- Brick `alive` is readonly on the contracts type; the service now mutates a private `LiveBrick`.
+- Overlay pong dispose omitted `table.dispose()`.
+- P2-B / P3-E CDP scripts hang after success unless they `process.exit`. Both now do. P3-E accepts an argv filter so `pong` can run alone.
+
+### Remaining blockers / unknowns
+
+- No committed `proofs/` for breakout or pong; catalog maturity stays `recipe`.
+- Chrome wrapper is session-local under `/tmp`.
+- Do not commit `package-lock.json` workspace links for gitignored `games/wave*`.
+- Next wave: melee / knockback / hit-stun (action-adventure, arena-combat) — re-audit before sharing.

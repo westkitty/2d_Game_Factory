@@ -50,6 +50,7 @@ import { inspectEconomy } from './economyLab.ts';
 import { inspectNeeds } from './needsLab.ts';
 import { inspectDialogue } from './dialogueLab.ts';
 import { inspectPerception } from './perceptionLab.ts';
+import { inspectBallPaddle } from './ballPaddleLab.ts';
 import { loadScene, listLevels, newObject, objectClassOptions, saveScene, SceneValidationError, type SceneDocument } from './sceneStore.ts';
 import { buildProject, createProject, packProject, validateProject } from './factoryService.ts';
 import { presetEvidenceFor } from './presetEvidence.ts';
@@ -714,6 +715,16 @@ const ROUTES: ReadonlyMap<string, Handler> = new Map<string, Handler>([
     (request) => {
       const body = bodyObject(request);
       return ok(inspectPerception(gameIdOf(request, body)));
+    },
+  ],
+
+  [
+    // Ball / paddle surface (Category-C Wave 5). Reports content/ball-paddle.json
+    // (mode, bricks, lives, win score). Live paddle/ball belong in-game.
+    'POST /ball-paddle/inspect',
+    (request) => {
+      const body = bodyObject(request);
+      return ok(inspectBallPaddle(gameIdOf(request, body)));
     },
   ],
 

@@ -46,6 +46,13 @@ declare module '@sw2d/contracts' {
     'perception:spotted': { readonly hidden: boolean };
     'perception:alerted': { readonly mode: string };
     'perception:escaped': { readonly mode: string; readonly alarm: boolean };
+    'ballPaddle:returned': { readonly mode: string };
+    'ballPaddle:brick': { readonly brickId: string; readonly score: number };
+    'ballPaddle:miss': { readonly lives: number };
+    'ballPaddle:cleared': Record<string, never>;
+    'ballPaddle:drained': Record<string, never>;
+    'ballPaddle:scored': { readonly side: 'player' | 'opponent'; readonly player: number; readonly opponent: number };
+    'ballPaddle:matchOver': { readonly outcome: 'complete' | 'failed' };
   }
 }
 

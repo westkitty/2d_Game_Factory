@@ -26,6 +26,7 @@ export * from './navigation.ts';
 export * from './needs.ts';
 export * from './dialogue.ts';
 export * from './perception.ts';
+export * from './ballPaddle.ts';
 export * from './persistence.ts';
 export * from './presets.ts';
 export * from './racing.ts';

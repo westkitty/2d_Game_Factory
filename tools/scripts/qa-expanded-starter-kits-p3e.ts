@@ -246,8 +246,14 @@ async function main(): Promise<number> {
     return 1;
   }
   const lockBefore = existsSync(LOCKFILE) ? readFileSync(LOCKFILE, 'utf8') : null;
+  const only = new Set(process.argv.slice(2));
+  const candidates = only.size > 0 ? CANDIDATES.filter((candidate) => only.has(candidate.id)) : CANDIDATES;
+  if (candidates.length === 0) {
+    console.error(`No P3-E candidate matched. Known: ${CANDIDATES.map((candidate) => candidate.id).join(', ')}`);
+    return 1;
+  }
   const results: Result[] = [];
-  for (const candidate of CANDIDATES) {
+  for (const candidate of candidates) {
     process.stdout.write(`Running P3-E starter candidate ${candidate.id}...\n`);
     const result = await runCandidate(candidate);
     results.push(result);
@@ -261,4 +267,4 @@ async function main(): Promise<number> {
   return failed.length === 0 && lockfileClean ? 0 : 1;
 }
 
-process.exitCode = await main();
+process.exit(await main());

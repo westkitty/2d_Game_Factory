@@ -1,0 +1,121 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:sw2d:schema:content-ball-paddle-catalog:v1",
+  "title": "BallPaddleCatalog",
+  "description": "Mirrors @sw2d/contracts BallPaddleCatalog (ballPaddle.ts). Validated as a ContentBundle.data document (document name 'ball-paddle'). Bounded arcade rebound - no Matter, no pinball table, no local multiplayer.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "mode", "court", "paddle", "ball", "walls", "bricks", "lives"],
+  "properties": {
+    "schemaVersion": { "type": "integer", "minimum": 1 },
+    "mode": { "type": "string", "enum": ["breakout", "pong"] },
+    "court": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["width", "height"],
+      "properties": {
+        "width": { "type": "number", "exclusiveMinimum": 0 },
+        "height": { "type": "number", "exclusiveMinimum": 0 }
+      }
+    },
+    "paddle": { "$ref": "#/definitions/paddle" },
+    "ball": { "$ref": "#/definitions/ball" },
+    "walls": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["insetX", "top", "bottom"],
+      "properties": {
+        "insetX": { "type": "number", "minimum": 0 },
+        "top": { "type": "number" },
+        "bottom": { "type": "number" }
+      }
+    },
+    "bricks": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/brick" }
+    },
+    "lives": { "type": "integer", "minimum": 0 },
+    "pong": { "$ref": "#/definitions/pong" },
+    "breakout": { "$ref": "#/definitions/breakout" }
+  },
+  "definitions": {
+    "paddle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y", "width", "height", "speed", "axis", "min", "max", "hitHalf"],
+      "properties": {
+        "x": { "type": "number" },
+        "y": { "type": "number" },
+        "width": { "type": "number", "exclusiveMinimum": 0 },
+        "height": { "type": "number", "exclusiveMinimum": 0 },
+        "speed": { "type": "number", "minimum": 0 },
+        "axis": { "type": "string", "enum": ["x", "y"] },
+        "min": { "type": "number" },
+        "max": { "type": "number" },
+        "hitHalf": { "type": "number", "exclusiveMinimum": 0 }
+      }
+    },
+    "ball": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y", "vx", "vy", "radius"],
+      "properties": {
+        "x": { "type": "number" },
+        "y": { "type": "number" },
+        "vx": { "type": "number" },
+        "vy": { "type": "number" },
+        "radius": { "type": "number", "exclusiveMinimum": 0 }
+      }
+    },
+    "brick": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "x", "y", "halfWidth", "halfHeight"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "x": { "type": "number" },
+        "y": { "type": "number" },
+        "halfWidth": { "type": "number", "exclusiveMinimum": 0 },
+        "halfHeight": { "type": "number", "exclusiveMinimum": 0 }
+      }
+    },
+    "breakout": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contactDivisor", "contactScale", "moveScale", "minSpeedX", "maxSpeedX", "parkOffset", "serveSpeed", "contactNear", "contactFar", "brickScore"],
+      "properties": {
+        "contactDivisor": { "type": "number", "exclusiveMinimum": 0 },
+        "contactScale": { "type": "number" },
+        "moveScale": { "type": "number" },
+        "minSpeedX": { "type": "number", "minimum": 0 },
+        "maxSpeedX": { "type": "number", "minimum": 0 },
+        "parkOffset": { "type": "number" },
+        "serveSpeed": { "type": "number" },
+        "contactNear": { "type": "number" },
+        "contactFar": { "type": "number" },
+        "brickScore": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "pong": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["opponentX", "opponentY", "opponentWidth", "opponentHeight", "opponentHitHalf", "lerpMs", "playerMinX", "playerMaxX", "opponentMinX", "opponentMaxX", "speedBump", "serveSpeed", "scorePast", "winScore"],
+      "properties": {
+        "opponentX": { "type": "number" },
+        "opponentY": { "type": "number" },
+        "opponentWidth": { "type": "number", "exclusiveMinimum": 0 },
+        "opponentHeight": { "type": "number", "exclusiveMinimum": 0 },
+        "opponentHitHalf": { "type": "number", "exclusiveMinimum": 0 },
+        "lerpMs": { "type": "number", "exclusiveMinimum": 0 },
+        "playerMinX": { "type": "number" },
+        "playerMaxX": { "type": "number" },
+        "opponentMinX": { "type": "number" },
+        "opponentMaxX": { "type": "number" },
+        "speedBump": { "type": "number" },
+        "serveSpeed": { "type": "number" },
+        "scorePast": { "type": "number" },
+        "winScore": { "type": "integer", "minimum": 1 }
+      }
+    }
+  }
+}
