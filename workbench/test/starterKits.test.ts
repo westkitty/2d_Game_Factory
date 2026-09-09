@@ -75,16 +75,29 @@ describe('overlay containment', () => {
 });
 
 describe('starter kit registry', () => {
-  it('has a rich proof kit for every proof-validated preset (W17)', () => {
+  it('keeps a rich proof kit for each of the original five deep-proof presets (W17)', () => {
+    // Kit depth describes the kit's own content (the registry doc comment:
+    // "Starter-kit depth and preset evidence maturity are deliberately
+    // separate"). The Arena finish program's catalog reconciliation promoted
+    // 18 more presets to proof-validated on the strength of their committed
+    // proofs/<id>/ games; their kits remain rich-starter-kits because the kit
+    // overlays do not reproduce the proof journey - only the original five do.
+    for (const presetId of PROOF_PRESETS) {
+      const kit = starterKitFor(presetId);
+      expect(kit, `no starter kit for ${presetId}`).toBeDefined();
+      expect(kit!.depth).toBe('rich-proof-kit');
+    }
+  });
+
+  it('has a starter kit for every proof-validated preset', () => {
     const proofValidated = listPresets()
       .filter((preset) => preset.maturity === 'proof-validated')
       .map((preset) => preset.id)
       .sort();
-    expect(proofValidated).toEqual([...PROOF_PRESETS].sort());
+    // 5 original + 18 reconciled by the Arena finish program.
+    expect(proofValidated.length).toBe(23);
     for (const presetId of proofValidated) {
-      const kit = starterKitFor(presetId);
-      expect(kit, `no starter kit for ${presetId}`).toBeDefined();
-      expect(kit!.depth).toBe('rich-proof-kit');
+      expect(starterKitFor(presetId), `no starter kit for proof-validated preset ${presetId}`).toBeDefined();
     }
   });
 
@@ -94,12 +107,17 @@ describe('starter kit registry', () => {
     }
   });
 
-  it('keeps registry ids unique and keeps kit depth honest about preset maturity', () => {
+  it('keeps registry ids unique and keeps rich-proof-kit depth exclusive to the original five', () => {
     const ids = allStarterKits().map((kit) => kit.presetId);
     expect(new Set(ids).size).toBe(ids.length);
     for (const kit of allStarterKits()) {
       const preset = getPreset(kit.presetId);
-      expect(kit.depth).toBe(preset.maturity === 'proof-validated' ? 'rich-proof-kit' : 'rich-starter-kit');
+      if (kit.depth === 'rich-proof-kit') {
+        expect(PROOF_PRESETS).toContain(kit.presetId);
+        expect(preset.maturity).toBe('proof-validated');
+      } else {
+        expect(kit.depth).toBe('rich-starter-kit');
+      }
     }
   });
 

@@ -42,6 +42,7 @@ export const STRATEGY_DEFENSE_PRESETS: readonly PresetDefinition[] = [
 
   definePreset({
     id: 'lane-defense',
+    maturity: 'proof-validated',
     displayName: 'Lane Defense',
     family: 'strategy-defense',
     controllerFamilies: ['grid', 'pointer'],
@@ -81,7 +82,7 @@ export const STRATEGY_DEFENSE_PRESETS: readonly PresetDefinition[] = [
 
   definePreset({
     id: 'turn-based-tactics',
-    maturity: 'smoke-validated',
+    maturity: 'proof-validated',
     displayName: 'Turn-Based Tactics',
     family: 'strategy-defense',
     controllerFamilies: ['grid', 'ui-simulation'],

@@ -22,6 +22,7 @@ import { LIMITATIONS, VALIDATION_PROFILES, definePreset, pack } from '../shared.
 export const TOP_DOWN_ACTION_PRESETS: readonly PresetDefinition[] = [
   definePreset({
     id: 'top-down-adventure',
+    maturity: 'proof-validated',
     displayName: 'Top-Down Adventure',
     family: 'top-down-action',
     controllerFamilies: ['top-down'],
@@ -71,6 +72,7 @@ export const TOP_DOWN_ACTION_PRESETS: readonly PresetDefinition[] = [
 
   definePreset({
     id: 'dungeon-crawler',
+    maturity: 'proof-validated',
     displayName: 'Dungeon Crawler',
     family: 'top-down-action',
     controllerFamilies: ['top-down'],
@@ -139,6 +141,7 @@ export const TOP_DOWN_ACTION_PRESETS: readonly PresetDefinition[] = [
 
   definePreset({
     id: 'boss-rush',
+    maturity: 'proof-validated',
     displayName: 'Boss Rush',
     family: 'top-down-action',
     controllerFamilies: ['top-down'],

@@ -41,6 +41,7 @@ export const PARTY_TOY_WEIRD_PRESETS: readonly PresetDefinition[] = [
 
   definePreset({
     id: 'physics-toy',
+    maturity: 'proof-validated',
     displayName: 'Physics Toy',
     family: 'party-toy-weird',
     controllerFamilies: ['pointer'],

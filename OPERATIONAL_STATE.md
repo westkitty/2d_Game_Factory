@@ -2,8 +2,8 @@
 
 Project: **Stinky Weasel 2D Browser Game Factory** (`sw2d`)
 Repository: `westkitty/2d_Game_Factory`
-State revision: **14**
-Updated: 2026-08-26
+State revision: **15**
+Updated: 2026-09-09
 
 Read this before doing anything. Governing spec: [`MASTER_PROJECT.md`](MASTER_PROJECT.md).
 Workflow: [`docs/AGENT_WORKFLOW.md`](docs/AGENT_WORKFLOW.md).
@@ -773,6 +773,18 @@ adjudicated individually in the Phase 12 acceptance document):
   gitignored; Phase 12 added no exception.
 
 ## Revision history
+
+### Revision 27 - 2026-09-09 (Arena finish program, Wave 1) - PROOF-EVIDENCE CATALOG RECONCILIATION
+
+The maturity split moved from 5/7/62 to **23 `proof-validated` / 3 `smoke-validated` / 48
+`recipe`**. This was a reconciliation, not a promotion-by-arithmetic: all 18 newly promoted
+presets already had committed proof games under `proofs/<id>/` (frozen `PROOF_CONTRACT.md` +
+dedicated real-browser spec) passing `npm run qa:proof` 23/23 — evidence created by the
+capability program but never reflected in the catalog. `packages/presets/test/proofEvidence.test.ts`
+(new) now derives the proof set mechanically from the `proofs/` directory and fails on drift in
+either direction. Kit depth remains a property of the kit, not the preset
+(`workbench/test/starterKits.test.ts` restated). Durable ledger:
+[`docs/architecture/ARENA_FACTORY_FINISH_STATE.md`](docs/architecture/ARENA_FACTORY_FINISH_STATE.md).
 
 ### Revision 26 - 2026-08-29 (Sonnet 5) - FIRST-TEN CAPABILITY PROGRAM CERTIFIED
 

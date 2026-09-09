@@ -17,7 +17,7 @@ import { VALIDATION_PROFILES, definePreset, pack } from '../shared.ts';
 export const VEHICLE_MOVEMENT_PRESETS: readonly PresetDefinition[] = [
   definePreset({
     id: 'top-down-racer',
-    maturity: 'smoke-validated',
+    maturity: 'proof-validated',
     displayName: 'Top-Down Racer',
     family: 'vehicle-movement',
     controllerFamilies: ['vehicle'],
@@ -46,6 +46,7 @@ export const VEHICLE_MOVEMENT_PRESETS: readonly PresetDefinition[] = [
 
   definePreset({
     id: 'time-trial-racer',
+    maturity: 'proof-validated',
     displayName: 'Time Trial Racer',
     family: 'vehicle-movement',
     controllerFamilies: ['vehicle'],

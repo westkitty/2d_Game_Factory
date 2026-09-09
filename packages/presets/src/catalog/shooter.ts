@@ -44,7 +44,7 @@ export const SHOOTER_PRESETS: readonly PresetDefinition[] = [
 
   definePreset({
     id: 'bullet-hell',
-    maturity: 'smoke-validated',
+    maturity: 'proof-validated',
     displayName: 'Bullet Hell',
     family: 'shooter',
     controllerFamilies: ['top-down'],
@@ -76,6 +76,7 @@ export const SHOOTER_PRESETS: readonly PresetDefinition[] = [
 
   definePreset({
     id: 'gallery-shooter',
+    maturity: 'proof-validated',
     displayName: 'Gallery Shooter',
     family: 'shooter',
     controllerFamilies: ['pointer'],
@@ -92,6 +93,7 @@ export const SHOOTER_PRESETS: readonly PresetDefinition[] = [
 
   definePreset({
     id: 'run-and-gun',
+    maturity: 'proof-validated',
     displayName: 'Run and Gun',
     family: 'shooter',
     controllerFamilies: ['platform'],
