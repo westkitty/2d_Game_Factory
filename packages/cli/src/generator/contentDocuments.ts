@@ -522,6 +522,76 @@ export function generateNeedsCatalog(kind: 'creature' | 'habitat' | 'companion' 
 }
 
 /**
+ * content/dialogue.json - a DialogueCatalog (Category-C Wave 3). Always
+ * emitted; empty/inert unless the preset installs `sw2d.dialogue`. Two
+ * bounded starter modes match the two consumers: novel (auto-start, choice,
+ * two endings) and adventure (hotspot start, gated exit).
+ */
+export function generateDialogueCatalog(kind: 'novel' | 'adventure' | 'none'): Record<string, unknown> {
+  const empty = {
+    schemaVersion: 1,
+    mode: 'novel',
+    conversations: [],
+  };
+  if (kind === 'none') return empty;
+  if (kind === 'novel') {
+    return {
+      schemaVersion: 1,
+      mode: 'novel',
+      startConversationId: 'station',
+      conversations: [
+        {
+          id: 'station',
+          startNodeId: 'n0',
+          nodes: [
+            { id: 'n0', kind: 'line', speaker: 'Narrator', text: 'A stranger arrives at the old station.', next: 'n1' },
+            { id: 'n1', kind: 'line', speaker: 'Stranger', text: 'They ask you to choose what happens next.', next: 'n2' },
+            {
+              id: 'n2',
+              kind: 'choice',
+              speaker: 'Stranger',
+              text: 'What do you do?',
+              choices: [
+                { id: 'help', text: 'Help the stranger', next: 'n3', branchId: 'help-the-stranger', setFlag: 'helped' },
+                { id: 'secret', text: 'Keep the secret', next: 'n4', branchId: 'keep-the-secret', setFlag: 'secret' },
+              ],
+            },
+            { id: 'n3', kind: 'end', speaker: 'Narrator', text: 'Your choice changes the final scene.', ending: 'dawn-ending' },
+            { id: 'n4', kind: 'end', speaker: 'Narrator', text: 'Your choice changes the final scene.', ending: 'midnight-ending' },
+          ],
+        },
+      ],
+    };
+  }
+  return {
+    schemaVersion: 1,
+    mode: 'adventure',
+    conversations: [
+      {
+        id: 'note',
+        startNodeId: 'n',
+        nodes: [{ id: 'n', kind: 'end', speaker: 'You', text: 'A crumpled note: the clock is lying.', setFlag: 'saw-note' }],
+      },
+      {
+        id: 'clock',
+        startNodeId: 'c',
+        nodes: [{ id: 'c', kind: 'end', speaker: 'You', text: 'The clock hides a small brass key.', setFlag: 'saw-clock' }],
+      },
+      {
+        id: 'door',
+        startNodeId: 'd',
+        nodes: [{ id: 'd', kind: 'end', speaker: 'You', text: 'The door swings open.', ending: 'escaped' }],
+      },
+    ],
+    hotspots: [
+      { id: 'note', conversationId: 'note', x: 240, y: 280 },
+      { id: 'clock', conversationId: 'clock', x: 480, y: 280 },
+      { id: 'door', conversationId: 'door', x: 720, y: 280, requireFlags: ['saw-note', 'saw-clock'] },
+    ],
+  };
+}
+
+/**
  * content/races.json - a RaceCatalog (capability program Phase 10). Always
  * emitted; empty unless the preset installs `sw2d.racing`, then one starter
  * race: a small four-corner track, `time-trial` mode for the time-trial
@@ -598,14 +668,18 @@ export function generateUiCopy(options: {
         : 'MOVE WASD/ARROWS  -  PAUSE TO STOP';
       break;
     case 'pointer':
-      playHint = 'POINT AT THINGS  -  CLICK TO ACT  -  PAUSE TO STOP';
+      playHint = has('sw2d.dialogue')
+        ? 'CLICK HOTSPOTS  -  ENTER ADVANCES'
+        : 'POINT AT THINGS  -  CLICK TO ACT  -  PAUSE TO STOP';
       break;
     case 'ui-simulation':
       playHint = has('sw2d.economy')
         ? 'ARROWS PICK  -  ENTER SERVES  -  K RESTOCKS OR COOKS'
         : has('sw2d.needs')
           ? 'J FEEDS  -  K PLAYS OR REFRESHES  -  KEEP NEEDS UP'
-          : 'ARROWS CHANGE THE SELECTION  -  ENTER CONFIRMS  -  PAUSE TO STOP';
+          : has('sw2d.dialogue')
+            ? 'ENTER ADVANCES  -  ARROWS CHOOSE'
+            : 'ARROWS CHANGE THE SELECTION  -  ENTER CONFIRMS  -  PAUSE TO STOP';
       break;
     default:
       break;

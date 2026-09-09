@@ -1,0 +1,83 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:sw2d:schema:content-dialogue-catalog:v1",
+  "title": "DialogueCatalog",
+  "description": "Mirrors @sw2d/contracts DialogueCatalog (dialogue.ts). Validated as a ContentBundle.data document (document name 'dialogue'). Bounded novel/adventure graph - no scripting, portraits or parser.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "mode", "conversations"],
+  "properties": {
+    "schemaVersion": { "type": "integer", "minimum": 1 },
+    "mode": { "type": "string", "enum": ["novel", "adventure"] },
+    "startConversationId": { "type": "string", "minLength": 1 },
+    "conversations": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/conversation" }
+    },
+    "hotspots": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/hotspot" }
+    }
+  },
+  "definitions": {
+    "conversation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "startNodeId", "nodes"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "startNodeId": { "type": "string", "minLength": 1 },
+        "nodes": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/node" }
+        }
+      }
+    },
+    "node": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "speaker", "text"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "kind": { "type": "string", "enum": ["line", "choice", "end"] },
+        "speaker": { "type": "string", "minLength": 1 },
+        "text": { "type": "string" },
+        "next": { "type": ["string", "null"] },
+        "ending": { "type": "string", "minLength": 1 },
+        "setFlag": { "type": "string", "minLength": 1 },
+        "choices": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/choice" }
+        }
+      }
+    },
+    "choice": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "text", "next"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "text": { "type": "string", "minLength": 1 },
+        "next": { "type": "string", "minLength": 1 },
+        "setFlag": { "type": "string", "minLength": 1 },
+        "branchId": { "type": "string", "minLength": 1 },
+        "requireFlag": { "type": "string", "minLength": 1 }
+      }
+    },
+    "hotspot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "conversationId", "x", "y"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "conversationId": { "type": "string", "minLength": 1 },
+        "x": { "type": "number" },
+        "y": { "type": "number" },
+        "requireFlags": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
+  }
+}

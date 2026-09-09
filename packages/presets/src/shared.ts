@@ -82,6 +82,8 @@ export const LIMITATIONS = {
     'Customer demand, queue, stock, transactions and production jobs are reusable (sw2d.economy); shop layout, walking customers, prestige and offline catch-up are not.',
   creatureSimulation:
     'Needs, decay, care actions, affinity and wellbeing hold/fail are reusable (sw2d.needs); full creature behaviour AI, relationship graphs and colony assignment are not.',
+  dialoguePresentation:
+    'Branching dialogue graphs, choices, flags and endings are reusable (sw2d.dialogue); portraits, scene composition, parser IF and evidence-board deduction are not.',
 } as const;
 
 export interface PresetSpec {

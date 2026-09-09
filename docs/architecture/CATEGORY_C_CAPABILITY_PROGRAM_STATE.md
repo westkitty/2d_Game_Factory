@@ -24,7 +24,7 @@ Highest-leverage clusters, from `packages/presets/src/shared.ts` LIMITATIONS + p
 |---|---|---|---|
 | 1 | Customer / demand / transaction / production | shopkeeper, restaurant, tycoon-lite | **Wave 1 implemented and played** (`sw2d.economy` / `simulation.economy`, ADR-0028). Residual: layout, walking customers, prestige, offline catch-up. |
 | 2 | Creature needs / behavior / relationship | pet-creature, aquarium-terrarium, virtual-pet (colony-lite only if the contract genuinely fits — it currently does not) | **Wave 2 implemented and played** (`sw2d.needs` / `simulation.needs`, ADR-0029). Residual: full creature behaviour AI, relationship graphs, colony assignment. |
-| 3 | Branching dialogue / narrative presentation | visual-novel, point-and-click; investigation/museum only if the contract fits | backlog |
+| 3 | Branching dialogue / narrative presentation | visual-novel, point-and-click; investigation/museum only if the contract fits | **Wave 3 implemented and played** (`sw2d.dialogue` / `narrative.dialogue`, ADR-0030). Residual: portraits, scene composition, parser IF, evidence-board deduction. |
 | 4 | Stealth perception / suspicion / noise / hiding | stealth-game, heist-game | backlog |
 | 5 | Ball / paddle / rebound | breakout, pong | backlog |
 | 6 | Melee / knockback / hit-stun | action-adventure, arena-combat; run-and-gun only if it still needs it | backlog |
@@ -194,4 +194,82 @@ High-contrast Phaser HUD (mode, meters, selection, last result, control hint `J 
 - No committed `proofs/` for the three consumers; catalog maturity stays `recipe`.
 - Chrome wrapper is session-local under `/tmp`.
 - Do not commit `package-lock.json` workspace links for gitignored `games/wave*`.
-- Next wave: branching dialogue / narrative presentation (visual-novel, point-and-click) unless a re-audit finds a higher multiplicative cluster.
+- Next wave: **in progress** — Wave 3 branching dialogue (see below).
+
+## Wave 3 — `sw2d.dialogue`
+
+### Problem
+
+Visual-novel and point-and-click needed authored branching graphs, choices, flags and endings. Portraits, parser IF and evidence boards are not shared.
+
+### Consumers
+
+- `visual-novel` — mode `novel` (auto-start; ENTER advances; arrows choose; two endings).
+- `point-and-click` — mode `adventure` (idle until hotspot `start`; inspect sets flags; gated door completes).
+
+Materially different: auto-start keyboard novel vs hotspot-started gated adventure.
+
+`investigation-game` / `museum-exhibit` / `interactive-fiction-hybrid` were **not** wired — deduction, exhibits and parser IF are different contracts. Committed `proofs/point-and-click` is a frozen custom lever/key shell and is not regenerated from the template.
+
+### ValidationPlan
+
+1. Contract + schema (`DialogueCatalog` / `dialogue-catalog`) reject unknown modes.
+2. Pack unit tests: novel two-ending branch; adventure inspect flags + locked door; duplicate ids throw; unknown next throws; missing document is inert; dispose withdraws the capability; reset restores the start node.
+3. Generator: all 74 emit schema-valid `content/dialogue.json`; the two consumers enable `sw2d.dialogue` and a non-empty catalog; `src/content.ts` passes `dialogue: dialogueData`.
+4. Generated ui-simulation shell binds `bindStarterDialogue` after economy/needs. Generated pointer shell replaces the dummy target with hotspots when adventure is active.
+5. Honesty / docsSync / catalogPackIntegrity / uiCopy allowlist stay green.
+6. Workbench `POST /api/dialogue/inspect` shows mode/conversations/hotspots.
+7. Expanded visual-novel kit drives the same service (`hud: false`) while keeping overlay debug fields (`dialogueStep` / `branch` / `ending`).
+8. Real-browser journeys against generated games + starter-kit overlays. Committed `proofs/` + maturity promotion still deferred.
+
+### CompletionContract
+
+- [x] Reusable pack in `@sw2d/packs`, renderer-neutral.
+- [x] Content authority `content/dialogue.json`.
+- [x] ≥2 materially different generated consumers (2 wired).
+- [x] Focused unit/integration tests.
+- [x] Honest residual limitation.
+- [x] ADR-0030.
+- [x] Real-browser play of factory-generated `wave3-visual-novel` / `wave3-point-and-click` (`tools/scripts/play-dialogue-wave3.ts`, 2/2 PASS, 0 console errors, 0 external requests).
+- [x] `npm run sw2d -- validate` on those two games (schema + tsc + vite build + boot smoke) PASS.
+- [x] `npm run qa:starter-kits:core -- visual-novel` PASS.
+- [x] `npm run qa:starter-kits:p3k` PASS (escape-room, IF-hybrid, investigation, point-and-click overlay still uses the cursor-clue loop).
+- [ ] Committed proofs + maturity promotion. **Not done — evidence rule.**
+
+### Implementation notes
+
+- Capability id `narrative.dialogue`. Pack id `sw2d.dialogue`. Not folded into `sw2d.narrative`.
+- Shell priority: economy.active, then needs.active, then dialogue.active, then dummy picker / dummy pointer target.
+- Novel catalog: two lines, one choice, end-nodes carry `ending` so the overlay's 4-confirm journey matches.
+- Adventure catalog: note/clock inspect `end` nodes set flags without completing; door requires both flags and its `ending` completes.
+- `POST /api/dialogue/inspect` must be a real route. `dialoguePack` must be in `REAL_PACKS`.
+- Overlay `visualNovel` maps `step`/`selectedIndex`/`branch`/`ending` onto the existing debug fields the core kit QA reads. ArrowLeft/Right use absolute 0/1, not wrap, so ArrowLeft on index 0 stays help.
+
+### Browser journeys (executed)
+
+Factory-generated:
+
+- Visual-novel: Space×2 → choice step=2; ArrowRight selectedIndex=1; Space branch=`keep-the-secret`; Space ending=`midnight-ending` outcome=complete; pause/restart; Space×2 + ArrowLeft + Space×2 ending=`dawn-ending`.
+- Point-and-click: idle adventure; click locked door → lastResult=`locked`; click note + Space sets `saw-note` and returns idle; clock sets `saw-clock`; door unlocks; click door + Space ending=`escaped` outcome=complete.
+
+Starter-kit overlays: visual-novel mechanic proof PASS (same 4-confirm journey, debug fields `dialogueStep`/`branch`/`ending`). P3-K overlays still pass; P&C overlay is still the cursor-clue loop, not `sw2d.dialogue`.
+
+### Visual inspection
+
+High-contrast Phaser HUD (mode, speaker, line/choices, last result, `ENTER ADVANCES` / `CLICK A HOTSPOT`). Dummy picker / dummy pointer target hidden when dialogue is active. Confirmed via debug snapshots, not screenshots.
+
+### Bugs found and fixed this wave
+
+- `src/main.ts.template` imported `dialoguePack` but did not put it in `createGame({ packs })` — the capability never installed.
+- `dialoguePack` imported in catalogPackIntegrity without `REAL_PACKS`.
+- `exactOptionalPropertyTypes` rejected `conversationId: string | undefined` on act results.
+- Factory ArrowLeft used wrap `select(-1)`; overlay QA requires absolute index 0. Factory shell now matches (ArrowLeft on 0 stays help).
+- Novel graph originally had extra n5/n6 line nodes after the choice; overlay's 4-confirm journey needs the choice to land on an `end` node so one more confirm completes.
+
+### Remaining blockers / unknowns
+
+- No committed `proofs/` for visual-novel; point-and-click proof stays the frozen Phase-1 lever/key game.
+- Catalog maturity unchanged (`visual-novel` smoke-validated, `point-and-click` proof-validated on the frozen proof).
+- Chrome wrapper is session-local under `/tmp`.
+- Do not commit `package-lock.json` workspace links for gitignored `games/wave*`.
+- Next wave: stealth perception / suspicion / noise / hiding (stealth-game, heist-game) unless a re-audit finds a higher multiplicative cluster.

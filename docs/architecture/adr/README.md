@@ -33,3 +33,4 @@ One short record per decision that constrains later work. No ADR for trivia.
 | [0027](0027-vehicle-handling-and-racing.md) | Vehicle handling and race state are two separate pure capabilities; the controller stays intent-only | Capability program 10 |
 | [0028](0028-customer-demand-transaction-production-economy.md) | Customer demand, stock, transactions and production jobs are one reusable economy capability | Category-C Wave 1 |
 | [0029](0029-creature-habitat-companion-needs.md) | Creature, habitat and companion needs are one reusable care capability | Category-C Wave 2 |
+| [0030](0030-branching-dialogue-graphs.md) | Branching dialogue graphs, choices, flags and endings are one reusable narrative-presentation capability | Category-C Wave 3 |

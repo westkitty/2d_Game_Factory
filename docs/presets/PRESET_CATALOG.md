@@ -216,8 +216,8 @@ recipe's *first* stated limitation; see `knownLimitations` in
 | `restaurant` | Customer demand, queue, stock, transactions and production jobs are reusable (sw2d.economy); shop layout, walking customers, prestige and offline catch-up are not. |
 | `aquarium-terrarium` | Needs, decay, care actions, affinity and wellbeing hold/fail are reusable (sw2d.needs); full creature behaviour AI, relationship graphs and colony assignment are not. |
 | `exploration-game` | (none stated) |
-| `visual-novel` | Narrative state exists, but no full content-authored branching dialogue renderer/portrait presentation system exists. |
-| `point-and-click` | Narrative state exists, but no full content-authored branching dialogue renderer/portrait presentation system exists. |
+| `visual-novel` | Branching dialogue graphs, choices, flags and endings are reusable (sw2d.dialogue); portraits, scene composition, parser IF and evidence-board deduction are not. |
+| `point-and-click` | Branching dialogue graphs, choices, flags and endings are reusable (sw2d.dialogue); portraits, scene composition, parser IF and evidence-board deduction are not. |
 | `interactive-fiction-hybrid` | No dedicated parser/text-command system exists. |
 | `investigation-game` | No evidence-board/deduction/linking system exists. |
 | `museum-exhibit` | No dedicated exhibit/codex presentation framework exists beyond general world/narrative/UI foundations. |

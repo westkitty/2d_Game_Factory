@@ -71,7 +71,7 @@ describe('generateUiCopy (generated games announce their genre honestly)', () =>
   it('names only real bindings for the puzzle, racing and menu families', () => {
     expect(copyFor('sokoban').playHint).toBe('MOVE / PUSH WASD/ARROWS  -  UNDO BACKSPACE  -  RESET K');
     expect(copyFor('time-trial-racer').playHint).toContain('ENTER STARTS THE RACE');
-    expect(copyFor('visual-novel').playHint).toContain('ENTER CONFIRMS');
+    expect(copyFor('visual-novel').playHint).toContain('ENTER ADVANCES');
     expect(copyFor('shopkeeper').playHint).toContain('ENTER SERVES');
     expect(copyFor('restaurant').playHint).toContain('K RESTOCKS OR COOKS');
     expect(copyFor('pet-creature').playHint).toContain('J FEEDS');

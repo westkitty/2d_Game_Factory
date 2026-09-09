@@ -48,6 +48,7 @@ import { inspectPhysics } from './physicsLab.ts';
 import { inspectRacing } from './racingLab.ts';
 import { inspectEconomy } from './economyLab.ts';
 import { inspectNeeds } from './needsLab.ts';
+import { inspectDialogue } from './dialogueLab.ts';
 import { loadScene, listLevels, newObject, objectClassOptions, saveScene, SceneValidationError, type SceneDocument } from './sceneStore.ts';
 import { buildProject, createProject, packProject, validateProject } from './factoryService.ts';
 import { presetEvidenceFor } from './presetEvidence.ts';
@@ -692,6 +693,16 @@ const ROUTES: ReadonlyMap<string, Handler> = new Map<string, Handler>([
     (request) => {
       const body = bodyObject(request);
       return ok(inspectNeeds(gameIdOf(request, body)));
+    },
+  ],
+
+  [
+    // Dialogue surface (Category-C Wave 3). Reports content/dialogue.json
+    // (mode, conversations, hotspots). Live node/flags belong in-game.
+    'POST /dialogue/inspect',
+    (request) => {
+      const body = bodyObject(request);
+      return ok(inspectDialogue(gameIdOf(request, body)));
     },
   ],
 

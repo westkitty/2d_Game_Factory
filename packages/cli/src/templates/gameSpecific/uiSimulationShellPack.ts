@@ -2,6 +2,7 @@ import type { AdvancedPhysicsService, InstalledSystemPack } from '@sw2d/contract
 import {
   bindStarterEconomy,
   bindStarterNeeds,
+  bindStarterDialogue,
   createAdvancedPhysics,
   mutedStyle,
   uiSimulationController,
@@ -16,8 +17,10 @@ import {
  * fixed option list, `confirm` locks one in. When `sw2d.economy` is
  * installed the option list is replaced by the reusable shop/kitchen/factory
  * loop (Category-C Wave 1). When `sw2d.needs` is installed it is replaced
- * by the creature/habitat/companion care loop (Wave 2). See
- * platformShellPack.ts's file comment for the template pattern.
+ * by the creature/habitat/companion care loop (Wave 2). When
+ * `sw2d.dialogue` is installed it is replaced by the novel/adventure
+ * reading loop (Wave 3). See platformShellPack.ts's file comment for
+ * the template pattern.
  */
 
 const OPTIONS = ['Option A', 'Option B', 'Option C', 'Option D'];
@@ -37,6 +40,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
 
     const economy = bindStarterEconomy(context);
     const needs = bindStarterNeeds(context);
+    const dialogue = bindStarterDialogue(context);
 
     // Optional advanced physics (capability program Phase 9). Inert unless
     // content/game.json sets physicsProfile: 'matter'. Then a ball drops onto a
@@ -50,7 +54,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         })()
       : null;
 
-    const label = economy.active || needs.active
+    const label = economy.active || needs.active || dialogue.active
       ? null
       : scene.add
           .text(width * 0.5, height * 0.5, '', mutedStyle(20))
@@ -69,6 +73,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       confirmed,
       ...(economy.active ? { economy: economy.snapshot() } : {}),
       ...(needs.active ? { needs: needs.snapshot() } : {}),
+      ...(dialogue.active ? { dialogue: dialogue.snapshot() } : {}),
       ...(physics ? { physics: { enabled: physics.enabled, bodyCount: physics.bodyCount, ball: ball ? physics.bodyState(ball) : null } } : {}),
     }));
 
@@ -97,6 +102,20 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
           needs.render();
           return;
         }
+        if (dialogue.active) {
+          const snap = dialogue.snapshot();
+          if (intent.navigateLeftPressed || intent.navigateUpPressed) {
+            if (snap.selectedIndex > 0) dialogue.select(-snap.selectedIndex);
+          } else if (intent.navigateRightPressed || intent.navigateDownPressed) {
+            if (snap.selectedIndex < Math.max(0, snap.choices.length - 1)) dialogue.select(1);
+          }
+          if (intent.confirmPressed) {
+            if (dialogue.snapshot().kind === 'choice') dialogue.choose();
+            else dialogue.advance();
+          }
+          dialogue.render();
+          return;
+        }
         if (intent.navigateLeftPressed) {
           selectionIndex = (selectionIndex - 1 + OPTIONS.length) % OPTIONS.length;
           confirmed = false;
@@ -119,6 +138,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         debugHandle.dispose();
         economy.dispose();
         needs.dispose();
+        dialogue.dispose();
         physics?.dispose();
         try {
           label?.destroy();

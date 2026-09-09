@@ -15,11 +15,10 @@ import { LIMITATIONS, POINTER_INPUT_MODES, VALIDATION_PROFILES, definePreset, pa
  * `ui-simulation`) for the two whose defining interaction is clicking
  * something (`point-and-click`, `escape-room`).
  *
- * `narrativePack`'s own doc comment: "lightweight state for later visual
- * novel/adventure systems ... No scripting language, renderer, portrait
- * system, dialogue graph loader, localization platform or quest framework
- * here" - every recipe that requires it therefore states what content it
- * cannot yet author declaratively.
+ * `sw2d.narrative` remains the lightweight flag/node/seen store.
+ * Branching graphs live in `sw2d.dialogue` (Category-C Wave 3). Recipes that
+ * require narrative without dialogue still state the remaining gap
+ * (parser IF, evidence boards, exhibits).
  */
 export const NARRATIVE_EXPLORATION_PRESETS: readonly PresetDefinition[] = [
   definePreset({
@@ -43,13 +42,11 @@ export const NARRATIVE_EXPLORATION_PRESETS: readonly PresetDefinition[] = [
     displayName: 'Visual Novel',
     family: 'narrative-exploration',
     controllerFamilies: ['ui-simulation'],
-    requiredSystemPacks: [pack(PACK_IDS.narrative)],
+    requiredSystemPacks: [pack(PACK_IDS.narrative), pack(PACK_IDS.dialogue)],
     optionalSystemPacks: [pack(PACK_IDS.progression)],
     requiredContentRoles: ['tuning', 'dialogue'],
     validationProfile: VALIDATION_PROFILES.narrativeExploration,
-    knownLimitations: [
-      'Narrative state exists, but no full content-authored branching dialogue renderer/portrait presentation system exists.',
-    ],
+    knownLimitations: [LIMITATIONS.dialoguePresentation],
   }),
 
   definePreset({
@@ -58,7 +55,7 @@ export const NARRATIVE_EXPLORATION_PRESETS: readonly PresetDefinition[] = [
     displayName: 'Point and Click',
     family: 'narrative-exploration',
     controllerFamilies: ['pointer', 'ui-simulation'],
-    requiredSystemPacks: [pack(PACK_IDS.narrative), pack(PACK_IDS.world), pack(PACK_IDS.worldEntities)],
+    requiredSystemPacks: [pack(PACK_IDS.narrative), pack(PACK_IDS.world), pack(PACK_IDS.worldEntities), pack(PACK_IDS.dialogue)],
     optionalSystemPacks: [pack(PACK_IDS.puzzle)],
     requiredContentRoles: ['tuning', 'levels', 'dialogue'],
     supportedInputModes: POINTER_INPUT_MODES,
@@ -66,7 +63,7 @@ export const NARRATIVE_EXPLORATION_PRESETS: readonly PresetDefinition[] = [
     // Spatial pointer position, hover targets and world-coordinate click/drag
     // targeting are implemented and consumed by the pointer shell (capability
     // program Phase 1, ADR-0018; proof: proofs/point-and-click/).
-    knownLimitations: ['Narrative state exists, but no full content-authored branching dialogue renderer/portrait presentation system exists.'],
+    knownLimitations: [LIMITATIONS.dialoguePresentation],
   }),
 
   definePreset({

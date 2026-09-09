@@ -41,6 +41,8 @@ declare module '@sw2d/contracts' {
     'needs:acted': { readonly actionId: string; readonly actionsTaken: number };
     'needs:completed': { readonly subjectId: string };
     'needs:failed': { readonly subjectId: string };
+    'dialogue:nodeChanged': { readonly nodeId: string | null; readonly conversationId: string | null };
+    'dialogue:ended': { readonly ending: string; readonly conversationId: string };
   }
 }
 

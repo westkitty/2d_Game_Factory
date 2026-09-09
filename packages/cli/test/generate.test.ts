@@ -119,6 +119,12 @@ describe('all 74 presets generate valid, token-free, schema-valid source', () =>
       expect(() => validateContentBundleData({ needs: needsJson })).not.toThrow();
     });
 
+    it(`${preset.id}'s generated content/dialogue.json validates as a dialogue catalog`, () => {
+      const files = buildGameFiles('matrix-game', preset);
+      const dialogueJson: unknown = JSON.parse(files.get('content/dialogue.json')!);
+      expect(() => validateContentBundleData({ dialogue: dialogueJson })).not.toThrow();
+    });
+
     it(`${preset.id} selects a real, resolvable shell template for its primary controller family`, () => {
       const files = buildGameFiles('matrix-game', preset);
       expect(files.has('src/game-specific/shellPack.ts')).toBe(true);
@@ -312,6 +318,36 @@ describe('generated ui-simulation economy games consume sw2d.economy', () => {
       expect(eco.mode, id).toBe(id === 'restaurant' ? 'kitchen' : id === 'tycoon-lite' ? 'factory' : 'shop');
       expect(eco.goods.length, id).toBeGreaterThan(0);
       expect(eco.demand.length, id).toBeGreaterThan(0);
+    }
+  });
+});
+
+describe('generated dialogue games consume sw2d.dialogue', () => {
+  it('the generated ui-simulation shell binds bindStarterDialogue', () => {
+    const vn = PRESETS.find((candidate) => candidate.id === 'visual-novel')!;
+    const shell = buildGameFiles('dialogue-probe', vn).get('src/game-specific/shellPack.ts')!;
+    expect(shell).toContain('bindStarterDialogue(context)');
+    expect(shell).toContain('dialogue.choose()');
+    expect(buildGameFiles('dialogue-probe', vn).get('src/content.ts')).toContain('dialogue: dialogueData');
+    expect(buildGameFiles('dialogue-probe', vn).get('src/main.ts')).toContain('dialoguePack, GAME_SPECIFIC_PACK');
+  });
+
+  it('the generated pointer shell binds adventure hotspots', () => {
+    const pan = PRESETS.find((candidate) => candidate.id === 'point-and-click')!;
+    const shell = buildGameFiles('dialogue-probe', pan).get('src/game-specific/shellPack.ts')!;
+    expect(shell).toContain('bindStarterDialogue(context)');
+    expect(shell).toContain('dialogue.start(');
+  });
+
+  it('visual-novel and point-and-click enable sw2d.dialogue and emit a non-empty catalog', () => {
+    for (const id of ['visual-novel', 'point-and-click'] as const) {
+      const preset = PRESETS.find((candidate) => candidate.id === id)!;
+      const files = buildGameFiles('dialogue-probe', preset);
+      const gameJson = JSON.parse(files.get('content/game.json')!) as { systemPacks: Array<{ packId: string }> };
+      expect(gameJson.systemPacks.map((s) => s.packId), id).toContain('sw2d.dialogue');
+      const doc = JSON.parse(files.get('content/dialogue.json')!) as { mode: string; conversations: unknown[] };
+      expect(doc.mode, id).toBe(id === 'point-and-click' ? 'adventure' : 'novel');
+      expect(doc.conversations.length, id).toBeGreaterThan(0);
     }
   });
 });

@@ -1,5 +1,11 @@
 import type { AdvancedPhysicsService, InstalledSystemPack } from '@sw2d/contracts';
-import { createAdvancedPhysics, type SceneContext, type ScenePackDefinition } from '@sw2d/runtime';
+import {
+  bindStarterDialogue,
+  createAdvancedPhysics,
+  pointerActionController,
+  type SceneContext,
+  type ScenePackDefinition,
+} from '@sw2d/runtime';
 
 /**
  * Generated starter shell: pointer controller family.
@@ -10,6 +16,9 @@ import { createAdvancedPhysics, type SceneContext, type ScenePackDefinition } fr
  * capture. This shell registers one world-space target and lets the service
  * resolve hover and click against the actual cursor position - no
  * cursor/hover/hit-test code is reimplemented here.
+ *
+ * When `sw2d.dialogue` is installed in adventure mode (Category-C Wave 3)
+ * the dummy target is replaced by authored hotspots that start conversations.
  *
  * Press-style semantic actions (`pointerActionController`) are still
  * available for menu-style confirms; this shell demonstrates the spatial
@@ -29,12 +38,43 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     const { width, height } = context.definition.viewport;
     const centre = { x: width * 0.5, y: height * 0.5, radius: 48 };
 
-    const target = scene.add.image(centre.x, centre.y, targetKey);
-    target.setDisplaySize(centre.radius * 2, centre.radius * 2);
+    const dialogue = bindStarterDialogue(context);
 
     let activations = 0;
     let highlighted = false;
     let hovered = false;
+
+    const target = dialogue.active
+      ? null
+      : scene.add.image(centre.x, centre.y, targetKey);
+    target?.setDisplaySize(centre.radius * 2, centre.radius * 2);
+
+    const hotspotSprites: { id: string; image: ReturnType<typeof scene.add.image>; handle: { dispose(): void } }[] = [];
+    if (dialogue.active) {
+      for (const hotspot of dialogue.snapshot().hotspots) {
+        const image = scene.add.image(hotspot.x, hotspot.y, targetKey);
+        image.setDisplaySize(56, 56);
+        if (hotspot.locked) image.setAlpha(0.35);
+        const handle = context.interaction.register({
+          id: hotspot.id,
+          shape: { kind: 'circle', x: hotspot.x, y: hotspot.y, radius: 28 },
+          onHoverEnter: () => {
+            image.setTint(0xbfe1ff);
+          },
+          onHoverLeave: () => {
+            image.clearTint();
+          },
+          onClick: () => {
+            dialogue.start(hotspot.conversationId);
+            for (const entry of hotspotSprites) {
+              const live = dialogue.snapshot().hotspots.find((h) => h.id === entry.id);
+              entry.image.setAlpha(live?.locked ? 0.35 : 1);
+            }
+          },
+        });
+        hotspotSprites.push({ id: hotspot.id, image, handle });
+      }
+    }
 
     // Optional advanced physics (capability program Phase 9). Inert unless
     // content/game.json sets physicsProfile: 'matter'. Then a demo rigid body
@@ -48,25 +88,27 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         })()
       : null;
 
-    const handle = context.interaction.register({
-      id: 'target',
-      shape: { kind: 'circle', x: centre.x, y: centre.y, radius: centre.radius },
-      onHoverEnter: () => {
-        hovered = true;
-        target.setTint(0xbfe1ff);
-      },
-      onHoverLeave: () => {
-        hovered = false;
-        if (!highlighted) target.clearTint();
-      },
-      onClick: () => {
-        activations += 1;
-        highlighted = !highlighted;
-        target.setTint(highlighted ? 0xffe14d : hovered ? 0xbfe1ff : 0xffffff);
-        context.audio.playCue('ui.confirm');
-        if (physics && demoBody) physics.applyImpulse(demoBody, 0, -180);
-      },
-    });
+    const handle = target
+      ? context.interaction.register({
+          id: 'target',
+          shape: { kind: 'circle', x: centre.x, y: centre.y, radius: centre.radius },
+          onHoverEnter: () => {
+            hovered = true;
+            target.setTint(0xbfe1ff);
+          },
+          onHoverLeave: () => {
+            hovered = false;
+            if (!highlighted) target.clearTint();
+          },
+          onClick: () => {
+            activations += 1;
+            highlighted = !highlighted;
+            target.setTint(highlighted ? 0xffe14d : hovered ? 0xbfe1ff : 0xffffff);
+            context.audio.playCue('ui.confirm');
+            if (physics && demoBody) physics.applyImpulse(demoBody, 0, -180);
+          },
+        })
+      : null;
 
     const debugHandle = context.debug.contribute('game.pointer-shell', () => ({
       activations,
@@ -75,6 +117,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       hoveredId: context.interaction.hoveredId,
       pointerWorldX: Math.round(context.spatialPointer.state.worldX),
       pointerWorldY: Math.round(context.spatialPointer.state.worldY),
+      ...(dialogue.active ? { dialogue: dialogue.snapshot() } : {}),
       ...(physics
         ? {
             physics: {
@@ -92,17 +135,32 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       id: GAME_SPECIFIC_PACK.id,
 
       update(): void {
-        /* Hover and click are event-driven through the interaction service. */
+        if (disposed || !dialogue.active) return;
+        const intent = pointerActionController.read(context.input);
+        if (intent.confirmPressed) {
+          if (dialogue.snapshot().kind === 'choice') dialogue.choose();
+          else dialogue.advance();
+        }
+        dialogue.render();
       },
 
       dispose(): void {
         if (disposed) return;
         disposed = true;
         debugHandle.dispose();
-        handle.dispose();
+        handle?.dispose();
+        for (const entry of hotspotSprites) {
+          entry.handle.dispose();
+          try {
+            entry.image.destroy();
+          } catch {
+            /* scene already tearing down */
+          }
+        }
+        dialogue.dispose();
         physics?.dispose();
         try {
-          target.destroy();
+          target?.destroy();
         } catch {
           /* scene already tearing down */
         }

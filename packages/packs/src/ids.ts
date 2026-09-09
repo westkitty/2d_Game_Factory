@@ -36,6 +36,7 @@ export const PACK_IDS = {
   racing: 'sw2d.racing',
   economy: 'sw2d.economy',
   needs: 'sw2d.needs',
+  dialogue: 'sw2d.dialogue',
 } as const;
 
 export const CAPABILITY_IDS = {
@@ -72,4 +73,6 @@ export const CAPABILITY_IDS = {
   economy: 'simulation.economy',
   /** Category-C Wave 2: creature / habitat / companion needs, decay and care. */
   needs: 'simulation.needs',
+  /** Category-C Wave 3: branching dialogue graphs, choices, flags and endings. */
+  dialogue: 'narrative.dialogue',
 } as const;

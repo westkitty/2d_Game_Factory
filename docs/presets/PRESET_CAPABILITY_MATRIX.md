@@ -105,8 +105,8 @@ pack/controller selections were actually exercised through, and
 | id | required packs | optional packs | controller(s) | input modes | validation profile |
 |---|---|---|---|---|---|
 | `exploration-game` | world, world-entities, world-graph | narrative | top-down | keyboard, touch | narrative-exploration-recipe |
-| `visual-novel` | narrative | progression | ui-simulation | keyboard, touch | narrative-exploration-recipe |
-| `point-and-click` | narrative, world, world-entities | puzzle | pointer, ui-simulation | keyboard, pointer, touch | narrative-exploration-recipe |
+| `visual-novel` | narrative, dialogue | progression | ui-simulation | keyboard, touch | narrative-exploration-recipe |
+| `point-and-click` | narrative, world, world-entities, dialogue | puzzle | pointer, ui-simulation | keyboard, pointer, touch | narrative-exploration-recipe |
 | `interactive-fiction-hybrid` | narrative | world | ui-simulation | keyboard, touch | narrative-exploration-recipe |
 | `investigation-game` | narrative, world, world-entities | puzzle | top-down, pointer | keyboard, pointer, touch | narrative-exploration-recipe |
 | `museum-exhibit` | world, world-entities | narrative | top-down, pointer | keyboard, pointer, touch | narrative-exploration-recipe |
@@ -150,8 +150,9 @@ pack/controller selections were actually exercised through, and
 | racing | `sw2d.racing` | `race.state` | 3 | 4 |
 | economy | `sw2d.economy` | `simulation.economy` | 3 | 3 |
 | needs | `sw2d.needs` | `simulation.needs` | 3 | 3 |
+| dialogue | `sw2d.dialogue` | `narrative.dialogue` | 2 | 2 |
 
-**All twenty-one current packs have at least one preset consumer.** `sw2d.items` (capability
+**All twenty-two current packs have at least one preset consumer.** `sw2d.items` (capability
 program Phase 2) is required by `collectathon-platformer`, whose generated starter consumes
 the reusable item/effect service through the shared platform shell. `sw2d.puzzle-rules`
 (capability program Phase 6) is required by `sokoban` and `puzzle-platformer`, whose

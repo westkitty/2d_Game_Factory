@@ -87,3 +87,4 @@ export { vehiclesPack, type VehicleService } from './vehicles/vehiclesPack.ts';
 export { racingPack, RACING_SAVE_SLOT, type RacingConfig, type RaceService } from './racing/racingPack.ts';
 export { economyPack, type EconomyService } from './economy/economyPack.ts';
 export { needsPack, type NeedsService } from './needs/needsPack.ts';
+export { dialoguePack, type DialogueService } from './dialogue/dialoguePack.ts';

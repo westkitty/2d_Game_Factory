@@ -15,6 +15,7 @@ import {
   generateRaceCatalog,
   generateEconomyCatalog,
   generateNeedsCatalog,
+  generateDialogueCatalog,
   generateResourceManifest,
   generateTiledLevel,
   generateTheme,
@@ -190,6 +191,20 @@ export function buildGameFiles(gameId: string, preset: PresetDefinition): Map<st
             : preset.id === 'virtual-pet'
               ? 'companion'
               : 'creature'
+          : 'none',
+      ),
+      null,
+      2,
+    ) + '\n',
+  );
+  files.set(
+    'content/dialogue.json',
+    JSON.stringify(
+      generateDialogueCatalog(
+        requiredPackIds.includes('sw2d.dialogue')
+          ? preset.id === 'point-and-click'
+            ? 'adventure'
+            : 'novel'
           : 'none',
       ),
       null,
