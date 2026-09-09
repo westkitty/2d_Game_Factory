@@ -43,4 +43,18 @@ describe('game-first seeds (zero imported art)', () => {
     const ids = buildSeeds({ assets: NO_ASSETS, limit: 6 }).map((seed) => seed.presetId);
     expect(ids).toContain('chase-platformer');
   });
+
+  it('never seeds a shallow kit while a deeper one of equal maturity is available (depth breaks maturity ties)', () => {
+    // Regression (Arena finish sweep B): once 23 presets honestly claimed
+    // proof-validated, maturity stopped being an accidental proxy for kit
+    // depth and one-object starter levels outranked designed ones - which
+    // broke WB-IMAGE-001's real-browser journey. A seed is a one-button
+    // recommendation; the depth of what is behind the button must count.
+    for (const seed of buildSeeds({ assets: NO_ASSETS, limit: 3 })) {
+      expect(
+        ['rich-proof-kit', 'rich-starter-kit'].includes(seed.starterKitDepth),
+        `seed ${seed.presetId} has depth ${seed.starterKitDepth}; with 60+ registered kits the top three should all be rich`,
+      ).toBe(true);
+    }
+  });
 });

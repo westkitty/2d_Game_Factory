@@ -2,7 +2,7 @@
 
 Project: **Stinky Weasel 2D Browser Game Factory** (`sw2d`)
 Repository: `westkitty/2d_Game_Factory`
-State revision: **16**
+State revision: **17**
 Updated: 2026-09-09
 
 Read this before doing anything. Governing spec: [`MASTER_PROJECT.md`](MASTER_PROJECT.md).
@@ -773,6 +773,24 @@ adjudicated individually in the Phase 12 acceptance document):
   gitignored; Phase 12 added no exception.
 
 ## Revision history
+
+### Revision 29 - 2026-09-09 (Arena finish program, Wave 4) - ADVERSARIAL SWEEP + FULL VALIDATION LADDER
+
+Second gameplay consumer proven (generated `bullet-hell`, real browser, dodge-under-fire loop) and
+an adversarial sweep run against the live game and workbench. Three real bugs found, root-caused,
+fixed, regression-protected: (1) the battle bridge's Arcade physics group reset the player's
+`setCollideWorldBounds`, letting the player leave the arena - found by playing, fixed with plain
+groups; (2) workbench theme synthesis rebuilt theme.json from scratch, deleting a starter kit's
+supplemental ui.panel assets (boot crash: UnknownAssetRoleError) and the generator's `ui` copy
+block - found by WB-IMAGE-001 failing, fixed by carrying both forward
+(`workbench/test/themePreservation.test.ts` guards it); (3) seed ranking lost its deep-kit
+preference once Wave 1's honest promotions broke maturity-as-depth-proxy - fixed with an explicit
+DEPTH_SCORE tie-breaker, and kit-overlay themes now carry the genre ui copy too. Six further
+attacks (pause/restart/quit-cycle torture, zero-length aim, key-mash) found nothing. Full ladder,
+all real: validate PASS (tests 2578/2578), qa:matrix 45/45, qa:smoke 14/14, qa:proof 23/23,
+qa:workbench 16/16 (13/16 before the fixes), qa:responsive 19/19, qa:starter-kits all 14 tranches,
+release:verify PASS, check:offline PASS. Durable ledger:
+[`docs/architecture/ARENA_FACTORY_FINISH_STATE.md`](docs/architecture/ARENA_FACTORY_FINISH_STATE.md).
 
 ### Revision 28 - 2026-09-09 (Arena finish program, Waves 2+3) - GENERATED SHELL CONSUMES THE COMBAT STACK; PRESET EVIDENCE SURFACE
 

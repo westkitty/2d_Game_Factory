@@ -127,8 +127,14 @@ export function bindStarterEncounters(
 
   const enemies = new Map<string, { sprite: Phaser.Physics.Arcade.Sprite; alive: boolean }>();
   const spriteToEnemy = new Map<Phaser.GameObjects.GameObject, string>();
-  const enemyGroup = scene.physics.add.group();
-  const playerGroup = scene.physics.add.group();
+  // Plain (non-physics) groups on purpose: an Arcade physics group applies its
+  // body defaults to every added child, which silently reset the shell's
+  // player.setCollideWorldBounds(true) and let the player walk out of the
+  // arena - a bug found by actually playing the generated bullet-hell. The
+  // projectile runtime's overlap checks only need the children to have bodies,
+  // which these sprites already do.
+  const enemyGroup = scene.add.group();
+  const playerGroup = scene.add.group();
   playerGroup.add(player);
 
   let kills = 0;

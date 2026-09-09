@@ -171,13 +171,61 @@ reads?" Three real bugs found and fixed before commit:
    reverted a shooter's HUD to "MOVE / JUMP". `addTheme.ts` now inherits the
    default theme's `ui` block.
 
-### Wave 4 — adversarial sweep + full ladder — PLANNED
-Planned: run after Waves 1-3 land.
+### Wave 4 — adversarial sweep + full ladder — COMPLETE
 
-## Final validation (post-Wave 4, this branch HEAD)
+Second consumer proof: generated `bullet-hell` played end-to-end in a real
+browser (dodge-under-fire loop: 2 kills, contact damage taken and avoided,
+0 deaths while dodging, pointer aim, genre HUD; zero console errors, zero
+external requests; mid-fight screenshot inspected).
 
-To be recorded when Wave 4 completes. Do not trust any number here until the
-wave status above says COMPLETE.
+Adversarial sweep B — attacks run against the live generated game and the
+workbench, three real bugs found, root-caused, fixed, regression-protected:
+1. **Player could walk out of the arena** (found by playing: position
+   reached x=-456). Root cause: `bindStarterEncounters` used
+   `scene.physics.add.group()` for its overlap groups; adding the player to
+   an Arcade physics group applies the group's body defaults, silently
+   resetting the shell's `setCollideWorldBounds(true)`. Fix: plain
+   `scene.add.group()` (overlap only needs children with bodies). Re-played:
+   bounds hold (x,y = 14,22 at the corner), battle loop unaffected.
+2. **Theme synthesis clobbered other writers' theme surfaces** (found by
+   WB-IMAGE-001 failing 0/3 with `UnknownAssetRoleError: ui.panel`).
+   `buildTheme` rebuilt theme.json from scratch, deleting a starter kit's
+   supplemental generated UI assets (ui.panel/ui.cursor - boot crash) and
+   the generator's `ui` copy block (HUD silently reverted). Fix:
+   `existingThemeOnDisk` carries forward the `ui` block verbatim plus any
+   generated-spec asset entry for a role synthesis did not emit; image-spec
+   entries are never carried (shipping bytes need provenance). New
+   `workbench/test/themePreservation.test.ts` (4 tests).
+3. **Seed ranking stopped preferring deep kits** (root cause of the same
+   journey failure): maturity had been an accidental proxy for kit depth
+   until Wave 1 honestly promoted 23 presets; after that, one-object
+   starter levels outranked designed 13-object ones. Fix: explicit
+   DEPTH_SCORE term (rich-proof-kit 30 / rich-starter 15 / smoke 5 / shell
+   0) breaking ties within a maturity tier. Kit-overlay themes now also
+   carry the genre `ui` copy (`themeRoles.ts` + `generateUiCopy` export via
+   `@sw2d/cli/factory`). New depth-tie regression test in
+   `seedsGameFirst.test.ts`.
+
+Attacks that found no bugs (all run in the real browser against the
+generated bullet-hell): pause mid-battle (nothing advances while paused,
+state survives resume); restart mid-battle with live projectiles + enemies
+(clean re-register, fresh loop works); double-fast restart; quit-to-title
+and re-enter (full teardown/rebuild); pointer aimed exactly at the player
+(zero-length aim vector - no NaN, position stays finite); nine keys mashed
+simultaneously. Zero console errors in every attack.
+
+## Final validation (this branch HEAD, all real, this session)
+
+- `npm run validate` (typecheck + test + workbench:build + build +
+  check:offline): PASS, tests 2578/2578 (2573 + 5 new regression tests)
+- `qa:matrix`: 45/45 generated games really entered play
+- `qa:smoke`: 14/14 — `qa:proof`: 23/23
+- `qa:workbench`: **16/16** journeys (13/16 before the sweep-B fixes)
+- `qa:responsive`: 19/19 surfaces (375x812 portrait, 844x390 landscape)
+- `qa:starter-kits`: all 14 tranches PASS (core 14/14, P2-B 7/7, P2-C 8/8,
+  P3-A..P3-K all green, package-lock unchanged in every tranche)
+- `release:verify`: PASS for all controller-shell families
+- `check:offline`: PASS
 
 ## Remaining blockers
 

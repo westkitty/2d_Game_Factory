@@ -177,6 +177,30 @@ function themeImageFileNames(theme: ThemeManifest): Set<string> {
   return files;
 }
 
+/**
+ * What synthesis must carry forward from the theme that is already on disk.
+ *
+ * Synthesis owns the semantic-role art it emits - but it is not the only
+ * writer of theme.json. A starter kit's overlay may have added supplemental
+ * generated UI assets (ui.panel for a dialogue box, ui.cursor for a pointer
+ * shell) that its shell pack resolves at install time, and the generator
+ * emits the game's `ui` copy block (title/subtitle/playHint). Rebuilding the
+ * document from scratch silently deleted both, so importing a single sprite
+ * into an expanded-kit game broke its boot (UnknownAssetRoleError: ui.panel)
+ * and reverted its HUD copy - a real bug found by the workbench QA journeys
+ * when seed ranking changed. Preserve: the `ui` block verbatim, and any
+ * existing asset entry whose role synthesis did not emit this pass.
+ */
+function existingThemeOnDisk(input: SynthesisInput, themeId: string): Partial<ThemeManifest> | null {
+  const themePath = resolveContained(gameRoot(input.gameId), 'content', 'themes', themeId, 'theme.json');
+  if (!existsSync(themePath)) return null;
+  try {
+    return JSON.parse(readFileSync(themePath, 'utf8')) as Partial<ThemeManifest>;
+  } catch {
+    return null; // unreadable/corrupt: synthesis output stands alone
+  }
+}
+
 /** Build the theme document without writing to disk. */
 export function buildTheme(input: SynthesisInput): SynthesisResult {
   const themeId = input.themeId ?? 'default';
@@ -238,12 +262,22 @@ export function buildTheme(input: SynthesisInput): SynthesisResult {
     })
     .filter((animation): animation is RoleAnimationDescriptor => animation !== null);
 
+  // Carry forward what other writers own (see existingThemeOnDisk): the
+  // generator's ui copy block, and supplemental asset roles a starter kit
+  // added that this synthesis pass did not emit (ui.panel etc.).
+  const existing = existingThemeOnDisk(input, themeId);
+  const emittedRoles = new Set(assets.map((descriptor) => descriptor.role));
+  const preservedAssets = (existing?.assets ?? []).filter(
+    (descriptor) => !emittedRoles.has(descriptor.role as WorkbenchAssetRole) && descriptor.spec.kind === 'generated',
+  );
+
   const tokens = tokensFromPalette(palette);
   const theme: ThemeManifest = {
     schemaVersion: 1,
     id: themeId,
     displayName: input.displayName ?? 'Default',
-    assets,
+    ...(existing?.ui !== undefined ? { ui: existing.ui } : {}),
+    assets: [...assets, ...preservedAssets],
     ...(animations.length > 0 ? { animations } : {}),
     tokens,
     fonts: { ui: 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace' },

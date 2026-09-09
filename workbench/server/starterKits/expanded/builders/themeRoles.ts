@@ -1,4 +1,5 @@
-import { generateTheme } from '@sw2d/cli/factory';
+import { generateTheme, generateUiCopy } from '@sw2d/cli/factory';
+import { getPreset } from '@sw2d/presets';
 import type { StarterKit } from '../../contracts.ts';
 
 type SupplementalUiRole = 'background' | 'ui.panel' | 'ui.cursor' | 'ui.button' | 'particle';
@@ -77,8 +78,23 @@ function roleOf(asset: unknown): string | null {
   return typeof role === 'string' ? role : null;
 }
 
-function defaultThemeWithRoles(roles: readonly SupplementalUiRole[]): string {
-  const theme = generateTheme('default', 'Default');
+function defaultThemeWithRoles(presetId: string, displayName: string, roles: readonly SupplementalUiRole[]): string {
+  // Same ui copy the plain generator would emit (title/subtitle/playHint) -
+  // overlaying a kit's theme must not silently revert the game's genre HUD
+  // back to the runtime's neutral "MOVE / JUMP" copy.
+  let ui: Record<string, string> | undefined;
+  try {
+    const preset = getPreset(presetId);
+    ui = generateUiCopy({
+      displayName,
+      presetDisplayName: preset.displayName,
+      primaryControllerFamily: preset.controllerFamilies[0]!,
+      requiredPackIds: preset.requiredSystemPacks.map((selection) => selection.packId),
+    });
+  } catch {
+    ui = undefined; // unknown preset id: theme simply carries no ui copy
+  }
+  const theme = generateTheme('default', 'Default', ui);
   const assets = Array.isArray(theme.assets) ? [...theme.assets] : [];
   for (const role of roles) {
     if (!assets.some((asset) => roleOf(asset) === role)) assets.push(SUPPLEMENTAL_UI_ASSETS[role]);
@@ -96,7 +112,7 @@ export function withDefaultThemeRoles(base: StarterKit, roles: readonly Suppleme
     ...base,
     overlay(gameId: string, displayName: string): ReadonlyMap<string, string> {
       const files = new Map(base.overlay(gameId, displayName));
-      files.set('content/themes/default/theme.json', defaultThemeWithRoles(roles));
+      files.set('content/themes/default/theme.json', defaultThemeWithRoles(base.presetId, displayName, roles));
       return files;
     },
   };
