@@ -151,9 +151,9 @@ describe('required knownLimitations (MASTER_PROJECT.md section 12)', () => {
     { id: 'territory-control', pattern: /Reusable capture-zone\/territory ownership\/scoring mechanics/ },
     // Phase 7C (MASTER_PROJECT.md section 11)
     { id: 'idle-incremental', pattern: /offline-progress\/catch-up, prestige, and large economy balancing/ },
-    { id: 'shopkeeper', pattern: /No complete customer AI, demand\/economy model/ },
-    { id: 'tycoon-lite', pattern: /No complete customer AI, demand\/economy model/ },
-    { id: 'restaurant', pattern: /No complete customer AI, demand\/economy model/ },
+    { id: 'shopkeeper', pattern: /Customer demand, queue, stock, transactions and production jobs are reusable/ },
+    { id: 'tycoon-lite', pattern: /Customer demand, queue, stock, transactions and production jobs are reusable/ },
+    { id: 'restaurant', pattern: /Customer demand, queue, stock, transactions and production jobs are reusable/ },
     { id: 'farming-lite', pattern: /No reusable crop-growth\/season\/plot-interaction system/ },
     { id: 'pet-creature', pattern: /No reusable needs\/behavior\/relationship\/creature simulation/ },
     { id: 'virtual-pet', pattern: /No reusable needs\/behavior\/relationship\/creature simulation/ },

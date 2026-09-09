@@ -1,13 +1,21 @@
 import type { AdvancedPhysicsService, InstalledSystemPack } from '@sw2d/contracts';
-import { createAdvancedPhysics, mutedStyle, uiSimulationController, type SceneContext, type ScenePackDefinition } from '@sw2d/runtime';
+import {
+  bindStarterEconomy,
+  createAdvancedPhysics,
+  mutedStyle,
+  uiSimulationController,
+  type SceneContext,
+  type ScenePackDefinition,
+} from '@sw2d/runtime';
 
 /**
  * Generated starter shell: ui-simulation controller family.
  *
  * A menu-style selection loop - `navigateLeft`/`navigateRight` cycle a
- * fixed option list, `confirm` locks one in. No canvas movement, matching
- * this controller family's own contract (menu-style navigation and
- * mode-changing intent only). See platformShellPack.ts's file comment for
+ * fixed option list, `confirm` locks one in. When `sw2d.economy` is
+ * installed the option list is replaced by the reusable shop/kitchen/factory
+ * loop (Category-C Wave 1) so generated management games are actually
+ * shops, not a dummy picker. See platformShellPack.ts's file comment for
  * the template pattern.
  */
 
@@ -26,6 +34,8 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     let selectionIndex = 0;
     let confirmed = false;
 
+    const economy = bindStarterEconomy(context);
+
     // Optional advanced physics (capability program Phase 9). Inert unless
     // content/game.json sets physicsProfile: 'matter'. Then a ball drops onto a
     // static floor through the reusable Matter-backed service; CONFIRM nudges
@@ -38,12 +48,15 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         })()
       : null;
 
-    const label = scene.add
-      .text(width * 0.5, height * 0.5, '', mutedStyle(20))
-      .setOrigin(0.5)
-      .setScrollFactor(0);
+    const label = economy.active
+      ? null
+      : scene.add
+          .text(width * 0.5, height * 0.5, '', mutedStyle(20))
+          .setOrigin(0.5)
+          .setScrollFactor(0);
 
     function render(): void {
+      if (!label) return;
       const marker = confirmed ? '[confirmed] ' : '';
       label.setText(`${marker}< ${OPTIONS[selectionIndex]} >`);
     }
@@ -52,6 +65,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     const debugHandle = context.debug.contribute('game.ui-simulation-shell', () => ({
       selectionIndex,
       confirmed,
+      ...(economy.active ? { economy: economy.snapshot() } : {}),
       ...(physics ? { physics: { enabled: physics.enabled, bodyCount: physics.bodyCount, ball: ball ? physics.bodyState(ball) : null } } : {}),
     }));
 
@@ -63,6 +77,14 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       update(): void {
         if (disposed) return;
         const intent = uiSimulationController.read(context.input);
+        if (economy.active) {
+          if (intent.navigateLeftPressed || intent.navigateUpPressed) economy.select(-1);
+          else if (intent.navigateRightPressed || intent.navigateDownPressed) economy.select(1);
+          if (intent.confirmPressed) economy.serve();
+          if (context.input.justPressed('SECONDARY_ACTION')) economy.secondary();
+          economy.render();
+          return;
+        }
         if (intent.navigateLeftPressed) {
           selectionIndex = (selectionIndex - 1 + OPTIONS.length) % OPTIONS.length;
           confirmed = false;
@@ -83,9 +105,10 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         if (disposed) return;
         disposed = true;
         debugHandle.dispose();
+        economy.dispose();
         physics?.dispose();
         try {
-          label.destroy();
+          label?.destroy();
         } catch {
           /* scene already tearing down */
         }

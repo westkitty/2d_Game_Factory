@@ -20,6 +20,7 @@ import {
   worldGraphPack,
   vehiclesPack,
   racingPack,
+  economyPack,
 } from '@sw2d/packs';
 import { resolveInstallOrder } from '@sw2d/runtime/composition';
 import { PRESETS } from '../src/index.ts';
@@ -60,6 +61,7 @@ const REAL_PACKS = [
   worldGraphPack,
   vehiclesPack,
   racingPack,
+  economyPack,
 ];
 
 const REGISTRY = new Map(REAL_PACKS.map((definition) => [definition.id, definition]));

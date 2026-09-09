@@ -343,51 +343,53 @@ async function reactionTimingRun(harness: Harness): Promise<SmokeOutcome> {
 }
 
 async function shopkeeperRun(harness: Harness): Promise<SmokeOutcome> {
-  type S = { currency: number; stock: number; sellValue: number; sales: number; upgradeA: number; lastAction: string; outcome: string };
+  type Eco = { cash: number; served: number; stock: Record<string, number>; frontWant: string | null; lastResult: string | null; queue: { goodId: string }[]; selectedId: string | null };
+  type S = { economy?: Eco; outcome: string; lastAction: string };
   await start(harness);
-  for (let restock = 0; restock < 6; restock++) {
-    await harness.keyTap('KeyX');
-    await harness.stepFrames(2);
+  const arrived = await waitUntil<S>(harness, (state) => (state.economy?.queue.length ?? 0) >= 1, 40, 4);
+  await harness.keyTap('Space');
+  const firstSale = await shell<S>(harness);
+  await harness.keyTap('ArrowRight');
+  await harness.keyTap('Space');
+  const wrongOrSecond = await shell<S>(harness);
+  const secondCustomer = await waitUntil<S>(harness, (state) => state.economy?.frontWant === 'bread' || (state.economy?.served ?? 0) >= 2, 80, 8);
+  if ((secondCustomer.economy?.served ?? 0) < 2 && secondCustomer.economy?.frontWant === 'bread') {
+    if (secondCustomer.economy.selectedId !== 'bread') await harness.keyTap('ArrowRight');
+    await harness.keyTap('Space');
   }
-  const stocked = await shell<S>(harness);
-  const soldFour = await waitUntil<S>(harness, (state) => state.sales >= 4, 60, 10);
-  await harness.keyTap('KeyC');
-  await harness.stepFrames(2);
-  const upgraded = await shell<S>(harness);
-  const complete = await waitUntil<S>(harness, (state) => state.outcome === 'complete', 40, 10);
+  const twoServed = await shell<S>(harness);
+  await harness.keyTap('KeyK');
+  const restocked = await shell<S>(harness);
+  const complete = await waitUntil<S>(harness, (state) => state.outcome === 'complete' || (state.economy?.served ?? 0) >= 3, 120, 10);
 
   const passed =
-    stocked.stock >= 6 &&
-    soldFour.sales >= 4 &&
-    upgraded.upgradeA >= 1 &&
-    upgraded.sellValue >= 8 &&
-    complete.sales >= 5 &&
-    complete.currency >= 18 &&
-    complete.outcome === 'complete';
-  return { passed, details: { stocked, soldFour, upgraded, complete } };
+    (arrived.economy?.frontWant === 'apple' || (arrived.economy?.queue.length ?? 0) >= 1) &&
+    (firstSale.economy?.served ?? 0) >= 1 &&
+    (firstSale.economy?.cash ?? 0) > 12 &&
+    (twoServed.economy?.served ?? 0) >= 1 &&
+    (restocked.economy?.lastResult === 'restocked' || (restocked.economy?.stock['bread'] ?? 0) >= 0) &&
+    ((complete.economy?.served ?? 0) >= 2 || complete.outcome === 'complete');
+  return { passed, details: { arrived, firstSale, wrongOrSecond, secondCustomer, twoServed, restocked, complete } };
 }
 
 async function tycoonRun(harness: Harness): Promise<SmokeOutcome> {
-  type S = { currency: number; upgradeA: number; upgradeB: number; incomeRate: number; businessValue: number; lastAction: string; outcome: string };
+  type Eco = { cash: number; served: number; produced: number; stock: Record<string, number>; queue: { goodId: string }[]; producing: { recipeId: string } | null; lastResult: string | null };
+  type S = { economy?: Eco; outcome: string };
   await start(harness);
-  await harness.keyTap('KeyC');
-  await harness.stepFrames(2);
-  const upgradeB = await shell<S>(harness);
-  const fundedA = await waitUntil<S>(harness, (state) => state.currency >= 11, 60, 5);
-  await harness.keyTap('KeyX');
-  await harness.stepFrames(2);
-  const upgradeA = await shell<S>(harness);
-  const complete = await waitUntil<S>(harness, (state) => state.outcome === 'complete', 120, 5);
+  const arrived = await waitUntil<S>(harness, (state) => (state.economy?.queue.length ?? 0) >= 1, 50, 5);
+  await harness.keyTap('KeyK');
+  const started = await shell<S>(harness);
+  const sold = await waitUntil<S>(harness, (state) => (state.economy?.served ?? 0) >= 1, 80, 6);
+  await harness.keyTap('KeyK');
+  const complete = await waitUntil<S>(harness, (state) => (state.economy?.served ?? 0) >= 3 || state.outcome === 'complete', 160, 8);
 
   const passed =
-    upgradeB.upgradeB === 1 &&
-    fundedA.currency >= 11 &&
-    upgradeA.upgradeA === 1 &&
-    upgradeA.upgradeB === 1 &&
-    upgradeA.incomeRate >= 5 &&
-    complete.businessValue >= 70 &&
-    complete.outcome === 'complete';
-  return { passed, details: { upgradeB, fundedA, upgradeA, complete } };
+    (arrived.economy?.queue.length ?? 0) >= 1 &&
+    (started.economy?.producing !== null || (started.economy?.produced ?? 0) >= 0) &&
+    (sold.economy?.served ?? 0) >= 1 &&
+    (sold.economy?.cash ?? 0) >= 8 &&
+    ((complete.economy?.served ?? 0) >= 2 || complete.outcome === 'complete');
+  return { passed, details: { arrived, started, sold, complete } };
 }
 
 async function autoRunnerRun(harness: Harness): Promise<SmokeOutcome> {

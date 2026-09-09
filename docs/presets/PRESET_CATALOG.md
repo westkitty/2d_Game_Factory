@@ -114,12 +114,12 @@ controller/input-mode breakdown and full pack-consumer coverage.
 | id | display name | controller(s) | content roles | maturity |
 |---|---|---|---|---|
 | `idle-incremental` | Idle Incremental | ui-simulation | tuning | proof-validated |
-| `shopkeeper` | Shopkeeper | ui-simulation | tuning | recipe |
-| `tycoon-lite` | Tycoon Lite | ui-simulation | tuning | recipe |
+| `shopkeeper` | Shopkeeper | ui-simulation | tuning, economy | recipe |
+| `tycoon-lite` | Tycoon Lite | ui-simulation | tuning, economy | recipe |
 | `farming-lite` | Farming Lite | ui-simulation | tuning | recipe |
 | `pet-creature` | Pet Creature | ui-simulation | tuning | recipe |
 | `colony-lite` | Colony Lite | ui-simulation | tuning | recipe |
-| `restaurant` | Restaurant | ui-simulation | tuning | recipe |
+| `restaurant` | Restaurant | ui-simulation | tuning, economy | recipe |
 | `aquarium-terrarium` | Aquarium / Terrarium | ui-simulation | tuning | recipe |
 
 ## Narrative / exploration (Phase 7C)
@@ -208,12 +208,12 @@ recipe's *first* stated limitation; see `knownLimitations` in
 | `base-defense` | Wave spawning is reusable (sw2d.encounters, Phase 4, optional); base-damage/target-priority resolution is still starter-specific. |
 | `territory-control` | Reusable capture-zone/territory ownership/scoring mechanics do not exist yet. |
 | `idle-incremental` | The simulation/resource core exists, but full offline-progress/catch-up, prestige, and large economy balancing are not production systems. |
-| `shopkeeper` | No complete customer AI, demand/economy model, queue/placement UI, or content-authored production chain exists. |
-| `tycoon-lite` | No complete customer AI, demand/economy model, queue/placement UI, or content-authored production chain exists. |
+| `shopkeeper` | Customer demand, queue, stock, transactions and production jobs are reusable (sw2d.economy); shop layout, walking customers, prestige and offline catch-up are not. |
+| `tycoon-lite` | Customer demand, queue, stock, transactions and production jobs are reusable (sw2d.economy); shop layout, walking customers, prestige and offline catch-up are not. |
 | `farming-lite` | No reusable crop-growth/season/plot-interaction system exists. |
 | `pet-creature` | No reusable needs/behavior/relationship/creature simulation exists beyond foundational resources/state. |
 | `colony-lite` | Colonist pathfinding is reusable (sw2d.navigation, optional); needs, assignment AI, construction placement and colony simulation are not. |
-| `restaurant` | No complete customer AI, demand/economy model, queue/placement UI, or content-authored production chain exists. |
+| `restaurant` | Customer demand, queue, stock, transactions and production jobs are reusable (sw2d.economy); shop layout, walking customers, prestige and offline catch-up are not. |
 | `aquarium-terrarium` | No reusable needs/behavior/relationship/creature simulation exists beyond foundational resources/state. |
 | `exploration-game` | (none stated) |
 | `visual-novel` | Narrative state exists, but no full content-authored branching dialogue renderer/portrait presentation system exists. |

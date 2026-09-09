@@ -34,6 +34,10 @@ declare module '@sw2d/contracts' {
     'weapons:ammoChanged': { readonly ownerId: string; readonly ammo: number };
     'encounters:phaseChanged': { readonly encounterId: string; readonly phaseId: string | null; readonly phaseIndex: number };
     'encounters:completed': { readonly encounterId: string };
+    'economy:served': { readonly customerId: string; readonly goodId: string; readonly cash: number; readonly stock: number };
+    'economy:customerArrived': { readonly customerId: string; readonly goodId: string; readonly queueLength: number };
+    'economy:customerLeft': { readonly customerId: string; readonly reason: 'impatient' };
+    'economy:stockChanged': { readonly goodId: string; readonly stock: number; readonly cash: number };
   }
 }
 

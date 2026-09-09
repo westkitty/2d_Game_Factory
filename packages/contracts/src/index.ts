@@ -14,6 +14,7 @@ export * from './context.ts';
 export * from './controllers.ts';
 export * from './debug.ts';
 export * from './disposable.ts';
+export * from './economy.ts';
 export * from './encounters.ts';
 export * from './events.ts';
 export * from './game.ts';

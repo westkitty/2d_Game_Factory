@@ -12,6 +12,16 @@ const GAMES_ROOT = path.join(REPO_ROOT, 'games');
 const LOCKFILE = path.join(REPO_ROOT, 'package-lock.json');
 const DEBUG_KEY = 'game.expanded-starter';
 
+interface EconomyDebug {
+  readonly cash: number;
+  readonly served: number;
+  readonly stock: Readonly<Record<string, number>>;
+  readonly frontWant: string | null;
+  readonly producing: { readonly recipeId: string } | null;
+  readonly selectedId: string | null;
+  readonly queue: readonly { readonly goodId: string }[];
+}
+
 interface SimulationState {
   readonly outcome: string;
   readonly lastAction: string;
@@ -40,6 +50,7 @@ interface SimulationState {
   readonly water: number;
   readonly food: number;
   readonly habitatHealthyMs: number;
+  readonly economy?: EconomyDebug;
 }
 
 interface Candidate { readonly id: string; readonly kit: StarterKit; run(harness: Harness): Promise<SmokeOutcome> }
@@ -104,18 +115,47 @@ async function colonyRun(harness: Harness): Promise<SmokeOutcome> {
   return { passed, details: { initial, assignedWood, final: finished } };
 }
 
+async function waitUntilState(
+  harness: Harness,
+  predicate: (state: SimulationState) => boolean,
+  maxSteps = 80,
+  framesPerStep = 5,
+): Promise<SimulationState> {
+  let state = await shell(harness);
+  for (let step = 0; step < maxSteps && !predicate(state); step++) {
+    await harness.stepFrames(framesPerStep);
+    state = await shell(harness);
+  }
+  return state;
+}
+
+async function cookMatchingTicket(harness: Harness): Promise<void> {
+  const before = await shell(harness);
+  const want = before.economy?.frontWant;
+  const selected = before.economy?.selectedId ?? '';
+  if (want === 'salad' && selected !== 'cook-salad') await harness.keyTap('ArrowRight');
+  if (want === 'soup' && selected !== 'cook-soup') await harness.keyTap('ArrowLeft');
+  await harness.keyTap('KeyK');
+  await waitUntilState(harness, (state) => state.economy?.producing === null, 60, 3);
+  await harness.keyTap('Enter');
+}
+
 async function restaurantRun(harness: Harness): Promise<SmokeOutcome> {
   await start(harness);
   const initial = await shell(harness);
-  for (let i = 0; i < 3; i++) { await harness.keyTap('KeyJ'); await harness.stepFrames(2); }
-  const queued = await shell(harness);
-  await harness.stepFrames(120);
-  const ready = await shell(harness);
-  for (let i = 0; i < 3; i++) { await harness.keyTap('Enter'); await harness.stepFrames(2); }
-  const finished = await shell(harness);
-  const passed = roles(initial) && queued.orders.length === 3 && ready.orders.every((order) => order.ready) &&
-    finished.served === 3 && finished.revenue === 30 && finished.orders.length === 0 && finished.outcome === 'complete' && finished.lastAction === 'serve';
-  return { passed, details: { initial, queued, ready, finished } };
+  const arrived = await waitUntilState(harness, (state) => (state.economy?.queue.length ?? 0) >= 1);
+  await cookMatchingTicket(harness);
+  const firstServe = await shell(harness);
+  await waitUntilState(harness, (state) => (state.economy?.queue.length ?? 0) >= 1);
+  await cookMatchingTicket(harness);
+  await waitUntilState(harness, (state) => (state.economy?.queue.length ?? 0) >= 1);
+  await cookMatchingTicket(harness);
+  const finished = await waitUntilState(harness, (state) => state.outcome === 'complete' || (state.economy?.served ?? 0) >= 3);
+  const passed = roles(initial) && Boolean(arrived.economy?.frontWant) &&
+    (firstServe.economy?.served ?? 0) >= 1 &&
+    (finished.economy?.served ?? 0) >= 3 &&
+    finished.outcome === 'complete';
+  return { passed, details: { initial, arrived, firstServe, finished } };
 }
 
 async function aquariumRun(harness: Harness): Promise<SmokeOutcome> {

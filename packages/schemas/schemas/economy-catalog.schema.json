@@ -1,0 +1,88 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:sw2d:schema:content-economy-catalog:v1",
+  "title": "EconomyCatalog",
+  "description": "Mirrors @sw2d/contracts EconomyCatalog (economy.ts). Validated as a ContentBundle.data document (document name 'economy'). Bounded shop/kitchen/factory semantics - no scripting.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "mode", "cash", "goods", "demand", "spawn"],
+  "properties": {
+    "schemaVersion": { "type": "integer", "minimum": 1 },
+    "mode": { "type": "string", "enum": ["shop", "kitchen", "factory"] },
+    "cash": { "type": "number", "minimum": 0 },
+    "goods": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/good" }
+    },
+    "recipes": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/recipe" }
+    },
+    "demand": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/demand" }
+    },
+    "spawn": { "$ref": "#/definitions/spawn" },
+    "autoSell": { "type": "boolean" }
+  },
+  "definitions": {
+    "good": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "displayName", "price", "stock"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "displayName": { "type": "string", "minLength": 1 },
+        "price": { "type": "number", "minimum": 0 },
+        "restockCost": { "type": "number", "minimum": 0 },
+        "stock": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "recipe": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "displayName", "outputGoodId", "outputCount", "durationMs"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "displayName": { "type": "string", "minLength": 1 },
+        "outputGoodId": { "type": "string", "minLength": 1 },
+        "outputCount": { "type": "integer", "exclusiveMinimum": 0 },
+        "durationMs": { "type": "number", "minimum": 0 },
+        "input": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["goodId", "count"],
+            "properties": {
+              "goodId": { "type": "string", "minLength": 1 },
+              "count": { "type": "integer", "exclusiveMinimum": 0 }
+            }
+          }
+        }
+      }
+    },
+    "demand": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "displayName", "goodId", "patienceMs"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "displayName": { "type": "string", "minLength": 1 },
+        "goodId": { "type": "string", "minLength": 1 },
+        "pay": { "type": "number", "minimum": 0 },
+        "patienceMs": { "type": "number", "exclusiveMinimum": 0 }
+      }
+    },
+    "spawn": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["firstDelayMs", "intervalMs", "maxQueue"],
+      "properties": {
+        "firstDelayMs": { "type": "number", "minimum": 0 },
+        "intervalMs": { "type": "number", "exclusiveMinimum": 0 },
+        "maxQueue": { "type": "integer", "minimum": 0 }
+      }
+    }
+  }
+}

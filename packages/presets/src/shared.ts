@@ -79,7 +79,7 @@ export const LIMITATIONS = {
   ballPaddleSystem: 'No reusable ball/paddle collision-and-bounce system exists yet.',
   // Phase 7C additions - same "two or more recipes" bar as Phase 7B's four.
   customerEconomy:
-    'No complete customer AI, demand/economy model, queue/placement UI, or content-authored production chain exists.',
+    'Customer demand, queue, stock, transactions and production jobs are reusable (sw2d.economy); shop layout, walking customers, prestige and offline catch-up are not.',
   creatureSimulation:
     'No reusable needs/behavior/relationship/creature simulation exists beyond foundational resources/state.',
 } as const;

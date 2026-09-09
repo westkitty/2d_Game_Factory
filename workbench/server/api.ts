@@ -46,6 +46,7 @@ import { previewGeneration } from './generationLab.ts';
 import { inspectWorldGraph } from './worldGraphLab.ts';
 import { inspectPhysics } from './physicsLab.ts';
 import { inspectRacing } from './racingLab.ts';
+import { inspectEconomy } from './economyLab.ts';
 import { loadScene, listLevels, newObject, objectClassOptions, saveScene, SceneValidationError, type SceneDocument } from './sceneStore.ts';
 import { buildProject, createProject, packProject, validateProject } from './factoryService.ts';
 import { presetEvidenceFor } from './presetEvidence.ts';
@@ -670,6 +671,16 @@ const ROUTES: ReadonlyMap<string, Handler> = new Map<string, Handler>([
     (request) => {
       const body = bodyObject(request);
       return ok(inspectRacing(gameIdOf(request, body)));
+    },
+  ],
+
+  [
+    // Economy surface (Category-C Wave 1). Reports content/economy.json
+    // (mode, goods, recipes, demand, spawn). Live queue belongs in-game.
+    'POST /economy/inspect',
+    (request) => {
+      const body = bodyObject(request);
+      return ok(inspectEconomy(gameIdOf(request, body)));
     },
   ],
 

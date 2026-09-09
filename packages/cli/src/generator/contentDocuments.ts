@@ -387,6 +387,73 @@ export function generateVehicleCatalog(profile: 'car' | 'kart' | 'boat' | 'fligh
 }
 
 /**
+ * content/economy.json - an EconomyCatalog (Category-C Wave 1). Always
+ * emitted; empty/inert unless the preset installs `sw2d.economy`. Three
+ * bounded starter modes match the three management consumers: shop
+ * (serve from stock), kitchen (cook then serve), factory (produce, auto-sell).
+ */
+export function generateEconomyCatalog(kind: 'shop' | 'kitchen' | 'factory' | 'none'): Record<string, unknown> {
+  const empty = {
+    schemaVersion: 1,
+    mode: 'shop',
+    cash: 0,
+    goods: [],
+    demand: [],
+    spawn: { firstDelayMs: 0, intervalMs: 1000, maxQueue: 0 },
+  };
+  if (kind === 'none') return empty;
+  if (kind === 'shop') {
+    return {
+      schemaVersion: 1,
+      mode: 'shop',
+      cash: 12,
+      goods: [
+        { id: 'apple', displayName: 'Apple', price: 5, restockCost: 2, stock: 2 },
+        { id: 'bread', displayName: 'Bread', price: 8, restockCost: 4, stock: 1 },
+      ],
+      demand: [
+        { id: 'pat', displayName: 'Pat', goodId: 'apple', patienceMs: 12000 },
+        { id: 'sam', displayName: 'Sam', goodId: 'bread', patienceMs: 12000 },
+      ],
+      spawn: { firstDelayMs: 250, intervalMs: 2200, maxQueue: 2 },
+    };
+  }
+  if (kind === 'kitchen') {
+    return {
+      schemaVersion: 1,
+      mode: 'kitchen',
+      cash: 0,
+      goods: [
+        { id: 'soup', displayName: 'Soup', price: 12, stock: 0 },
+        { id: 'salad', displayName: 'Salad', price: 9, stock: 0 },
+      ],
+      recipes: [
+        { id: 'cook-soup', displayName: 'Cook soup', outputGoodId: 'soup', outputCount: 1, durationMs: 700 },
+        { id: 'cook-salad', displayName: 'Toss salad', outputGoodId: 'salad', outputCount: 1, durationMs: 500 },
+      ],
+      demand: [
+        { id: 'diner-a', displayName: 'Diner', goodId: 'soup', patienceMs: 14000 },
+        { id: 'diner-b', displayName: 'Guest', goodId: 'salad', patienceMs: 14000 },
+      ],
+      spawn: { firstDelayMs: 250, intervalMs: 2400, maxQueue: 2 },
+    };
+  }
+  return {
+    schemaVersion: 1,
+    mode: 'factory',
+    cash: 8,
+    autoSell: true,
+    goods: [{ id: 'widget', displayName: 'Widget', price: 6, stock: 0 }],
+    recipes: [{ id: 'make-widget', displayName: 'Stamp widget', outputGoodId: 'widget', outputCount: 1, durationMs: 600 }],
+    demand: [
+      { id: 'buyer-a', displayName: 'Buyer', goodId: 'widget', patienceMs: 16000 },
+      { id: 'buyer-b', displayName: 'Client', goodId: 'widget', patienceMs: 16000 },
+    ],
+    spawn: { firstDelayMs: 400, intervalMs: 1800, maxQueue: 3 },
+  };
+}
+
+/**
  * content/races.json - a RaceCatalog (capability program Phase 10). Always
  * emitted; empty unless the preset installs `sw2d.racing`, then one starter
  * race: a small four-corner track, `time-trial` mode for the time-trial
@@ -466,7 +533,9 @@ export function generateUiCopy(options: {
       playHint = 'POINT AT THINGS  -  CLICK TO ACT  -  PAUSE TO STOP';
       break;
     case 'ui-simulation':
-      playHint = 'ARROWS CHANGE THE SELECTION  -  ENTER CONFIRMS  -  PAUSE TO STOP';
+      playHint = has('sw2d.economy')
+        ? 'ARROWS PICK  -  ENTER SERVES  -  K RESTOCKS OR COOKS'
+        : 'ARROWS CHANGE THE SELECTION  -  ENTER CONFIRMS  -  PAUSE TO STOP';
       break;
     default:
       break;

@@ -34,6 +34,7 @@ export const PACK_IDS = {
   worldGraph: 'sw2d.world-graph',
   vehicles: 'sw2d.vehicles',
   racing: 'sw2d.racing',
+  economy: 'sw2d.economy',
 } as const;
 
 export const CAPABILITY_IDS = {
@@ -66,4 +67,6 @@ export const CAPABILITY_IDS = {
   vehicles: 'vehicle.motion',
   /** Capability program Phase 10: race / checkpoint / lap state, separate from vehicle motion. */
   racing: 'race.state',
+  /** Category-C Wave 1: customer / demand / transaction / production economy. */
+  economy: 'simulation.economy',
 } as const;

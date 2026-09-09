@@ -107,6 +107,12 @@ describe('all 74 presets generate valid, token-free, schema-valid source', () =>
       expect(() => validateContentBundleData({ vehicles: vJson, races: rJson })).not.toThrow();
     });
 
+    it(`${preset.id}'s generated content/economy.json validates as an economy catalog`, () => {
+      const files = buildGameFiles('matrix-game', preset);
+      const ecoJson: unknown = JSON.parse(files.get('content/economy.json')!);
+      expect(() => validateContentBundleData({ economy: ecoJson })).not.toThrow();
+    });
+
     it(`${preset.id} selects a real, resolvable shell template for its primary controller family`, () => {
       const files = buildGameFiles('matrix-game', preset);
       expect(files.has('src/game-specific/shellPack.ts')).toBe(true);
@@ -280,6 +286,30 @@ describe('generated games ship explicit start controls', () => {
  * constant, the real generated shell. End-to-end behaviour is proven in a real
  * browser by proofs/gallery-shooter/ and proofs/point-and-click/.
  */
+describe('generated ui-simulation economy games consume sw2d.economy', () => {
+  it('the generated ui-simulation shell binds bindStarterEconomy', () => {
+    const shop = PRESETS.find((candidate) => candidate.id === 'shopkeeper')!;
+    const shell = buildGameFiles('economy-probe', shop).get('src/game-specific/shellPack.ts')!;
+    expect(shell).toContain('bindStarterEconomy(context)');
+    expect(shell).toContain('economy.select(');
+    expect(shell).toContain('economy.serve()');
+    expect(buildGameFiles('economy-probe', shop).get('src/content.ts')).toContain('economy: economyData');
+  });
+
+  it('shopkeeper, restaurant and tycoon-lite enable sw2d.economy and emit a non-empty catalog', () => {
+    for (const id of ['shopkeeper', 'restaurant', 'tycoon-lite'] as const) {
+      const preset = PRESETS.find((candidate) => candidate.id === id)!;
+      const files = buildGameFiles('economy-probe', preset);
+      const gameJson = JSON.parse(files.get('content/game.json')!) as { systemPacks: Array<{ packId: string }> };
+      expect(gameJson.systemPacks.map((s) => s.packId), id).toContain('sw2d.economy');
+      const eco = JSON.parse(files.get('content/economy.json')!) as { mode: string; goods: unknown[]; demand: unknown[] };
+      expect(eco.mode, id).toBe(id === 'restaurant' ? 'kitchen' : id === 'tycoon-lite' ? 'factory' : 'shop');
+      expect(eco.goods.length, id).toBeGreaterThan(0);
+      expect(eco.demand.length, id).toBeGreaterThan(0);
+    }
+  });
+});
+
 describe('generated pointer games consume the spatial interaction capability', () => {
   const pointerPreset = PRESETS.find((candidate) => candidate.controllerFamilies[0] === 'pointer')!;
 

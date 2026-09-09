@@ -10,6 +10,7 @@ import {
   worldGraphPack,
   vehiclesPack,
   racingPack,
+  economyPack,
   aiPack,
   arcadePack,
   combatPack,
@@ -53,6 +54,7 @@ const ALL_PACKS = [
   worldGraphPack,
   vehiclesPack,
   racingPack,
+  economyPack,
 ];
 
 /** `<family>.<service>`: lowercase segments, at least two, dash-separated words allowed after the first. */

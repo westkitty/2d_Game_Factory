@@ -13,6 +13,7 @@ import {
   generateWorldGraphDoc,
   generateVehicleCatalog,
   generateRaceCatalog,
+  generateEconomyCatalog,
   generateResourceManifest,
   generateTiledLevel,
   generateTheme,
@@ -157,6 +158,22 @@ export function buildGameFiles(gameId: string, preset: PresetDefinition): Map<st
     JSON.stringify(
       generateRaceCatalog(
         requiredPackIds.includes('sw2d.racing') ? (preset.id.includes('time-trial') ? 'time-trial' : 'race') : 'none',
+      ),
+      null,
+      2,
+    ) + '\n',
+  );
+  files.set(
+    'content/economy.json',
+    JSON.stringify(
+      generateEconomyCatalog(
+        requiredPackIds.includes('sw2d.economy')
+          ? preset.id === 'restaurant'
+            ? 'kitchen'
+            : preset.id === 'tycoon-lite'
+              ? 'factory'
+              : 'shop'
+          : 'none',
       ),
       null,
       2,

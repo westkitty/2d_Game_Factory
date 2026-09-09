@@ -13,7 +13,7 @@ export type SimulationStarterVariant =
 function shellSource(variant: SimulationStarterVariant): string {
   return String.raw`import Phaser from 'phaser';
 import type { InstalledSystemPack } from '@sw2d/contracts';
-import { uiSimulationController, type SceneContext, type ScenePackDefinition } from '@sw2d/runtime';
+import { bindStarterEconomy, uiSimulationController, type SceneContext, type ScenePackDefinition } from '@sw2d/runtime';
 import { addBackground } from './presentation.ts';
 
 const VARIANT = ${JSON.stringify(variant)} as const;
@@ -37,6 +37,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     const resourceIcon = scene.add.sprite(width * 0.5 - 110, 185, context.assets.resolve('pickup')).setDisplaySize(34, 34);
     const status = scene.add.text(width * 0.5, 290, '', { fontFamily: 'ui-monospace, monospace', fontSize: '18px', color: '#ffffff', align: 'center', wordWrap: { width: 820 } }).setOrigin(0.5, 0).setDepth(50);
     const hint = scene.add.text(width * 0.5, 455, '', { fontFamily: 'ui-monospace, monospace', fontSize: '14px', color: '#9fd7ff', align: 'center', wordWrap: { width: 820 } }).setOrigin(0.5).setDepth(50);
+    const economy = bindStarterEconomy(context, { hud: false });
 
     let elapsedMs = 0;
     let outcome: 'playing' | 'complete' | 'failed' = 'playing';
@@ -46,7 +47,6 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     let stock = 1;
     let sellValue = 6;
     let sales = 0;
-    let customerMs = 0;
     let upgradeA = 0;
     let upgradeB = 0;
     let incomeRate = 1;
@@ -69,7 +69,6 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     let constructionComplete = false;
 
     const orders: Order[] = [];
-    let nextOrderId = 1;
     let revenue = 0;
     let served = 0;
 
@@ -79,29 +78,28 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
 
     function clampNeeds(): void { hunger = Phaser.Math.Clamp(hunger, 0, 100); mood = Phaser.Math.Clamp(mood, 0, 100); water = Phaser.Math.Clamp(water, 0, 100); food = Phaser.Math.Clamp(food, 0, 100); }
 
-    function updateShop(deltaMs: number, primary: boolean, secondary: boolean): void {
-      customerMs += deltaMs;
-      if (customerMs >= 1500) {
-        customerMs -= 1500;
-        if (stock > 0) { stock -= 1; currency += sellValue; sales += 1; lastAction = 'sale'; }
-      }
-      if (primary && currency >= 2) { currency -= 2; stock += 1; lastAction = 'restock'; }
-      if (secondary && currency >= 16) { currency -= 16; sellValue += 2; upgradeA += 1; lastAction = 'upgrade'; }
-      if (sales >= 4 && upgradeA >= 1 && currency >= 18) outcome = 'complete';
+    function driveEconomy(navLeft: boolean, navRight: boolean, confirm: boolean, secondary: boolean): void {
+      if (!economy.active) return;
+      if (navLeft) economy.select(-1);
+      else if (navRight) economy.select(1);
+      if (confirm) { economy.serve(); lastAction = 'serve'; }
+      if (secondary) { economy.secondary(); lastAction = 'secondary'; }
+      const snap = economy.snapshot();
+      currency = snap.cash;
+      stock = Object.values(snap.stock).reduce((sum, n) => sum + n, 0);
+      sales = snap.served;
+      served = snap.served;
+      revenue = snap.cash;
+      if (snap.served >= 3) outcome = 'complete';
     }
 
-    function updateTycoon(deltaMs: number, primary: boolean, secondary: boolean): void {
-      currency += incomeRate * deltaMs / 1000;
-      businessValue = currency + upgradeA * 18 + upgradeB * 28;
-      if (primary) {
-        const cost = 10 + upgradeA * 8;
-        if (currency >= cost) { currency -= cost; upgradeA += 1; incomeRate += 1.2; lastAction = 'upgrade-a'; }
-      }
-      if (secondary) {
-        const cost = 18 + upgradeB * 12;
-        if (currency >= cost) { currency -= cost; upgradeB += 1; incomeRate += 2.8; lastAction = 'upgrade-b'; }
-      }
-      if (upgradeA >= 1 && upgradeB >= 1 && businessValue >= 70) outcome = 'complete';
+    function updateShop(_deltaMs: number, _primary: boolean, secondary: boolean, navLeft: boolean, navRight: boolean, confirm: boolean): void {
+      driveEconomy(navLeft, navRight, confirm, secondary);
+    }
+
+    function updateTycoon(_deltaMs: number, _primary: boolean, secondary: boolean, navLeft: boolean, navRight: boolean, confirm: boolean): void {
+      driveEconomy(navLeft, navRight, confirm, secondary);
+      businessValue = currency + sales * 6;
     }
 
     function updateFarming(deltaMs: number, navLeft: boolean, navRight: boolean, confirm: boolean, primary: boolean): void {
@@ -133,14 +131,8 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       if (primary && wood >= 5 && stone >= 5) { wood -= 5; stone -= 5; constructionComplete = true; lastAction = 'build'; outcome = 'complete'; }
     }
 
-    function updateRestaurant(deltaMs: number, primary: boolean, confirm: boolean): void {
-      if (primary && orders.length < 3) { orders.push({ id: nextOrderId++, remainingMs: 1800, ready: false }); lastAction = 'queue-order'; }
-      for (const order of orders) if (!order.ready) { order.remainingMs -= deltaMs; if (order.remainingMs <= 0) { order.ready = true; order.remainingMs = 0; } }
-      if (confirm) {
-        const index = orders.findIndex((order) => order.ready);
-        if (index >= 0) { orders.splice(index, 1); revenue += 10; served += 1; lastAction = 'serve'; }
-      }
-      if (revenue >= 30 && served >= 3) outcome = 'complete';
+    function updateRestaurant(_deltaMs: number, _primary: boolean, confirm: boolean, secondary: boolean, navLeft: boolean, navRight: boolean): void {
+      driveEconomy(navLeft, navRight, confirm, secondary);
     }
 
     function updateHabitat(deltaMs: number, primary: boolean, secondary: boolean): void {
@@ -154,14 +146,27 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     }
 
     function render(): void {
-      if (VARIANT === 'shopkeeper') status.setText('Stock ' + stock + ' · currency ' + Math.floor(currency) + ' · sale value ' + sellValue + ' · sales ' + sales);
+      if (VARIANT === 'shopkeeper' && economy.active) {
+        const snap = economy.snapshot();
+        status.setText('Cash $' + snap.cash + ' · served ' + snap.served + ' · lost ' + snap.lost + ' · ' + (snap.frontWant ? snap.queue[0]?.name + ' wants ' + snap.frontWant : 'no customer') + ' · sel ' + (snap.selectedId ?? '-'));
+      } else if (VARIANT === 'tycoon-lite' && economy.active) {
+        const snap = economy.snapshot();
+        status.setText('Factory cash $' + snap.cash + ' · produced ' + snap.produced + ' · sold ' + snap.served + ' · queue ' + snap.queue.length + (snap.producing ? ' · cooking ' + snap.producing.recipeId : ''));
+      } else if (VARIANT === 'shopkeeper') status.setText('Stock ' + stock + ' · currency ' + Math.floor(currency) + ' · sale value ' + sellValue + ' · sales ' + sales);
       else if (VARIANT === 'tycoon-lite') status.setText('Cash ' + Math.floor(currency) + ' · income ' + incomeRate.toFixed(1) + '/s · A ' + upgradeA + ' · B ' + upgradeB + ' · value ' + Math.floor(businessValue));
       else if (VARIANT === 'farming-lite') status.setText('Plots ' + plots.map((plot, index) => (index === selectedPlot ? '[' + plot.state + ']' : plot.state)).join(' · ') + ' · harvested ' + harvested);
       else if (VARIANT === 'pet-creature') status.setText('Hunger ' + Math.round(hunger) + ' · mood ' + Math.round(mood) + ' · care ' + careActions);
       else if (VARIANT === 'colony-lite') status.setText('Wood ' + wood.toFixed(1) + ' (' + woodWorkers + ' workers) · Stone ' + stone.toFixed(1) + ' (' + stoneWorkers + ' workers)');
-      else if (VARIANT === 'restaurant') status.setText('Orders ' + orders.map((order) => order.ready ? 'READY' : Math.ceil(order.remainingMs / 100) / 10 + 's').join(' · ') + ' · revenue ' + revenue);
+      else if (VARIANT === 'restaurant' && economy.active) {
+        const snap = economy.snapshot();
+        status.setText('Kitchen $' + snap.cash + ' · served ' + snap.served + ' · ' + (snap.frontWant ? 'ticket ' + snap.frontWant : 'no ticket') + (snap.producing ? ' · cooking ' + snap.producing.recipeId : ' · idle'));
+      } else if (VARIANT === 'restaurant') status.setText('Orders ' + orders.map((order) => order.ready ? 'READY' : Math.ceil(order.remainingMs / 100) / 10 + 's').join(' · ') + ' · revenue ' + revenue);
       else status.setText('Water ' + Math.round(water) + ' · food ' + Math.round(food) + ' · healthy ' + Math.floor(habitatHealthyMs / 1000) + 's');
-      hint.setText('PRIMARY action · SECONDARY action · arrows/CONFIRM select' + (outcome !== 'playing' ? ' · ' + outcome.toUpperCase() : ''));
+      hint.setText(
+        economy.active
+          ? 'ARROWS pick · ENTER serves · K restocks/cooks' + (outcome !== 'playing' ? ' · ' + outcome.toUpperCase() : '')
+          : 'PRIMARY action · SECONDARY action · arrows/CONFIRM select' + (outcome !== 'playing' ? ' · ' + outcome.toUpperCase() : ''),
+      );
       resourceIcon.setRotation(elapsedMs / 1000 * 0.25);
     }
 
@@ -172,6 +177,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       elapsedMs: Math.round(elapsedMs), outcome, lastAction, currency: Math.floor(currency * 100) / 100, stock, sellValue, sales, upgradeA, upgradeB, incomeRate, businessValue,
       plots, selectedPlot, harvested, hunger, mood, wellbeingHoldMs, careActions, wood, stone, woodWorkers, stoneWorkers, selectedJob, constructionComplete,
       orders, revenue, served, water, food, habitatHealthyMs,
+      ...(economy.active ? { economy: economy.snapshot() } : {}),
     }));
 
     let disposed = false;
@@ -184,16 +190,16 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         const intent = uiSimulationController.read(context.input);
         const primary = intent.primaryPressed;
         const secondary = context.input.justPressed('SECONDARY_ACTION');
-        if (VARIANT === 'shopkeeper') updateShop(deltaMs, primary, secondary);
-        else if (VARIANT === 'tycoon-lite') updateTycoon(deltaMs, primary, secondary);
+        if (VARIANT === 'shopkeeper') updateShop(deltaMs, primary, secondary, intent.navigateLeftPressed, intent.navigateRightPressed, intent.confirmPressed);
+        else if (VARIANT === 'tycoon-lite') updateTycoon(deltaMs, primary, secondary, intent.navigateLeftPressed, intent.navigateRightPressed, intent.confirmPressed);
         else if (VARIANT === 'farming-lite') updateFarming(deltaMs, intent.navigateLeftPressed, intent.navigateRightPressed, intent.confirmPressed, primary);
         else if (VARIANT === 'pet-creature') updatePet(deltaMs, primary, secondary);
         else if (VARIANT === 'colony-lite') updateColony(deltaMs, intent.navigateLeftPressed, intent.navigateRightPressed, intent.confirmPressed, primary);
-        else if (VARIANT === 'restaurant') updateRestaurant(deltaMs, primary, intent.confirmPressed);
+        else if (VARIANT === 'restaurant') updateRestaurant(deltaMs, primary, intent.confirmPressed, secondary, intent.navigateLeftPressed, intent.navigateRightPressed);
         else updateHabitat(deltaMs, primary, secondary);
         render();
       },
-      dispose(): void { if (disposed) return; disposed = true; debugHandle.dispose(); try { background?.destroy(); panel.destroy(); button.destroy(); mascot.destroy(); resourceIcon.destroy(); status.destroy(); hint.destroy(); } catch { /* scene teardown */ } },
+      dispose(): void { if (disposed) return; disposed = true; debugHandle.dispose(); economy.dispose(); try { background?.destroy(); panel.destroy(); button.destroy(); mascot.destroy(); resourceIcon.destroy(); status.destroy(); hint.destroy(); } catch { /* scene teardown */ } },
     };
   },
 };
