@@ -23,7 +23,7 @@ Highest-leverage clusters, from `packages/presets/src/shared.ts` LIMITATIONS + p
 | Rank | Gap | Consumers | Status |
 |---|---|---|---|
 | 1 | Customer / demand / transaction / production | shopkeeper, restaurant, tycoon-lite | **Wave 1 implemented and played** (`sw2d.economy` / `simulation.economy`, ADR-0028). Residual: layout, walking customers, prestige, offline catch-up. |
-| 2 | Creature needs / behavior / relationship | pet-creature, aquarium-terrarium, virtual-pet (colony-lite only if the contract genuinely fits — it currently does not) | **next** |
+| 2 | Creature needs / behavior / relationship | pet-creature, aquarium-terrarium, virtual-pet (colony-lite only if the contract genuinely fits — it currently does not) | **Wave 2 implemented and played** (`sw2d.needs` / `simulation.needs`, ADR-0029). Residual: full creature behaviour AI, relationship graphs, colony assignment. |
 | 3 | Branching dialogue / narrative presentation | visual-novel, point-and-click; investigation/museum only if the contract fits | backlog |
 | 4 | Stealth perception / suspicion / noise / hiding | stealth-game, heist-game | backlog |
 | 5 | Ball / paddle / rebound | breakout, pong | backlog |
@@ -113,4 +113,85 @@ High-contrast Phaser HUD (mode, cash, stock, front customer, selection, last res
 - No committed `proofs/` for the three consumers; catalog maturity stays `recipe`.
 - Chrome wrapper is session-local under `/tmp`.
 - `package-lock.json` may be dirty from `npm install` (proof workspaces). Include with the Wave-1 commit if node_modules/proofs require it.
-- Next wave: creature needs (pet / aquarium / virtual-pet) unless a re-audit finds a higher multiplicative cluster.
+- Next wave: **done** — Wave 2 creature needs (see below).
+
+## Wave 2 — `sw2d.needs`
+
+### Problem
+
+Three care recipes needed decaying meters, care actions, affinity and wellbeing hold/fail. Theme, creature AI, relationship graphs and colony assignment are not shared.
+
+### Consumers
+
+- `pet-creature` — mode `creature` (J feeds hunger, K plays mood; hold 1600 ms after both ≥ 82).
+- `aquarium-terrarium` — mode `habitat` (J feeds food, K refreshes water; hold 7000 ms after both ≥ 55; fail if any meter ≤ 10).
+- `virtual-pet` — mode `companion` (J feeds hunger, K plays happiness; complete when both ≥ 85 after two acts).
+
+Materially different: companion complete-on-threshold vs creature hold-then-complete vs habitat long hold with fail floor.
+
+`colony-lite` was **not** wired — assignment/roles are a different contract.
+
+### ValidationPlan
+
+1. Contract + schema (`NeedsCatalog` / `needs-catalog`) reject unknown modes, duplicate meter/action ids, missing `targetMeter` / `delta`, empty meters, `failBelow` ≥ `completeAt`.
+2. Pack unit tests: decay, act + cooldown + affinity, clamp, fail-below, hold-then-complete, pause (dt=0), restart, missing document is inert, dispose withdraws the capability, malformed catalog throws.
+3. Generator: all 74 emit schema-valid `content/needs.json`; the three consumers enable `sw2d.needs` and a non-empty catalog; `src/content.ts` passes `needs: needsData` into the bundle.
+4. Generated ui-simulation shell binds `bindStarterNeeds` after economy; dummy picker hidden when needs is active. J/K map to `actByIndex(0/1)`; confirm `act()`.
+5. Honesty / docsSync / catalogPackIntegrity / uiCopy allowlist stay green.
+6. Workbench `POST /api/needs/inspect` shows mode/meters/actions.
+7. Expanded starter kits for the three consumers drive the same service (`hud: false`) instead of private decay loops.
+8. Real-browser journeys against generated games + starter-kit overlays. Committed `proofs/` + maturity promotion still deferred.
+
+### CompletionContract
+
+- [x] Reusable pack in `@sw2d/packs`, renderer-neutral, simulation-time only.
+- [x] Content authority `content/needs.json`.
+- [x] ≥2 materially different generated consumers (3 wired).
+- [x] Focused unit/integration tests.
+- [x] Honest residual limitation.
+- [x] ADR-0029.
+- [x] Real-browser play of factory-generated `wave2-pet-creature` / `wave2-aquarium-terrarium` / `wave2-virtual-pet` (`tools/scripts/play-needs-wave2.ts`, 3/3 PASS, 0 console errors, 0 external requests).
+- [x] `npm run sw2d -- validate` on those three games (schema + tsc + vite build + boot smoke) PASS.
+- [x] `npm run qa:starter-kits:p3j` PASS (farming-lite, pet-creature, colony-lite, restaurant, aquarium-terrarium).
+- [x] `npm run qa:starter-kits:p3h` PASS (microgame-collection, physics-toy, sandbox-playground, virtual-pet, photography-game).
+- [ ] Committed `proofs/pet-creature` + `proofs/aquarium-terrarium` + `proofs/virtual-pet` + `qa:proof` list. **Not done** — would require catalog maturity promotion in the same commit (`proofEvidence.test.ts`).
+- [ ] Preset maturity promotion. **Not done — evidence rule.** Recipes stay `recipe`.
+
+### Implementation notes
+
+- Capability id `simulation.needs` (family `simulation`, service `needs`). Pack id `sw2d.needs`.
+- Duplicate meter/action ids throw at install. Unknown `targetMeter` throws. Missing `content/needs.json` is inert.
+- `bindStarterNeeds` is INERT when the capability is missing. `{ hud: false }` lets expanded kits keep their own presentation.
+- Shell priority: economy.active first, then needs.active, then dummy picker. No consumer currently installs both.
+- Overlay rates frozen from the previous private loops (do not invent): pet −0.0028/−0.0022 +22/+24 complete all≥82 hold 1600 +2 acts fail 0; aquarium water −0.003 food −0.0035 +24/+24 complete ≥55 hold 7000 +2 acts fail 10; virtual-pet −0.003/−0.0025 +25/+25 complete both≥85 +2 acts holdMs 0 no fail.
+- Live limitation: “Needs, decay, care actions, affinity and wellbeing hold/fail are reusable (sw2d.needs); full creature behaviour AI, relationship graphs and colony assignment are not.”
+- `POST /api/needs/inspect` must be a real route (import-only fails `noUnusedLocals`).
+- `needsPack` must be in `REAL_PACKS` in `catalogPackIntegrity.test.ts`.
+
+### Browser journeys (executed)
+
+Factory-generated (ui-simulation shell HUD):
+
+- Pet-creature: hunger/mood ~71 → decay hunger 70.1 → J feed 91.8 actions=1 → spam feed clamps 99.86 → K play mood 92.3 actions=14 hold 83.3 → complete outcome=complete hold 1600 affinity=14; pause/resume preserves complete.
+- Aquarium-terrarium: water/food ~77 → J feed food 99.7 → K refresh water 99.75 actions=2 → complete hold 7006.9.
+- Virtual-pet: hunger/happiness ~69 → J feed 94.17 outcome=playing → K play 94.27 actions=2 outcome=complete.
+
+Starter-kit overlays (`game.expanded-starter`): pet-creature / aquarium-terrarium / virtual-pet mechanic proofs PASS. Farming/colony/restaurant/microgame/physics-toy/sandbox/photography still pass (needs binding is inert there except the three consumers).
+
+### Visual inspection
+
+High-contrast Phaser HUD (mode, meters, selection, last result, control hint `J FEEDS  -  K PLAYS OR REFRESHES  -  KEEP NEEDS UP`). Dummy picker hidden when needs is active. Confirmed via debug snapshots, not screenshots.
+
+### Bugs found and fixed this wave
+
+- `POST /api/needs/inspect` was import-only until route added after economy inspect (`noUnusedLocals`).
+- `needsPack` imported in catalogPackIntegrity without `REAL_PACKS` (`noUnusedLocals` + “every referenced pack id is real”).
+- Honesty/MATRIX `virtual-pet` row must list `needs` (StrReplace can miss; verify file).
+- Overlay unused locals / leftover private decay must not break generated-game `tsc`.
+
+### Remaining blockers / unknowns
+
+- No committed `proofs/` for the three consumers; catalog maturity stays `recipe`.
+- Chrome wrapper is session-local under `/tmp`.
+- Do not commit `package-lock.json` workspace links for gitignored `games/wave*`.
+- Next wave: branching dialogue / narrative presentation (visual-novel, point-and-click) unless a re-audit finds a higher multiplicative cluster.

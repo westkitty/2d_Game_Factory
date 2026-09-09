@@ -113,6 +113,12 @@ describe('all 74 presets generate valid, token-free, schema-valid source', () =>
       expect(() => validateContentBundleData({ economy: ecoJson })).not.toThrow();
     });
 
+    it(`${preset.id}'s generated content/needs.json validates as a needs catalog`, () => {
+      const files = buildGameFiles('matrix-game', preset);
+      const needsJson: unknown = JSON.parse(files.get('content/needs.json')!);
+      expect(() => validateContentBundleData({ needs: needsJson })).not.toThrow();
+    });
+
     it(`${preset.id} selects a real, resolvable shell template for its primary controller family`, () => {
       const files = buildGameFiles('matrix-game', preset);
       expect(files.has('src/game-specific/shellPack.ts')).toBe(true);
@@ -306,6 +312,29 @@ describe('generated ui-simulation economy games consume sw2d.economy', () => {
       expect(eco.mode, id).toBe(id === 'restaurant' ? 'kitchen' : id === 'tycoon-lite' ? 'factory' : 'shop');
       expect(eco.goods.length, id).toBeGreaterThan(0);
       expect(eco.demand.length, id).toBeGreaterThan(0);
+    }
+  });
+});
+
+describe('generated ui-simulation needs games consume sw2d.needs', () => {
+  it('the generated ui-simulation shell binds bindStarterNeeds', () => {
+    const pet = PRESETS.find((candidate) => candidate.id === 'pet-creature')!;
+    const shell = buildGameFiles('needs-probe', pet).get('src/game-specific/shellPack.ts')!;
+    expect(shell).toContain('bindStarterNeeds(context)');
+    expect(shell).toContain('needs.actByIndex(');
+    expect(buildGameFiles('needs-probe', pet).get('src/content.ts')).toContain('needs: needsData');
+  });
+
+  it('pet-creature, aquarium-terrarium and virtual-pet enable sw2d.needs and emit a non-empty catalog', () => {
+    for (const id of ['pet-creature', 'aquarium-terrarium', 'virtual-pet'] as const) {
+      const preset = PRESETS.find((candidate) => candidate.id === id)!;
+      const files = buildGameFiles('needs-probe', preset);
+      const gameJson = JSON.parse(files.get('content/game.json')!) as { systemPacks: Array<{ packId: string }> };
+      expect(gameJson.systemPacks.map((s) => s.packId), id).toContain('sw2d.needs');
+      const doc = JSON.parse(files.get('content/needs.json')!) as { mode: string; needs: unknown[]; actions: unknown[] };
+      expect(doc.mode, id).toBe(id === 'aquarium-terrarium' ? 'habitat' : id === 'virtual-pet' ? 'companion' : 'creature');
+      expect(doc.needs.length, id).toBeGreaterThan(0);
+      expect(doc.actions.length, id).toBeGreaterThan(0);
     }
   });
 });

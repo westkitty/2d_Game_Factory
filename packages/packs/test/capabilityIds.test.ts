@@ -11,6 +11,7 @@ import {
   vehiclesPack,
   racingPack,
   economyPack,
+  needsPack,
   aiPack,
   arcadePack,
   combatPack,
@@ -55,6 +56,7 @@ const ALL_PACKS = [
   vehiclesPack,
   racingPack,
   economyPack,
+  needsPack,
 ];
 
 /** `<family>.<service>`: lowercase segments, at least two, dash-separated words allowed after the first. */

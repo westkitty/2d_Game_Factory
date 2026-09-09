@@ -96,10 +96,10 @@ pack/controller selections were actually exercised through, and
 | `shopkeeper` | simulation, progression, economy | world | ui-simulation | keyboard, touch | simulation-management-recipe |
 | `tycoon-lite` | simulation, progression, economy | arcade | ui-simulation | keyboard, touch | simulation-management-recipe |
 | `farming-lite` | simulation, world | progression | ui-simulation | keyboard, touch | simulation-management-recipe |
-| `pet-creature` | simulation, progression | world | ui-simulation | keyboard, touch | simulation-management-recipe |
+| `pet-creature` | simulation, progression, needs | world | ui-simulation | keyboard, touch | simulation-management-recipe |
 | `colony-lite` | simulation, world | progression, navigation | ui-simulation | keyboard, touch | simulation-management-recipe |
 | `restaurant` | simulation, progression, economy | arcade | ui-simulation | keyboard, touch | simulation-management-recipe |
-| `aquarium-terrarium` | simulation | progression | ui-simulation | keyboard, touch | simulation-management-recipe |
+| `aquarium-terrarium` | simulation, needs | progression | ui-simulation | keyboard, touch | simulation-management-recipe |
 ## Narrative / exploration (Phase 7C)
 
 | id | required packs | optional packs | controller(s) | input modes | validation profile |
@@ -118,7 +118,7 @@ pack/controller selections were actually exercised through, and
 | `microgame-collection` | arcade | progression | ui-simulation | keyboard, touch | party-toy-weird-recipe |
 | `local-party-game` | arcade | combat | ui-simulation | keyboard, touch | party-toy-weird-recipe |
 | `physics-toy` | - | puzzle | pointer | keyboard, pointer, touch | party-toy-weird-recipe |
-| `virtual-pet` | simulation, progression | world | ui-simulation | keyboard, touch | party-toy-weird-recipe |
+| `virtual-pet` | simulation, progression, needs | world | ui-simulation | keyboard, touch | party-toy-weird-recipe |
 | `dress-up-character-toy` | - | progression | pointer, ui-simulation | keyboard, pointer, touch | party-toy-weird-recipe |
 | `sandbox-playground` | world, world-entities | puzzle | pointer, ui-simulation | keyboard, pointer, touch | party-toy-weird-recipe |
 | `drawing-game` | - | arcade | pointer | keyboard, pointer, touch | party-toy-weird-recipe |
@@ -149,8 +149,9 @@ pack/controller selections were actually exercised through, and
 | vehicles | `sw2d.vehicles` | `vehicle.motion` | 5 | 5 |
 | racing | `sw2d.racing` | `race.state` | 3 | 4 |
 | economy | `sw2d.economy` | `simulation.economy` | 3 | 3 |
+| needs | `sw2d.needs` | `simulation.needs` | 3 | 3 |
 
-**All twenty current packs have at least one preset consumer.** `sw2d.items` (capability
+**All twenty-one current packs have at least one preset consumer.** `sw2d.items` (capability
 program Phase 2) is required by `collectathon-platformer`, whose generated starter consumes
 the reusable item/effect service through the shared platform shell. `sw2d.puzzle-rules`
 (capability program Phase 6) is required by `sokoban` and `puzzle-platformer`, whose

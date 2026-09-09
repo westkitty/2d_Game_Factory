@@ -23,6 +23,7 @@ export * from './input.ts';
 export * from './items.ts';
 export * from './level.ts';
 export * from './navigation.ts';
+export * from './needs.ts';
 export * from './persistence.ts';
 export * from './presets.ts';
 export * from './racing.ts';

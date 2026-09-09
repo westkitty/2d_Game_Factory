@@ -13,7 +13,7 @@ export type SimulationStarterVariant =
 function shellSource(variant: SimulationStarterVariant): string {
   return String.raw`import Phaser from 'phaser';
 import type { InstalledSystemPack } from '@sw2d/contracts';
-import { bindStarterEconomy, uiSimulationController, type SceneContext, type ScenePackDefinition } from '@sw2d/runtime';
+import { bindStarterEconomy, bindStarterNeeds, uiSimulationController, type SceneContext, type ScenePackDefinition } from '@sw2d/runtime';
 import { addBackground } from './presentation.ts';
 
 const VARIANT = ${JSON.stringify(variant)} as const;
@@ -38,6 +38,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     const status = scene.add.text(width * 0.5, 290, '', { fontFamily: 'ui-monospace, monospace', fontSize: '18px', color: '#ffffff', align: 'center', wordWrap: { width: 820 } }).setOrigin(0.5, 0).setDepth(50);
     const hint = scene.add.text(width * 0.5, 455, '', { fontFamily: 'ui-monospace, monospace', fontSize: '14px', color: '#9fd7ff', align: 'center', wordWrap: { width: 820 } }).setOrigin(0.5).setDepth(50);
     const economy = bindStarterEconomy(context, { hud: false });
+    const needs = bindStarterNeeds(context, { hud: false });
 
     let elapsedMs = 0;
     let outcome: 'playing' | 'complete' | 'failed' = 'playing';
@@ -112,6 +113,17 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     }
 
     function updatePet(deltaMs: number, primary: boolean, secondary: boolean): void {
+      if (needs.active) {
+        if (primary) { needs.actByIndex(0); lastAction = 'feed'; }
+        if (secondary) { needs.actByIndex(1); lastAction = 'play'; }
+        const snap = needs.snapshot();
+        hunger = snap.needValues.hunger ?? hunger;
+        mood = snap.needValues.mood ?? mood;
+        careActions = snap.actionsTaken;
+        wellbeingHoldMs = snap.holdMs;
+        if (snap.outcome !== 'playing') outcome = snap.outcome as typeof outcome;
+        return;
+      }
       hunger -= deltaMs * 0.0028; mood -= deltaMs * 0.0022;
       if (primary) { hunger += 22; careActions += 1; lastAction = 'feed'; }
       if (secondary) { mood += 24; careActions += 1; lastAction = 'play'; }
@@ -136,6 +148,17 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     }
 
     function updateHabitat(deltaMs: number, primary: boolean, secondary: boolean): void {
+      if (needs.active) {
+        if (primary) { needs.actByIndex(0); lastAction = 'feed-habitat'; }
+        if (secondary) { needs.actByIndex(1); lastAction = 'refresh-water'; }
+        const snap = needs.snapshot();
+        food = snap.needValues.food ?? food;
+        water = snap.needValues.water ?? water;
+        careActions = snap.actionsTaken;
+        habitatHealthyMs = snap.holdMs;
+        if (snap.outcome !== 'playing') outcome = snap.outcome as typeof outcome;
+        return;
+      }
       water -= deltaMs * 0.003; food -= deltaMs * 0.0035;
       if (primary) { food += 24; careActions += 1; lastAction = 'feed-habitat'; }
       if (secondary) { water += 24; careActions += 1; lastAction = 'refresh-water'; }
@@ -165,6 +188,8 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       hint.setText(
         economy.active
           ? 'ARROWS pick · ENTER serves · K restocks/cooks' + (outcome !== 'playing' ? ' · ' + outcome.toUpperCase() : '')
+          : needs.active
+            ? 'J feeds · K plays/refreshes' + (outcome !== 'playing' ? ' · ' + outcome.toUpperCase() : '')
           : 'PRIMARY action · SECONDARY action · arrows/CONFIRM select' + (outcome !== 'playing' ? ' · ' + outcome.toUpperCase() : ''),
       );
       resourceIcon.setRotation(elapsedMs / 1000 * 0.25);
@@ -178,6 +203,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       plots, selectedPlot, harvested, hunger, mood, wellbeingHoldMs, careActions, wood, stone, woodWorkers, stoneWorkers, selectedJob, constructionComplete,
       orders, revenue, served, water, food, habitatHealthyMs,
       ...(economy.active ? { economy: economy.snapshot() } : {}),
+      ...(needs.active ? { needs: needs.snapshot() } : {}),
     }));
 
     let disposed = false;
@@ -199,7 +225,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         else updateHabitat(deltaMs, primary, secondary);
         render();
       },
-      dispose(): void { if (disposed) return; disposed = true; debugHandle.dispose(); economy.dispose(); try { background?.destroy(); panel.destroy(); button.destroy(); mascot.destroy(); resourceIcon.destroy(); status.destroy(); hint.destroy(); } catch { /* scene teardown */ } },
+      dispose(): void { if (disposed) return; disposed = true; debugHandle.dispose(); economy.dispose(); needs.dispose(); try { background?.destroy(); panel.destroy(); button.destroy(); mascot.destroy(); resourceIcon.destroy(); status.destroy(); hint.destroy(); } catch { /* scene teardown */ } },
     };
   },
 };

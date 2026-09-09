@@ -38,6 +38,9 @@ declare module '@sw2d/contracts' {
     'economy:customerArrived': { readonly customerId: string; readonly goodId: string; readonly queueLength: number };
     'economy:customerLeft': { readonly customerId: string; readonly reason: 'impatient' };
     'economy:stockChanged': { readonly goodId: string; readonly stock: number; readonly cash: number };
+    'needs:acted': { readonly actionId: string; readonly actionsTaken: number };
+    'needs:completed': { readonly subjectId: string };
+    'needs:failed': { readonly subjectId: string };
   }
 }
 

@@ -14,6 +14,7 @@ import {
   generateVehicleCatalog,
   generateRaceCatalog,
   generateEconomyCatalog,
+  generateNeedsCatalog,
   generateResourceManifest,
   generateTiledLevel,
   generateTheme,
@@ -173,6 +174,22 @@ export function buildGameFiles(gameId: string, preset: PresetDefinition): Map<st
             : preset.id === 'tycoon-lite'
               ? 'factory'
               : 'shop'
+          : 'none',
+      ),
+      null,
+      2,
+    ) + '\n',
+  );
+  files.set(
+    'content/needs.json',
+    JSON.stringify(
+      generateNeedsCatalog(
+        requiredPackIds.includes('sw2d.needs')
+          ? preset.id === 'aquarium-terrarium'
+            ? 'habitat'
+            : preset.id === 'virtual-pet'
+              ? 'companion'
+              : 'creature'
           : 'none',
       ),
       null,

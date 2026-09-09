@@ -47,6 +47,7 @@ import { inspectWorldGraph } from './worldGraphLab.ts';
 import { inspectPhysics } from './physicsLab.ts';
 import { inspectRacing } from './racingLab.ts';
 import { inspectEconomy } from './economyLab.ts';
+import { inspectNeeds } from './needsLab.ts';
 import { loadScene, listLevels, newObject, objectClassOptions, saveScene, SceneValidationError, type SceneDocument } from './sceneStore.ts';
 import { buildProject, createProject, packProject, validateProject } from './factoryService.ts';
 import { presetEvidenceFor } from './presetEvidence.ts';
@@ -681,6 +682,16 @@ const ROUTES: ReadonlyMap<string, Handler> = new Map<string, Handler>([
     (request) => {
       const body = bodyObject(request);
       return ok(inspectEconomy(gameIdOf(request, body)));
+    },
+  ],
+
+  [
+    // Needs surface (Category-C Wave 2). Reports content/needs.json
+    // (mode, subject, needs, actions, win/lose). Live values belong in-game.
+    'POST /needs/inspect',
+    (request) => {
+      const body = bodyObject(request);
+      return ok(inspectNeeds(gameIdOf(request, body)));
     },
   ],
 

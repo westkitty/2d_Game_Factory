@@ -117,10 +117,10 @@ controller/input-mode breakdown and full pack-consumer coverage.
 | `shopkeeper` | Shopkeeper | ui-simulation | tuning, economy | recipe |
 | `tycoon-lite` | Tycoon Lite | ui-simulation | tuning, economy | recipe |
 | `farming-lite` | Farming Lite | ui-simulation | tuning | recipe |
-| `pet-creature` | Pet Creature | ui-simulation | tuning | recipe |
+| `pet-creature` | Pet Creature | ui-simulation | tuning, needs | recipe |
 | `colony-lite` | Colony Lite | ui-simulation | tuning | recipe |
 | `restaurant` | Restaurant | ui-simulation | tuning, economy | recipe |
-| `aquarium-terrarium` | Aquarium / Terrarium | ui-simulation | tuning | recipe |
+| `aquarium-terrarium` | Aquarium / Terrarium | ui-simulation | tuning, needs | recipe |
 
 ## Narrative / exploration (Phase 7C)
 
@@ -141,7 +141,7 @@ controller/input-mode breakdown and full pack-consumer coverage.
 | `microgame-collection` | Microgame Collection | ui-simulation | tuning, microgames | recipe |
 | `local-party-game` | Local Party Game | ui-simulation | tuning | recipe |
 | `physics-toy` | Physics Toy | pointer | tuning | proof-validated |
-| `virtual-pet` | Virtual Pet | ui-simulation | tuning | recipe |
+| `virtual-pet` | Virtual Pet | ui-simulation | tuning, needs | recipe |
 | `dress-up-character-toy` | Dress-Up Character Toy | pointer, ui-simulation | tuning, characters | recipe |
 | `sandbox-playground` | Sandbox Playground | pointer, ui-simulation | tuning, levels | recipe |
 | `drawing-game` | Drawing Game | pointer | tuning | recipe |
@@ -211,10 +211,10 @@ recipe's *first* stated limitation; see `knownLimitations` in
 | `shopkeeper` | Customer demand, queue, stock, transactions and production jobs are reusable (sw2d.economy); shop layout, walking customers, prestige and offline catch-up are not. |
 | `tycoon-lite` | Customer demand, queue, stock, transactions and production jobs are reusable (sw2d.economy); shop layout, walking customers, prestige and offline catch-up are not. |
 | `farming-lite` | No reusable crop-growth/season/plot-interaction system exists. |
-| `pet-creature` | No reusable needs/behavior/relationship/creature simulation exists beyond foundational resources/state. |
+| `pet-creature` | Needs, decay, care actions, affinity and wellbeing hold/fail are reusable (sw2d.needs); full creature behaviour AI, relationship graphs and colony assignment are not. |
 | `colony-lite` | Colonist pathfinding is reusable (sw2d.navigation, optional); needs, assignment AI, construction placement and colony simulation are not. |
 | `restaurant` | Customer demand, queue, stock, transactions and production jobs are reusable (sw2d.economy); shop layout, walking customers, prestige and offline catch-up are not. |
-| `aquarium-terrarium` | No reusable needs/behavior/relationship/creature simulation exists beyond foundational resources/state. |
+| `aquarium-terrarium` | Needs, decay, care actions, affinity and wellbeing hold/fail are reusable (sw2d.needs); full creature behaviour AI, relationship graphs and colony assignment are not. |
 | `exploration-game` | (none stated) |
 | `visual-novel` | Narrative state exists, but no full content-authored branching dialogue renderer/portrait presentation system exists. |
 | `point-and-click` | Narrative state exists, but no full content-authored branching dialogue renderer/portrait presentation system exists. |
@@ -225,7 +225,7 @@ recipe's *first* stated limitation; see `knownLimitations` in
 | `microgame-collection` | No microgame scheduler/rotation/meta-framework exists. |
 | `local-party-game` | No multi-player/local multi-device input routing exists. |
 | `physics-toy` | (none stated) |
-| `virtual-pet` | No reusable needs/behavior/relationship/creature simulation exists beyond foundational resources/state. |
+| `virtual-pet` | Needs, decay, care actions, affinity and wellbeing hold/fail are reusable (sw2d.needs); full creature behaviour AI, relationship graphs and colony assignment are not. |
 | `dress-up-character-toy` | No wardrobe/attachment system is built on the drag/drop capability (ADR-0018) yet. |
 | `sandbox-playground` | No generalized authoring/editing sandbox exists. |
 | `drawing-game` | No canvas-stroke/drawing capture is built on the spatial pointer service (ADR-0018) yet. |

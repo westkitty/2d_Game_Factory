@@ -35,6 +35,7 @@ export const PACK_IDS = {
   vehicles: 'sw2d.vehicles',
   racing: 'sw2d.racing',
   economy: 'sw2d.economy',
+  needs: 'sw2d.needs',
 } as const;
 
 export const CAPABILITY_IDS = {
@@ -69,4 +70,6 @@ export const CAPABILITY_IDS = {
   racing: 'race.state',
   /** Category-C Wave 1: customer / demand / transaction / production economy. */
   economy: 'simulation.economy',
+  /** Category-C Wave 2: creature / habitat / companion needs, decay and care. */
+  needs: 'simulation.needs',
 } as const;

@@ -1,6 +1,7 @@
 import type { AdvancedPhysicsService, InstalledSystemPack } from '@sw2d/contracts';
 import {
   bindStarterEconomy,
+  bindStarterNeeds,
   createAdvancedPhysics,
   mutedStyle,
   uiSimulationController,
@@ -14,9 +15,9 @@ import {
  * A menu-style selection loop - `navigateLeft`/`navigateRight` cycle a
  * fixed option list, `confirm` locks one in. When `sw2d.economy` is
  * installed the option list is replaced by the reusable shop/kitchen/factory
- * loop (Category-C Wave 1) so generated management games are actually
- * shops, not a dummy picker. See platformShellPack.ts's file comment for
- * the template pattern.
+ * loop (Category-C Wave 1). When `sw2d.needs` is installed it is replaced
+ * by the creature/habitat/companion care loop (Wave 2). See
+ * platformShellPack.ts's file comment for the template pattern.
  */
 
 const OPTIONS = ['Option A', 'Option B', 'Option C', 'Option D'];
@@ -35,6 +36,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     let confirmed = false;
 
     const economy = bindStarterEconomy(context);
+    const needs = bindStarterNeeds(context);
 
     // Optional advanced physics (capability program Phase 9). Inert unless
     // content/game.json sets physicsProfile: 'matter'. Then a ball drops onto a
@@ -48,7 +50,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         })()
       : null;
 
-    const label = economy.active
+    const label = economy.active || needs.active
       ? null
       : scene.add
           .text(width * 0.5, height * 0.5, '', mutedStyle(20))
@@ -66,6 +68,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       selectionIndex,
       confirmed,
       ...(economy.active ? { economy: economy.snapshot() } : {}),
+      ...(needs.active ? { needs: needs.snapshot() } : {}),
       ...(physics ? { physics: { enabled: physics.enabled, bodyCount: physics.bodyCount, ball: ball ? physics.bodyState(ball) : null } } : {}),
     }));
 
@@ -83,6 +86,15 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
           if (intent.confirmPressed) economy.serve();
           if (context.input.justPressed('SECONDARY_ACTION')) economy.secondary();
           economy.render();
+          return;
+        }
+        if (needs.active) {
+          if (intent.navigateLeftPressed || intent.navigateUpPressed) needs.select(-1);
+          else if (intent.navigateRightPressed || intent.navigateDownPressed) needs.select(1);
+          if (intent.confirmPressed) needs.act();
+          if (intent.primaryPressed) needs.actByIndex(0);
+          if (context.input.justPressed('SECONDARY_ACTION')) needs.actByIndex(1);
+          needs.render();
           return;
         }
         if (intent.navigateLeftPressed) {
@@ -106,6 +118,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         disposed = true;
         debugHandle.dispose();
         economy.dispose();
+        needs.dispose();
         physics?.dispose();
         try {
           label?.destroy();

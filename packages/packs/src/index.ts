@@ -86,3 +86,4 @@ export { worldGraphPack, WORLD_GRAPH_SAVE_SLOT, type WorldGraphConfig, type Worl
 export { vehiclesPack, type VehicleService } from './vehicles/vehiclesPack.ts';
 export { racingPack, RACING_SAVE_SLOT, type RacingConfig, type RaceService } from './racing/racingPack.ts';
 export { economyPack, type EconomyService } from './economy/economyPack.ts';
+export { needsPack, type NeedsService } from './needs/needsPack.ts';

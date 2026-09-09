@@ -454,6 +454,74 @@ export function generateEconomyCatalog(kind: 'shop' | 'kitchen' | 'factory' | 'n
 }
 
 /**
+ * content/needs.json - a NeedsCatalog (Category-C Wave 2). Always emitted;
+ * empty/inert unless the preset installs `sw2d.needs`. Three bounded starter
+ * modes match the three care consumers: creature (hunger/mood hold-to-win),
+ * habitat (water/food longer hold, fail-below), companion (instant win, no fail).
+ */
+export function generateNeedsCatalog(kind: 'creature' | 'habitat' | 'companion' | 'none'): Record<string, unknown> {
+  const empty = {
+    schemaVersion: 1,
+    mode: 'creature',
+    subject: { id: 'none', displayName: 'None' },
+    needs: [],
+    actions: [],
+    win: { minValue: 100, holdMs: 0, minActions: 0 },
+  };
+  if (kind === 'none') return empty;
+  if (kind === 'creature') {
+    return {
+      schemaVersion: 1,
+      mode: 'creature',
+      subject: { id: 'pet', displayName: 'Pico' },
+      needs: [
+        { id: 'hunger', displayName: 'Hunger', value: 72, min: 0, max: 100, decayPerSecond: 2.8 },
+        { id: 'mood', displayName: 'Mood', value: 72, min: 0, max: 100, decayPerSecond: 2.2 },
+      ],
+      actions: [
+        { id: 'feed', displayName: 'Feed', effects: [{ needId: 'hunger', delta: 22 }], affinityDelta: 1 },
+        { id: 'play', displayName: 'Play', effects: [{ needId: 'mood', delta: 24 }], affinityDelta: 1 },
+      ],
+      win: { minValue: 82, holdMs: 1600, minActions: 2 },
+      loseBelow: 0,
+      affinity: 0,
+    };
+  }
+  if (kind === 'habitat') {
+    return {
+      schemaVersion: 1,
+      mode: 'habitat',
+      subject: { id: 'tank', displayName: 'Tank' },
+      needs: [
+        { id: 'water', displayName: 'Water', value: 78, min: 0, max: 100, decayPerSecond: 3 },
+        { id: 'food', displayName: 'Food', value: 78, min: 0, max: 100, decayPerSecond: 3.5 },
+      ],
+      actions: [
+        { id: 'feed', displayName: 'Feed', effects: [{ needId: 'food', delta: 24 }] },
+        { id: 'refresh', displayName: 'Refresh', effects: [{ needId: 'water', delta: 24 }] },
+      ],
+      win: { minValue: 55, holdMs: 7000, minActions: 2 },
+      loseBelow: 10,
+    };
+  }
+  return {
+    schemaVersion: 1,
+    mode: 'companion',
+    subject: { id: 'buddy', displayName: 'Buddy' },
+    needs: [
+      { id: 'hunger', displayName: 'Hunger', value: 70, min: 0, max: 100, decayPerSecond: 3 },
+      { id: 'happiness', displayName: 'Happiness', value: 70, min: 0, max: 100, decayPerSecond: 2.5 },
+    ],
+    actions: [
+      { id: 'feed', displayName: 'Feed', effects: [{ needId: 'hunger', delta: 25 }], affinityDelta: 2 },
+      { id: 'play', displayName: 'Play', effects: [{ needId: 'happiness', delta: 25 }], affinityDelta: 2 },
+    ],
+    win: { minValue: 85, holdMs: 0, minActions: 2 },
+    affinity: 0,
+  };
+}
+
+/**
  * content/races.json - a RaceCatalog (capability program Phase 10). Always
  * emitted; empty unless the preset installs `sw2d.racing`, then one starter
  * race: a small four-corner track, `time-trial` mode for the time-trial
@@ -535,7 +603,9 @@ export function generateUiCopy(options: {
     case 'ui-simulation':
       playHint = has('sw2d.economy')
         ? 'ARROWS PICK  -  ENTER SERVES  -  K RESTOCKS OR COOKS'
-        : 'ARROWS CHANGE THE SELECTION  -  ENTER CONFIRMS  -  PAUSE TO STOP';
+        : has('sw2d.needs')
+          ? 'J FEEDS  -  K PLAYS OR REFRESHES  -  KEEP NEEDS UP'
+          : 'ARROWS CHANGE THE SELECTION  -  ENTER CONFIRMS  -  PAUSE TO STOP';
       break;
     default:
       break;
