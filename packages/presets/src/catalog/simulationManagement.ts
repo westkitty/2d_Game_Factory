@@ -77,7 +77,9 @@ export const SIMULATION_MANAGEMENT_PRESETS: readonly PresetDefinition[] = [
     optionalSystemPacks: [pack(PACK_IDS.progression)],
     requiredContentRoles: ['tuning'],
     validationProfile: VALIDATION_PROFILES.simulationManagement,
-    knownLimitations: ['No reusable crop-growth/season/plot-interaction system exists.'],
+    knownLimitations: [
+      'Resource ledger and timed jobs are reusable (sw2d.simulation); a crop-growth/season/plot framework is not.',
+    ],
   }),
 
   definePreset({
@@ -102,7 +104,7 @@ export const SIMULATION_MANAGEMENT_PRESETS: readonly PresetDefinition[] = [
     requiredContentRoles: ['tuning'],
     validationProfile: VALIDATION_PROFILES.simulationManagement,
     knownLimitations: [
-      'Colonist pathfinding is reusable (sw2d.navigation, optional); needs, assignment AI, construction placement and colony simulation are not.',
+      'Resource ledger and timed jobs are reusable (sw2d.simulation); colonist pathfinding is reusable (sw2d.navigation, optional); needs, assignment AI and construction placement are not.',
     ],
   }),
 

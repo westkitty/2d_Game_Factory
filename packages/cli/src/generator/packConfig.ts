@@ -21,6 +21,11 @@ import type { PresetDefinition } from '@sw2d/contracts';
  * counter. The pack keeps `TState` opaque; this file stays plain TypeScript
  * the author replaces wholesale.
  *
+ * Category-C Wave 13 also stamps `SIMULATION_STARTER` here (`farm` /
+ * `colony` / null) so the shared ui-simulation shell can present two
+ * different `sw2d.simulation` loops without extending that pack into a
+ * crop/season or colony-AI monolith.
+ *
  * Deliberately NOT a universal puzzle DSL.
  */
 
@@ -114,6 +119,8 @@ export function generatePackConfig(preset: PresetDefinition): string {
         : variant === 'fallback'
           ? FALLBACK_ENTRY
           : '  // This preset selects no code-configured pack.';
+  const simulationStarter =
+    preset.id === 'farming-lite' ? "'farm'" : preset.id === 'colony-lite' ? "'colony'" : 'null';
   return [
     '/**',
     " * Config for packs that declare `configSource: 'code'` in their definition -",
@@ -127,6 +134,9 @@ export function generatePackConfig(preset: PresetDefinition): string {
     'export const PACK_CONFIG: Readonly<Record<string, unknown>> = {',
     entry.trimEnd(),
     '};',
+    '',
+    '/** Category-C Wave 13: farm vs colony presentation of sw2d.simulation. Null otherwise. */',
+    `export const SIMULATION_STARTER: 'farm' | 'colony' | null = ${simulationStarter};`,
     '',
   ]
     .filter((line, index, all) => !(line === '' && all[index - 1] === ''))

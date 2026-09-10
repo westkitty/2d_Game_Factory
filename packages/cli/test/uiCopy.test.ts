@@ -96,5 +96,7 @@ describe('generateUiCopy (generated games announce their genre honestly)', () =>
     expect(copyFor('kart-racer').playHint).not.toContain('FIRE');
     expect(copyFor('physics-puzzle').playHint).toBe('CLICK TO NUDGE  -  LAND IN THE GOAL');
     expect(copyFor('escape-room').playHint).toBe('CLICK THE NOTE  -  THEN THE KEY');
+    expect(copyFor('farming-lite').playHint).toBe('ARROWS PICK A PLOT  -  ENTER PLANTS OR HARVESTS');
+    expect(copyFor('colony-lite').playHint).toBe('ARROWS PICK A JOB  -  ENTER ASSIGNS OR BUILDS');
   });
 });

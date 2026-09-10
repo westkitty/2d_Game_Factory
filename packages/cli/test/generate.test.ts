@@ -645,6 +645,37 @@ describe('generated vehicle and pointer shooters consume sw2d.weapons', () => {
   });
 });
 
+describe('generated ui-simulation farm and colony consume sw2d.simulation', () => {
+  it('the generated ui-simulation shell binds bindStarterSimulation', () => {
+    const farm = PRESETS.find((candidate) => candidate.id === 'farming-lite')!;
+    const shell = buildGameFiles('simulation-probe', farm).get('src/game-specific/shellPack.ts')!;
+    expect(shell).toContain('bindStarterSimulation(context, { mode: SIMULATION_STARTER })');
+    expect(shell).toContain('jobs.confirm()');
+    expect(shell).toContain("from './packConfig.ts'");
+    expect(buildGameFiles('simulation-probe', farm).get('src/main.ts')).toContain('simulationPack');
+  });
+
+  it('farming-lite and colony-lite enable sw2d.simulation with different starters', () => {
+    const farm = PRESETS.find((candidate) => candidate.id === 'farming-lite')!;
+    const colony = PRESETS.find((candidate) => candidate.id === 'colony-lite')!;
+    const shop = PRESETS.find((candidate) => candidate.id === 'shopkeeper')!;
+    const farmFiles = buildGameFiles('simulation-probe', farm);
+    const colonyFiles = buildGameFiles('simulation-probe', colony);
+    const shopFiles = buildGameFiles('simulation-probe', shop);
+    const farmJson = JSON.parse(farmFiles.get('content/game.json')!) as { systemPacks: Array<{ packId: string }> };
+    const colonyJson = JSON.parse(colonyFiles.get('content/game.json')!) as { systemPacks: Array<{ packId: string }> };
+    expect(farmJson.systemPacks.map((s) => s.packId)).toContain('sw2d.simulation');
+    expect(colonyJson.systemPacks.map((s) => s.packId)).toContain('sw2d.simulation');
+    expect(farmFiles.get('src/game-specific/packConfig.ts')).toContain("SIMULATION_STARTER: 'farm' | 'colony' | null = 'farm'");
+    expect(colonyFiles.get('src/game-specific/packConfig.ts')).toContain("SIMULATION_STARTER: 'farm' | 'colony' | null = 'colony'");
+    expect(shopFiles.get('src/game-specific/packConfig.ts')).toContain("SIMULATION_STARTER: 'farm' | 'colony' | null = null");
+    const farmTheme = JSON.parse(farmFiles.get('content/themes/default/theme.json')!) as { ui: { playHint: string } };
+    const colonyTheme = JSON.parse(colonyFiles.get('content/themes/default/theme.json')!) as { ui: { playHint: string } };
+    expect(farmTheme.ui.playHint).toContain('ENTER PLANTS OR HARVESTS');
+    expect(colonyTheme.ui.playHint).toContain('ENTER ASSIGNS OR BUILDS');
+  });
+});
+
 describe('generated pointer puzzles consume sw2d.puzzle', () => {
   it('the generated pointer shell presents physics-goal and escape-locks on puzzle.state', () => {
     const physics = PRESETS.find((candidate) => candidate.id === 'physics-puzzle')!;

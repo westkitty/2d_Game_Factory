@@ -35,6 +35,7 @@ Highest-leverage clusters, from `packages/presets/src/shared.ts` LIMITATIONS + p
 | 10 | Visual reaction / beat windows (not audio-sync) | reaction-timing, rhythm-action | **Wave 10 implemented and played** (`sw2d.timing` / `arcade.timing`, ADR-0037). Residual: music-beat/audio-synchronization. Overlay rhythm/reaction stay local (P3-F). |
 | 11 | Consume existing weapons in vehicle + pointer shells | asteroids-shooter, gallery-shooter | **Wave 11 implemented and played** (existing `sw2d.weapons`; ADR-0038). Residual: rail-camera; rail keeps weapons leftover. Overlay shooters stay local. |
 | 12 | Consume existing `sw2d.puzzle` code seam | physics-puzzle, escape-room | **Wave 12 implemented and played** (existing `sw2d.puzzle`; ADR-0039). Residual: rules stay TypeScript not content; no escape-room grammar. Overlay physics/escape stay local. |
+| 13 | Consume existing `sw2d.simulation` ledger/jobs | farming-lite, colony-lite | **Wave 13 implemented and played** (existing `sw2d.simulation`; ADR-0040). Residual: crop/season/plot framework and colony assignment AI stay out. Overlay farming/colony stay local (P3-J). |
 | — | Tier 4 specialized (parser IF, fishing, cooking, photography, wardrobe, drawing, microgame scheduler, sandbox authoring) | prefer game-specific seam until a second consumer is real | backlog |
 
 Do not extend `sw2d.simulation` / `sw2d.narrative` / `sw2d.ai` into genre monoliths. New narrow packs compose with them.
@@ -861,7 +862,13 @@ Confirmed via debug snapshots, not screenshots.
 - Do not commit `package-lock.json` workspace links for gitignored `games/wave*`.
 - Residual Category-C: climbing, chase, territory, pinball, crop/season, rail
   camera, run-meta vs survivor, remaining Tier-4, committed proofs.
-er shell never called, so both recipes entered
+
+## Wave 12 — consume `sw2d.puzzle` in the pointer shell
+
+### Problem
+
+`physics-puzzle` and `escape-room` still required `sw2d.puzzle`. The generated
+packConfig was a 3-move counter the pointer shell never called, so both recipes entered
 play as a dummy click target. The leftover was consumption, not a missing
 pack. Inventing a new puzzle pack would duplicate ADR-0017 / ADR-0023.
 
@@ -946,3 +953,103 @@ Confirmed via debug snapshots, not screenshots.
 - Do not commit `package-lock.json` workspace links for gitignored `games/wave*`.
 - Residual Category-C: climbing, chase, territory, pinball, crop/season, rail
   camera, run-meta vs survivor, remaining Tier-4, committed proofs.
+
+## Wave 13 — consume `sw2d.simulation` in farm and colony shells
+
+### Problem
+
+`farming-lite` and `colony-lite` already required `sw2d.simulation`. The
+generated ui-simulation shell never bound it, so both recipes entered play as
+dummy OPTIONS. The leftover was consumption, not a missing pack. Inventing a
+crop/season pack would duplicate a 1-consumer leftover. Extending
+`sw2d.simulation` into farms/colonies would make a genre monolith.
+
+### Consumers
+
+- `farming-lite` — `SIMULATION_STARTER = 'farm'` (plant / grow / harvest three
+  plots; complete at 3 crops).
+- `colony-lite` — `SIMULATION_STARTER = 'colony'` (assign two workers to gather,
+  spend 2 materials on one construct job; complete when the hall is built).
+
+Materially different: plot plant/harvest vs worker assignment + construction.
+
+Overlay farming / colony kits stay local (P3-J).
+
+### ValidationPlan
+
+1. No new pack / schema / capability id.
+2. Generated packConfig stamps `SIMULATION_STARTER` farm vs colony vs null.
+3. Generated ui-simulation shell binds `bindStarterSimulation` and skips the
+   dummy picker when active.
+4. Honesty / docsSync / uiCopy stay green. ADR-0040.
+5. Real-browser play of factory-generated games. Overlay kits not re-run.
+   Committed proofs + maturity promotion still deferred.
+
+### CompletionContract
+
+- [x] No new pack / schema / capability id.
+- [x] Authority remains the existing `simulation.resources` ledger + jobs.
+- [x] ≥2 materially different generated consumers (2 wired).
+- [x] Focused generate/honesty/uiCopy tests.
+- [x] Honest residual limitation (crop/season framework; assignment AI /
+  construction placement).
+- [x] ADR-0040.
+- [x] Real-browser play of factory-generated `wave13-farming-lite` /
+  `wave13-colony-lite` (`tools/scripts/play-simulation-wave13.ts`, 2/2 PASS,
+  0 console errors, 0 external requests).
+- [x] `npm run sw2d -- validate` on those two games (schema + tsc + vite
+  build + boot smoke) PASS (CDP hang after printed success, timeout 90 → 124).
+- [ ] Overlay P3-J re-run. **Not done this wave** — overlay stays unwired.
+- [ ] Committed proofs + maturity promotion. **Not done — evidence rule.**
+
+### Implementation notes
+
+- No new pack. `sw2d.simulation` already exists (resource ledger + timed jobs).
+- `bindStarterSimulation` is INERT unless packConfig names `'farm'` or
+  `'colony'` *and* `simulation.resources` is installed. Idle-incremental stays
+  on its frozen proof; shop/kitchen/factory stay on `sw2d.economy`.
+- Farm: `queueJob('grow-N', 480)` then harvest `addResource('crops', 1)`.
+- Colony: gather jobs add materials; construct costs 2 and queues `construct`.
+- Scene restart zeros resources and cancels starter job ids (the pack is
+  game-lifetime, not scene-lifetime).
+- Overlay farming/colony kits stay local (P3-J authored plots/jobs).
+
+### Browser journeys (executed)
+
+Factory-generated:
+
+- Farming-lite: Space start 3 empty plots, crops 0 → Enter plants plot 0
+  (`planted`, growing remaining 363) → 50 frames ripe → Enter harvest crops 1
+  → ArrowRight plant/harvest plot 1 crops 2 → plot 2 harvest crops 3
+  outcome=complete.
+- Colony-lite: Space start materials 0 → ArrowRight×2 Enter `need-materials`
+  → ArrowLeft×2 Enter assign worker 0 busy → 50 frames materials 1 gathered →
+  ArrowRight assign worker 1 → materials 2 → ArrowRight Enter constructing →
+  50 frames built true, outcome=complete.
+
+### Visual inspection
+
+Farm: three plot rectangles EMPTY / GROWING / RIPE, HUD `crops n/3`, title
+`HARVESTED` on complete. Colony: two worker rectangles plus BUILD HALL, HUD
+`materials n`, title `BUILT` on complete. Dummy picker hidden when the binder
+is active. Confirmed via debug snapshots, not screenshots.
+
+### Bugs found and fixed this wave
+
+- Parallel StrReplace on `uiSimulationShellPack.ts` dropped the `jobs.active`
+  update loop while keeping bind/dispose. Restored before play.
+- `timeout 90 npm run sw2d -- validate` still hangs after printed PASS (exit
+  124). Same as Waves 8–12; not a Wave-13 regression.
+
+### Remaining blockers / unknowns
+
+- No committed `proofs/` for farming-lite or colony-lite; catalog maturity
+  stays `recipe` (23/3/48).
+- Overlay farming/colony stay local. Crop/season/plot framework and colony
+  assignment AI stay out of contract.
+- Chrome wrapper is session-local under `/tmp`.
+- Do not commit `package-lock.json` workspace links for gitignored `games/wave*`.
+- Residual Category-C: climbing, chase, territory, pinball, crop/season, rail
+  camera, run-meta vs survivor, remaining dummy OPTIONS (pinball/auto-battler/
+  IF/microgame/fishing/cooking), maze wanderer, committed proofs.
+

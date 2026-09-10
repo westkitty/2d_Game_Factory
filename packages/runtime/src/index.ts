@@ -63,6 +63,12 @@ export { bindStarterLocalPlay, type StarterLocalPlayBinding, type StarterLocalPl
 export { bindStarterStageScroll, type StarterStageScrollBinding, type StarterStageScrollSnapshot } from './game-support/starterStageScroll.ts';
 export { bindStarterPuzzle, type StarterPuzzleBinding, type StarterPuzzleSnapshot } from './game-support/starterPuzzle.ts';
 export { bindStarterTiming, type StarterTimingBinding, type StarterTimingSnapshot } from './game-support/starterTiming.ts';
+export {
+  bindStarterSimulation,
+  type StarterSimulationBinding,
+  type StarterSimulationSnapshot,
+  type SimulationStarterMode,
+} from './game-support/starterSimulation.ts';
 
 export { LocalStorageDriver, MemoryStorageDriver } from './persistence/LocalStorageDriver.ts';
 export { SaveStoreImpl } from './persistence/SaveStoreImpl.ts';

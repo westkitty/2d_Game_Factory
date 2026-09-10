@@ -1031,7 +1031,11 @@ export function generateUiCopy(options: {
                 ? presetId === 'rhythm-action'
                   ? 'ENTER ON THE BEAT'
                   : 'WAIT FOR THE GO  -  ENTER HITS'
-                : 'ARROWS CHANGE THE SELECTION  -  ENTER CONFIRMS  -  PAUSE TO STOP';
+                : presetId === 'farming-lite'
+                  ? 'ARROWS PICK A PLOT  -  ENTER PLANTS OR HARVESTS'
+                  : presetId === 'colony-lite'
+                    ? 'ARROWS PICK A JOB  -  ENTER ASSIGNS OR BUILDS'
+                    : 'ARROWS CHANGE THE SELECTION  -  ENTER CONFIRMS  -  PAUSE TO STOP';
       break;
     default:
       break;
