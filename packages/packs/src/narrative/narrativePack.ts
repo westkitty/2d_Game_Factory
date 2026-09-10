@@ -20,6 +20,8 @@ export interface NarrativeService {
   hasSeen(entryId: string): boolean;
   seenEntries(): readonly string[];
   chosenChoices(): readonly string[];
+  /** Scene-lifetime restart: the pack is game-lifetime. */
+  reset(): void;
 }
 
 class NarrativeServiceImpl implements NarrativeService {
@@ -72,6 +74,13 @@ class NarrativeServiceImpl implements NarrativeService {
 
   chosenChoices(): readonly string[] {
     return [...this.#choices].sort();
+  }
+
+  reset(): void {
+    this.#node = null;
+    this.#flags.clear();
+    this.#seen.clear();
+    this.#choices.clear();
   }
 }
 

@@ -218,8 +218,8 @@ recipe's *first* stated limitation; see `knownLimitations` in
 | `exploration-game` | (none stated) |
 | `visual-novel` | Branching dialogue graphs, choices, flags and endings are reusable (sw2d.dialogue); portraits, scene composition, parser IF and evidence-board deduction are not. |
 | `point-and-click` | Branching dialogue graphs, choices, flags and endings are reusable (sw2d.dialogue); portraits, scene composition, parser IF and evidence-board deduction are not. |
-| `interactive-fiction-hybrid` | No dedicated parser/text-command system exists. |
-| `investigation-game` | No evidence-board/deduction/linking system exists. |
+| `interactive-fiction-hybrid` | Nodes, flags, choices and seen entries are reusable (sw2d.narrative); a dedicated parser/text-command system and an evidence-board/deduction/linking system are not. |
+| `investigation-game` | Nodes, flags, choices and seen entries are reusable (sw2d.narrative); a dedicated parser/text-command system and an evidence-board/deduction/linking system are not. |
 | `museum-exhibit` | No dedicated exhibit/codex presentation framework exists beyond general world/narrative/UI foundations. |
 | `escape-room` | Standard puzzle kinds (sokoban, switch/sequence, match, falling-block) are now content-authorable through the sw2d.puzzle-rules capability and content/puzzles.json (ADR-0023). This recipe's board rules are not one of those built-in kinds, so it still uses the code seam: sw2d.puzzle declares configSource: 'code' (ADR-0017) and a generated game supplies createInitialState/isSolved from src/game-specific/packConfig.ts (shipped with a working placeholder to replace) - the pack really installs, but this puzzle's own rules stay game-specific TypeScript, not content. |
 | `microgame-collection` | No microgame scheduler/rotation/meta-framework exists. |

@@ -9,6 +9,7 @@ import {
   bindStarterLocalPlay,
   bindStarterStageScroll,
   bindStarterPerception,
+  bindStarterNarrative,
   bindStarterWeapon,
   createRoomTransitionRuntime,
   createWorldMapOverlay,
@@ -17,6 +18,7 @@ import {
   type SceneContext,
   type ScenePackDefinition,
 } from '@sw2d/runtime';
+import { NARRATIVE_STARTER } from './packConfig.ts';
 
 /**
  * Generated starter shell: top-down controller family.
@@ -99,6 +101,15 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     // exit replace the dummy wander.
     const perception = bindStarterPerception(context);
     if (perception.active) player.setPosition(perception.startX(), perception.startY());
+    // Narrative (Category-C Wave 14). Inert unless packConfig names a
+    // fiction/case starter and sw2d.narrative is installed. Case mode
+    // walks the player to clues; dummy OPTIONS stay on other recipes.
+    const story = bindStarterNarrative(context, { mode: NARRATIVE_STARTER });
+    if (story.active) {
+      player.setPosition(story.startX(), story.startY());
+      walls.setVisible(false);
+      wallCollider.destroy();
+    }
     // Ball / paddle (Category-C Wave 5). Inert unless sw2d.ball-paddle is
     // installed with a non-empty catalog. Then the table owns motion and
     // the dummy wander is hidden.
@@ -163,6 +174,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       weapon: weapon?.snapshot() ?? null,
       ...(battle.active ? { battle: battle.snapshot() } : {}),
       ...(perception.active ? { perception: perception.snapshot() } : {}),
+      ...(story.active ? { narrative: story.snapshot() } : {}),
       ...(table.active ? { ballPaddle: table.snapshot() } : {}),
       ...(melee.active ? { melee: melee.snapshot() } : {}),
       ...(seats.active ? { localPlay: seats.snapshot() } : {}),
@@ -248,8 +260,13 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
           perception.setPlayer(player.x, player.y);
           perception.tick(deltaMs);
         }
+        if (story.active) {
+          story.setPlayer(player.x, player.y);
+          if (intent.primaryPressed) story.act();
+          story.render();
+        }
         const firing = intent.primaryPressed || (battle.active && context.input.isDown('PRIMARY_ACTION'));
-        if (firing && !perception.active) {
+        if (firing && !perception.active && !story.active) {
           (weapon ?? battle).fire(nowMs, facingX, facingY, { x: player.x, y: player.y });
         }
         if (worldGraph && rooms) {
@@ -270,6 +287,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         battle.dispose();
         weapon?.dispose();
         perception.dispose();
+        story.dispose();
         table.dispose();
         melee.dispose();
         seats.dispose();

@@ -98,5 +98,7 @@ describe('generateUiCopy (generated games announce their genre honestly)', () =>
     expect(copyFor('escape-room').playHint).toBe('CLICK THE NOTE  -  THEN THE KEY');
     expect(copyFor('farming-lite').playHint).toBe('ARROWS PICK A PLOT  -  ENTER PLANTS OR HARVESTS');
     expect(copyFor('colony-lite').playHint).toBe('ARROWS PICK A JOB  -  ENTER ASSIGNS OR BUILDS');
+    expect(copyFor('interactive-fiction-hybrid').playHint).toBe('ARROWS PICK A VERB  -  ENTER ACTS');
+    expect(copyFor('investigation-game').playHint).toBe('MOVE WASD/ARROWS  -  J INSPECTS CLUES');
   });
 });

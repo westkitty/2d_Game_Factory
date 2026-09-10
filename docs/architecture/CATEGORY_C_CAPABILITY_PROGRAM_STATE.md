@@ -36,6 +36,7 @@ Highest-leverage clusters, from `packages/presets/src/shared.ts` LIMITATIONS + p
 | 11 | Consume existing weapons in vehicle + pointer shells | asteroids-shooter, gallery-shooter | **Wave 11 implemented and played** (existing `sw2d.weapons`; ADR-0038). Residual: rail-camera; rail keeps weapons leftover. Overlay shooters stay local. |
 | 12 | Consume existing `sw2d.puzzle` code seam | physics-puzzle, escape-room | **Wave 12 implemented and played** (existing `sw2d.puzzle`; ADR-0039). Residual: rules stay TypeScript not content; no escape-room grammar. Overlay physics/escape stay local. |
 | 13 | Consume existing `sw2d.simulation` ledger/jobs | farming-lite, colony-lite | **Wave 13 implemented and played** (existing `sw2d.simulation`; ADR-0040). Residual: crop/season/plot framework and colony assignment AI stay out. Overlay farming/colony stay local (P3-J). |
+| 14 | Consume existing `sw2d.narrative` store | interactive-fiction-hybrid, investigation-game | **Wave 14 implemented** (existing `sw2d.narrative`; ADR-0041). Residual: parser IF and evidence-board linking stay out. Overlay IF/investigation stay local (P3-K). |
 | — | Tier 4 specialized (parser IF, fishing, cooking, photography, wardrobe, drawing, microgame scheduler, sandbox authoring) | prefer game-specific seam until a second consumer is real | backlog |
 
 Do not extend `sw2d.simulation` / `sw2d.narrative` / `sw2d.ai` into genre monoliths. New narrow packs compose with them.
@@ -1051,5 +1052,101 @@ is active. Confirmed via debug snapshots, not screenshots.
 - Do not commit `package-lock.json` workspace links for gitignored `games/wave*`.
 - Residual Category-C: climbing, chase, territory, pinball, crop/season, rail
   camera, run-meta vs survivor, remaining dummy OPTIONS (pinball/auto-battler/
-  IF/microgame/fishing/cooking), maze wanderer, committed proofs.
+  microgame/fishing/cooking), maze wanderer, committed proofs.
 
+
+## Wave 14 — consume `sw2d.narrative` in IF and investigation shells
+
+### Problem
+
+`interactive-fiction-hybrid` and `investigation-game` already required
+`sw2d.narrative`. The generated shells never bound it, so IF entered play as
+dummy OPTIONS and investigation as a top-down wanderer. The leftover was
+consumption, not a missing pack. Inventing a parser or evidence-board pack
+would duplicate 1-consumer leftovers. Folding either into `sw2d.dialogue`
+would lie about parser commands and evidence linking.
+
+### Consumers
+
+- `interactive-fiction-hybrid` — `NARRATIVE_STARTER = 'fiction'` (LOOK / TAKE /
+  LEAVE menu verbs; TAKE locked until LOOK sets `saw-note`; TAKE and LEAVE are
+  two endings).
+- `investigation-game` — `NARRATIVE_STARTER = 'case'` (walk to two clue
+  markers, J inspects `markSeen`, walk to desk, J deduces).
+
+Materially different: keyboard verb menu vs spatial inspect-then-deduce.
+
+Overlay IF / investigation kits stay local (P3-K).
+
+### ValidationPlan
+
+1. No new pack / schema / capability id. `narrative.reset()` is scene-lifetime.
+2. Generated packConfig stamps `NARRATIVE_STARTER` fiction vs case vs null.
+3. Generated ui-simulation shell binds fiction verbs. Generated top-down shell
+   binds case clues.
+4. Honesty / docsSync / uiCopy stay green. ADR-0041.
+5. Real-browser play of factory-generated games. Overlay kits not re-run.
+   Committed proofs + maturity promotion still deferred.
+
+### CompletionContract
+
+- [x] No new pack / schema / capability id.
+- [x] Authority remains the existing `narrative.state` node/flag/choice/seen store.
+- [x] ≥2 materially different generated consumers (2 wired).
+- [x] Focused generate/honesty/uiCopy/pack tests.
+- [x] Honest residual limitation (parser IF; evidence-board linking).
+- [x] ADR-0041.
+- [x] Real-browser play of factory-generated `wave14-interactive-fiction-hybrid` /
+  `wave14-investigation-game` (`tools/scripts/play-narrative-wave14.ts`, 2/2 PASS,
+  0 console errors, 0 external requests).
+- [x] `npm run sw2d -- validate` on those two games (schema + tsc + vite
+  build + boot smoke) PASS (CDP hang after printed success, timeout 90 → 124).
+- [ ] Overlay P3-K re-run. **Not done this wave** — overlay stays unwired.
+- [ ] Committed proofs + maturity promotion. **Not done — evidence rule.**
+
+### Implementation notes
+
+- No new pack. `sw2d.narrative` already exists (node / flags / choose / seen).
+- `bindStarterNarrative` is INERT unless packConfig names `'fiction'` or
+  `'case'` *and* `narrative.state` is installed. Visual-novel / point-and-click
+  stay on `sw2d.dialogue`. Museum stays optional narrative.
+- Fiction verbs LOOK/TAKE/LEAVE. TAKE without `saw-note` records `locked`.
+- Case clues at (280,270) and (620,270); desk at (850,270); spawn (120,270).
+- Scene restart calls `narrative.reset()` (the pack is game-lifetime).
+- Overlay IF / investigation kits stay local (P3-K).
+
+### Browser journeys (executed)
+
+Factory-generated:
+
+- Interactive-fiction-hybrid: Space start node=`start` LOOK → ArrowRight
+  Enter TAKE `locked` → ArrowLeft Enter LOOK `saw-note` node=`looked` →
+  ArrowRight Enter TAKE ending=`escaped` outcome=complete.
+- Investigation-game: Space start x=120 clues 0/2 → J `too-far` → walk
+  x=237 near print, J `inspected` seen print → walk x=575 near photo, J
+  `inspected` 2/2 → walk x=795 near desk, J `deduced` ending=`closed`
+  outcome=complete.
+
+### Visual inspection
+
+Fiction: HUD `FICTION`, cabin text, `< LOOK > TAKE LEAVE`, then `ESCAPED`.
+Case: PRINT / PHOTO / DESK markers, HUD `CASE` clues n/2, then `CASE CLOSED`.
+Dummy picker hidden when the binder is active. Confirmed via debug snapshots,
+not screenshots.
+
+### Bugs found and fixed this wave
+
+- Investigation catalog limitation edit missed on the first pass (`docsSync`
+  still expected the old evidence-board-only string).
+- Unused `EMPTY_COLOR` in `starterNarrative.ts` failed `tsc` (`noUnusedLocals`).
+
+### Remaining blockers / unknowns
+
+- No committed `proofs/` for IF-hybrid or investigation; catalog maturity
+  stays `recipe` (23/3/48).
+- Overlay IF / investigation stay local. Parser and evidence-board stay out.
+- Chrome wrapper is session-local under `/tmp`.
+- Do not commit `package-lock.json` workspace links for gitignored `games/wave*`.
+- Residual Category-C: climbing, chase, territory, pinball, crop/season, rail
+  camera, run-meta vs survivor, remaining dummy OPTIONS (pinball/auto-battler/
+  microgame/fishing/cooking), maze wanderer, committed proofs.

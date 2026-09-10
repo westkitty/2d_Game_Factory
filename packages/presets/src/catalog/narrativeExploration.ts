@@ -16,9 +16,9 @@ import { LIMITATIONS, POINTER_INPUT_MODES, VALIDATION_PROFILES, definePreset, pa
  * something (`point-and-click`, `escape-room`).
  *
  * `sw2d.narrative` remains the lightweight flag/node/seen store.
- * Branching graphs live in `sw2d.dialogue` (Category-C Wave 3). Recipes that
- * require narrative without dialogue still state the remaining gap
- * (parser IF, evidence boards, exhibits).
+ * Branching graphs live in `sw2d.dialogue` (Category-C Wave 3). Category-C
+ * Wave 14 consumes the store for menu-verb IF vs walk-and-inspect clues;
+ * parser IF, evidence boards and exhibits stay out of the pack.
  */
 export const NARRATIVE_EXPLORATION_PRESETS: readonly PresetDefinition[] = [
   definePreset({
@@ -75,7 +75,7 @@ export const NARRATIVE_EXPLORATION_PRESETS: readonly PresetDefinition[] = [
     optionalSystemPacks: [pack(PACK_IDS.world)],
     requiredContentRoles: ['tuning', 'dialogue'],
     validationProfile: VALIDATION_PROFILES.narrativeExploration,
-    knownLimitations: ['No dedicated parser/text-command system exists.'],
+    knownLimitations: [LIMITATIONS.narrativeStore],
   }),
 
   definePreset({
@@ -88,7 +88,7 @@ export const NARRATIVE_EXPLORATION_PRESETS: readonly PresetDefinition[] = [
     requiredContentRoles: ['tuning', 'levels', 'dialogue'],
     supportedInputModes: POINTER_INPUT_MODES,
     validationProfile: VALIDATION_PROFILES.narrativeExploration,
-    knownLimitations: ['No evidence-board/deduction/linking system exists.'],
+    knownLimitations: [LIMITATIONS.narrativeStore],
   }),
 
   definePreset({

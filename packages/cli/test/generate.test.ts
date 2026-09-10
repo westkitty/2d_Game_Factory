@@ -676,6 +676,51 @@ describe('generated ui-simulation farm and colony consume sw2d.simulation', () =
   });
 });
 
+describe('generated narrative games consume sw2d.narrative', () => {
+  it('the generated ui-simulation shell binds bindStarterNarrative', () => {
+    const fiction = PRESETS.find((candidate) => candidate.id === 'interactive-fiction-hybrid')!;
+    const shell = buildGameFiles('narrative-probe', fiction).get('src/game-specific/shellPack.ts')!;
+    expect(shell).toContain('bindStarterNarrative(context, { mode: NARRATIVE_STARTER })');
+    expect(shell).toContain('story.act()');
+    expect(shell).toContain("from './packConfig.ts'");
+    expect(buildGameFiles('narrative-probe', fiction).get('src/main.ts')).toContain('narrativePack');
+  });
+
+  it('the generated top-down shell binds case clues', () => {
+    const investigation = PRESETS.find((candidate) => candidate.id === 'investigation-game')!;
+    const shell = buildGameFiles('narrative-probe', investigation).get('src/game-specific/shellPack.ts')!;
+    expect(shell).toContain('bindStarterNarrative(context, { mode: NARRATIVE_STARTER })');
+    expect(shell).toContain('story.setPlayer(');
+    expect(shell).toContain('story.act()');
+  });
+
+  it('interactive-fiction-hybrid and investigation-game enable sw2d.narrative with different starters', () => {
+    const fiction = PRESETS.find((candidate) => candidate.id === 'interactive-fiction-hybrid')!;
+    const investigation = PRESETS.find((candidate) => candidate.id === 'investigation-game')!;
+    const shop = PRESETS.find((candidate) => candidate.id === 'shopkeeper')!;
+    const fictionFiles = buildGameFiles('narrative-probe', fiction);
+    const caseFiles = buildGameFiles('narrative-probe', investigation);
+    const shopFiles = buildGameFiles('narrative-probe', shop);
+    const fictionJson = JSON.parse(fictionFiles.get('content/game.json')!) as { systemPacks: Array<{ packId: string }> };
+    const caseJson = JSON.parse(caseFiles.get('content/game.json')!) as { systemPacks: Array<{ packId: string }> };
+    expect(fictionJson.systemPacks.map((s) => s.packId)).toContain('sw2d.narrative');
+    expect(caseJson.systemPacks.map((s) => s.packId)).toContain('sw2d.narrative');
+    expect(fictionFiles.get('src/game-specific/packConfig.ts')).toContain(
+      "NARRATIVE_STARTER: 'fiction' | 'case' | null = 'fiction'",
+    );
+    expect(caseFiles.get('src/game-specific/packConfig.ts')).toContain(
+      "NARRATIVE_STARTER: 'fiction' | 'case' | null = 'case'",
+    );
+    expect(shopFiles.get('src/game-specific/packConfig.ts')).toContain(
+      "NARRATIVE_STARTER: 'fiction' | 'case' | null = null",
+    );
+    const fictionTheme = JSON.parse(fictionFiles.get('content/themes/default/theme.json')!) as { ui: { playHint: string } };
+    const caseTheme = JSON.parse(caseFiles.get('content/themes/default/theme.json')!) as { ui: { playHint: string } };
+    expect(fictionTheme.ui.playHint).toContain('ARROWS PICK A VERB');
+    expect(caseTheme.ui.playHint).toContain('J INSPECTS CLUES');
+  });
+});
+
 describe('generated pointer puzzles consume sw2d.puzzle', () => {
   it('the generated pointer shell presents physics-goal and escape-locks on puzzle.state', () => {
     const physics = PRESETS.find((candidate) => candidate.id === 'physics-puzzle')!;

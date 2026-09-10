@@ -6,13 +6,14 @@ import {
   bindStarterLocalPlay,
   bindStarterTiming,
   bindStarterSimulation,
+  bindStarterNarrative,
   createAdvancedPhysics,
   mutedStyle,
   uiSimulationController,
   type SceneContext,
   type ScenePackDefinition,
 } from '@sw2d/runtime';
-import { SIMULATION_STARTER } from './packConfig.ts';
+import { NARRATIVE_STARTER, SIMULATION_STARTER } from './packConfig.ts';
 
 /**
  * Generated starter shell: ui-simulation controller family.
@@ -25,8 +26,9 @@ import { SIMULATION_STARTER } from './packConfig.ts';
  * `sw2d.dialogue` is installed it is replaced by the novel/adventure
  * reading loop (Wave 3). When `SIMULATION_STARTER` is farm or colony the
  * option list is replaced by the existing `sw2d.simulation` ledger/jobs
- * (Wave 13). See platformShellPack.ts's file comment for the template
- * pattern.
+ * (Wave 13). When `NARRATIVE_STARTER` is fiction the option list is
+ * replaced by menu verbs on `sw2d.narrative` (Wave 14). See
+ * platformShellPack.ts's file comment for the template pattern.
  */
 
 const OPTIONS = ['Option A', 'Option B', 'Option C', 'Option D'];
@@ -50,6 +52,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     const seats = bindStarterLocalPlay(context);
     const clock = bindStarterTiming(context);
     const jobs = bindStarterSimulation(context, { mode: SIMULATION_STARTER });
+    const story = bindStarterNarrative(context, { mode: NARRATIVE_STARTER });
 
     // Optional advanced physics (capability program Phase 9). Inert unless
     // content/game.json sets physicsProfile: 'matter'. Then a ball drops onto a
@@ -63,7 +66,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         })()
       : null;
 
-    const label = economy.active || needs.active || dialogue.active || seats.active || clock.active || jobs.active
+    const label = economy.active || needs.active || dialogue.active || seats.active || clock.active || jobs.active || story.active
       ? null
       : scene.add
           .text(width * 0.5, height * 0.5, '', mutedStyle(20))
@@ -86,6 +89,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       ...(seats.active ? { localPlay: seats.snapshot() } : {}),
       ...(clock.active ? { timing: clock.snapshot() } : {}),
       ...(jobs.active ? { simulation: jobs.snapshot() } : {}),
+      ...(story.active ? { narrative: story.snapshot() } : {}),
       ...(physics ? { physics: { enabled: physics.enabled, bodyCount: physics.bodyCount, ball: ball ? physics.bodyState(ball) : null } } : {}),
     }));
 
@@ -147,6 +151,13 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
           jobs.render();
           return;
         }
+        if (story.active) {
+          if (intent.navigateLeftPressed || intent.navigateUpPressed) story.select(-1);
+          else if (intent.navigateRightPressed || intent.navigateDownPressed) story.select(1);
+          if (intent.confirmPressed || intent.primaryPressed) story.act();
+          story.render();
+          return;
+        }
         if (intent.navigateLeftPressed) {
           selectionIndex = (selectionIndex - 1 + OPTIONS.length) % OPTIONS.length;
           confirmed = false;
@@ -173,6 +184,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         seats.dispose();
         clock.dispose();
         jobs.dispose();
+        story.dispose();
         physics?.dispose();
         try {
           label?.destroy();

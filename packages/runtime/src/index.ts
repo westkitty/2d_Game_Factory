@@ -69,6 +69,12 @@ export {
   type StarterSimulationSnapshot,
   type SimulationStarterMode,
 } from './game-support/starterSimulation.ts';
+export {
+  bindStarterNarrative,
+  type StarterNarrativeBinding,
+  type StarterNarrativeSnapshot,
+  type NarrativeStarterMode,
+} from './game-support/starterNarrative.ts';
 
 export { LocalStorageDriver, MemoryStorageDriver } from './persistence/LocalStorageDriver.ts';
 export { SaveStoreImpl } from './persistence/SaveStoreImpl.ts';

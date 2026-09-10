@@ -62,6 +62,24 @@ describe('narrativePack', () => {
     expect(narrative.seenEntries()).toEqual(['codex.castle', 'codex.dragon']);
   });
 
+  it('reset() clears node, flags, seen and choices', () => {
+    const context = createFakeGameContext();
+    narrativePack.install(context, undefined);
+    const narrative = context.capabilities.require<NarrativeService>('narrative.state');
+
+    narrative.goTo('intro');
+    narrative.setFlag('met-innkeeper', true);
+    narrative.markSeen('codex.dragon');
+    narrative.choose('go-left', 'forest-path');
+    narrative.reset();
+
+    expect(narrative.currentNode()).toBeNull();
+    expect(narrative.hasFlag('met-innkeeper')).toBe(false);
+    expect(narrative.hasSeen('codex.dragon')).toBe(false);
+    expect(narrative.seenEntries()).toEqual([]);
+    expect(narrative.chosenChoices()).toEqual([]);
+  });
+
   it('withdraws the capability on dispose', () => {
     const context = createFakeGameContext();
     const installed = narrativePack.install(context, undefined);

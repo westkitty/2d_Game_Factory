@@ -989,7 +989,9 @@ export function generateUiCopy(options: {
               ? 'MOVE WASD/ARROWS  -  AIM WITH MOUSE  -  FIRE J/X  -  SURVIVE THE WAVES'
               : has('sw2d.weapons')
                 ? 'MOVE WASD/ARROWS  -  AIM WITH MOUSE  -  FIRE J/X'
-                : 'MOVE WASD/ARROWS  -  PAUSE TO STOP';
+                : presetId === 'investigation-game'
+                  ? 'MOVE WASD/ARROWS  -  J INSPECTS CLUES'
+                  : 'MOVE WASD/ARROWS  -  PAUSE TO STOP';
       break;
     case 'vehicle':
       playHint = has('sw2d.racing')
@@ -1035,7 +1037,9 @@ export function generateUiCopy(options: {
                   ? 'ARROWS PICK A PLOT  -  ENTER PLANTS OR HARVESTS'
                   : presetId === 'colony-lite'
                     ? 'ARROWS PICK A JOB  -  ENTER ASSIGNS OR BUILDS'
-                    : 'ARROWS CHANGE THE SELECTION  -  ENTER CONFIRMS  -  PAUSE TO STOP';
+                    : presetId === 'interactive-fiction-hybrid'
+                      ? 'ARROWS PICK A VERB  -  ENTER ACTS'
+                      : 'ARROWS CHANGE THE SELECTION  -  ENTER CONFIRMS  -  PAUSE TO STOP';
       break;
     default:
       break;
