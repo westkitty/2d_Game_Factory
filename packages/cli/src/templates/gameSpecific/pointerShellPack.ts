@@ -1,6 +1,7 @@
 import type { AdvancedPhysicsService, InstalledSystemPack } from '@sw2d/contracts';
 import {
   bindStarterDialogue,
+  bindStarterWeapon,
   createAdvancedPhysics,
   pointerActionController,
   type SceneContext,
@@ -20,6 +21,11 @@ import {
  * When `sw2d.dialogue` is installed in adventure mode (Category-C Wave 3)
  * the dummy target is replaced by authored hotspots that start conversations.
  *
+ * When `sw2d.weapons` is installed (Category-C Wave 11) PRIMARY_ACTION or a
+ * pointer click fires toward the cursor through the reusable projectile
+ * runtime. Gallery-shooter is the pointer consumer; rail-shooter does not
+ * install the pack (its leftover is a rail camera).
+ *
  * Press-style semantic actions (`pointerActionController`) are still
  * available for menu-style confirms; this shell demonstrates the spatial
  * layer because that is the part a pointer game cannot fake. See
@@ -35,19 +41,27 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
   install(context: SceneContext): InstalledSystemPack {
     const scene = context.scene;
     const targetKey = context.assets.resolve('pickup');
+    const playerKey = context.assets.resolve('player');
     const { width, height } = context.definition.viewport;
     const centre = { x: width * 0.5, y: height * 0.5, radius: 48 };
 
     const dialogue = bindStarterDialogue(context);
+    const weapon = bindStarterWeapon(context);
+    const weaponsActive = Boolean(weapon.snapshot()) && !dialogue.active;
 
     let activations = 0;
     let highlighted = false;
     let hovered = false;
+    let nowMs = 0;
 
     const target = dialogue.active
       ? null
       : scene.add.image(centre.x, centre.y, targetKey);
     target?.setDisplaySize(centre.radius * 2, centre.radius * 2);
+
+    const gun = weaponsActive ? scene.add.image(width * 0.5, height - 56, playerKey) : null;
+    const reticle = weaponsActive ? scene.add.image(centre.x, centre.y, targetKey) : null;
+    reticle?.setDisplaySize(12, 12);
 
     const hotspotSprites: { id: string; image: ReturnType<typeof scene.add.image>; handle: { dispose(): void } }[] = [];
     if (dialogue.active) {
@@ -88,7 +102,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         })()
       : null;
 
-    const handle = target
+    const handle = target && !weaponsActive
       ? context.interaction.register({
           id: 'target',
           shape: { kind: 'circle', x: centre.x, y: centre.y, radius: centre.radius },
@@ -118,6 +132,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       pointerWorldX: Math.round(context.spatialPointer.state.worldX),
       pointerWorldY: Math.round(context.spatialPointer.state.worldY),
       ...(dialogue.active ? { dialogue: dialogue.snapshot() } : {}),
+      weapon: weapon.snapshot(),
       ...(physics
         ? {
             physics: {
@@ -134,14 +149,33 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     return {
       id: GAME_SPECIFIC_PACK.id,
 
-      update(): void {
-        if (disposed || !dialogue.active) return;
-        const intent = pointerActionController.read(context.input);
-        if (intent.confirmPressed) {
-          if (dialogue.snapshot().kind === 'choice') dialogue.choose();
-          else dialogue.advance();
+      update(deltaMs: number): void {
+        if (disposed) return;
+        nowMs += deltaMs;
+        weapon.update(deltaMs, nowMs);
+
+        if (dialogue.active) {
+          const intent = pointerActionController.read(context.input);
+          if (intent.confirmPressed) {
+            if (dialogue.snapshot().kind === 'choice') dialogue.choose();
+            else dialogue.advance();
+          }
+          dialogue.render();
+          return;
         }
-        dialogue.render();
+
+        if (!weaponsActive) return;
+        const ptr = context.spatialPointer.state;
+        reticle?.setPosition(ptr.worldX, ptr.worldY);
+        const intent = pointerActionController.read(context.input);
+        if (intent.primaryPressed || ptr.justPressed) {
+          const ox = gun?.x ?? width * 0.5;
+          const oy = gun?.y ?? height - 56;
+          const dx = ptr.worldX - ox;
+          const dy = ptr.worldY - oy;
+          const len = Math.hypot(dx, dy);
+          weapon.fire(nowMs, len > 1 ? dx / len : 0, len > 1 ? dy / len : -1, { x: ox, y: oy });
+        }
       },
 
       dispose(): void {
@@ -158,9 +192,20 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
           }
         }
         dialogue.dispose();
+        weapon.dispose();
         physics?.dispose();
         try {
           target?.destroy();
+        } catch {
+          /* scene already tearing down */
+        }
+        try {
+          gun?.destroy();
+        } catch {
+          /* scene already tearing down */
+        }
+        try {
+          reticle?.destroy();
         } catch {
           /* scene already tearing down */
         }

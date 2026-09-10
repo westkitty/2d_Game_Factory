@@ -175,6 +175,9 @@ describe('required knownLimitations (MASTER_PROJECT.md section 12)', () => {
     { id: 'fishing-game', pattern: /No reusable casting\/line\/tension\/fish behavior system/ },
     { id: 'cooking-game', pattern: /No reusable ingredient\/recipe\/action-sequence cooking system/ },
     { id: 'photography-game', pattern: /No reusable camera\/framing\/scoring\/photo-capture gameplay system/ },
+    { id: 'asteroids-shooter', pattern: /sw2d\.weapons/ },
+    { id: 'gallery-shooter', pattern: /sw2d\.weapons/ },
+    { id: 'rail-shooter', pattern: /this starter's shell does not wire it yet/ },
   ];
 
   cases.forEach(({ id, pattern }, index) => {

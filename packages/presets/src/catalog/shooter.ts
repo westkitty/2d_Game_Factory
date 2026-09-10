@@ -11,11 +11,11 @@ import { LIMITATIONS, POINTER_INPUT_MODES, VALIDATION_PROFILES, definePreset, pa
  * gallery/rail shooters - which are about a fixed viewpoint plus targeting,
  * not locomotion - to `pointer`.
  *
- * None of the seven references a projectile/weapon pack: `sw2d.combat` is a
- * health/damage model only today ("deliberately not a combat system - no
- * weapons, projectiles, melee collision, knockback" - combatPack.ts's own
- * doc comment). Every recipe here states that gap in knownLimitations
- * instead of implying weapons exist.
+ * Shmups, bullet-hell and run-and-gun already require `sw2d.weapons`.
+ * Category-C Wave 11 also wires that existing pack into the vehicle
+ * (asteroids heading-fire) and pointer (gallery cursor-fire) shells.
+ * Rail-shooter keeps the weapons leftover: its identity gap is a rail
+ * camera, not a second shooting adapter.
  */
 export const SHOOTER_PRESETS: readonly PresetDefinition[] = [
   definePreset({
@@ -69,12 +69,12 @@ export const SHOOTER_PRESETS: readonly PresetDefinition[] = [
     displayName: 'Asteroids Shooter',
     family: 'shooter',
     controllerFamilies: ['vehicle'],
-    requiredSystemPacks: [pack(PACK_IDS.combat)],
+    requiredSystemPacks: [pack(PACK_IDS.combat), pack(PACK_IDS.weapons)],
     optionalSystemPacks: [pack(PACK_IDS.arcade)],
     requiredContentRoles: ['tuning'],
     validationProfile: VALIDATION_PROFILES.shooter,
     knownLimitations: [
-      LIMITATIONS.weaponsProjectiles,
+      'Drifting rock fields and wrap-around collision stay game-specific; the generated starter steers and fires along heading through sw2d.weapons.',
       'vehicleController supplies arcade steering/throttle intent only, not rotational-inertia physics.',
     ],
   }),
@@ -85,15 +85,19 @@ export const SHOOTER_PRESETS: readonly PresetDefinition[] = [
     displayName: 'Gallery Shooter',
     family: 'shooter',
     controllerFamilies: ['pointer'],
-    requiredSystemPacks: [pack(PACK_IDS.combat)],
+    requiredSystemPacks: [pack(PACK_IDS.combat), pack(PACK_IDS.weapons)],
     optionalSystemPacks: [pack(PACK_IDS.arcade)],
     requiredContentRoles: ['tuning'],
     supportedInputModes: POINTER_INPUT_MODES,
     validationProfile: VALIDATION_PROFILES.shooter,
     // Spatial pointer/world-space click targeting is implemented and consumed
     // by this preset's starter (capability program Phase 1, ADR-0018; proof:
-    // proofs/gallery-shooter/). Weapons/projectiles remain a later phase.
-    knownLimitations: [LIMITATIONS.weaponsProjectiles],
+    // proofs/gallery-shooter/). Category-C Wave 11 also wires sw2d.weapons
+    // into the generated pointer shell (cursor-aimed fire). Authored target
+    // waves stay in the frozen proof, not a reusable gallery-stage pack.
+    knownLimitations: [
+      'Authored gallery target waves and projectile-vs-target scoring stay in the frozen proof; the generated starter fires toward the cursor through sw2d.weapons.',
+    ],
   }),
 
   definePreset({

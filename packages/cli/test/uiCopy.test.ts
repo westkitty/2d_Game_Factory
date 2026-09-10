@@ -18,7 +18,8 @@ import { generateUiCopy } from '../src/generator/contentDocuments.ts';
 //  - MOVE / STEER / THROTTLE / ARROWS / WASD: every controller family reads MOVE_*.
 //  - JUMP: platform controller (JUMP: Space/KeyW/ArrowUp).
 //  - FIRE J/X: PRIMARY_ACTION keyboard bindings are KeyJ/KeyX.
-//  - AIM WITH MOUSE: topDownShellPack consumes aimFromPointer (ADR-0018).
+//  - AIM WITH MOUSE: topDownShellPack consumes aimFromPointer (ADR-0018);
+//    pointerShellPack fires toward context.spatialPointer when weapons are on.
 //  - UNDO BACKSPACE: CANCEL is Backspace; gridShellPack calls puzzle.undo() on CANCEL.
 //  - RESET K: SECONDARY_ACTION is KeyK/KeyC; gridShellPack calls puzzle.reset().
 //  - ENTER: CONFIRM is Enter/Space/NumpadEnter; vehicle shell starts the race,
@@ -89,5 +90,9 @@ describe('generateUiCopy (generated games announce their genre honestly)', () =>
     expect(copyFor('rhythm-action').playHint).toBe('ENTER ON THE BEAT');
     expect(copyFor('action-adventure').playHint).toContain('STRIKE J/X');
     expect(copyFor('arena-combat').playHint).toContain('STRIKE J/X');
+    expect(copyFor('asteroids-shooter').playHint).toContain('FIRE J/X');
+    expect(copyFor('gallery-shooter').playHint).toContain('FIRE J/X');
+    expect(copyFor('rail-shooter').playHint).not.toContain('FIRE');
+    expect(copyFor('kart-racer').playHint).not.toContain('FIRE');
   });
 });

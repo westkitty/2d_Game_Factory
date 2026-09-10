@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import type { InstalledSystemPack, RaceService, VehicleService } from '@sw2d/contracts';
 import { RACE_STATE_CAPABILITY_ID, VEHICLE_MOTION_CAPABILITY_ID } from '@sw2d/contracts';
-import { resolveSceneLevel, vehicleController, type SceneContext, type ScenePackDefinition } from '@sw2d/runtime';
+import { bindStarterWeapon, resolveSceneLevel, vehicleController, type SceneContext, type ScenePackDefinition } from '@sw2d/runtime';
 
 /**
  * Generated starter shell: vehicle controller family.
@@ -13,6 +13,10 @@ import { resolveSceneLevel, vehicleController, type SceneContext, type ScenePack
  * `sw2d.racing` is installed the RaceService owns the countdown, ordered
  * checkpoints and laps - CONFIRM starts the race, and reaching a checkpoint
  * circle reports it (only the expected next one counts).
+ *
+ * When `sw2d.weapons` is installed (Category-C Wave 11) PRIMARY_ACTION fires
+ * along the ship's heading through the reusable projectile runtime. Fire is
+ * not vehicle intent - the shell reads the action, the controller does not.
  */
 
 const LEVEL_DOCUMENT = 'levels/main';
@@ -40,9 +44,13 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     const spawn = level?.objects.find((object) => object.class === 'PlayerSpawn');
     const vehicleSvc = context.capabilities.get<VehicleService>(VEHICLE_MOTION_CAPABILITY_ID);
     const raceSvc = context.capabilities.get<RaceService>(RACE_STATE_CAPABILITY_ID);
+    // Weapons (capability program Phase 3 / Category-C Wave 11). Inert unless
+    // sw2d.weapons is installed. Asteroids heading-fire is the vehicle consumer.
+    const weapon = bindStarterWeapon(context);
+    const openSpace = Boolean(weapon.snapshot()) && !vehicleSvc;
 
-    const spawnX = spawn?.x ?? width * 0.5;
-    const spawnY = spawn?.y ?? height * 0.5;
+    const spawnX = openSpace ? width * 0.5 : (spawn?.x ?? width * 0.5);
+    const spawnY = openSpace ? height * 0.5 : (spawn?.y ?? height * 0.5);
 
     if (vehicleSvc && vehicleSvc.definitionIds().length > 0) {
       vehicleSvc.load(vehicleSvc.definitionIds()[0]!, { x: spawnX, y: spawnY, heading: 0 });
@@ -52,13 +60,20 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     vehicle.setCollideWorldBounds(true);
     vehicle.body.setAllowGravity(false);
     if (!vehicleSvc) {
-      scene.physics.add.collider(vehicle, walls);
+      if (openSpace) {
+        // The universal proof level's ground strip is not an asteroids arena.
+        // Colliding with it pins the ship; hide it and fly in open space.
+        walls.setVisible(false);
+      } else {
+        scene.physics.add.collider(vehicle, walls);
+      }
       vehicle.setDamping(true);
       vehicle.setDrag(0.92);
       vehicle.setMaxVelocity(260);
     }
 
     let raceStarted = false;
+    let nowMs = 0;
     const debugHandle = context.debug.contribute('game.vehicle-shell', () => ({
       x: Math.round(vehicle.x),
       y: Math.round(vehicle.y),
@@ -66,6 +81,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       ...(vehicleSvc ? { vehicle: vehicleSvc.state() } : { speed: Math.round(vehicle.body.velocity.length()) }),
       ...(raceSvc ? { race: raceSvc.raceState(), expectedCheckpoint: raceSvc.expectedCheckpoint()?.id ?? null } : {}),
       ...(generationManifest ? { generation: generationManifest } : {}),
+      weapon: weapon.snapshot(),
     }));
 
     const scratch = new Phaser.Math.Vector2();
@@ -76,6 +92,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
 
       update(deltaMs: number): void {
         if (disposed) return;
+        nowMs += deltaMs;
         const intent = vehicleController.read(context.input);
 
         if (raceSvc) {
@@ -116,12 +133,19 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
           }
           if (intent.brake > 0) vehicle.body.velocity.scale(1 - intent.brake * 0.1);
         }
+
+        weapon.update(deltaMs, nowMs);
+        if (context.input.justPressed('PRIMARY_ACTION')) {
+          const heading = vehicleSvc ? vehicleSvc.state().heading : vehicle.rotation;
+          weapon.fire(nowMs, Math.cos(heading), Math.sin(heading), { x: vehicle.x, y: vehicle.y });
+        }
       },
 
       dispose(): void {
         if (disposed) return;
         disposed = true;
         debugHandle.dispose();
+        weapon.dispose();
         try {
           vehicle.destroy();
         } catch {

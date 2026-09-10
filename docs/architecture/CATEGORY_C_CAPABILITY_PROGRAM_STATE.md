@@ -33,6 +33,7 @@ Highest-leverage clusters, from `packages/presets/src/shared.ts` LIMITATIONS + p
 | 9 | Match / falling-block consumption | match-puzzle, falling-block-puzzle | **Wave 9 implemented and played** (existing `sw2d.puzzle-rules` kinds; ADR-0036). Residual: pointer drag-swap, wall-kicks, overlay-local boards. |
 | — | Tier 3 leftovers (rail camera, territory, chase, climbing, run-meta, crop/season) | 1 live consumer each | backlog |
 | 10 | Visual reaction / beat windows (not audio-sync) | reaction-timing, rhythm-action | **Wave 10 implemented and played** (`sw2d.timing` / `arcade.timing`, ADR-0037). Residual: music-beat/audio-synchronization. Overlay rhythm/reaction stay local (P3-F). |
+| 11 | Consume existing weapons in vehicle + pointer shells | asteroids-shooter, gallery-shooter | **Wave 11 implemented and played** (existing `sw2d.weapons`; ADR-0038). Residual: rail-camera; rail keeps weapons leftover. Overlay shooters stay local. |
 | — | Tier 4 specialized (parser IF, fishing, cooking, photography, wardrobe, drawing, microgame scheduler, sandbox authoring) | prefer game-specific seam until a second consumer is real | backlog |
 
 Do not extend `sw2d.simulation` / `sw2d.narrative` / `sw2d.ai` into genre monoliths. New narrow packs compose with them.
@@ -766,3 +767,96 @@ High-contrast Phaser HUD (`REACTION` / `RHYTHM`, hits/misses, WAIT/GO circle, `W
 - Chrome wrapper is session-local under `/tmp`.
 - Do not commit `package-lock.json` workspace links for gitignored `games/wave*`.
 - Residual Category-C: climbing, chase, territory, pinball, crop/season, rail camera, weapons leftover, run-meta vs survivor, remaining Tier-4, committed proofs.
+
+## Wave 11 — consume `sw2d.weapons` in vehicle and pointer shells
+
+### Problem
+
+`asteroids-shooter` and `gallery-shooter` still carried
+`LIMITATIONS.weaponsProjectiles` after Phase 3 shipped `sw2d.weapons`. The
+generated platform and top-down shells already bind `bindStarterWeapon`. The
+vehicle and pointer shells did not. The leftover was consumption, not a
+missing pack. Rail-shooter's identity gap is a rail-path camera, not another
+fire adapter.
+
+### Consumers
+
+- `asteroids-shooter` — vehicle heading-fire on `PRIMARY_ACTION` (J/X).
+- `gallery-shooter` — pointer cursor-aimed fire on `PRIMARY_ACTION` or click.
+
+Materially different: ship-heading projectiles vs origin-to-cursor projectiles.
+
+`rail-shooter` was **not** wired — pointer-shell fire is inert unless the pack
+is installed. Overlay asteroids/gallery/rail kits stay local.
+
+### ValidationPlan
+
+1. No new pack / schema / capability id.
+2. Catalog: asteroids and gallery require `sw2d.weapons`; rail does not.
+3. Generated vehicle shell binds `bindStarterWeapon`, skips dummy ground
+   collision in open space, fires along heading.
+4. Generated pointer shell binds `bindStarterWeapon`, fires toward
+   `spatialPointer`, keeps dummy click for non-weapon pointer games.
+5. Honesty / docsSync / catalogPackIntegrity / uiCopy stay green. ADR-0038.
+6. Real-browser play of factory-generated games. Overlay shooters not re-run.
+   Committed proofs + maturity promotion still deferred.
+
+### CompletionContract
+
+- [x] No new pack / schema / capability id.
+- [x] Content authority remains `content/weapons.json`.
+- [x] ≥2 materially different generated consumers (2 wired).
+- [x] Focused generate/honesty/uiCopy tests.
+- [x] Honest residual limitation (rocks/gallery waves/rail camera).
+- [x] ADR-0038.
+- [x] Real-browser play of factory-generated `wave11-asteroids-shooter` / `wave11-gallery-shooter` (`tools/scripts/play-weapons-wave11.ts`, 2/2 PASS, 0 console errors, 0 external requests).
+- [x] `npm run sw2d -- validate` on those two games (schema + tsc + vite build + boot smoke) PASS (CDP hang after printed success, timeout 90 → 124).
+- [ ] Overlay shooter re-run. **Not done this wave** — overlay stays unwired.
+- [ ] Committed proofs + maturity promotion. **Not done — evidence rule.** Gallery stays proof-validated on the frozen proof.
+
+### Implementation notes
+
+- No new pack. `sw2d.weapons` / `bindStarterWeapon` already exist (ADR-0020).
+- Fire is not vehicle intent (ADR-0009). The vehicle shell reads
+  `PRIMARY_ACTION` directly; `VehicleIntent` stays steering/throttle/boost.
+- Asteroids open-space: hide the proof-level ground strip and spawn at centre
+  so the dummy Solid does not pin the ship (found while writing the shell;
+  play confirmed spawn 480,270 and throttle x 480→512 speed 190).
+- Gallery keeps a visible dummy target; click-to-toggle is skipped while
+  weapons are active so a click fires instead. KeyJ fires toward the cursor
+  (default 0,0 aims up).
+- Frozen `proofs/gallery-shooter/` is not regenerated. Gallery stays
+  proof-validated on that evidence.
+- Overlay shooter kits stay local.
+
+### Browser journeys (executed)
+
+Factory-generated:
+
+- Asteroids-shooter: Space start at centre 480,270 sidearm 0 shots → ArrowUp throttle x 512 speed 190 → KeyJ projectilesSpawned 1 live 1.
+- Gallery-shooter: Space start sidearm 0 shots pointer 0,0 → KeyJ projectilesSpawned 1 live 1.
+
+### Visual inspection
+
+Ship flies in open space (dummy ground hidden) and fires along heading.
+Gallery gun at the bottom fires toward the cursor; dummy click-toggle is off.
+Confirmed via debug snapshots, not screenshots.
+
+### Bugs found and fixed this wave
+
+- Parallel StrReplace on `contentDocuments.ts` duplicated the tail of
+  `generateTiledLevel` and dropped the vehicle FIRE hint. Restored before
+  generate tests.
+- Dummy proof-level ground strip would pin an asteroids ship. Open-space
+  path hides walls and centres the spawn.
+
+### Remaining blockers / unknowns
+
+- No committed `proofs/` for asteroids-shooter; gallery proof stays the frozen
+  Phase-1 click-target game. Catalog maturity unchanged (23/3/48).
+- Overlay shooters stay local. Rail-camera leftover remains on `rail-shooter`,
+  which still carries `LIMITATIONS.weaponsProjectiles`.
+- Chrome wrapper is session-local under `/tmp`.
+- Do not commit `package-lock.json` workspace links for gitignored `games/wave*`.
+- Residual Category-C: climbing, chase, territory, pinball, crop/season, rail
+  camera, run-meta vs survivor, remaining Tier-4, committed proofs.

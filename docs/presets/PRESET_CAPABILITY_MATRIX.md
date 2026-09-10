@@ -50,8 +50,8 @@ pack/controller selections were actually exercised through, and
 | `horizontal-shmup` | combat, weapons, encounters, stage-scroll | arcade | top-down | keyboard, touch | shooter-recipe |
 | `vertical-shmup` | combat, weapons, encounters, stage-scroll | arcade | top-down | keyboard, touch | shooter-recipe |
 | `bullet-hell` | combat, weapons, encounters | arcade | top-down | keyboard, touch | shooter-recipe |
-| `asteroids-shooter` | combat | arcade | vehicle | keyboard, touch | shooter-recipe |
-| `gallery-shooter` | combat | arcade | pointer | keyboard, pointer, touch | shooter-recipe |
+| `asteroids-shooter` | combat, weapons | arcade | vehicle | keyboard, touch | shooter-recipe |
+| `gallery-shooter` | combat, weapons | arcade | pointer | keyboard, pointer, touch | shooter-recipe |
 | `run-and-gun` | combat, world, world-entities, weapons | arcade | platform | keyboard, touch | shooter-recipe |
 | `rail-shooter` | combat | arcade | pointer | keyboard, pointer, touch | shooter-recipe |
 ## Vehicle / movement (Phase 7B)
@@ -141,7 +141,7 @@ pack/controller selections were actually exercised through, and
 | narrative | `sw2d.narrative` | `narrative.state` | 4 | 8 |
 | strategy | `sw2d.strategy` | `strategy.turns` | 4 | 4 |
 | items | `sw2d.items` | `items.state` | 1 | 2 |
-| weapons | `sw2d.weapons` | `combat.weapons` | 9 | 9 |
+| weapons | `sw2d.weapons` | `combat.weapons` | 11 | 11 |
 | encounters | `sw2d.encounters` | `combat.encounters` | 6 | 8 |
 | navigation | `sw2d.navigation` | `world.navigation` | 3 | 7 |
 | generation | `sw2d.generation` | `world.generation` | 5 | 5 |

@@ -604,6 +604,47 @@ describe('generated ui-simulation needs games consume sw2d.needs', () => {
   });
 });
 
+describe('generated vehicle and pointer shooters consume sw2d.weapons', () => {
+  it('the generated vehicle shell binds bindStarterWeapon and fires on PRIMARY_ACTION', () => {
+    const asteroids = PRESETS.find((candidate) => candidate.id === 'asteroids-shooter')!;
+    const shell = buildGameFiles('weapons-probe', asteroids).get('src/game-specific/shellPack.ts')!;
+    expect(shell).toContain('bindStarterWeapon(context)');
+    expect(shell).toContain("justPressed('PRIMARY_ACTION')");
+    expect(shell).toContain('weapon.fire(');
+    expect(buildGameFiles('weapons-probe', asteroids).get('src/content.ts')).toContain('weapons: weaponsData');
+  });
+
+  it('the generated pointer shell binds bindStarterWeapon and fires toward the cursor', () => {
+    const gallery = PRESETS.find((candidate) => candidate.id === 'gallery-shooter')!;
+    const shell = buildGameFiles('weapons-probe', gallery).get('src/game-specific/shellPack.ts')!;
+    expect(shell).toContain('bindStarterWeapon(context)');
+    expect(shell).toContain('weapon.fire(');
+    expect(shell).toContain('context.spatialPointer.state');
+  });
+
+  it('asteroids-shooter and gallery-shooter enable sw2d.weapons and emit a non-empty catalog', () => {
+    for (const id of ['asteroids-shooter', 'gallery-shooter'] as const) {
+      const preset = PRESETS.find((candidate) => candidate.id === id)!;
+      const files = buildGameFiles('weapons-probe', preset);
+      const gameJson = JSON.parse(files.get('content/game.json')!) as { systemPacks: Array<{ packId: string }> };
+      expect(gameJson.systemPacks.map((s) => s.packId), id).toContain('sw2d.weapons');
+      const doc = JSON.parse(files.get('content/weapons.json')!) as { weapons: unknown[] };
+      expect(doc.weapons.length, id).toBeGreaterThan(0);
+      const theme = JSON.parse(files.get('content/themes/default/theme.json')!) as { ui: { playHint: string } };
+      expect(theme.ui.playHint, id).toContain('FIRE J/X');
+    }
+  });
+
+  it('rail-shooter does not enable sw2d.weapons (rail-camera leftover, not a second shooting adapter)', () => {
+    const rail = PRESETS.find((candidate) => candidate.id === 'rail-shooter')!;
+    const files = buildGameFiles('weapons-probe', rail);
+    const gameJson = JSON.parse(files.get('content/game.json')!) as { systemPacks: Array<{ packId: string }> };
+    expect(gameJson.systemPacks.map((s) => s.packId)).not.toContain('sw2d.weapons');
+    const theme = JSON.parse(files.get('content/themes/default/theme.json')!) as { ui: { playHint: string } };
+    expect(theme.ui.playHint).not.toContain('FIRE');
+  });
+});
+
 describe('generated pointer games consume the spatial interaction capability', () => {
   const pointerPreset = PRESETS.find((candidate) => candidate.controllerFamilies[0] === 'pointer')!;
 

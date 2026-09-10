@@ -181,8 +181,8 @@ recipe's *first* stated limitation; see `knownLimitations` in
 | `horizontal-shmup` | Horizontal and vertical scrolling-stage camera movement, player band clamp, streaming hazards and stage-clear are reusable (sw2d.stage-scroll); rail-path cameras, parallax authoring and bullet-hell pooling are not. |
 | `vertical-shmup` | Horizontal and vertical scrolling-stage camera movement, player band clamp, streaming hazards and stage-clear are reusable (sw2d.stage-scroll); rail-path cameras, parallax authoring and bullet-hell pooling are not. |
 | `bullet-hell` | Per-bullet GPU-scale pooling for thousands of simultaneous bullets is not tuned; patterns are bounded. |
-| `asteroids-shooter` | The reusable weapon/projectile capability (sw2d.weapons, ADR-0020) exists; this starter's shell does not wire it yet. |
-| `gallery-shooter` | The reusable weapon/projectile capability (sw2d.weapons, ADR-0020) exists; this starter's shell does not wire it yet. |
+| `asteroids-shooter` | Drifting rock fields and wrap-around collision stay game-specific; the generated starter steers and fires along heading through sw2d.weapons. |
+| `gallery-shooter` | Authored gallery target waves and projectile-vs-target scoring stay in the frozen proof; the generated starter fires toward the cursor through sw2d.weapons. |
 | `run-and-gun` | Enemy encounter orchestration (sw2d.encounters, Phase 4, ADR-0021) is reusable now, but this recipe does not install it - its enemy waves/patterns would be authored as game-specific code or by adding that pack. |
 | `rail-shooter` | The reusable weapon/projectile capability (sw2d.weapons, ADR-0020) exists; this starter's shell does not wire it yet. |
 | `top-down-racer` | (none stated) |

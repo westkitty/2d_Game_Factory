@@ -994,7 +994,9 @@ export function generateUiCopy(options: {
     case 'vehicle':
       playHint = has('sw2d.racing')
         ? 'STEER / THROTTLE WASD/ARROWS  -  ENTER STARTS THE RACE'
-        : 'STEER / THROTTLE WASD/ARROWS  -  PAUSE TO STOP';
+        : has('sw2d.weapons')
+          ? 'STEER / THROTTLE WASD/ARROWS  -  FIRE J/X'
+          : 'STEER / THROTTLE WASD/ARROWS  -  PAUSE TO STOP';
       break;
     case 'grid':
       playHint = presetId === 'match-puzzle'
@@ -1008,7 +1010,9 @@ export function generateUiCopy(options: {
     case 'pointer':
       playHint = has('sw2d.dialogue')
         ? 'CLICK HOTSPOTS  -  ENTER ADVANCES'
-        : 'POINT AT THINGS  -  CLICK TO ACT  -  PAUSE TO STOP';
+        : has('sw2d.weapons')
+          ? 'AIM WITH MOUSE  -  FIRE J/X'
+          : 'POINT AT THINGS  -  CLICK TO ACT  -  PAUSE TO STOP';
       break;
     case 'ui-simulation':
       playHint = has('sw2d.economy')

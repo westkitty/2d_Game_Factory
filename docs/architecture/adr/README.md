@@ -40,3 +40,5 @@ One short record per decision that constrains later work. No ADR for trivia.
 | [0034](0034-local-multiplayer-input-ownership.md) | Local hot-seat and versus seats are one reusable input-ownership capability | Category-C Wave 7 |
 | [0035](0035-scrolling-stage-camera.md) | Horizontal and vertical scrolling stages are one reusable camera capability | Category-C Wave 8 |
 | [0036](0036-puzzle-board-match-and-falling-block.md) | Match and falling-block engines are consumed, not a new pack | Category-C Wave 9 |
+| [0037](0037-visual-timing-windows.md) | Visual reaction and beat windows are a timing pack | Category-C Wave 10 |
+| [0038](0038-consume-weapons-in-vehicle-and-pointer-shells.md) | Consume existing weapons in vehicle and pointer shells | Category-C Wave 11 |
