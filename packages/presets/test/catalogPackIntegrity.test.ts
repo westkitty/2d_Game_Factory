@@ -27,6 +27,7 @@ import {
   ballPaddlePack,
   meleePack,
   localPlayPack,
+  stageScrollPack,
 } from '@sw2d/packs';
 import { resolveInstallOrder } from '@sw2d/runtime/composition';
 import { PRESETS } from '../src/index.ts';
@@ -74,6 +75,7 @@ const REAL_PACKS = [
   ballPaddlePack,
   meleePack,
   localPlayPack,
+  stageScrollPack,
 ];
 
 const REGISTRY = new Map(REAL_PACKS.map((definition) => [definition.id, definition]));

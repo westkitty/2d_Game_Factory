@@ -29,6 +29,7 @@ import perceptionCatalogSchema from '../schemas/perception-catalog.schema.json' 
 import ballPaddleCatalogSchema from '../schemas/ball-paddle-catalog.schema.json' with { type: 'json' };
 import meleeCatalogSchema from '../schemas/melee-catalog.schema.json' with { type: 'json' };
 import localPlayCatalogSchema from '../schemas/local-play-catalog.schema.json' with { type: 'json' };
+import stageScrollCatalogSchema from '../schemas/stage-scroll-catalog.schema.json' with { type: 'json' };
 
 /**
  * Ajv-based validation for every schema this package owns.
@@ -67,7 +68,8 @@ export type SchemaName =
   | 'perception-catalog'
   | 'ball-paddle-catalog'
   | 'melee-catalog'
-  | 'local-play-catalog';
+  | 'local-play-catalog'
+  | 'stage-scroll-catalog';
 
 export const SCHEMA_NAMES: readonly SchemaName[] = [
   'action-bindings',
@@ -98,6 +100,7 @@ export const SCHEMA_NAMES: readonly SchemaName[] = [
   'ball-paddle-catalog',
   'melee-catalog',
   'local-play-catalog',
+  'stage-scroll-catalog',
 ];
 
 /** One located problem: which document, where in it, and what is wrong. */
@@ -150,6 +153,7 @@ const SCHEMA_DOCUMENTS: Readonly<Record<SchemaName, SchemaDocument>> = {
   'ball-paddle-catalog': ballPaddleCatalogSchema,
   'melee-catalog': meleeCatalogSchema,
   'local-play-catalog': localPlayCatalogSchema,
+  'stage-scroll-catalog': stageScrollCatalogSchema,
 };
 
 // Registration order matters: a schema must be added before anything that
@@ -182,6 +186,7 @@ for (const name of [
   'ball-paddle-catalog',
   'melee-catalog',
   'local-play-catalog',
+  'stage-scroll-catalog',
 ] as const) {
   const schema = SCHEMA_DOCUMENTS[name];
   ajv.addSchema(schema, schema.$id);

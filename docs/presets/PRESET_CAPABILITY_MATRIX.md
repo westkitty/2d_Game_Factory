@@ -47,8 +47,8 @@ pack/controller selections were actually exercised through, and
 
 | id | required packs | optional packs | controller(s) | input modes | validation profile |
 |---|---|---|---|---|---|
-| `horizontal-shmup` | combat, weapons, encounters | arcade | top-down | keyboard, touch | shooter-recipe |
-| `vertical-shmup` | combat, weapons, encounters | arcade | top-down | keyboard, touch | shooter-recipe |
+| `horizontal-shmup` | combat, weapons, encounters, stage-scroll | arcade | top-down | keyboard, touch | shooter-recipe |
+| `vertical-shmup` | combat, weapons, encounters, stage-scroll | arcade | top-down | keyboard, touch | shooter-recipe |
 | `bullet-hell` | combat, weapons, encounters | arcade | top-down | keyboard, touch | shooter-recipe |
 | `asteroids-shooter` | combat | arcade | vehicle | keyboard, touch | shooter-recipe |
 | `gallery-shooter` | combat | arcade | pointer | keyboard, pointer, touch | shooter-recipe |
@@ -155,8 +155,9 @@ pack/controller selections were actually exercised through, and
 | ball-paddle | `sw2d.ball-paddle` | `arcade.ball` | 2 | 2 |
 | melee | `sw2d.melee` | `combat.melee` | 2 | 2 |
 | local-play | `sw2d.local-play` | `arcade.seats` | 2 | 2 |
+| stage-scroll | `sw2d.stage-scroll` | `world.scroll` | 2 | 2 |
 
-**All twenty-six current packs have at least one preset consumer.** `sw2d.items` (capability
+**All twenty-seven current packs have at least one preset consumer.** `sw2d.items` (capability
 program Phase 2) is required by `collectathon-platformer`, whose generated starter consumes
 the reusable item/effect service through the shared platform shell. `sw2d.puzzle-rules`
 (capability program Phase 6) is required by `sokoban` and `puzzle-platformer`, whose

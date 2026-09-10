@@ -749,6 +749,53 @@ export function generateLocalPlayCatalog(kind: 'hotseat' | 'versus' | 'none'): R
 }
 
 /**
+ * content/stage-scroll.json - a StageScrollCatalog (Category-C Wave 8). Always
+ * emitted; empty/inert unless the preset installs `sw2d.stage-scroll`. Two
+ * bounded starter modes match the two consumers: horizontal (stream left,
+ * fire +X) and vertical (stream down, fire -Y).
+ */
+export function generateStageScrollCatalog(kind: 'horizontal' | 'vertical' | 'none'): Record<string, unknown> {
+  const empty = {
+    schemaVersion: 1,
+    mode: 'horizontal',
+    speed: 0,
+    length: 0,
+    viewport: { width: 960, height: 540 },
+    player: { x: 120, y: 270, radius: 16, speed: 0, minX: 0, maxX: 960, minY: 0, maxY: 540 },
+    hazards: [] as const,
+  };
+  if (kind === 'none') return empty;
+  if (kind === 'horizontal') {
+    return {
+      schemaVersion: 1,
+      mode: 'horizontal',
+      speed: 180,
+      length: 720,
+      viewport: { width: 960, height: 540 },
+      player: { x: 120, y: 270, radius: 16, speed: 210, minX: 40, maxX: 420, minY: 40, maxY: 500 },
+      hazards: [
+        { id: 'rock-a', along: 280, cross: 90, radius: 18 },
+        { id: 'rock-b', along: 480, cross: 450, radius: 18 },
+        { id: 'rock-c', along: 640, cross: 90, radius: 18 },
+      ],
+    };
+  }
+  return {
+    schemaVersion: 1,
+    mode: 'vertical',
+    speed: 180,
+    length: 720,
+    viewport: { width: 960, height: 540 },
+    player: { x: 480, y: 440, radius: 16, speed: 210, minX: 40, maxX: 920, minY: 260, maxY: 510 },
+    hazards: [
+      { id: 'rock-a', along: 280, cross: 120, radius: 18 },
+      { id: 'rock-b', along: 480, cross: 840, radius: 18 },
+      { id: 'rock-c', along: 640, cross: 120, radius: 18 },
+    ],
+  };
+}
+
+/**
  * content/melee.json - a MeleeCatalog (Category-C Wave 6). Always
  * emitted; empty/inert unless the preset installs `sw2d.melee`. Two
  * bounded starter modes match the two consumers: skirmish (one elite
@@ -857,11 +904,13 @@ export function generateUiCopy(options: {
         ? 'MOVE WASD/ARROWS  -  AVOID THE CONE  -  HIDE IN COVER'
         : has('sw2d.melee')
           ? 'MOVE WASD/ARROWS  -  STRIKE J/X'
-          : has('sw2d.encounters')
-            ? 'MOVE WASD/ARROWS  -  AIM WITH MOUSE  -  FIRE J/X  -  SURVIVE THE WAVES'
-            : has('sw2d.weapons')
-              ? 'MOVE WASD/ARROWS  -  AIM WITH MOUSE  -  FIRE J/X'
-              : 'MOVE WASD/ARROWS  -  PAUSE TO STOP';
+          : has('sw2d.stage-scroll')
+            ? 'MOVE WASD/ARROWS  -  FIRE J/X  -  CLEAR THE STAGE'
+            : has('sw2d.encounters')
+              ? 'MOVE WASD/ARROWS  -  AIM WITH MOUSE  -  FIRE J/X  -  SURVIVE THE WAVES'
+              : has('sw2d.weapons')
+                ? 'MOVE WASD/ARROWS  -  AIM WITH MOUSE  -  FIRE J/X'
+                : 'MOVE WASD/ARROWS  -  PAUSE TO STOP';
       break;
     case 'vehicle':
       playHint = has('sw2d.racing')

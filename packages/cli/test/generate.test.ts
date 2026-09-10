@@ -149,6 +149,12 @@ describe('all 74 presets generate valid, token-free, schema-valid source', () =>
       expect(() => validateContentBundleData({ 'local-play': seatsJson })).not.toThrow();
     });
 
+    it(`${preset.id}'s generated content/stage-scroll.json validates as a stage-scroll catalog`, () => {
+      const files = buildGameFiles('matrix-game', preset);
+      const stageJson: unknown = JSON.parse(files.get('content/stage-scroll.json')!);
+      expect(() => validateContentBundleData({ 'stage-scroll': stageJson })).not.toThrow();
+    });
+
     it(`${preset.id} selects a real, resolvable shell template for its primary controller family`, () => {
       const files = buildGameFiles('matrix-game', preset);
       expect(files.has('src/game-specific/shellPack.ts')).toBe(true);
@@ -407,7 +413,7 @@ describe('generated ball-paddle games consume sw2d.ball-paddle', () => {
     expect(shell).toContain('table.tick(');
     expect(buildGameFiles('ball-paddle-probe', breakout).get('src/content.ts')).toContain("'ball-paddle': ballPaddleData");
     expect(buildGameFiles('ball-paddle-probe', breakout).get('src/main.ts')).toContain(
-      'ballPaddlePack, meleePack, localPlayPack, GAME_SPECIFIC_PACK',
+      'ballPaddlePack, meleePack, localPlayPack, stageScrollPack, GAME_SPECIFIC_PACK',
     );
   });
 
@@ -433,7 +439,7 @@ describe('generated melee games consume sw2d.melee', () => {
     expect(shell).toContain('melee.strike(');
     expect(buildGameFiles('melee-probe', adventure).get('src/content.ts')).toContain('melee: meleeData');
     expect(buildGameFiles('melee-probe', adventure).get('src/main.ts')).toContain(
-      'ballPaddlePack, meleePack, localPlayPack, GAME_SPECIFIC_PACK',
+      'ballPaddlePack, meleePack, localPlayPack, stageScrollPack, GAME_SPECIFIC_PACK',
     );
   });
 
@@ -458,7 +464,7 @@ describe('generated local-play games consume sw2d.local-play', () => {
     expect(shell).toContain('seats.act()');
     expect(buildGameFiles('local-play-probe', party).get('src/content.ts')).toContain("'local-play': localPlayData");
     expect(buildGameFiles('local-play-probe', party).get('src/main.ts')).toContain(
-      'ballPaddlePack, meleePack, localPlayPack, GAME_SPECIFIC_PACK',
+      'ballPaddlePack, meleePack, localPlayPack, stageScrollPack, GAME_SPECIFIC_PACK',
     );
   });
 
@@ -478,6 +484,32 @@ describe('generated local-play games consume sw2d.local-play', () => {
       const doc = JSON.parse(files.get('content/local-play.json')!) as { mode: string; players: unknown[] };
       expect(doc.mode, id).toBe(id === 'pong' ? 'versus' : 'hotseat');
       expect(doc.players.length, id).toBeGreaterThanOrEqual(2);
+    }
+  });
+});
+
+describe('generated stage-scroll games consume sw2d.stage-scroll', () => {
+  it('the generated top-down shell binds bindStarterStageScroll', () => {
+    const shmup = PRESETS.find((candidate) => candidate.id === 'horizontal-shmup')!;
+    const shell = buildGameFiles('stage-scroll-probe', shmup).get('src/game-specific/shellPack.ts')!;
+    expect(shell).toContain('bindStarterStageScroll(context)');
+    expect(shell).toContain('stage.tick(');
+    expect(buildGameFiles('stage-scroll-probe', shmup).get('src/content.ts')).toContain("'stage-scroll': stageScrollData");
+    expect(buildGameFiles('stage-scroll-probe', shmup).get('src/main.ts')).toContain(
+      'ballPaddlePack, meleePack, localPlayPack, stageScrollPack, GAME_SPECIFIC_PACK',
+    );
+  });
+
+  it('horizontal-shmup and vertical-shmup enable sw2d.stage-scroll and emit a non-empty catalog', () => {
+    for (const id of ['horizontal-shmup', 'vertical-shmup'] as const) {
+      const preset = PRESETS.find((candidate) => candidate.id === id)!;
+      const files = buildGameFiles('stage-scroll-probe', preset);
+      const gameJson = JSON.parse(files.get('content/game.json')!) as { systemPacks: Array<{ packId: string }> };
+      expect(gameJson.systemPacks.map((s) => s.packId), id).toContain('sw2d.stage-scroll');
+      const doc = JSON.parse(files.get('content/stage-scroll.json')!) as { mode: string; length: number; hazards: unknown[] };
+      expect(doc.mode, id).toBe(id === 'vertical-shmup' ? 'vertical' : 'horizontal');
+      expect(doc.length, id).toBeGreaterThan(0);
+      expect(doc.hazards.length, id).toBeGreaterThan(0);
     }
   });
 });

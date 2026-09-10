@@ -41,6 +41,7 @@ export const PACK_IDS = {
   ballPaddle: 'sw2d.ball-paddle',
   melee: 'sw2d.melee',
   localPlay: 'sw2d.local-play',
+  stageScroll: 'sw2d.stage-scroll',
 } as const;
 
 export const CAPABILITY_IDS = {
@@ -87,4 +88,6 @@ export const CAPABILITY_IDS = {
   melee: 'combat.melee',
   /** Category-C Wave 7: local hot-seat / versus seats (one keyboard). */
   localPlay: 'arcade.seats',
+  /** Category-C Wave 8: scrolling stage / player band / streaming hazards. */
+  stageScroll: 'world.scroll',
 } as const;

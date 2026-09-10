@@ -20,6 +20,7 @@ import {
   generateBallPaddleCatalog,
   generateMeleeCatalog,
   generateLocalPlayCatalog,
+  generateStageScrollCatalog,
   generateResourceManifest,
   generateTiledLevel,
   generateTheme,
@@ -254,6 +255,20 @@ export function buildGameFiles(gameId: string, preset: PresetDefinition): Map<st
     JSON.stringify(
       generateLocalPlayCatalog(
         requiredPackIds.includes('sw2d.local-play') ? (preset.id === 'pong' ? 'versus' : 'hotseat') : 'none',
+      ),
+      null,
+      2,
+    ) + '\n',
+  );
+  files.set(
+    'content/stage-scroll.json',
+    JSON.stringify(
+      generateStageScrollCatalog(
+        requiredPackIds.includes('sw2d.stage-scroll')
+          ? preset.id === 'vertical-shmup'
+            ? 'vertical'
+            : 'horizontal'
+          : 'none',
       ),
       null,
       2,

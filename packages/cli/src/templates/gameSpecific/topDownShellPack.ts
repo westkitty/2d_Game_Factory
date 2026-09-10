@@ -7,6 +7,7 @@ import {
   bindStarterBallPaddle,
   bindStarterMelee,
   bindStarterLocalPlay,
+  bindStarterStageScroll,
   bindStarterPerception,
   bindStarterWeapon,
   createRoomTransitionRuntime,
@@ -83,7 +84,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     const player = scene.physics.add.sprite(spawnX, spawnY, playerKey);
     player.setCollideWorldBounds(true);
     player.body.setAllowGravity(false);
-    scene.physics.add.collider(player, walls);
+    const wallCollider = scene.physics.add.collider(player, walls);
 
     // Data-driven item pickups (capability program Phase 2). Inert unless the
     // game installs sw2d.items - see platformShellPack.ts's note.
@@ -116,6 +117,17 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     // installed with two seats. Versus pong feeds P2 axis into the table
     // instead of lerp AI. HUD stays on the table.
     const seats = bindStarterLocalPlay(context, { hud: false });
+    // Scrolling stage (Category-C Wave 8). Inert unless sw2d.stage-scroll
+    // is installed with a positive length. Then the ship stays in a band
+    // while the stage streams past; dummy walls hide.
+    const stage = bindStarterStageScroll(context);
+    if (stage.active) {
+      player.setPosition(stage.startX(), stage.startY());
+      player.setCollideWorldBounds(false);
+      player.setVelocity(0, 0);
+      walls.setVisible(false);
+      wallCollider.destroy();
+    }
     // Weapons (capability program Phase 3). Inert unless sw2d.weapons is
     // installed. When the encounter binding is active it owns the weapon and
     // its projectile runtime, so the plain starter weapon stays inert too.
@@ -154,6 +166,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       ...(table.active ? { ballPaddle: table.snapshot() } : {}),
       ...(melee.active ? { melee: melee.snapshot() } : {}),
       ...(seats.active ? { localPlay: seats.snapshot() } : {}),
+      ...(stage.active ? { stageScroll: stage.snapshot() } : {}),
       ...(generationManifest ? { generation: generationManifest } : {}),
       ...(worldGraph
         ? { worldGraph: { current: worldGraph.currentNode().id, ...worldGraph.mapState(), mapOpen: worldMap?.isOpen ?? false, transitions: rooms?.transitions ?? 0 } }
@@ -189,6 +202,27 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
           if (intent.primaryPressed) melee.strike(nowMs);
           melee.tick(deltaMs, nowMs);
           if (melee.snapshot().outcome !== 'playing') player.setVelocity(0, 0);
+          return;
+        }
+        if (stage.active) {
+          stage.setMove(intent.moveX, intent.moveY);
+          stage.tick(deltaMs);
+          const ship = stage.snapshot();
+          player.setPosition(ship.playerX, ship.playerY);
+          player.setVelocity(0, 0);
+          if (intent.aimMagnitude > 0) {
+            facingX = intent.aimX;
+            facingY = intent.aimY;
+          } else {
+            facingX = ship.fireX;
+            facingY = ship.fireY;
+          }
+          weapon?.update(deltaMs, nowMs);
+          battle.update(deltaMs, nowMs);
+          const firing = intent.primaryPressed || (battle.active && context.input.isDown('PRIMARY_ACTION'));
+          if (firing && ship.outcome === 'playing') {
+            (weapon ?? battle).fire(nowMs, facingX, facingY, { x: player.x, y: player.y });
+          }
           return;
         }
         if (intent.aimMagnitude > 0) {
@@ -239,6 +273,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         table.dispose();
         melee.dispose();
         seats.dispose();
+        stage.dispose();
         rooms?.dispose();
         worldMap?.dispose();
         try {

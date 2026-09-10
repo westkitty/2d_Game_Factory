@@ -64,8 +64,8 @@ controller/input-mode breakdown and full pack-consumer coverage.
 
 | id | display name | controller(s) | content roles | maturity |
 |---|---|---|---|---|
-| `horizontal-shmup` | Horizontal Shmup | top-down | tuning | recipe |
-| `vertical-shmup` | Vertical Shmup | top-down | tuning | recipe |
+| `horizontal-shmup` | Horizontal Shmup | top-down | tuning, stage-scroll | recipe |
+| `vertical-shmup` | Vertical Shmup | top-down | tuning, stage-scroll | recipe |
 | `bullet-hell` | Bullet Hell | top-down | tuning | proof-validated |
 | `asteroids-shooter` | Asteroids Shooter | vehicle | tuning | recipe |
 | `gallery-shooter` | Gallery Shooter | pointer | tuning | proof-validated |
@@ -178,8 +178,8 @@ recipe's *first* stated limitation; see `knownLimitations` in
 | `heist-game` | Vision cones, occlusion, suspicion, noise and hiding are reusable (sw2d.perception); patrol pathfinding, takedowns and full stealth AI are not. |
 | `arena-combat` | Melee strike, knockback, hit-stun and contact damage are reusable (sw2d.melee); combo strings, directional attacks and targeting UI are not. |
 | `boss-rush` | Sequencing multiple bosses across a run is starter-specific; sw2d.encounters drives one boss encounter at a time. |
-| `horizontal-shmup` | Continuous scrolling-stage camera movement (the terrain streaming past a fixed ship) is not a reusable capability; the generated starter fights its encounter waves in a fixed arena. |
-| `vertical-shmup` | Continuous scrolling-stage camera movement (the terrain streaming past a fixed ship) is not a reusable capability; the generated starter fights its encounter waves in a fixed arena. |
+| `horizontal-shmup` | Horizontal and vertical scrolling-stage camera movement, player band clamp, streaming hazards and stage-clear are reusable (sw2d.stage-scroll); rail-path cameras, parallax authoring and bullet-hell pooling are not. |
+| `vertical-shmup` | Horizontal and vertical scrolling-stage camera movement, player band clamp, streaming hazards and stage-clear are reusable (sw2d.stage-scroll); rail-path cameras, parallax authoring and bullet-hell pooling are not. |
 | `bullet-hell` | Per-bullet GPU-scale pooling for thousands of simultaneous bullets is not tuned; patterns are bounded. |
 | `asteroids-shooter` | The reusable weapon/projectile capability (sw2d.weapons, ADR-0020) exists; this starter's shell does not wire it yet. |
 | `gallery-shooter` | The reusable weapon/projectile capability (sw2d.weapons, ADR-0020) exists; this starter's shell does not wire it yet. |

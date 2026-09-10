@@ -61,8 +61,9 @@ describe('generateUiCopy (generated games announce their genre honestly)', () =>
   });
 
   it('tells an encounter-family player about the battle, and a weaponless one nothing about firing', () => {
-    expect(copyFor('vertical-shmup').playHint).toContain('SURVIVE THE WAVES');
+    expect(copyFor('vertical-shmup').playHint).toContain('CLEAR THE STAGE');
     expect(copyFor('vertical-shmup').playHint).toContain('FIRE J/X');
+    expect(copyFor('vertical-shmup').playHint).not.toContain('SURVIVE');
     expect(copyFor('twin-stick-shooter').playHint).toContain('FIRE J/X');
     expect(copyFor('twin-stick-shooter').playHint).not.toContain('SURVIVE');
     expect(copyFor('top-down-adventure').playHint).not.toContain('FIRE');

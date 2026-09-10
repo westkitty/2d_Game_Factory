@@ -27,9 +27,9 @@ export const SHOOTER_PRESETS: readonly PresetDefinition[] = [
     // enemy formations are a shmup's defining mechanic, and the generated
     // top-down shell now wires content/encounters.json into a real fight
     // (bindStarterEncounters) whenever combat+weapons+encounters are present.
-    requiredSystemPacks: [pack(PACK_IDS.combat), pack(PACK_IDS.weapons), pack(PACK_IDS.encounters)],
+    requiredSystemPacks: [pack(PACK_IDS.combat), pack(PACK_IDS.weapons), pack(PACK_IDS.encounters), pack(PACK_IDS.stageScroll)],
     optionalSystemPacks: [pack(PACK_IDS.arcade)],
-    requiredContentRoles: ['tuning'],
+    requiredContentRoles: ['tuning', 'stage-scroll'],
     validationProfile: VALIDATION_PROFILES.shooter,
     knownLimitations: [LIMITATIONS.scrollingShmupCamera],
   }),
@@ -40,9 +40,9 @@ export const SHOOTER_PRESETS: readonly PresetDefinition[] = [
     family: 'shooter',
     controllerFamilies: ['top-down'],
     // Same Wave 2 change as horizontal-shmup: formations are the genre.
-    requiredSystemPacks: [pack(PACK_IDS.combat), pack(PACK_IDS.weapons), pack(PACK_IDS.encounters)],
+    requiredSystemPacks: [pack(PACK_IDS.combat), pack(PACK_IDS.weapons), pack(PACK_IDS.encounters), pack(PACK_IDS.stageScroll)],
     optionalSystemPacks: [pack(PACK_IDS.arcade)],
-    requiredContentRoles: ['tuning'],
+    requiredContentRoles: ['tuning', 'stage-scroll'],
     validationProfile: VALIDATION_PROFILES.shooter,
     knownLimitations: [LIMITATIONS.scrollingShmupCamera],
   }),

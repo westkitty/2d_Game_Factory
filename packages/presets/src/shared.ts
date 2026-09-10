@@ -72,7 +72,7 @@ export const LIMITATIONS = {
   chasePressure:
     'A reusable chase/pursuit-pressure system does not exist yet; it must be authored as game-specific code, the same pattern starter/src/game-specific/ demonstrates.',
   scrollingShmupCamera:
-    'Continuous scrolling-stage camera movement (the terrain streaming past a fixed ship) is not a reusable capability; the generated starter fights its encounter waves in a fixed arena.',
+    'Horizontal and vertical scrolling-stage camera movement, player band clamp, streaming hazards and stage-clear are reusable (sw2d.stage-scroll); rail-path cameras, parallax authoring and bullet-hell pooling are not.',
   // Phase 7B additions - each reused by two or more recipes; a recipe-specific gap gets an
   // inline string in its own catalog file instead (see platforming.ts's own comment on why:
   // sharing text is a decision, not laziness, and inline is correct when nothing else repeats it).

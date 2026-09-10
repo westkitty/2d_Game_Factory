@@ -92,3 +92,4 @@ export { perceptionPack, type PerceptionService } from './perception/perceptionP
 export { ballPaddlePack, type BallPaddleService } from './ballPaddle/ballPaddlePack.ts';
 export { meleePack, type MeleeService } from './melee/meleePack.ts';
 export { localPlayPack, type LocalPlayService } from './localPlay/localPlayPack.ts';
+export { stageScrollPack, type StageScrollService } from './stageScroll/stageScrollPack.ts';

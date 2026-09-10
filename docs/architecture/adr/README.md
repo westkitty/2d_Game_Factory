@@ -38,3 +38,4 @@ One short record per decision that constrains later work. No ADR for trivia.
 | [0032](0032-arcade-ball-paddle-rebound.md) | Ball, paddle, rebound, brick-clear and first-to-N scoring are one reusable arcade capability | Category-C Wave 5 |
 | [0033](0033-combat-melee-knockback.md) | Melee strike, knockback and hit-stun are one reusable close-combat capability | Category-C Wave 6 |
 | [0034](0034-local-multiplayer-input-ownership.md) | Local hot-seat and versus seats are one reusable input-ownership capability | Category-C Wave 7 |
+| [0035](0035-scrolling-stage-camera.md) | Horizontal and vertical scrolling stages are one reusable camera capability | Category-C Wave 8 |

@@ -28,7 +28,8 @@ Highest-leverage clusters, from `packages/presets/src/shared.ts` LIMITATIONS + p
 | 4 | Stealth perception / suspicion / noise / hiding | stealth-game, heist-game | **Wave 4 complete** (`sw2d.perception` / `ai.perception`, ADR-0031). Residual: patrol pathfinding, takedowns, full stealth AI. |
 | 5 | Ball / paddle / rebound | breakout, pong | **Wave 5 implemented** (`sw2d.ball-paddle` / `arcade.ball`, ADR-0032). Residual: pinball table. Factory pong versus axes are Wave 7. |
 | 6 | Melee / knockback / hit-stun | action-adventure, arena-combat | **Wave 6 implemented** (`sw2d.melee` / `combat.melee`, ADR-0033). Residual: combos, directional attacks, targeting UI. Run-and-gun stays projectile. |
-| 7 | Local multiplayer input ownership | local-party-game, pong | backlog |
+| 7 | Local multiplayer input ownership | local-party-game, pong | **Wave 7 implemented and played** (`sw2d.local-play` / `arcade.seats`, ADR-0034). Residual: netcode, gamepads, split-screen. Overlay pong stays AI. |
+| 8 | Scrolling-stage camera | horizontal-shmup, vertical-shmup | **Wave 8 implemented and played** (`sw2d.stage-scroll` / `world.scroll`, ADR-0035). Residual: rail-path cameras, parallax authoring, bullet-hell pooling. Overlay shmups stay the three-enemy lane fight. |
 | — | Tier 3 (rail camera, territory, chase, climbing, run-meta, falling-block, match consumption, crop/season) | re-audit before sharing | backlog |
 | — | Tier 4 specialized (rhythm, parser IF, fishing, cooking, photography, wardrobe, drawing, microgame scheduler, sandbox authoring) | prefer game-specific seam until a second consumer is real | backlog |
 
@@ -533,3 +534,82 @@ High-contrast Phaser HUD (`PLAYER N` / `VERSUS`, scores or axes, `J/ENTER ACTS` 
 - Chrome wrapper is session-local under `/tmp`.
 - Do not commit `package-lock.json` workspace links for gitignored `games/wave*`.
 - Residual Category-C: combos, pinball, Tier 3/4, committed proofs.
+- Next wave: **done** — Wave 8 scrolling-stage camera (see below).
+
+## Wave 8 — `sw2d.stage-scroll`
+
+### Problem
+
+Horizontal-shmup and vertical-shmup needed terrain streaming past a ship
+held in a screen-space band, plus stage-clear. The generated starter
+fought encounter waves in a fixed arena. Rail-path cameras, parallax
+authoring and bullet-hell pooling are not shared. Overlay shmups keep
+the three-enemy lane fight so P2-C stays valid.
+
+### Consumers
+
+- `horizontal-shmup` — mode `horizontal` (stream left, fire +X, band x 40–420).
+- `vertical-shmup` — mode `vertical` (stream down, fire −Y, band y 260–510).
+
+Materially different: incoming-right vs incoming-top, plus opposite default fire dirs.
+
+### ValidationPlan
+
+1. Contract + schema (`StageScrollCatalog` / `stage-scroll-catalog`) reject unknown modes.
+2. Pack unit tests: offset/complete, band clamp, incoming-edge placement, vertical stream, contact, duplicate ids, missing document inert, dispose, reset, dt=0.
+3. Generator: all 74 emit schema-valid `content/stage-scroll.json`; the two consumers enable `sw2d.stage-scroll` and a non-empty catalog; `src/content.ts` passes `'stage-scroll': stageScrollData`; `main.ts` installs `stageScrollPack`.
+4. Generated top-down shell binds `bindStarterStageScroll`, parks dummy walls, drives the ship, keeps `bindStarterEncounters` for shooting.
+5. Honesty / docsSync / catalogPackIntegrity / uiCopy allowlist stay green.
+6. Workbench `POST /api/stage-scroll/inspect`.
+7. Overlay shmups **not** bound (P2-C three-enemy lane fight).
+8. Real-browser journeys against factory-generated games. Committed `proofs/` + maturity promotion still deferred.
+
+### CompletionContract
+
+- [x] Reusable pack in `@sw2d/packs`, renderer-neutral.
+- [x] Content authority `content/stage-scroll.json`.
+- [x] ≥2 materially different generated consumers (2 wired).
+- [x] Focused unit/integration tests.
+- [x] Honest residual limitation.
+- [x] ADR-0035.
+- [x] Real-browser play of factory-generated `wave8-horizontal-shmup` / `wave8-vertical-shmup` (`tools/scripts/play-stage-scroll-wave8.ts`, 2/2 PASS, 0 console errors, 0 external requests).
+- [x] `npm run sw2d -- validate` on those two games (schema + tsc + vite build + boot smoke) PASS (CDP hang after printed success, timeout 90 → 124).
+- [ ] Overlay P2-C re-run. **Not done this wave** — overlay stays unwired.
+- [ ] Committed proofs + maturity promotion. **Not done — evidence rule.**
+
+### Implementation notes
+
+- Capability id `world.scroll`. Pack id `sw2d.stage-scroll`. Not folded into `sw2d.world`.
+- Empty catalog (length or speed not positive) is inert. Duplicate hazard ids throw.
+- Horizontal: `screenX = viewport.width - (offset - along)`. Vertical: `screenY = offset - along`.
+- Factory HUD stays on. Overlay shmups do not bind.
+- `LIMITATIONS.scrollingShmupCamera` names what is reusable and what is not.
+- Generated `src/main.ts` must both import and install `stageScrollPack` (same miss class as Waves 4–7).
+- Band-clamp unit test must not complete the stage on the first 5s tick (`length: 99_999`).
+- Dummy wall collider is destroyed when the stage is active so the ship is not shoved by the proof-level ground strip.
+
+### Browser journeys (executed)
+
+Factory-generated (top-down shell HUD):
+
+- Horizontal-shmup: mode horizontal, fire +X; ArrowDown playerY 270→340; KeyJ projectilesSpawned 1; offset 720 progress 1 outcome=complete; hazardsVisible 3.
+- Vertical-shmup: mode vertical, fire −Y; ArrowRight playerX 480→550; KeyJ projectilesSpawned 1; offset 720 progress 1 outcome=complete; hazardsVisible 3.
+
+### Visual inspection
+
+High-contrast Phaser HUD (`HORIZONTAL` / `VERTICAL`, stage %, `MOVE WASD/ARROWS   FIRE J/X   CLEAR THE STAGE`). Dummy walls hidden; ship stays in the authored band while tiles/hazards stream. Confirmed via debug snapshots, not screenshots.
+
+### Bugs found and fixed this wave
+
+- Generated `src/main.ts` imported `stageScrollPack` but omitted it from `createGame({ packs })`.
+- Debug snapshot omitted `stageScroll` (play script would have seen undefined).
+- Band-clamp test completed the stage on the first 5s tick, so the opposite-direction clamp never ran.
+- Dummy wall collider stayed live after `setVisible(false)` and could shove the ship.
+
+### Remaining blockers / unknowns
+
+- No committed `proofs/` for the two shmups; catalog maturity stays `recipe`.
+- Overlay shmups stay the local three-enemy lane fight.
+- Chrome wrapper is session-local under `/tmp`.
+- Do not commit `package-lock.json` workspace links for gitignored `games/wave*`.
+- Residual Category-C: combos, pinball, rail cameras, Tier 3/4, committed proofs.
