@@ -37,7 +37,7 @@ Highest-leverage clusters, from `packages/presets/src/shared.ts` LIMITATIONS + p
 | 12 | Consume existing `sw2d.puzzle` code seam | physics-puzzle, escape-room | **Wave 12 implemented and played** (existing `sw2d.puzzle`; ADR-0039). Residual: rules stay TypeScript not content; no escape-room grammar. Overlay physics/escape stay local. |
 | 13 | Consume existing `sw2d.simulation` ledger/jobs | farming-lite, colony-lite | **Wave 13 implemented and played** (existing `sw2d.simulation`; ADR-0040). Residual: crop/season/plot framework and colony assignment AI stay out. Overlay farming/colony stay local (P3-J). |
 | 14 | Consume existing `sw2d.narrative` store | interactive-fiction-hybrid, investigation-game | **Wave 14 implemented** (existing `sw2d.narrative`; ADR-0041). Residual: parser IF and evidence-board linking stay out. Overlay IF/investigation stay local (P3-K). |
-| 15 | Consume existing `sw2d.arcade` score/elapsed | fishing-game, cooking-game | **Wave 15 implemented** (existing `sw2d.arcade`; ADR-0042). Residual: casting/line/tension/fish behaviour and ingredient/recipe cooking stay out. Overlay fishing/cooking stay local (P3-H). Pinball/microgame stay dummy OPTIONS. |
+| 15 | Consume existing `sw2d.arcade` score/elapsed | fishing-game, cooking-game | **Wave 15 implemented** (existing `sw2d.arcade`; ADR-0042). Residual: casting/line/tension/fish behaviour and ingredient/recipe cooking stay out. Overlay fishing/cooking stay local (P3-H). Pinball is Wave 24. Microgame is Wave 28. |
 | 16 | Consume existing ADR-0018 interaction in pointer shells | drawing-game, dress-up-character-toy | **Wave 16 implemented** (existing spatial pointer / drag-drop; ADR-0043). Residual: pressure/layers/export; attachment/skeleton wardrobe. Overlay drawing/dress-up stay local (P3-H). Wave 20 consumes the same service for photo vs sandbox. |
 | 17 | Consume existing `sw2d.progression` XP/currency | survivor-like, action-roguelite | **Wave 17 implemented** (existing `sw2d.progression`; ADR-0044). Residual: difficulty scaling; permadeath. Overlay survivor/roguelite stay local (P3-C). |
 | 18 | Consume existing `sw2d.strategy` teams/turns | turn-based-tactics, auto-battler | **Wave 18 implemented** (existing `sw2d.strategy`; ADR-0045). Residual: attack-range; autonomous combat; RTS box-select; territory capture. Overlay tactics/battler stay local. |
@@ -45,7 +45,7 @@ Highest-leverage clusters, from `packages/presets/src/shared.ts` LIMITATIONS + p
 | 20 | Consume existing ADR-0018 in photo + sandbox | photography-game, sandbox-playground | **Wave 20 implemented** (existing spatial pointer / click; ADR-0047). Residual: camera/framing/scoring; generalized authoring. Overlay photography/sandbox stay local (P3-H). |
 | 21 | Consume existing `sw2d.combat` health/damage | dungeon-crawler, base-defense | **Wave 21 implemented** (existing `sw2d.combat`; ADR-0048). Residual: generated Enemy objects / AI; target-priority. Overlay dungeon/base stay local. |
 | 22 | Consume auto-run presentation in platform shells | auto-runner, endless-runner | **Wave 22 implemented** (no new pack; ADR-0049). Residual: climbing / chase-pressure; generated segment solids unused by the starter strip. Overlay runner kits stay local. |
-| 23 | Consume vehicle.motion in road and craft shells | endless-driving, boat-flight-racer | **Wave 23 implemented** (no new pack; ADR-0050). Residual: kart item-fire. Overlay vehicle kits stay local. |
+| 23 | Consume vehicle.motion in road and craft shells | endless-driving, boat-flight-racer | **Wave 23 implemented** (no new pack; ADR-0050). Residual: kart item-fire is Wave 29 (game-specific). Overlay vehicle kits stay local. |
 | 24 | Consume AdvancedPhysics in toy and table shells | physics-toy, pinball-lite | **Wave 24 implemented** (no new pack; ADR-0051). Residual: reusable pinball pack. Overlay physics kits stay local. Frozen physics-toy proof not regenerated. |
 | 25 | Consume one-unit command vs stand-in occupy | simple-rts, territory-control | **Wave 25 implemented** (no new pack; ADR-0052). Residual: box-select; capture-zone pack. Overlay RTS/territory kits stay local. |
 | 26 | Consume look as museum plaques vs rail targets | museum-exhibit, rail-shooter | **Wave 26 implemented** (no new pack; ADR-0053). Residual: exhibit/codex; rail-path camera. Overlay kits stay local. |
@@ -2040,9 +2040,59 @@ Wave 22 already consumed auto-run and rejected pairing climbing with chase.
 - Chrome wrapper is session-local under `/tmp`.
 - Do not commit `package-lock.json` workspace links for gitignored `games/wave*`.
 - Residual Category-C: wall-slide, chase, box-select, capture-zone pack,
-  pinball pack, crop/season, rail-path camera, exhibit/codex, dummy OPTIONS
-  (microgame), overlay wiring, committed proofs, tower target-selection,
-  attack-range, autonomous combat, camera/framing, generalized authoring,
-  kart item-fire. Skip Waves 28–32 unless a later audit finds another
+  pinball pack, crop/season, rail-path camera, exhibit/codex, microgame
+  scheduler, overlay wiring, committed proofs, tower target-selection,
+  attack-range, autonomous combat, camera/framing, generalized authoring.
+  Waves 28–29 consumed the last dummy factory recipes without inventing
+  1-consumer packs. Skip further waves unless a later audit finds another
   ≥2-consumer leftover.
+
+## Wave 28 — consume arcade score as microgame tap-then-mash
+
+### Problem
+
+`microgame-collection` already required `sw2d.arcade` and entered play as dummy
+OPTIONS. Wave 15 left it null rather than invent a scheduler.
+
+### Consumers
+
+- `microgame-collection` — `ARCADE_STARTER = 'micro'` (ENTER on GO, then mash J
+  five times; `addScore` per tap/mash; complete at mash target).
+
+### CompletionContract
+
+- [x] No new pack. ADR-0055. Third consumer of existing `sw2d.arcade`.
+- [x] Real-browser play of `wave28-microgame-collection`
+  (`tools/scripts/play-arcade-wave28.ts`, 1/1 PASS, 0 console errors, 0
+  external requests).
+
+### Browser journeys (executed)
+
+- Microgame-collection: Space start mode=`micro` wait round 1 → GO at 548 ms →
+  Enter `tapped` score 50 mash round 2 → 5× KeyJ `set` mash 5 score 100
+  outcome=complete.
+
+## Wave 29 — kart on-demand item-fire is game-specific
+
+### Problem
+
+`kart-racer` already races. The leftover is hold-and-fire. Inventing an
+item-fire pack would be one consumer.
+
+### Consumers
+
+- `kart-racer` — `KART_STARTER = 'item'` (drive through the box, J fires).
+
+### CompletionContract
+
+- [x] No new pack. ADR-0056.
+- [x] Real-browser play of `wave29-kart-racer`
+  (`tools/scripts/play-kart-wave29.ts`, 1/1 PASS, 0 console errors, 0
+  external requests).
+
+### Browser journeys (executed)
+
+- Kart-racer: Space start x=160 empty → KeyJ `empty` → hold ArrowUp x=381
+  `pickup` held → KeyJ `fired` 1 outcome=complete.
+
 

@@ -94,7 +94,6 @@ describe('generateUiCopy (generated games announce their genre honestly)', () =>
     expect(copyFor('asteroids-shooter').playHint).toContain('FIRE J/X');
     expect(copyFor('gallery-shooter').playHint).toContain('FIRE J/X');
     expect(copyFor('rail-shooter').playHint).not.toContain('FIRE');
-    expect(copyFor('kart-racer').playHint).not.toContain('FIRE');
     expect(copyFor('physics-puzzle').playHint).toBe('CLICK TO NUDGE  -  LAND IN THE GOAL');
     expect(copyFor('escape-room').playHint).toBe('CLICK THE NOTE  -  THEN THE KEY');
     expect(copyFor('farming-lite').playHint).toBe('ARROWS PICK A PLOT  -  ENTER PLANTS OR HARVESTS');
@@ -123,5 +122,9 @@ describe('generateUiCopy (generated games announce their genre honestly)', () =>
     expect(copyFor('rail-shooter').playHint).toBe('J DAMAGES APPROACHING TARGETS');
     expect(copyFor('precision-platformer').playHint).toBe('MOVE / JUMP  -  JUMP THE GAPS');
     expect(copyFor('climbing-game').playHint).toBe('MOVE / JUMP  -  JUMP UP');
+    expect(copyFor('microgame-collection').playHint).toBe('ENTER ON GO  -  THEN MASH J');
+    expect(copyFor('kart-racer').playHint).toBe(
+      'STEER / THROTTLE WASD/ARROWS  -  ENTER STARTS  -  J FIRES THE SHELL',
+    );
   });
 });

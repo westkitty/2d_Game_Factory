@@ -45,7 +45,10 @@ import type { PresetDefinition } from '@sw2d/contracts';
  * two different `sw2d.combat` loops without inventing targeting, AI or
  * encounter packs. Wave 22 stamps `RUN_STARTER` (`course` / `endless` / null)
  * so the platform shell can present two different auto-run loops without
- * inventing a climbing, chase, or scrolling-stage pack.
+ * inventing a climbing, chase, or scrolling-stage pack. Wave 28 extends
+ * `ARCADE_STARTER` with `'micro'` (tap-then-mash rounds on the existing
+ * arcade ledger — not a scheduler pack). Wave 29 stamps `KART_STARTER`
+ * (`item` / null) for game-specific on-demand kart item-fire.
  *
  * Deliberately NOT a universal puzzle DSL.
  */
@@ -145,7 +148,13 @@ export function generatePackConfig(preset: PresetDefinition): string {
   const narrativeStarter =
     preset.id === 'interactive-fiction-hybrid' ? "'fiction'" : preset.id === 'investigation-game' ? "'case'" : 'null';
   const arcadeStarter =
-    preset.id === 'fishing-game' ? "'fishing'" : preset.id === 'cooking-game' ? "'cooking'" : 'null';
+    preset.id === 'fishing-game'
+      ? "'fishing'"
+      : preset.id === 'cooking-game'
+        ? "'cooking'"
+        : preset.id === 'microgame-collection'
+          ? "'micro'"
+          : 'null';
   const pointerStarter =
     preset.id === 'drawing-game' ? "'draw'" : preset.id === 'dress-up-character-toy' ? "'wardrobe'" : 'null';
   const progressionStarter =
@@ -169,6 +178,7 @@ export function generatePackConfig(preset: PresetDefinition): string {
     preset.id === 'museum-exhibit' ? "'museum'" : preset.id === 'rail-shooter' ? "'rail'" : 'null';
   const parkourStarter =
     preset.id === 'precision-platformer' ? "'precision'" : preset.id === 'climbing-game' ? "'climb'" : 'null';
+  const kartStarter = preset.id === 'kart-racer' ? "'item'" : 'null';
   return [
     '/**',
     " * Config for packs that declare `configSource: 'code'` in their definition -",
@@ -189,8 +199,8 @@ export function generatePackConfig(preset: PresetDefinition): string {
     '/** Category-C Wave 14: fiction vs case presentation of sw2d.narrative. Null otherwise. */',
     `export const NARRATIVE_STARTER: 'fiction' | 'case' | null = ${narrativeStarter};`,
     '',
-    '/** Category-C Wave 15: fishing vs cooking presentation of sw2d.arcade. Null otherwise. */',
-    `export const ARCADE_STARTER: 'fishing' | 'cooking' | null = ${arcadeStarter};`,
+    '/** Category-C Wave 15/28: fishing vs cooking vs micro presentation of sw2d.arcade. Null otherwise. */',
+    `export const ARCADE_STARTER: 'fishing' | 'cooking' | 'micro' | null = ${arcadeStarter};`,
     '',
     '/** Category-C Wave 16: draw vs wardrobe presentation of ADR-0018 interaction. Null otherwise. */',
     `export const POINTER_STARTER: 'draw' | 'wardrobe' | null = ${pointerStarter};`,
@@ -227,6 +237,9 @@ export function generatePackConfig(preset: PresetDefinition): string {
     '',
     '/** Category-C Wave 27: precision vs climb parkour. Null otherwise. */',
     `export const PARKOUR_STARTER: 'precision' | 'climb' | null = ${parkourStarter};`,
+    '',
+    '/** Category-C Wave 29: kart on-demand item-fire. Null otherwise. */',
+    `export const KART_STARTER: 'item' | null = ${kartStarter};`,
     '',
   ]
     .filter((line, index, all) => !(line === '' && all[index - 1] === ''))

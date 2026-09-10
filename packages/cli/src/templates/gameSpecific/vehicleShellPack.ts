@@ -1,8 +1,8 @@
 import Phaser from 'phaser';
 import type { InstalledSystemPack, RaceService, VehicleService } from '@sw2d/contracts';
 import { RACE_STATE_CAPABILITY_ID, VEHICLE_MOTION_CAPABILITY_ID } from '@sw2d/contracts';
-import { bindStarterVehicle, bindStarterWeapon, resolveSceneLevel, vehicleController, type SceneContext, type ScenePackDefinition } from '@sw2d/runtime';
-import { VEHICLE_STARTER } from './packConfig.ts';
+import { bindStarterKartItem, bindStarterVehicle, bindStarterWeapon, resolveSceneLevel, vehicleController, type SceneContext, type ScenePackDefinition } from '@sw2d/runtime';
+import { KART_STARTER, VEHICLE_STARTER } from './packConfig.ts';
 
 /**
  * Generated starter shell: vehicle controller family.
@@ -21,7 +21,8 @@ import { VEHICLE_STARTER } from './packConfig.ts';
  *
  * When `VEHICLE_STARTER` is road or craft (Category-C Wave 23) the dummy
  * drive-and-maybe-race loop is replaced by arcade distance or a boat-to-
- * flight switch on the existing catalog. Kart item-fire stays leftover.
+ * flight switch on the existing catalog. When `KART_STARTER` is item
+ * (Wave 29) J fires a held shell after driving through the box.
  */
 
 const LEVEL_DOCUMENT = 'levels/main';
@@ -55,10 +56,13 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     // Endless road vs boat/flight (Category-C Wave 23). Inert unless
     // packConfig names a road/craft starter. Kart racing stays on RaceService.
     const drive = bindStarterVehicle(context, { mode: VEHICLE_STARTER });
+    // Kart on-demand item (Category-C Wave 29). Inert unless packConfig
+    // names the item starter. Pickup/fire stay game-specific.
+    const kartItem = bindStarterKartItem(context, { mode: KART_STARTER });
     const openSpace = (Boolean(weapon.snapshot()) && !vehicleSvc) || drive.active;
 
-    const spawnX = drive.active ? drive.startX() : openSpace ? width * 0.5 : (spawn?.x ?? width * 0.5);
-    const spawnY = drive.active ? drive.startY() : openSpace ? height * 0.5 : (spawn?.y ?? height * 0.5);
+    const spawnX = drive.active ? drive.startX() : kartItem.active ? 160 : openSpace ? width * 0.5 : (spawn?.x ?? width * 0.5);
+    const spawnY = drive.active ? drive.startY() : kartItem.active ? 440 : openSpace ? height * 0.5 : (spawn?.y ?? height * 0.5);
 
     if (vehicleSvc && vehicleSvc.definitionIds().length > 0) {
       vehicleSvc.load(vehicleSvc.definitionIds()[0]!, { x: spawnX, y: spawnY, heading: 0 });
@@ -67,7 +71,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     const vehicle = scene.physics.add.sprite(spawnX, spawnY, vehicleKey);
     vehicle.setCollideWorldBounds(true);
     vehicle.body.setAllowGravity(false);
-    if (drive.active) walls.setVisible(false);
+    if (drive.active || kartItem.active) walls.setVisible(false);
     if (!vehicleSvc) {
       if (openSpace) {
         // The universal proof level's ground strip is not an asteroids arena.
@@ -90,6 +94,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       ...(vehicleSvc ? { vehicle: vehicleSvc.state() } : { speed: Math.round(vehicle.body.velocity.length()) }),
       ...(raceSvc ? { race: raceSvc.raceState(), expectedCheckpoint: raceSvc.expectedCheckpoint()?.id ?? null } : {}),
       ...(drive.active ? { drive: drive.snapshot() } : {}),
+      ...(kartItem.active ? { kartItem: kartItem.snapshot() } : {}),
       ...(generationManifest ? { generation: generationManifest } : {}),
       weapon: weapon.snapshot(),
     }));
@@ -134,6 +139,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
             drive.tick(deltaMs);
             drive.render();
           }
+          if (kartItem.active) kartItem.setVehicle(now.x, now.y, now.heading);
           if (raceSvc) {
             const cp = raceSvc.expectedCheckpoint();
             if (cp && Math.hypot(now.x - cp.x, now.y - cp.y) <= cp.radius) raceSvc.checkpointEntered(cp.id);
@@ -151,7 +157,9 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
 
         weapon.update(deltaMs, nowMs);
         if (context.input.justPressed('PRIMARY_ACTION')) {
-          if (drive.active && drive.snapshot().mode === 'craft') {
+          if (kartItem.active) {
+            kartItem.fire();
+          } else if (drive.active && drive.snapshot().mode === 'craft') {
             drive.switchCraft();
           } else {
             const heading = vehicleSvc ? vehicleSvc.state().heading : vehicle.rotation;

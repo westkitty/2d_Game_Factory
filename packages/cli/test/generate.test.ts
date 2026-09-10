@@ -731,7 +731,7 @@ describe('generated ui-simulation fishing and cooking consume sw2d.arcade', () =
     expect(buildGameFiles('arcade-probe', fishing).get('src/main.ts')).toContain('arcadePack');
   });
 
-  it('fishing-game and cooking-game enable sw2d.arcade with different starters; pinball and microgame stay null', () => {
+  it('fishing-game, cooking-game and microgame-collection enable sw2d.arcade with different starters; pinball stays null', () => {
     const fishing = PRESETS.find((candidate) => candidate.id === 'fishing-game')!;
     const cooking = PRESETS.find((candidate) => candidate.id === 'cooking-game')!;
     const pinball = PRESETS.find((candidate) => candidate.id === 'pinball-lite')!;
@@ -744,27 +744,31 @@ describe('generated ui-simulation fishing and cooking consume sw2d.arcade', () =
     const shopFiles = buildGameFiles('arcade-probe', shop);
     const fishingJson = JSON.parse(fishingFiles.get('content/game.json')!) as { systemPacks: Array<{ packId: string }> };
     const cookingJson = JSON.parse(cookingFiles.get('content/game.json')!) as { systemPacks: Array<{ packId: string }> };
+    const microJson = JSON.parse(microFiles.get('content/game.json')!) as { systemPacks: Array<{ packId: string }> };
     expect(fishingJson.systemPacks.map((s) => s.packId)).toContain('sw2d.arcade');
     expect(cookingJson.systemPacks.map((s) => s.packId)).toContain('sw2d.arcade');
+    expect(microJson.systemPacks.map((s) => s.packId)).toContain('sw2d.arcade');
     expect(fishingFiles.get('src/game-specific/packConfig.ts')).toContain(
-      "ARCADE_STARTER: 'fishing' | 'cooking' | null = 'fishing'",
+      "ARCADE_STARTER: 'fishing' | 'cooking' | 'micro' | null = 'fishing'",
     );
     expect(cookingFiles.get('src/game-specific/packConfig.ts')).toContain(
-      "ARCADE_STARTER: 'fishing' | 'cooking' | null = 'cooking'",
-    );
-    expect(pinballFiles.get('src/game-specific/packConfig.ts')).toContain(
-      "ARCADE_STARTER: 'fishing' | 'cooking' | null = null",
+      "ARCADE_STARTER: 'fishing' | 'cooking' | 'micro' | null = 'cooking'",
     );
     expect(microFiles.get('src/game-specific/packConfig.ts')).toContain(
-      "ARCADE_STARTER: 'fishing' | 'cooking' | null = null",
+      "ARCADE_STARTER: 'fishing' | 'cooking' | 'micro' | null = 'micro'",
+    );
+    expect(pinballFiles.get('src/game-specific/packConfig.ts')).toContain(
+      "ARCADE_STARTER: 'fishing' | 'cooking' | 'micro' | null = null",
     );
     expect(shopFiles.get('src/game-specific/packConfig.ts')).toContain(
-      "ARCADE_STARTER: 'fishing' | 'cooking' | null = null",
+      "ARCADE_STARTER: 'fishing' | 'cooking' | 'micro' | null = null",
     );
     const fishingTheme = JSON.parse(fishingFiles.get('content/themes/default/theme.json')!) as { ui: { playHint: string } };
     const cookingTheme = JSON.parse(cookingFiles.get('content/themes/default/theme.json')!) as { ui: { playHint: string } };
+    const microTheme = JSON.parse(microFiles.get('content/themes/default/theme.json')!) as { ui: { playHint: string } };
     expect(fishingTheme.ui.playHint).toContain('ENTER CASTS AND LANDS');
     expect(cookingTheme.ui.playHint).toContain('ENTER ADDS TO THE DISH');
+    expect(microTheme.ui.playHint).toContain('ENTER ON GO');
   });
 });
 
@@ -1126,6 +1130,8 @@ describe('generated endless-driving and boat-flight consume vehicle presentation
     expect(shell).toContain('bindStarterVehicle(context, { mode: VEHICLE_STARTER })');
     expect(shell).toContain('drive.setVehicle(');
     expect(shell).toContain('drive.switchCraft(');
+    expect(shell).toContain('bindStarterKartItem(context, { mode: KART_STARTER })');
+    expect(shell).toContain('kartItem.fire(');
     expect(shell).toContain("from './packConfig.ts'");
   });
 
@@ -1150,6 +1156,8 @@ describe('generated endless-driving and boat-flight consume vehicle presentation
     expect(kartFiles.get('src/game-specific/packConfig.ts')).toContain(
       "VEHICLE_STARTER: 'road' | 'craft' | null = null",
     );
+    expect(kartFiles.get('src/game-specific/packConfig.ts')).toContain("KART_STARTER: 'item' | null = 'item'");
+    expect(roadFiles.get('src/game-specific/packConfig.ts')).toContain("KART_STARTER: 'item' | null = null");
     const roadTheme = JSON.parse(roadFiles.get('content/themes/default/theme.json')!) as { ui: { playHint: string } };
     const craftTheme = JSON.parse(craftFiles.get('content/themes/default/theme.json')!) as { ui: { playHint: string } };
     expect(roadTheme.ui.playHint).toContain('BANK DISTANCE');

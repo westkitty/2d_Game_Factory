@@ -31,11 +31,11 @@ import { ARCADE_STARTER, NARRATIVE_STARTER, PHYSICS_STARTER, SIMULATION_STARTER,
  * option list is replaced by the existing `sw2d.simulation` ledger/jobs
  * (Wave 13). When `NARRATIVE_STARTER` is fiction the option list is
  * replaced by menu verbs on `sw2d.narrative` (Wave 14). When
- * `ARCADE_STARTER` is fishing or cooking the option list is replaced by
- * a score/elapsed presentation of `sw2d.arcade` (Wave 15). When
+ * `ARCADE_STARTER` is fishing, cooking, or micro the option list is replaced
+ * by a score/elapsed presentation of `sw2d.arcade` (Wave 15 / 28). When
  * `STRATEGY_STARTER` is battler the option list is replaced by a pick-and-
- * strike presentation of `sw2d.strategy` (Wave 18). Pinball,
- * microgame and timing leftovers stay dummy OPTIONS or their own binders.
+ * strike presentation of `sw2d.strategy` (Wave 18). Pinball uses its own
+ * binder. Overlay kits stay local.
  * See platformShellPack.ts's file comment for the template pattern.
  */
 

@@ -153,6 +153,11 @@ export {
   type StarterParkourSnapshot,
   type ParkourStarterMode,
 } from './game-support/starterParkour.ts';
+export {
+  bindStarterKartItem,
+  type StarterKartItemBinding,
+  type StarterKartItemSnapshot,
+} from './game-support/starterKartItem.ts';
 
 export { LocalStorageDriver, MemoryStorageDriver } from './persistence/LocalStorageDriver.ts';
 export { SaveStoreImpl } from './persistence/SaveStoreImpl.ts';

@@ -58,3 +58,5 @@ One short record per decision that constrains later work. No ADR for trivia.
 | [0052](0052-consume-command-in-rts-and-zone-shells.md) | Consume one-unit command vs stand-in occupy | Category-C Wave 25 |
 | [0053](0053-consume-look-in-museum-and-rail-shells.md) | Consume look as museum plaques vs rail targets | Category-C Wave 26 |
 | [0054](0054-consume-parkour-in-precision-and-climb-shells.md) | Consume player-controlled parkour vs climb | Category-C Wave 27 |
+| [0055](0055-consume-arcade-in-microgame-shell.md) | Consume arcade score as microgame tap-then-mash | Category-C Wave 28 |
+| [0056](0056-kart-item-fire-is-game-specific.md) | Kart on-demand item-fire is game-specific | Category-C Wave 29 |

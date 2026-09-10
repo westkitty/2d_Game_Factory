@@ -5,14 +5,14 @@ import type { SceneContext } from '../scenes/SceneContext.ts';
  * Bind the generated ui-simulation shell to `sw2d.arcade` (Category-C Wave 15).
  *
  * Inert unless the game installed the pack *and* the generated packConfig
- * names a fishing or cooking starter. The pack stays score / combo / lives /
- * elapsed — this file is presentation, not a casting/tension or recipe
- * framework. Overlay fishing/cooking kits stay local (P3-H).
+ * names a fishing, cooking, or micro starter. The pack stays score / combo /
+ * lives / elapsed — this file is presentation, not a casting/tension, recipe,
+ * or scheduler framework. Overlay fishing/cooking/microgame kits stay local.
  */
 
 const ARCADE_CAPABILITY_ID = 'arcade.score';
 
-export type ArcadeStarterMode = 'fishing' | 'cooking';
+export type ArcadeStarterMode = 'fishing' | 'cooking' | 'micro';
 
 export type FishingPhase = 'idle' | 'cast' | 'bite' | 'landed';
 
@@ -21,12 +21,14 @@ export interface StarterArcadeSnapshot {
   readonly mode: ArcadeStarterMode | null;
   readonly score: number;
   readonly elapsedMs: number;
-  readonly phase: FishingPhase | 'cook';
+  readonly phase: FishingPhase | 'cook' | 'wait' | 'go' | 'mash';
   readonly caught: number;
   readonly missed: number;
   readonly selectedIndex: number;
   readonly recipeStep: number;
   readonly mistakes: number;
+  readonly round: number;
+  readonly mash: number;
   readonly lastResult: string | null;
   readonly outcome: 'playing' | 'complete';
 }
@@ -57,6 +59,8 @@ const INERT: StarterArcadeBinding = {
     selectedIndex: 0,
     recipeStep: 0,
     mistakes: 0,
+    round: 0,
+    mash: 0,
     lastResult: null,
     outcome: 'playing',
   }),
@@ -78,6 +82,11 @@ const FISH_SCORE = 50;
 const DISH_SCORE = 100;
 const RECIPE = [0, 1, 2] as const;
 const INGREDIENTS = ['FLOUR', 'EGG', 'MIX'] as const;
+const TAP_WAIT_MS = 500;
+const TAP_WINDOW_MS = 700;
+const MASH_TARGET = 5;
+const TAP_SCORE = 50;
+const MASH_SCORE = 10;
 const WATER_COLOR = 0x173a5c;
 const BOBBER_COLOR = 0xe0574f;
 const BITE_COLOR = 0xf0c274;
@@ -93,7 +102,7 @@ export function bindStarterArcade(
   options?: { readonly mode?: ArcadeStarterMode | null; readonly hud?: boolean },
 ): StarterArcadeBinding {
   const mode = options?.mode ?? null;
-  if (mode !== 'fishing' && mode !== 'cooking') return INERT;
+  if (mode !== 'fishing' && mode !== 'cooking' && mode !== 'micro') return INERT;
   if (!context.capabilities.has(ARCADE_CAPABILITY_ID)) return INERT;
   const arcade = context.capabilities.require<ArcadeLedger>(ARCADE_CAPABILITY_ID);
 
@@ -111,7 +120,7 @@ export function bindStarterArcade(
   const slots: { setFillStyle(color: number, alpha?: number): unknown; setStrokeStyle(width: number, color: number, alpha?: number): unknown; destroy(): void }[] = [];
   const labels: { setText(value: string): unknown; destroy(): void }[] = [];
   if (hud) {
-    if (mode === 'fishing') {
+    if (mode === 'fishing' || mode === 'micro') {
       slots.push(scene.add.rectangle(width * 0.5, height * 0.52, 420, 160, WATER_COLOR, 0.95).setStrokeStyle(2, 0x8a93a6, 0.9).setScrollFactor(0).setDepth(20));
       labels.push(scene.add.text(width * 0.5, height * 0.52, '', mutedStyle(18)).setOrigin(0.5).setScrollFactor(0).setDepth(21));
     } else {
@@ -124,12 +133,15 @@ export function bindStarterArcade(
   }
 
   let phase: FishingPhase = 'idle';
+  let microPhase: 'wait' | 'go' | 'mash' = 'wait';
   let phaseAt = arcade.elapsedMs();
   let caught = 0;
   let missed = 0;
   let selectedIndex = 0;
   let recipeStep = 0;
   let mistakes = 0;
+  let mash = 0;
+  let primed = false;
   let lastResult: string | null = null;
   let outcome: 'playing' | 'complete' = 'playing';
   let disposed = false;
@@ -140,12 +152,14 @@ export function bindStarterArcade(
       mode,
       score: arcade.score(),
       elapsedMs: Math.round(arcade.elapsedMs()),
-      phase: mode === 'fishing' ? phase : 'cook',
+      phase: mode === 'fishing' ? phase : mode === 'micro' ? microPhase : 'cook',
       caught,
       missed,
       selectedIndex,
       recipeStep,
       mistakes,
+      round: mode === 'micro' ? (microPhase === 'mash' || outcome === 'complete' ? 2 : 1) : 0,
+      mash,
       lastResult,
       outcome,
     };
@@ -157,6 +171,10 @@ export function bindStarterArcade(
       const color = phase === 'bite' ? BITE_COLOR : phase === 'landed' ? LAND_COLOR : phase === 'cast' ? BOBBER_COLOR : WATER_COLOR;
       slots[0]?.setFillStyle(color, 0.95);
       labels[0]?.setText(phase === 'bite' ? 'BITE' : phase === 'landed' ? 'LANDED' : phase === 'cast' ? 'WAITING' : 'CAST');
+    } else if (mode === 'micro') {
+      const color = microPhase === 'go' ? BITE_COLOR : microPhase === 'mash' ? BOBBER_COLOR : snap.outcome === 'complete' ? LAND_COLOR : WATER_COLOR;
+      slots[0]?.setFillStyle(color, 0.95);
+      labels[0]?.setText(snap.outcome === 'complete' ? 'SET CLEAR' : microPhase === 'go' ? 'GO' : microPhase === 'mash' ? `MASH ${mash}/${MASH_TARGET}` : 'WAIT');
     } else {
       for (let i = 0; i < slots.length; i++) {
         const selected = i === selectedIndex;
@@ -175,6 +193,14 @@ export function bindStarterArcade(
         }`,
       );
       hint.setText('ENTER CASTS AND LANDS');
+    } else if (mode === 'micro') {
+      title.setText(snap.outcome === 'complete' ? 'SET CLEAR' : 'MICRO');
+      status.setText(
+        `round ${snap.round}/2  ·  score ${snap.score}${snap.lastResult ? `  ·  ${snap.lastResult}` : ''}${
+          snap.outcome === 'complete' ? '  ·  complete' : ''
+        }`,
+      );
+      hint.setText(snap.outcome === 'playing' ? (microPhase === 'mash' ? 'MASH J' : 'ENTER ON GO') : 'SET CLEAR');
     } else {
       title.setText(snap.outcome === 'complete' ? 'DISH READY' : 'KITCHEN');
       status.setText(
@@ -236,9 +262,53 @@ export function bindStarterArcade(
     }
   }
 
-  function poll(): void {
-    if (mode !== 'fishing' || outcome !== 'playing') return;
+  function confirmMicro(): void {
     const now = arcade.elapsedMs();
+    if (microPhase === 'wait') {
+      missed += 1;
+      lastResult = 'early';
+      phaseAt = now;
+      return;
+    }
+    if (microPhase === 'go') {
+      arcade.addScore(TAP_SCORE);
+      microPhase = 'mash';
+      mash = 0;
+      lastResult = 'tapped';
+      return;
+    }
+    mash += 1;
+    arcade.addScore(MASH_SCORE);
+    lastResult = 'mash';
+    if (mash >= MASH_TARGET) {
+      outcome = 'complete';
+      lastResult = 'set';
+    }
+  }
+
+  function poll(): void {
+    if (outcome !== 'playing') return;
+    const now = arcade.elapsedMs();
+    if (mode === 'micro') {
+      if (!primed) {
+        primed = true;
+        phaseAt = now;
+        microPhase = 'wait';
+        return;
+      }
+      if (microPhase === 'wait' && now - phaseAt >= TAP_WAIT_MS) {
+        microPhase = 'go';
+        phaseAt = now;
+        lastResult = 'go';
+      } else if (microPhase === 'go' && now - phaseAt > TAP_WINDOW_MS) {
+        microPhase = 'wait';
+        phaseAt = now;
+        missed += 1;
+        lastResult = 'late';
+      }
+      return;
+    }
+    if (mode !== 'fishing') return;
     if (phase === 'cast' && now - phaseAt >= CAST_MS) {
       phase = 'bite';
       phaseAt = now;
@@ -268,6 +338,7 @@ export function bindStarterArcade(
     confirm(): void {
       if (disposed || outcome !== 'playing') return;
       if (mode === 'fishing') confirmFishing();
+      else if (mode === 'micro') confirmMicro();
       else confirmCooking();
       context.audio.playCue('ui.confirm');
       paint();

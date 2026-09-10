@@ -1024,6 +1024,8 @@ export function generateUiCopy(options: {
           ? 'STEER / THROTTLE WASD/ARROWS  -  HOLD UP TO BANK DISTANCE'
           : presetId === 'boat-flight-racer'
             ? 'STEER / THROTTLE WASD/ARROWS  -  J SWITCHES TO FLIGHT'
+          : presetId === 'kart-racer'
+            ? 'STEER / THROTTLE WASD/ARROWS  -  ENTER STARTS  -  J FIRES THE SHELL'
           : has('sw2d.racing')
             ? 'STEER / THROTTLE WASD/ARROWS  -  ENTER STARTS THE RACE'
             : has('sw2d.weapons')
@@ -1093,6 +1095,8 @@ export function generateUiCopy(options: {
                             ? 'ARROWS PICK  -  ENTER STRIKES'
                           : presetId === 'pinball-lite'
                             ? 'J LEFT K RIGHT  -  HIT BUMPERS'
+                          : presetId === 'microgame-collection'
+                            ? 'ENTER ON GO  -  THEN MASH J'
                           : 'ARROWS CHANGE THE SELECTION  -  ENTER CONFIRMS  -  PAUSE TO STOP';
       break;
     default:
