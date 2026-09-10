@@ -13,12 +13,11 @@ import { LIMITATIONS, POINTER_INPUT_MODES, VALIDATION_PROFILES, definePreset, pa
  * and the one recipe that is genuinely about pointer interaction
  * (`physics-puzzle`) gets `pointer`, honestly limited to press-style actions.
  *
- * Standard puzzle kinds (sokoban, switch/sequence) are content-authorable
- * through `sw2d.puzzle-rules` + `content/puzzles.json` as of the capability
- * program's Phase 6 (ADR-0023): `sokoban` here consumes that reusable service
- * and carries no puzzle limitation. Recipes whose board rules are not a
- * built-in kind (`match-puzzle`, `falling-block-puzzle`, `physics-puzzle`)
- * still select the foundational, code-configured `sw2d.puzzle` and reuse
+ * Standard puzzle kinds (sokoban, switch/sequence, match, falling-block) are
+ * content-authorable through `sw2d.puzzle-rules` + `content/puzzles.json`
+ * (ADR-0023, Category-C Wave 9). `sokoban`, `match-puzzle` and
+ * `falling-block-puzzle` consume that reusable service. `physics-puzzle`
+ * still selects the foundational, code-configured `sw2d.puzzle` and reuses
  * `LIMITATIONS.puzzleConfigIsCode` verbatim.
  */
 export const PUZZLE_ARCADE_PRESETS: readonly PresetDefinition[] = [
@@ -43,13 +42,12 @@ export const PUZZLE_ARCADE_PRESETS: readonly PresetDefinition[] = [
     displayName: 'Match Puzzle',
     family: 'puzzle-arcade',
     controllerFamilies: ['grid'],
-    requiredSystemPacks: [pack(PACK_IDS.puzzle)],
+    requiredSystemPacks: [pack(PACK_IDS.puzzleRules)],
     optionalSystemPacks: [pack(PACK_IDS.arcade)],
-    requiredContentRoles: ['tuning'],
+    requiredContentRoles: ['tuning', 'puzzles'],
     validationProfile: VALIDATION_PROFILES.puzzleArcade,
     knownLimitations: [
-      LIMITATIONS.puzzleConfigIsCode,
-      'The bounded `match` engine exists in sw2d.puzzle-rules (Phase 6, ADR-0023) and is unit-tested, but no reusable match-detection/cascade board rules are consumed by this recipe yet - it stays on the code-configured sw2d.puzzle.',
+      LIMITATIONS.puzzleBoardRules,
       'The reusable spatial pointer (world cursor, hover, drag - ADR-0018) exists; this grid-family recipe does not consume it, so tile drag/swap interaction is game-specific code.',
     ],
   }),
@@ -59,11 +57,11 @@ export const PUZZLE_ARCADE_PRESETS: readonly PresetDefinition[] = [
     displayName: 'Falling Block Puzzle',
     family: 'puzzle-arcade',
     controllerFamilies: ['grid', 'ui-simulation'],
-    requiredSystemPacks: [pack(PACK_IDS.puzzle)],
+    requiredSystemPacks: [pack(PACK_IDS.puzzleRules)],
     optionalSystemPacks: [pack(PACK_IDS.arcade)],
-    requiredContentRoles: ['tuning'],
+    requiredContentRoles: ['tuning', 'puzzles'],
     validationProfile: VALIDATION_PROFILES.puzzleArcade,
-    knownLimitations: [LIMITATIONS.puzzleConfigIsCode, 'No reusable falling-piece/line-clear board engine exists yet.'],
+    knownLimitations: [LIMITATIONS.puzzleBoardRules],
   }),
 
   definePreset({

@@ -30,7 +30,8 @@ Highest-leverage clusters, from `packages/presets/src/shared.ts` LIMITATIONS + p
 | 6 | Melee / knockback / hit-stun | action-adventure, arena-combat | **Wave 6 implemented** (`sw2d.melee` / `combat.melee`, ADR-0033). Residual: combos, directional attacks, targeting UI. Run-and-gun stays projectile. |
 | 7 | Local multiplayer input ownership | local-party-game, pong | **Wave 7 implemented and played** (`sw2d.local-play` / `arcade.seats`, ADR-0034). Residual: netcode, gamepads, split-screen. Overlay pong stays AI. |
 | 8 | Scrolling-stage camera | horizontal-shmup, vertical-shmup | **Wave 8 implemented and played** (`sw2d.stage-scroll` / `world.scroll`, ADR-0035). Residual: rail-path cameras, parallax authoring, bullet-hell pooling. Overlay shmups stay the three-enemy lane fight. |
-| — | Tier 3 (rail camera, territory, chase, climbing, run-meta, falling-block, match consumption, crop/season) | re-audit before sharing | backlog |
+| 9 | Match / falling-block consumption | match-puzzle, falling-block-puzzle | **Wave 9 implemented and played** (existing `sw2d.puzzle-rules` kinds; ADR-0036). Residual: pointer drag-swap, wall-kicks, overlay-local boards. |
+| — | Tier 3 leftovers (rail camera, territory, chase, climbing, run-meta, crop/season) | 1 live consumer each | backlog |
 | — | Tier 4 specialized (rhythm, parser IF, fishing, cooking, photography, wardrobe, drawing, microgame scheduler, sandbox authoring) | prefer game-specific seam until a second consumer is real | backlog |
 
 Do not extend `sw2d.simulation` / `sw2d.narrative` / `sw2d.ai` into genre monoliths. New narrow packs compose with them.
@@ -613,3 +614,78 @@ High-contrast Phaser HUD (`HORIZONTAL` / `VERTICAL`, stage %, `MOVE WASD/ARROWS 
 - Chrome wrapper is session-local under `/tmp`.
 - Do not commit `package-lock.json` workspace links for gitignored `games/wave*`.
 - Residual Category-C: combos, pinball, rail cameras, Tier 3/4, committed proofs.
+- Next wave: **done** — Wave 9 match / falling-block consumption (see below).
+
+## Wave 9 — consume `sw2d.puzzle-rules` match and falling-block
+
+### Problem
+
+`match-puzzle` and `falling-block-puzzle` still used the code-configured
+`sw2d.puzzle` seam. Phase 6 already shipped both engines inside
+`sw2d.puzzle-rules`. The leftover was consumption, not a missing pack.
+
+### Consumers
+
+- `match-puzzle` — kind `match` (cursor select, adjacent swap, cascade, clear objective).
+- `falling-block-puzzle` — kind `falling-block` (move, rotate, gravity tick, hard-drop, line-clear).
+
+Materially different: swap/cascade vs gravity/lock/line-clear.
+
+Overlay match / falling-block were **not** wired (P3-E local boards stay).
+
+### ValidationPlan
+
+1. Pack extras expose live `board` / `grid` / `active` for presentation. Unit tests cover the generated starter boards.
+2. Generator: match and falling-block presets enable `sw2d.puzzle-rules`, emit the matching kind, no code-config seam.
+3. Generated grid shell binds `bindStarterPuzzle` and hides the dummy actor when active.
+4. Honesty / docsSync / uiCopy stay green. ADR-0036.
+5. Real-browser play of factory-generated games. Overlay P3-E not re-run. Committed proofs + maturity promotion still deferred.
+
+### CompletionContract
+
+- [x] No new pack / schema / capability id.
+- [x] Content authority remains `content/puzzles.json`.
+- [x] ≥2 materially different generated consumers (2 wired).
+- [x] Focused unit/integration tests.
+- [x] Honest residual limitation.
+- [x] ADR-0036.
+- [x] Real-browser play of factory-generated `wave9-match-puzzle` / `wave9-falling-block-puzzle` (`tools/scripts/play-puzzle-boards-wave9.ts`, 2/2 PASS, 0 console errors, 0 external requests).
+- [x] `npm run sw2d -- validate` on those two games (schema + tsc + vite build + boot smoke) PASS (CDP hang after printed success, timeout 90 → 124).
+- [ ] Overlay P3-E re-run. **Not done this wave** — overlay stays unwired.
+- [ ] Committed proofs + maturity promotion. **Not done — evidence rule.**
+
+### Implementation notes
+
+- No new pack. `match` and `falling-block` kinds already live in `sw2d.puzzle-rules` (ADR-0023).
+- Snapshot extras now include live `board` / `grid` / `active` cells so the HUD can draw without a parallel table.
+- `bindStarterPuzzle` is INERT for sokoban / switch-sequence. `{ hud: false }` is unused this wave.
+- Match: cursor `gridController.step`; CONFIRM select-or-adjacent-swap; CANCEL deselect then undo; SECONDARY reset. Warm-in 250 ms.
+- Falling: L/R/D `move`, UP+CONFIRM `rotate`, SECONDARY `hard-drop`, gravity tick 450 ms, warm-in 250 ms.
+- Generator must pass `presetId` into `generateUiCopy` or every grid `puzzle-rules` game inherits the sokoban hint.
+- Overlay match / falling-block kits stay local (P3-E).
+- `physics-puzzle` / `escape-room` stay on the `sw2d.puzzle` code seam.
+
+### Browser journeys (executed)
+
+Factory-generated (grid shell HUD):
+
+- Match-puzzle: Space start → ArrowDown cursor (0,1) → Enter select → ArrowRight (1,1) → Enter swap → `clears` 9 / objective 3, `solved` true, 1 move.
+- Falling-block-puzzle: Space start → ArrowRight×3 park 3-wide bar on the right → KeyK hard-drop → KeyK drop the next bar on the left → `lines` 1 / objective 1, `solved` true.
+
+### Visual inspection
+
+High-contrast Phaser HUD (`MATCH` / `FALLING BLOCK`, clears or lines, `MOVE WASD/ARROWS   ENTER SELECTS OR SWAPS   UNDO BACKSPACE` / `MOVE WASD/ARROWS   ENTER ROTATES   DROP K`). Dummy grid actor hidden when the board is active. Confirmed via debug snapshots, not screenshots.
+
+### Bugs found and fixed this wave
+
+- `falling-block-puzzle` catalog lag: generator/docs/tests switched to `sw2d.puzzle-rules` while the live `definePreset` still required `sw2d.puzzle` (honesty/generate/docsSync failed until the catalog caught up).
+- `generateUiCopy` learned match/falling hints but `buildGameFiles` omitted `presetId`, so generated theme copy still said PUSH/UNDO/RESET K. The generator now forwards `presetId`.
+- `starterPuzzle.ts` `selectedCol`/`selectedRow` needed a local null-narrow for `tsc`.
+
+### Remaining blockers / unknowns
+
+- No committed `proofs/` for match-puzzle or falling-block-puzzle; catalog maturity stays `recipe`.
+- Overlay boards stay local. Pointer drag-swap and wall-kicks stay out of contract.
+- Chrome wrapper is session-local under `/tmp`.
+- Do not commit `package-lock.json` workspace links for gitignored `games/wave*`.
+- Residual Category-C: climbing, chase, territory, pinball, crop/season, rail camera, weapons leftover, run-meta vs survivor, Tier-4, committed proofs.

@@ -135,8 +135,8 @@ describe('required knownLimitations (MASTER_PROJECT.md section 12)', () => {
     { id: 'run-and-gun', pattern: /Enemy encounter orchestration/ },
     { id: 'boss-rush', pattern: /Sequencing multiple bosses/ },
     // Phase 7B (MASTER_PROJECT.md section 9)
-    { id: 'match-puzzle', pattern: /match-detection\/cascade board rules are consumed by this recipe/ },
-    { id: 'falling-block-puzzle', pattern: /No reusable falling-piece\/line-clear board engine/ },
+    { id: 'match-puzzle', pattern: /Match-detection\/cascade and falling-piece\/line-clear are reusable/ },
+    { id: 'falling-block-puzzle', pattern: /Match-detection\/cascade and falling-piece\/line-clear are reusable/ },
     { id: 'action-adventure', pattern: /Melee strike, knockback, hit-stun and contact damage are reusable/ },
     { id: 'arena-combat', pattern: /Melee strike, knockback, hit-stun and contact damage are reusable/ },
     { id: 'breakout', pattern: /Ball, paddle, rebound, brick-clear and first-to-N scoring are reusable/ },

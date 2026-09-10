@@ -180,6 +180,9 @@ describe('match engine', () => {
     const snap = svc.apply({ kind: 'swap', a: [0, 1], b: [1, 1] });
     expect((snap.clears as number)).toBeGreaterThanOrEqual(3);
     expect(snap.solved).toBe(true);
+    expect(Array.isArray(snap.board)).toBe(true);
+    expect(snap.width).toBe(3);
+    expect(snap.height).toBe(3);
   });
 
   it('a non-adjacent swap is a no-op', () => {
@@ -210,6 +213,30 @@ describe('falling-block engine', () => {
     svc.load('fb');
     const snap = svc.apply({ kind: 'hard-drop' });
     // a 2-wide piece dropped into a 2-wide well fills the bottom row -> 1 line.
+    expect((snap.lines as number)).toBe(1);
+    expect(snap.solved).toBe(true);
+  });
+
+  it('two 3-wide bars parked right then left clear one line in a 6-wide well', () => {
+    const { svc } = makeService({
+      schemaVersion: 1,
+      puzzles: [{
+        id: 'fb',
+        kind: 'falling-block',
+        width: 6,
+        height: 10,
+        pieces: [{ cells: [[0, 0], [1, 0], [2, 0]], spawnCol: 0 }],
+        sequence: [0, 0, 0],
+        objectiveLines: 1,
+      }],
+    });
+    svc.load('fb');
+    svc.apply({ kind: 'move', dir: 'right' });
+    svc.apply({ kind: 'move', dir: 'right' });
+    svc.apply({ kind: 'move', dir: 'right' });
+    svc.apply({ kind: 'hard-drop' });
+    expect(svc.isSolved()).toBe(false);
+    const snap = svc.apply({ kind: 'hard-drop' });
     expect((snap.lines as number)).toBe(1);
     expect(snap.solved).toBe(true);
   });

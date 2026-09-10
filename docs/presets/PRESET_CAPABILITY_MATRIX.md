@@ -68,8 +68,8 @@ pack/controller selections were actually exercised through, and
 | id | required packs | optional packs | controller(s) | input modes | validation profile |
 |---|---|---|---|---|---|
 | `sokoban` | puzzle-rules | - | grid | keyboard, touch | puzzle-arcade-recipe |
-| `match-puzzle` | puzzle | arcade | grid | keyboard, touch | puzzle-arcade-recipe |
-| `falling-block-puzzle` | puzzle | arcade | grid, ui-simulation | keyboard, touch | puzzle-arcade-recipe |
+| `match-puzzle` | puzzle-rules | arcade | grid | keyboard, touch | puzzle-arcade-recipe |
+| `falling-block-puzzle` | puzzle-rules | arcade | grid, ui-simulation | keyboard, touch | puzzle-arcade-recipe |
 | `breakout` | arcade, ball-paddle | - | top-down | keyboard, touch | puzzle-arcade-recipe |
 | `pong` | arcade, ball-paddle, local-play | - | top-down | keyboard, touch | puzzle-arcade-recipe |
 | `physics-puzzle` | puzzle | - | pointer | keyboard, pointer, touch | puzzle-arcade-recipe |
@@ -135,8 +135,8 @@ pack/controller selections were actually exercised through, and
 | world-entities | `sw2d.world-entities` | `world.entities` | 27 | 36 |
 | progression | `sw2d.progression` | `progression.state` | 11 | 26 |
 | arcade | `sw2d.arcade` | `arcade.score` | 14 | 41 |
-| puzzle | `sw2d.puzzle` | `puzzle.state` | 4 | 8 |
-| puzzle-rules | `sw2d.puzzle-rules` | `puzzle.rules` | 2 | 2 |
+| puzzle | `sw2d.puzzle` | `puzzle.state` | 2 | 6 |
+| puzzle-rules | `sw2d.puzzle-rules` | `puzzle.rules` | 4 | 4 |
 | simulation | `sw2d.simulation` | `simulation.resources` | 9 | 10 |
 | narrative | `sw2d.narrative` | `narrative.state` | 4 | 8 |
 | strategy | `sw2d.strategy` | `strategy.turns` | 4 | 4 |
@@ -160,8 +160,9 @@ pack/controller selections were actually exercised through, and
 **All twenty-seven current packs have at least one preset consumer.** `sw2d.items` (capability
 program Phase 2) is required by `collectathon-platformer`, whose generated starter consumes
 the reusable item/effect service through the shared platform shell. `sw2d.puzzle-rules`
-(capability program Phase 6) is required by `sokoban` and `puzzle-platformer`, whose
-generated starters drive the whole push/goal and switch/sequence rulesets from the validated
+(capability program Phase 6 / Category-C Wave 9) is required by `sokoban`, `puzzle-platformer`,
+`match-puzzle` and `falling-block-puzzle`, whose generated starters drive the push/goal,
+switch/sequence, match-cascade and falling-piece/line-clear rulesets from the validated
 `content/puzzles.json` document. `sw2d.generation` (capability program Phase 7) is required by
 `endless-runner`, `auto-runner`, `dungeon-crawler`, `action-roguelite` and `endless-driving`,
 whose generated shells build the playable world from a deterministic seed in
@@ -178,4 +179,5 @@ intent into car/kart/boat/flight motion and runs an ordered-checkpoint race from
 Nine, one per registered family (MASTER_PROJECT.md section 14/6/8 - a bounded set, not
 one per recipe): `platform-recipe`, `top-down-action-recipe`, `shooter-recipe` (Phase 7A),
 `vehicle-movement-recipe`, `puzzle-arcade-recipe`, `strategy-defense-recipe` (Phase 7B),
-`simulation-management-recipe`, `narrative-exploration-rec
+`simulation-management-recipe`, `narrative-exploration-recipe`, `party-toy-weird-recipe`
+(Phase 7C).

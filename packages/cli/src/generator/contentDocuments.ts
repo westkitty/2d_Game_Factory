@@ -150,11 +150,13 @@ export function generateEncounterCatalog(hasEncountersPack: boolean): Record<str
  * content/puzzles.json - a PuzzleRulesDoc (capability program Phase 6).
  * Always emitted; empty unless the preset installs `sw2d.puzzle-rules`. A
  * puzzle-family preset gets one built-in starter definition matching its
- * kind, so its generated shell loads an entire ruleset - moves, undo, reset,
- * solved-detection - from serialized data with no `createInitialState` /
- * `isSolved` callback.
+ * kind (sokoban, switch-sequence, match, falling-block), so its generated
+ * shell loads an entire ruleset - moves, undo, reset, solved-detection -
+ * from serialized data with no `createInitialState` / `isSolved` callback.
  */
-export function generatePuzzleRulesDoc(kind: 'sokoban' | 'switch-sequence' | 'none'): Record<string, unknown> {
+export function generatePuzzleRulesDoc(
+  kind: 'sokoban' | 'switch-sequence' | 'match' | 'falling-block' | 'none',
+): Record<string, unknown> {
   if (kind === 'sokoban') {
     return {
       schemaVersion: 1,
@@ -185,6 +187,46 @@ export function generatePuzzleRulesDoc(kind: 'sokoban' | 'switch-sequence' | 'no
           kind: 'switch-sequence',
           switches: ['a', 'b', 'c'],
           completeWhen: { kind: 'all-on' },
+        },
+      ],
+    };
+  }
+  if (kind === 'match') {
+    // One adjacent swap (1,0)<->(1,1) makes column 0 three 0s.
+    return {
+      schemaVersion: 1,
+      puzzles: [
+        {
+          id: 'starter',
+          kind: 'match',
+          width: 3,
+          height: 3,
+          pieceTypes: 3,
+          matchLength: 3,
+          objectiveClears: 3,
+          board: [
+            [0, 1, 2],
+            [1, 0, 2],
+            [0, 1, 2],
+          ],
+        },
+      ],
+    };
+  }
+  if (kind === 'falling-block') {
+    // 3-wide bar in a 6-wide well: park the first piece on the right, drop
+    // the second on the left, one line clears.
+    return {
+      schemaVersion: 1,
+      puzzles: [
+        {
+          id: 'starter',
+          kind: 'falling-block',
+          width: 6,
+          height: 10,
+          pieces: [{ cells: [[0, 0], [1, 0], [2, 0]], spawnCol: 0 }],
+          sequence: [0, 0, 0, 0],
+          objectiveLines: 1,
         },
       ],
     };
@@ -887,8 +929,9 @@ export function generateUiCopy(options: {
   readonly presetDisplayName: string;
   readonly primaryControllerFamily: string;
   readonly requiredPackIds: readonly string[];
+  readonly presetId?: string;
 }): Record<string, string> {
-  const { displayName, presetDisplayName, primaryControllerFamily, requiredPackIds } = options;
+  const { displayName, presetDisplayName, primaryControllerFamily, requiredPackIds, presetId } = options;
   const has = (id: string) => requiredPackIds.includes(id);
   let playHint = 'MOVE  -  PAUSE TO STOP';
   switch (primaryControllerFamily) {
@@ -918,9 +961,13 @@ export function generateUiCopy(options: {
         : 'STEER / THROTTLE WASD/ARROWS  -  PAUSE TO STOP';
       break;
     case 'grid':
-      playHint = has('sw2d.puzzle-rules')
-        ? 'MOVE / PUSH WASD/ARROWS  -  UNDO BACKSPACE  -  RESET K'
-        : 'MOVE WASD/ARROWS  -  PAUSE TO STOP';
+      playHint = presetId === 'match-puzzle'
+        ? 'MOVE WASD/ARROWS  -  ENTER SELECTS OR SWAPS  -  UNDO BACKSPACE'
+        : presetId === 'falling-block-puzzle'
+          ? 'MOVE WASD/ARROWS  -  ENTER ROTATES  -  DROP K'
+          : has('sw2d.puzzle-rules')
+            ? 'MOVE / PUSH WASD/ARROWS  -  UNDO BACKSPACE  -  RESET K'
+            : 'MOVE WASD/ARROWS  -  PAUSE TO STOP';
       break;
     case 'pointer':
       playHint = has('sw2d.dialogue')

@@ -95,6 +95,7 @@ export function buildGameFiles(gameId: string, preset: PresetDefinition): Map<st
           presetDisplayName: preset.displayName,
           primaryControllerFamily: preset.controllerFamilies[0]!,
           requiredPackIds,
+          presetId: preset.id,
         }),
       ),
       null,
@@ -123,9 +124,13 @@ export function buildGameFiles(gameId: string, preset: PresetDefinition): Map<st
     JSON.stringify(
       generatePuzzleRulesDoc(
         requiredPackIds.includes('sw2d.puzzle-rules')
-          ? preset.controllerFamilies[0] === 'grid'
-            ? 'sokoban'
-            : 'switch-sequence'
+          ? preset.id === 'match-puzzle'
+            ? 'match'
+            : preset.id === 'falling-block-puzzle'
+              ? 'falling-block'
+              : preset.controllerFamilies[0] === 'grid'
+                ? 'sokoban'
+                : 'switch-sequence'
           : 'none',
       ),
       null,

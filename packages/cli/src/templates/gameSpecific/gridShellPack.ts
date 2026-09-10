@@ -1,6 +1,6 @@
 import type { InstalledSystemPack, NormalizedLevel, PuzzleRulesService } from '@sw2d/contracts';
 import { PUZZLE_RULES_CAPABILITY_ID } from '@sw2d/contracts';
-import { gridController, type SceneContext, type ScenePackDefinition } from '@sw2d/runtime';
+import { bindStarterPuzzle, gridController, type SceneContext, type ScenePackDefinition } from '@sw2d/runtime';
 
 /**
  * Generated starter shell: grid controller family.
@@ -11,9 +11,10 @@ import { gridController, type SceneContext, type ScenePackDefinition } from '@sw
  *
  * If the preset installs `sw2d.puzzle-rules` (capability program Phase 6),
  * this shell drives the reusable puzzle service instead of free-roaming the
- * actor: each grid step is a bounded `move` op, CANCEL undoes, SECONDARY_ACTION
- * resets, and the whole ruleset (walls, boxes, goals, solved-detection) is the
- * validated `content/puzzles.json` document - no game-specific rule code here.
+ * actor. Sokoban stays a player-cell `move` / undo / reset loop. Match and
+ * falling-block (Category-C Wave 9) bind `bindStarterPuzzle` so swap /
+ * gravity / line-clear come from `content/puzzles.json` - no game-specific
+ * rule code here.
  */
 
 const LEVEL_DOCUMENT = 'levels/main';
@@ -32,6 +33,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     const { width, height } = context.definition.viewport;
 
     const puzzle = context.capabilities.get<PuzzleRulesService>(PUZZLE_RULES_CAPABILITY_ID);
+    const board = bindStarterPuzzle(context);
 
     const spawn = level?.objects.find((object) => object.class === 'PlayerSpawn');
     let col = Math.round((spawn?.x ?? width * 0.5) / CELL_SIZE);
@@ -46,18 +48,20 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       const snap = puzzle?.snapshot() as { playerCol?: number; playerRow?: number } | undefined;
       return { col: snap?.playerCol ?? col, row: snap?.playerRow ?? row };
     };
-    if (puzzle) {
+    if (puzzle && !board.active) {
       const cell = puzzlePlayerCell();
       col = cell.col;
       row = cell.row;
     }
 
     const actor = scene.add.sprite(col * CELL_SIZE, row * CELL_SIZE, playerKey);
+    if (board.active) actor.setVisible(false);
 
     const debugHandle = context.debug.contribute('game.grid-shell', () => ({
       col,
       row,
       ...(puzzle ? { puzzle: puzzle.snapshot(), solved: puzzle.isSolved() } : {}),
+      ...(board.active ? { puzzleBoard: board.snapshot() } : {}),
     }));
 
     let disposed = false;
@@ -65,9 +69,18 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     return {
       id: GAME_SPECIFIC_PACK.id,
 
-      update(): void {
+      update(deltaMs: number): void {
         if (disposed) return;
         const intent = gridController.read(context.input);
+
+        if (board.active) {
+          if (intent.step) board.step(intent.step);
+          if (intent.confirmPressed) board.confirm();
+          if (intent.cancelPressed) board.cancel();
+          if (context.input.consumePress('SECONDARY_ACTION')) board.secondary();
+          board.tick(deltaMs);
+          return;
+        }
 
         if (puzzle) {
           if (intent.step) puzzle.apply({ kind: 'move', dir: intent.step });
@@ -91,6 +104,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         if (disposed) return;
         disposed = true;
         debugHandle.dispose();
+        board.dispose();
         try {
           actor.destroy();
         } catch {

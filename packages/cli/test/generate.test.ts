@@ -488,6 +488,33 @@ describe('generated local-play games consume sw2d.local-play', () => {
   });
 });
 
+describe('generated puzzle-board games consume sw2d.puzzle-rules match and falling-block', () => {
+  it('the generated grid shell binds bindStarterPuzzle', () => {
+    const match = PRESETS.find((candidate) => candidate.id === 'match-puzzle')!;
+    const shell = buildGameFiles('puzzle-board-probe', match).get('src/game-specific/shellPack.ts')!;
+    expect(shell).toContain('bindStarterPuzzle(context)');
+    expect(shell).toContain('board.tick(');
+    expect(buildGameFiles('puzzle-board-probe', match).get('src/content.ts')).toContain('puzzles: puzzlesData');
+    expect(buildGameFiles('puzzle-board-probe', match).get('src/main.ts')).toContain('puzzleRulesPack');
+  });
+
+  it('match-puzzle and falling-block-puzzle enable sw2d.puzzle-rules and emit the matching kind', () => {
+    for (const id of ['match-puzzle', 'falling-block-puzzle'] as const) {
+      const preset = PRESETS.find((candidate) => candidate.id === id)!;
+      const files = buildGameFiles('puzzle-board-probe', preset);
+      const gameJson = JSON.parse(files.get('content/game.json')!) as { systemPacks: Array<{ packId: string }> };
+      expect(gameJson.systemPacks.map((s) => s.packId), id).toContain('sw2d.puzzle-rules');
+      expect(gameJson.systemPacks.map((s) => s.packId), id).not.toContain('sw2d.puzzle');
+      const doc = JSON.parse(files.get('content/puzzles.json')!) as { puzzles: Array<{ kind: string }> };
+      expect(doc.puzzles[0]?.kind, id).toBe(id === 'falling-block-puzzle' ? 'falling-block' : 'match');
+      const packConfig = files.get('src/game-specific/packConfig.ts')!;
+      expect(packConfig, id).not.toContain('createInitialState');
+      const theme = JSON.parse(files.get('content/themes/default/theme.json')!) as { ui: { playHint: string } };
+      expect(theme.ui.playHint, id).toContain(id === 'falling-block-puzzle' ? 'DROP K' : 'ENTER SELECTS OR SWAPS');
+    }
+  });
+});
+
 describe('generated stage-scroll games consume sw2d.stage-scroll', () => {
   it('the generated top-down shell binds bindStarterStageScroll', () => {
     const shmup = PRESETS.find((candidate) => candidate.id === 'horizontal-shmup')!;

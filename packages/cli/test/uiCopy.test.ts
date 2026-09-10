@@ -39,6 +39,7 @@ describe('generateUiCopy (generated games announce their genre honestly)', () =>
       presetDisplayName: preset.displayName,
       primaryControllerFamily: preset.controllerFamilies[0]!,
       requiredPackIds: preset.requiredSystemPacks.map((s) => s.packId),
+      presetId: preset.id,
     });
   };
 
@@ -71,6 +72,8 @@ describe('generateUiCopy (generated games announce their genre honestly)', () =>
 
   it('names only real bindings for the puzzle, racing and menu families', () => {
     expect(copyFor('sokoban').playHint).toBe('MOVE / PUSH WASD/ARROWS  -  UNDO BACKSPACE  -  RESET K');
+    expect(copyFor('match-puzzle').playHint).toContain('ENTER SELECTS OR SWAPS');
+    expect(copyFor('falling-block-puzzle').playHint).toContain('DROP K');
     expect(copyFor('time-trial-racer').playHint).toContain('ENTER STARTS THE RACE');
     expect(copyFor('visual-novel').playHint).toContain('ENTER ADVANCES');
     expect(copyFor('shopkeeper').playHint).toContain('ENTER SERVES');

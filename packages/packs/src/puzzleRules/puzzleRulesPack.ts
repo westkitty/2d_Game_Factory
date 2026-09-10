@@ -183,7 +183,18 @@ const match: Engine<MatchState> = {
     return { board, clears };
   },
   solved: (state, rulesIn) => state.clears >= (rulesIn as MatchRules).objectiveClears,
-  extra: (state) => ({ clears: state.clears }),
+  extra: (state, rulesIn) => {
+    const r = rulesIn as MatchRules;
+    return {
+      clears: state.clears,
+      board: state.board.map((row) => [...row]),
+      width: r.width,
+      height: r.height,
+      pieceTypes: r.pieceTypes,
+      matchLength: r.matchLength,
+      objectiveClears: r.objectiveClears,
+    };
+  },
 };
 
 // --- falling-block (simplified: no wall kicks) --------------------
@@ -252,7 +263,18 @@ const fallingBlock: Engine<FbState> = {
     return state;
   },
   solved: (state, rulesIn) => state.lines >= (rulesIn as FallingBlockRules).objectiveLines,
-  extra: (state) => ({ lines: state.lines, toppedOut: state.toppedOut }),
+  extra: (state, rulesIn) => {
+    const r = rulesIn as FallingBlockRules;
+    return {
+      lines: state.lines,
+      toppedOut: state.toppedOut,
+      grid: state.grid.map((row) => [...row]),
+      active: state.active ? { cells: state.active.cells.map((cell) => [cell[0], cell[1]] as const) } : null,
+      width: r.width,
+      height: r.height,
+      objectiveLines: r.objectiveLines,
+    };
+  },
 };
 
 // --- physics-goal ----------------------------------------------
