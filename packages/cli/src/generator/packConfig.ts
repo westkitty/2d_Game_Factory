@@ -159,6 +159,8 @@ export function generatePackConfig(preset: PresetDefinition): string {
     preset.id === 'dungeon-crawler' ? "'room'" : preset.id === 'base-defense' ? "'hold'" : 'null';
   const runStarter =
     preset.id === 'auto-runner' ? "'course'" : preset.id === 'endless-runner' ? "'endless'" : 'null';
+  const vehicleStarter =
+    preset.id === 'endless-driving' ? "'road'" : preset.id === 'boat-flight-racer' ? "'craft'" : 'null';
   return [
     '/**',
     " * Config for packs that declare `configSource: 'code'` in their definition -",
@@ -202,6 +204,9 @@ export function generatePackConfig(preset: PresetDefinition): string {
     '',
     '/** Category-C Wave 22: course vs endless presentation of auto-run. Null otherwise. */',
     `export const RUN_STARTER: 'course' | 'endless' | null = ${runStarter};`,
+    '',
+    '/** Category-C Wave 23: road vs craft presentation of vehicle.motion. Null otherwise. */',
+    `export const VEHICLE_STARTER: 'road' | 'craft' | null = ${vehicleStarter};`,
     '',
   ]
     .filter((line, index, all) => !(line === '' && all[index - 1] === ''))

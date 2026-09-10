@@ -45,6 +45,7 @@ Highest-leverage clusters, from `packages/presets/src/shared.ts` LIMITATIONS + p
 | 20 | Consume existing ADR-0018 in photo + sandbox | photography-game, sandbox-playground | **Wave 20 implemented** (existing spatial pointer / click; ADR-0047). Residual: camera/framing/scoring; generalized authoring. Overlay photography/sandbox stay local (P3-H). |
 | 21 | Consume existing `sw2d.combat` health/damage | dungeon-crawler, base-defense | **Wave 21 implemented** (existing `sw2d.combat`; ADR-0048). Residual: generated Enemy objects / AI; target-priority. Overlay dungeon/base stay local. |
 | 22 | Consume auto-run presentation in platform shells | auto-runner, endless-runner | **Wave 22 implemented** (no new pack; ADR-0049). Residual: climbing / chase-pressure; generated segment solids unused by the starter strip. Overlay runner kits stay local. |
+| 23 | Consume vehicle.motion in road and craft shells | endless-driving, boat-flight-racer | **Wave 23 implemented** (no new pack; ADR-0050). Residual: kart item-fire. Overlay vehicle kits stay local. |
 | — | Tier 4 specialized (parser IF, microgame scheduler) | prefer game-specific seam until a second consumer is real | backlog |
 
 Do not extend `sw2d.simulation` / `sw2d.narrative` / `sw2d.ai` into genre monoliths. New narrow packs compose with them.
@@ -1838,5 +1839,67 @@ not screenshots.
   rail camera, dummy OPTIONS (pinball/microgame), overlay wiring, committed
   proofs, simple-rts leftover (realtime box-select, not turns), tower
   target-selection, attack-range, autonomous combat, museum exhibit/codex,
-  camera/framing, generalized authoring.
+  camera/framing, generalized authoring. Next wave: **done** — Wave 23
+  vehicle road/craft (see below).
+
+## Wave 23 — consume vehicle.motion in road and craft shells
+
+### Problem
+
+`endless-driving` already required `sw2d.vehicles` + `sw2d.arcade` +
+`sw2d.generation`. The generated vehicle shell never called `arcade.addScore`.
+`boat-flight-racer` already emits `starter-boat` and `starter-flight`, but the
+shell loaded only `definitionIds()[0]`. Inventing kart item-fire would
+duplicate a 1-consumer leftover. Kart already races.
+
+### Consumers
+
+- `endless-driving` — `VEHICLE_STARTER = 'road'` (throttle, arcade distance,
+  complete at score 80).
+- `boat-flight-racer` — `VEHICLE_STARTER = 'craft'` (J loads `starter-flight`,
+  hold Up+Shift climbs, complete at altitude 80).
+
+Materially different: distance score vs boat-to-flight altitude.
+
+Kart-racer, time-trial and asteroids keep `VEHICLE_STARTER = null`. Overlay
+vehicle kits stay local.
+
+### CompletionContract
+
+- [x] No new pack / schema / capability id.
+- [x] Authority remains `vehicle.motion` + `arcade.score` + the boat catalog.
+- [x] ≥2 materially different generated consumers (2 wired).
+- [x] Focused generate/honesty/uiCopy tests.
+- [x] Honest residual limitation (kart item-fire).
+- [x] ADR-0050.
+- [x] Real-browser play of factory-generated `wave23-endless-driving` /
+  `wave23-boat-flight-racer` (`tools/scripts/play-vehicle-wave23.ts`, 2/2 PASS,
+  0 console errors, 0 external requests).
+- [ ] Overlay re-run. **Not this wave.**
+- [ ] Committed proofs + maturity promotion. **Not done — evidence rule.**
+
+### Browser journeys (executed)
+
+Factory-generated:
+
+- Endless-driving: Space start x=160 mode=`road` score 0 → hold ArrowUp
+  x=812 speed 340 score 80 `distance` outcome=complete.
+- Boat-flight-racer: Space start mode=`craft` profile=`boat` alt 0 → KeyJ
+  profile=`flight` lastResult=`flight` → hold ArrowUp+ShiftLeft alt 84
+  `airborne` outcome=complete.
+
+### Bugs found and fixed this wave
+
+- None during play. First journey 2/2 PASS.
+
+### Remaining blockers / unknowns
+
+- Catalog maturity stays unchanged (23/3/48).
+- Chrome wrapper is session-local under `/tmp`.
+- Do not commit `package-lock.json` workspace links for gitignored `games/wave*`.
+- Residual Category-C: climbing, chase, territory capture, pinball, crop/season,
+  rail camera, dummy OPTIONS (pinball/microgame), overlay wiring, committed
+  proofs, simple-rts leftover (realtime box-select, not turns), tower
+  target-selection, attack-range, autonomous combat, museum exhibit/codex,
+  camera/framing, generalized authoring, kart item-fire.
 

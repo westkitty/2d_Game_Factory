@@ -123,6 +123,12 @@ export {
   type StarterRunSnapshot,
   type RunStarterMode,
 } from './game-support/starterRun.ts';
+export {
+  bindStarterVehicle,
+  type StarterVehicleBinding,
+  type StarterVehicleSnapshot,
+  type VehicleStarterMode,
+} from './game-support/starterVehicle.ts';
 
 export { LocalStorageDriver, MemoryStorageDriver } from './persistence/LocalStorageDriver.ts';
 export { SaveStoreImpl } from './persistence/SaveStoreImpl.ts';

@@ -188,7 +188,7 @@ recipe's *first* stated limitation; see `knownLimitations` in
 | `top-down-racer` | (none stated) |
 | `kart-racer` | Holding and firing a kart item on demand (a shell, an on-use boost pickup) is game-specific code; item boxes grant canonical sw2d.items entries (Phase 2), and drift / handling are the reusable sw2d.vehicles kart profile. |
 | `time-trial-racer` | (none stated) |
-| `endless-driving` | (none stated) |
+| `endless-driving` | Arcade distance for the generated starter is game-specific presentation of sw2d.vehicles + sw2d.arcade; a reusable kart item-fire system is not. |
 | `boat-flight-racer` | The boat and flight profiles are bounded arcade handling (momentum, drag, lateral grip, and for flight a 2D altitude band) - not fluid or aerodynamic simulation. |
 | `sokoban` | (none stated) |
 | `match-puzzle` | Match-detection/cascade and falling-piece/line-clear are reusable (sw2d.puzzle-rules); pointer drag-swap, wall-kicks and overlay-local boards are not. |

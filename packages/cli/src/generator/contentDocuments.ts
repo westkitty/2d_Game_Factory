@@ -1009,11 +1009,16 @@ export function generateUiCopy(options: {
                     : 'MOVE WASD/ARROWS  -  PAUSE TO STOP';
       break;
     case 'vehicle':
-      playHint = has('sw2d.racing')
-        ? 'STEER / THROTTLE WASD/ARROWS  -  ENTER STARTS THE RACE'
-        : has('sw2d.weapons')
-          ? 'STEER / THROTTLE WASD/ARROWS  -  FIRE J/X'
-          : 'STEER / THROTTLE WASD/ARROWS  -  PAUSE TO STOP';
+      playHint =
+        presetId === 'endless-driving'
+          ? 'STEER / THROTTLE WASD/ARROWS  -  HOLD UP TO BANK DISTANCE'
+          : presetId === 'boat-flight-racer'
+            ? 'STEER / THROTTLE WASD/ARROWS  -  J SWITCHES TO FLIGHT'
+          : has('sw2d.racing')
+            ? 'STEER / THROTTLE WASD/ARROWS  -  ENTER STARTS THE RACE'
+            : has('sw2d.weapons')
+              ? 'STEER / THROTTLE WASD/ARROWS  -  FIRE J/X'
+              : 'STEER / THROTTLE WASD/ARROWS  -  PAUSE TO STOP';
       break;
     case 'grid':
       playHint = presetId === 'match-puzzle'

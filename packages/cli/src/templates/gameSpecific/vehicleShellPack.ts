@@ -1,7 +1,8 @@
 import Phaser from 'phaser';
 import type { InstalledSystemPack, RaceService, VehicleService } from '@sw2d/contracts';
 import { RACE_STATE_CAPABILITY_ID, VEHICLE_MOTION_CAPABILITY_ID } from '@sw2d/contracts';
-import { bindStarterWeapon, resolveSceneLevel, vehicleController, type SceneContext, type ScenePackDefinition } from '@sw2d/runtime';
+import { bindStarterVehicle, bindStarterWeapon, resolveSceneLevel, vehicleController, type SceneContext, type ScenePackDefinition } from '@sw2d/runtime';
+import { VEHICLE_STARTER } from './packConfig.ts';
 
 /**
  * Generated starter shell: vehicle controller family.
@@ -17,6 +18,10 @@ import { bindStarterWeapon, resolveSceneLevel, vehicleController, type SceneCont
  * When `sw2d.weapons` is installed (Category-C Wave 11) PRIMARY_ACTION fires
  * along the ship's heading through the reusable projectile runtime. Fire is
  * not vehicle intent - the shell reads the action, the controller does not.
+ *
+ * When `VEHICLE_STARTER` is road or craft (Category-C Wave 23) the dummy
+ * drive-and-maybe-race loop is replaced by arcade distance or a boat-to-
+ * flight switch on the existing catalog. Kart item-fire stays leftover.
  */
 
 const LEVEL_DOCUMENT = 'levels/main';
@@ -47,10 +52,13 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     // Weapons (capability program Phase 3 / Category-C Wave 11). Inert unless
     // sw2d.weapons is installed. Asteroids heading-fire is the vehicle consumer.
     const weapon = bindStarterWeapon(context);
-    const openSpace = Boolean(weapon.snapshot()) && !vehicleSvc;
+    // Endless road vs boat/flight (Category-C Wave 23). Inert unless
+    // packConfig names a road/craft starter. Kart racing stays on RaceService.
+    const drive = bindStarterVehicle(context, { mode: VEHICLE_STARTER });
+    const openSpace = (Boolean(weapon.snapshot()) && !vehicleSvc) || drive.active;
 
-    const spawnX = openSpace ? width * 0.5 : (spawn?.x ?? width * 0.5);
-    const spawnY = openSpace ? height * 0.5 : (spawn?.y ?? height * 0.5);
+    const spawnX = drive.active ? drive.startX() : openSpace ? width * 0.5 : (spawn?.x ?? width * 0.5);
+    const spawnY = drive.active ? drive.startY() : openSpace ? height * 0.5 : (spawn?.y ?? height * 0.5);
 
     if (vehicleSvc && vehicleSvc.definitionIds().length > 0) {
       vehicleSvc.load(vehicleSvc.definitionIds()[0]!, { x: spawnX, y: spawnY, heading: 0 });
@@ -59,6 +67,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     const vehicle = scene.physics.add.sprite(spawnX, spawnY, vehicleKey);
     vehicle.setCollideWorldBounds(true);
     vehicle.body.setAllowGravity(false);
+    if (drive.active) walls.setVisible(false);
     if (!vehicleSvc) {
       if (openSpace) {
         // The universal proof level's ground strip is not an asteroids arena.
@@ -80,6 +89,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       angle: Math.round(vehicle.angle),
       ...(vehicleSvc ? { vehicle: vehicleSvc.state() } : { speed: Math.round(vehicle.body.velocity.length()) }),
       ...(raceSvc ? { race: raceSvc.raceState(), expectedCheckpoint: raceSvc.expectedCheckpoint()?.id ?? null } : {}),
+      ...(drive.active ? { drive: drive.snapshot() } : {}),
       ...(generationManifest ? { generation: generationManifest } : {}),
       weapon: weapon.snapshot(),
     }));
@@ -113,12 +123,17 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
           // checkpoint, lap, clock) is deliberately untouched, so the reset
           // costs time but not progress.
           const margin = 48;
-          if (st.x < -margin || st.x > width + margin || st.y < -margin || st.y > height + margin) {
+          if (!drive.active && (st.x < -margin || st.x > width + margin || st.y < -margin || st.y > height + margin)) {
             vehicleSvc.reset();
           }
           const now = vehicleSvc.state();
           vehicle.setPosition(now.x, now.y);
           vehicle.setRotation(now.heading);
+          if (drive.active) {
+            drive.setVehicle(now);
+            drive.tick(deltaMs);
+            drive.render();
+          }
           if (raceSvc) {
             const cp = raceSvc.expectedCheckpoint();
             if (cp && Math.hypot(now.x - cp.x, now.y - cp.y) <= cp.radius) raceSvc.checkpointEntered(cp.id);
@@ -136,8 +151,12 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
 
         weapon.update(deltaMs, nowMs);
         if (context.input.justPressed('PRIMARY_ACTION')) {
-          const heading = vehicleSvc ? vehicleSvc.state().heading : vehicle.rotation;
-          weapon.fire(nowMs, Math.cos(heading), Math.sin(heading), { x: vehicle.x, y: vehicle.y });
+          if (drive.active && drive.snapshot().mode === 'craft') {
+            drive.switchCraft();
+          } else {
+            const heading = vehicleSvc ? vehicleSvc.state().heading : vehicle.rotation;
+            weapon.fire(nowMs, Math.cos(heading), Math.sin(heading), { x: vehicle.x, y: vehicle.y });
+          }
         }
       },
 

@@ -1118,3 +1118,43 @@ describe('generated pointer games consume the spatial interaction capability', (
     }
   });
 });
+
+describe('generated endless-driving and boat-flight consume vehicle presentation', () => {
+  it('the generated vehicle shell binds bindStarterVehicle', () => {
+    const road = PRESETS.find((candidate) => candidate.id === 'endless-driving')!;
+    const shell = buildGameFiles('vehicle-probe', road).get('src/game-specific/shellPack.ts')!;
+    expect(shell).toContain('bindStarterVehicle(context, { mode: VEHICLE_STARTER })');
+    expect(shell).toContain('drive.setVehicle(');
+    expect(shell).toContain('drive.switchCraft(');
+    expect(shell).toContain("from './packConfig.ts'");
+  });
+
+  it('endless-driving and boat-flight-racer stamp different VEHICLE_STARTER values; kart stays null', () => {
+    const road = PRESETS.find((candidate) => candidate.id === 'endless-driving')!;
+    const craft = PRESETS.find((candidate) => candidate.id === 'boat-flight-racer')!;
+    const kart = PRESETS.find((candidate) => candidate.id === 'kart-racer')!;
+    const roadFiles = buildGameFiles('vehicle-probe', road);
+    const craftFiles = buildGameFiles('vehicle-probe', craft);
+    const kartFiles = buildGameFiles('vehicle-probe', kart);
+    const roadJson = JSON.parse(roadFiles.get('content/game.json')!) as { systemPacks: Array<{ packId: string }> };
+    const craftJson = JSON.parse(craftFiles.get('content/game.json')!) as { systemPacks: Array<{ packId: string }> };
+    expect(roadJson.systemPacks.map((s) => s.packId)).toContain('sw2d.vehicles');
+    expect(roadJson.systemPacks.map((s) => s.packId)).toContain('sw2d.arcade');
+    expect(craftJson.systemPacks.map((s) => s.packId)).toContain('sw2d.vehicles');
+    expect(roadFiles.get('src/game-specific/packConfig.ts')).toContain(
+      "VEHICLE_STARTER: 'road' | 'craft' | null = 'road'",
+    );
+    expect(craftFiles.get('src/game-specific/packConfig.ts')).toContain(
+      "VEHICLE_STARTER: 'road' | 'craft' | null = 'craft'",
+    );
+    expect(kartFiles.get('src/game-specific/packConfig.ts')).toContain(
+      "VEHICLE_STARTER: 'road' | 'craft' | null = null",
+    );
+    const roadTheme = JSON.parse(roadFiles.get('content/themes/default/theme.json')!) as { ui: { playHint: string } };
+    const craftTheme = JSON.parse(craftFiles.get('content/themes/default/theme.json')!) as { ui: { playHint: string } };
+    expect(roadTheme.ui.playHint).toContain('BANK DISTANCE');
+    expect(craftTheme.ui.playHint).toContain('J SWITCHES TO FLIGHT');
+    const vehicles = JSON.parse(craftFiles.get('content/vehicles.json')!) as { vehicles: Array<{ id: string }> };
+    expect(vehicles.vehicles.map((v) => v.id)).toEqual(['starter-boat', 'starter-flight']);
+  });
+});

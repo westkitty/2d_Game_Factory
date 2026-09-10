@@ -113,5 +113,7 @@ describe('generateUiCopy (generated games announce their genre honestly)', () =>
     expect(copyFor('base-defense').playHint).toBe('MOVE WASD/ARROWS  -  STRIKE J/X  -  DEFEND THE BASE');
     expect(copyFor('auto-runner').playHint).toBe('JUMP  -  AUTO RUN  -  REACH THE FLAG');
     expect(copyFor('endless-runner').playHint).toBe('JUMP  -  AUTO RUN  -  SURVIVE');
+    expect(copyFor('endless-driving').playHint).toBe('STEER / THROTTLE WASD/ARROWS  -  HOLD UP TO BANK DISTANCE');
+    expect(copyFor('boat-flight-racer').playHint).toBe('STEER / THROTTLE WASD/ARROWS  -  J SWITCHES TO FLIGHT');
   });
 });
