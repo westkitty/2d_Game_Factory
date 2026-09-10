@@ -160,11 +160,11 @@ recipe's *first* stated limitation; see `knownLimitations` in
 |---|---|
 | `traditional-platformer` | (none stated) |
 | `chase-platformer` | A reusable chase/pursuit-pressure system does not exist yet; it must be authored as game-specific code, the same pattern starter/src/game-specific/ demonstrates. |
-| `endless-runner` | (none stated) |
+| `endless-runner` | Auto-run and the starter gap for the generated starter are game-specific presentation; a reusable climbing or chase-pressure system is not. |
 | `precision-platformer` | (none stated) |
 | `metroidvania` | (none stated) |
 | `puzzle-platformer` | (none stated) |
-| `auto-runner` | (none stated) |
+| `auto-runner` | Auto-run and the starter gap for the generated starter are game-specific presentation; a reusable climbing or chase-pressure system is not. |
 | `climbing-game` | Wall-slide, wall-jump and ledge-grab movement mechanics are not yet implemented as reusable capabilities (MASTER_PROJECT.md section 9.2); vertical movement must be authored as game-specific code, the same pattern starter/src/game-specific/ demonstrates. |
 | `grappling-platformer` | (none stated) |
 | `collectathon-platformer` | (none stated) |

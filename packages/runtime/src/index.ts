@@ -117,6 +117,12 @@ export {
   type StarterCombatSnapshot,
   type CombatStarterMode,
 } from './game-support/starterCombat.ts';
+export {
+  bindStarterRun,
+  type StarterRunBinding,
+  type StarterRunSnapshot,
+  type RunStarterMode,
+} from './game-support/starterRun.ts';
 
 export { LocalStorageDriver, MemoryStorageDriver } from './persistence/LocalStorageDriver.ts';
 export { SaveStoreImpl } from './persistence/SaveStoreImpl.ts';

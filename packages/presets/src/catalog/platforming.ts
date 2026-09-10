@@ -56,7 +56,10 @@ export const PLATFORMING_PRESETS: readonly PresetDefinition[] = [
     validationProfile: VALIDATION_PROFILES.platform,
     // Phase 7 (ADR-0024): the level is a deterministic seeded segment chain from
     // content/generation.json, driven by the reusable sw2d.generation capability.
-    knownLimitations: [],
+    // Category-C Wave 22: generated starter auto-runs an authored gap strip.
+    knownLimitations: [
+      'Auto-run and the starter gap for the generated starter are game-specific presentation; a reusable climbing or chase-pressure system is not.',
+    ],
   }),
 
   definePreset({
@@ -111,7 +114,10 @@ export const PLATFORMING_PRESETS: readonly PresetDefinition[] = [
     requiredContentRoles: ['tuning', 'levels', 'generation'],
     validationProfile: VALIDATION_PROFILES.platform,
     // Phase 7 (ADR-0024): deterministic seeded segment chain via sw2d.generation.
-    knownLimitations: [],
+    // Category-C Wave 22: generated starter auto-runs an authored gap strip.
+    knownLimitations: [
+      'Auto-run and the starter gap for the generated starter are game-specific presentation; a reusable climbing or chase-pressure system is not.',
+    ],
   }),
 
   definePreset({

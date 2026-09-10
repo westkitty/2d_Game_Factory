@@ -181,6 +181,8 @@ describe('required knownLimitations (MASTER_PROJECT.md section 12)', () => {
     { id: 'asteroids-shooter', pattern: /sw2d\.weapons/ },
     { id: 'gallery-shooter', pattern: /sw2d\.weapons/ },
     { id: 'rail-shooter', pattern: /this starter's shell does not wire it yet/ },
+    { id: 'auto-runner', pattern: /climbing or chase-pressure/ },
+    { id: 'endless-runner', pattern: /climbing or chase-pressure/ },
   ];
 
   cases.forEach(({ id, pattern }, index) => {

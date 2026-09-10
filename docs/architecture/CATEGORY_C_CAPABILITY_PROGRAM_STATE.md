@@ -44,6 +44,7 @@ Highest-leverage clusters, from `packages/presets/src/shared.ts` LIMITATIONS + p
 | 19 | Consume existing `sw2d.navigation` pathfinding | maze-game, lane-defense | **Wave 19 implemented** (existing `sw2d.navigation`; ADR-0046). Residual: fog-of-war; maze generation; spawn scheduling; combat; tower target-selection. Overlay maze/lane stay local. |
 | 20 | Consume existing ADR-0018 in photo + sandbox | photography-game, sandbox-playground | **Wave 20 implemented** (existing spatial pointer / click; ADR-0047). Residual: camera/framing/scoring; generalized authoring. Overlay photography/sandbox stay local (P3-H). |
 | 21 | Consume existing `sw2d.combat` health/damage | dungeon-crawler, base-defense | **Wave 21 implemented** (existing `sw2d.combat`; ADR-0048). Residual: generated Enemy objects / AI; target-priority. Overlay dungeon/base stay local. |
+| 22 | Consume auto-run presentation in platform shells | auto-runner, endless-runner | **Wave 22 implemented** (no new pack; ADR-0049). Residual: climbing / chase-pressure; generated segment solids unused by the starter strip. Overlay runner kits stay local. |
 | — | Tier 4 specialized (parser IF, microgame scheduler) | prefer game-specific seam until a second consumer is real | backlog |
 
 Do not extend `sw2d.simulation` / `sw2d.narrative` / `sw2d.ai` into genre monoliths. New narrow packs compose with them.
@@ -1740,4 +1741,102 @@ via debug snapshots, not screenshots.
   rail camera, dummy OPTIONS (pinball/microgame), overlay wiring, committed
   proofs, simple-rts leftover (realtime box-select, not turns), tower
   target-selection, attack-range, autonomous combat, museum exhibit/codex,
+  camera/framing, generalized authoring. Next wave: **done** — Wave 22 auto-run
+  (see below).
+
+## Wave 22 — consume auto-run in course and endless shells
+
+### Problem
+
+`auto-runner` and `endless-runner` already required `sw2d.generation` and
+`sw2d.arcade`. The generated platform shell still let the player walk, so a
+factory endless-runner was not auto-running. Wave 8 already rejected pairing
+these two via `sw2d.stage-scroll`. Inventing a climbing or chase pack would
+duplicate 1-consumer leftovers.
+
+### Consumers
+
+- `auto-runner` — `RUN_STARTER = 'course'` (constant +X, Space jumps the gap,
+  complete occupying FLAG at x 820 on the ground).
+- `endless-runner` — `RUN_STARTER = 'endless'` (same auto-run and gap;
+  `arcade.addScore` from distance; complete at score 80).
+
+Materially different: reach-the-flag course vs survive-and-score endless.
+
+Climbing-game, chase-platformer and collectathon keep `RUN_STARTER = null`.
+Overlay runner kits stay local.
+
+### ValidationPlan
+
+1. No new pack / schema / capability id.
+2. Generated packConfig stamps `RUN_STARTER` course vs endless vs null.
+3. Generated platform shell binds course/endless, hides generated ground,
+   auto-runs, and jumps on Space.
+4. Honesty / docsSync / uiCopy stay green. ADR-0049.
+5. Real-browser play of factory-generated games. Overlay kits not re-run.
+   Committed proofs + maturity promotion still deferred.
+
+### CompletionContract
+
+- [x] No new pack / schema / capability id.
+- [x] Auto-run is game-specific presentation on the platform shell.
+- [x] ≥2 materially different generated consumers (2 wired).
+- [x] Focused generate/honesty/uiCopy tests.
+- [x] Honest residual limitation (climbing / chase-pressure; starter strip
+  vs generated solids).
+- [x] ADR-0049.
+- [x] Real-browser play of factory-generated `wave22-auto-runner` /
+  `wave22-endless-runner` (`tools/scripts/play-run-wave22.ts`, 2/2 PASS,
+  0 console errors, 0 external requests).
+- [x] `npm run sw2d -- validate` on auto-runner (schema + tsc + vite
+  build + boot smoke) PASS (CDP hang after printed success, timeout 90 → 124).
+  Both games tsc PASS; play already proved the loop.
+- [ ] Overlay re-run. **Not this wave.**
+- [ ] Committed proofs + maturity promotion. **Not done — evidence rule.**
+
+### Implementation notes
+
+- No new pack. Do not invent a runner, climbing, or chase engine.
+- `bindStarterRun` is INERT unless packConfig names `'course'` or `'endless'`.
+  Endless also requires `arcade.score`.
+- Authored strip: left floor 0–280, gap 280–360, right 360–960, start
+  (100,458), FLAG x 820, fail y>510. Generated NormalizedLevel solids stay
+  unused by the starter strip.
+- Auto +X 260 px/s. Space jumps. Course complete x≥820 onGround. Endless
+  scores 1 per 8 px and completes at 80.
+- Overlay runner kits stay local.
+
+### Browser journeys (executed)
+
+Factory-generated:
+
+- Auto-runner: Space start x≈156 mode=`course` jumps 0 → wait x≈208, Space
+  `jump` 1 → x=828 onGround `finished` outcome=complete.
+- Endless-runner: Space start x≈152 mode=`endless` score 6 → wait x≈204,
+  Space `jump` 1 → x=746 score 80 `survived` outcome=complete.
+
+### Visual inspection
+
+Course: two floor pads plus FLAG, HUD `x n · jumps n`, title `FINISHED` on
+complete. Endless: same pads, HUD `score n/80`, title `SURVIVED` on complete.
+Dummy walk hidden when the binder is active. Confirmed via debug snapshots,
+not screenshots.
+
+### Bugs found and fixed this wave
+
+- First play assertion required spawn x=100 after the 12-frame start warm-in.
+  Auto-run already advances (~156). Assertions now allow x in (90, 220).
+- Jump-clearance at 220 px/s was ~2 px short of the right pad. Auto +X is 260.
+
+### Remaining blockers / unknowns
+
+- Catalog maturity stays unchanged (23/3/48). `endless-runner` remains
+  proof-validated on the frozen proof.
+- Chrome wrapper is session-local under `/tmp`.
+- Do not commit `package-lock.json` workspace links for gitignored `games/wave*`.
+- Residual Category-C: climbing, chase, territory capture, pinball, crop/season,
+  rail camera, dummy OPTIONS (pinball/microgame), overlay wiring, committed
+  proofs, simple-rts leftover (realtime box-select, not turns), tower
+  target-selection, attack-range, autonomous combat, museum exhibit/codex,
   camera/framing, generalized authoring.
+

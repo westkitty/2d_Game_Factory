@@ -3,6 +3,7 @@ import type { AdvancedPhysicsService, InstalledSystemPack, PuzzleRulesService, W
 import { PUZZLE_RULES_CAPABILITY_ID, WORLD_GRAPH_CAPABILITY_ID } from '@sw2d/contracts';
 import {
   bindCollectiblePickups,
+  bindStarterRun,
   bindStarterWeapon,
   createAdvancedPhysics,
   createRoomTransitionRuntime,
@@ -12,6 +13,7 @@ import {
   type SceneContext,
   type ScenePackDefinition,
 } from '@sw2d/runtime';
+import { RUN_STARTER } from './packConfig.ts';
 
 /**
  * Generated starter shell: platform controller family.
@@ -87,7 +89,17 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     player.setCollideWorldBounds(true);
     player.body.setAllowGravity(true);
     player.setGravityY(tuning.gravity);
-    scene.physics.add.collider(player, ground);
+    const groundCollider = scene.physics.add.collider(player, ground);
+    // Auto-run (Category-C Wave 22). Inert unless packConfig names a
+    // course/endless starter. Then an authored gap strip replaces dummy
+    // walk-and-jump on generated solids.
+    const run = bindStarterRun(context, { mode: RUN_STARTER });
+    if (run.active) {
+      ground.setVisible(false);
+      groundCollider.destroy();
+      player.setPosition(run.startX(), run.startY());
+      run.attach(player);
+    }
 
     // Data-driven item pickups (capability program Phase 2). Inert unless the
     // game installs sw2d.items; then every Collectible whose itemId names a
@@ -148,6 +160,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       pickupsRemaining: pickups.remaining(),
       weapon: weapon.snapshot(),
       ...(puzzle ? { puzzle: puzzle.snapshot(), solved: puzzle.isSolved() } : {}),
+      ...(run.active ? { run: run.snapshot() } : {}),
       ...(generationManifest ? { generation: generationManifest } : {}),
       ...(worldGraph
         ? { worldGraph: { current: worldGraph.currentNode().id, ...worldGraph.mapState(), mapOpen: worldMap?.isOpen ?? false, transitions: rooms?.transitions ?? 0 } }
@@ -164,10 +177,18 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         if (disposed) return;
         nowMs += deltaMs;
         const intent = platformController.read(context.input);
-        player.setVelocityX(intent.moveAxis * tuning.moveSpeed);
-        if (intent.moveAxis !== 0) {
-          player.setFlipX(intent.moveAxis < 0);
-          facing = intent.moveAxis < 0 ? -1 : 1;
+        if (run.active && run.snapshot().outcome !== 'playing') {
+          player.setVelocity(0, 0);
+        } else if (run.active) {
+          player.setVelocityX(260);
+          player.setFlipX(false);
+          facing = 1;
+        } else {
+          player.setVelocityX(intent.moveAxis * tuning.moveSpeed);
+          if (intent.moveAxis !== 0) {
+            player.setFlipX(intent.moveAxis < 0);
+            facing = intent.moveAxis < 0 ? -1 : 1;
+          }
         }
         weapon.update(deltaMs, nowMs);
         if (intent.primaryPressed) weapon.fire(nowMs, facing, 0, { x: player.x, y: player.y });
@@ -179,7 +200,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
           }
           if (context.input.consumePress('CANCEL')) puzzle.undo();
         }
-        if (worldGraph && rooms) {
+        if (worldGraph && rooms && !run.active) {
           rooms.tick();
           if (!puzzle && context.input.consumePress('SECONDARY_ACTION')) worldMap?.toggle();
           if (!rooms.transitioning && !(worldMap?.isOpen ?? false) && player.x > context.definition.viewport.width - 48) {
@@ -187,9 +208,16 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
             if (conn) rooms.requestTransition(conn.id);
           }
         }
-        if (intent.jumpPressed && player.body.blocked.down) {
+        if (intent.jumpPressed && player.body.blocked.down && (!run.active || run.snapshot().outcome === 'playing')) {
           player.setVelocityY(-tuning.jumpVelocity);
           context.audio.playCue('ui.confirm');
+          if (run.active) run.jumped();
+        }
+        if (run.active) {
+          run.setPlayer(player.x, player.y, player.body.blocked.down);
+          run.tick(deltaMs);
+          run.render();
+          if (run.snapshot().outcome !== 'playing') player.setVelocity(0, 0);
         }
       },
 
@@ -199,6 +227,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         debugHandle.dispose();
         pickups.dispose();
         weapon.dispose();
+        run.dispose();
         rooms?.dispose();
         worldMap?.dispose();
         advPhysics?.dispose();

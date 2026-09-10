@@ -972,7 +972,14 @@ export function generateUiCopy(options: {
   let playHint = 'MOVE  -  PAUSE TO STOP';
   switch (primaryControllerFamily) {
     case 'platform':
-      playHint = has('sw2d.weapons') ? 'MOVE / JUMP  -  FIRE J/X  -  PAUSE TO STOP' : 'MOVE / JUMP  -  PAUSE TO STOP';
+      playHint =
+        presetId === 'auto-runner'
+          ? 'JUMP  -  AUTO RUN  -  REACH THE FLAG'
+          : presetId === 'endless-runner'
+            ? 'JUMP  -  AUTO RUN  -  SURVIVE'
+            : has('sw2d.weapons')
+              ? 'MOVE / JUMP  -  FIRE J/X  -  PAUSE TO STOP'
+              : 'MOVE / JUMP  -  PAUSE TO STOP';
       break;
     case 'top-down':
       playHint = has('sw2d.local-play') && has('sw2d.ball-paddle')

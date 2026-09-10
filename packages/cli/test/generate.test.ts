@@ -1033,6 +1033,39 @@ describe('generated dungeon and base-defense consume sw2d.combat', () => {
   });
 });
 
+describe('generated auto-runner and endless-runner consume auto-run presentation', () => {
+  it('the generated platform shell binds bindStarterRun', () => {
+    const auto = PRESETS.find((candidate) => candidate.id === 'auto-runner')!;
+    const shell = buildGameFiles('run-probe', auto).get('src/game-specific/shellPack.ts')!;
+    expect(shell).toContain('bindStarterRun(context, { mode: RUN_STARTER })');
+    expect(shell).toContain('run.setPlayer(');
+    expect(shell).toContain('run.attach(');
+    expect(shell).toContain("from './packConfig.ts'");
+  });
+
+  it('auto-runner and endless-runner stamp different RUN_STARTER values; climbing stays null', () => {
+    const auto = PRESETS.find((candidate) => candidate.id === 'auto-runner')!;
+    const endless = PRESETS.find((candidate) => candidate.id === 'endless-runner')!;
+    const climbing = PRESETS.find((candidate) => candidate.id === 'climbing-game')!;
+    const autoFiles = buildGameFiles('run-probe', auto);
+    const endlessFiles = buildGameFiles('run-probe', endless);
+    const climbingFiles = buildGameFiles('run-probe', climbing);
+    expect(autoFiles.get('src/game-specific/packConfig.ts')).toContain(
+      "RUN_STARTER: 'course' | 'endless' | null = 'course'",
+    );
+    expect(endlessFiles.get('src/game-specific/packConfig.ts')).toContain(
+      "RUN_STARTER: 'course' | 'endless' | null = 'endless'",
+    );
+    expect(climbingFiles.get('src/game-specific/packConfig.ts')).toContain(
+      "RUN_STARTER: 'course' | 'endless' | null = null",
+    );
+    const autoTheme = JSON.parse(autoFiles.get('content/themes/default/theme.json')!) as { ui: { playHint: string } };
+    const endlessTheme = JSON.parse(endlessFiles.get('content/themes/default/theme.json')!) as { ui: { playHint: string } };
+    expect(autoTheme.ui.playHint).toContain('REACH THE FLAG');
+    expect(endlessTheme.ui.playHint).toContain('SURVIVE');
+  });
+});
+
 describe('generated pointer puzzles consume sw2d.puzzle', () => {
   it('the generated pointer shell presents physics-goal and escape-locks on puzzle.state', () => {
     const physics = PRESETS.find((candidate) => candidate.id === 'physics-puzzle')!;

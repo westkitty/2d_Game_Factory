@@ -111,5 +111,7 @@ describe('generateUiCopy (generated games announce their genre honestly)', () =>
     expect(copyFor('survivor-like').playHint).toContain('SURVIVE THE WAVES');
     expect(copyFor('dungeon-crawler').playHint).toBe('MOVE WASD/ARROWS  -  STRIKE J/X');
     expect(copyFor('base-defense').playHint).toBe('MOVE WASD/ARROWS  -  STRIKE J/X  -  DEFEND THE BASE');
+    expect(copyFor('auto-runner').playHint).toBe('JUMP  -  AUTO RUN  -  REACH THE FLAG');
+    expect(copyFor('endless-runner').playHint).toBe('JUMP  -  AUTO RUN  -  SURVIVE');
   });
 });

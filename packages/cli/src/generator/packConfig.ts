@@ -43,7 +43,9 @@ import type { PresetDefinition } from '@sw2d/contracts';
  * a camera/framing pack or a generalized authoring sandbox. Wave 21 stamps
  * `COMBAT_STARTER` (`room` / `hold` / null) so the top-down shell can present
  * two different `sw2d.combat` loops without inventing targeting, AI or
- * encounter packs.
+ * encounter packs. Wave 22 stamps `RUN_STARTER` (`course` / `endless` / null)
+ * so the platform shell can present two different auto-run loops without
+ * inventing a climbing, chase, or scrolling-stage pack.
  *
  * Deliberately NOT a universal puzzle DSL.
  */
@@ -155,6 +157,8 @@ export function generatePackConfig(preset: PresetDefinition): string {
     preset.id === 'photography-game' ? "'photo'" : preset.id === 'sandbox-playground' ? "'sandbox'" : 'null';
   const combatStarter =
     preset.id === 'dungeon-crawler' ? "'room'" : preset.id === 'base-defense' ? "'hold'" : 'null';
+  const runStarter =
+    preset.id === 'auto-runner' ? "'course'" : preset.id === 'endless-runner' ? "'endless'" : 'null';
   return [
     '/**',
     " * Config for packs that declare `configSource: 'code'` in their definition -",
@@ -195,6 +199,9 @@ export function generatePackConfig(preset: PresetDefinition): string {
     '',
     '/** Category-C Wave 21: room vs hold presentation of sw2d.combat. Null otherwise. */',
     `export const COMBAT_STARTER: 'room' | 'hold' | null = ${combatStarter};`,
+    '',
+    '/** Category-C Wave 22: course vs endless presentation of auto-run. Null otherwise. */',
+    `export const RUN_STARTER: 'course' | 'endless' | null = ${runStarter};`,
     '',
   ]
     .filter((line, index, all) => !(line === '' && all[index - 1] === ''))
