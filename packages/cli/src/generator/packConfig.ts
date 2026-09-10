@@ -30,7 +30,9 @@ import type { PresetDefinition } from '@sw2d/contracts';
  * score/elapsed — not a casting/tension or recipe pack. Wave 16 stamps
  * `POINTER_STARTER` (`draw` / `wardrobe` / null) so the pointer shell can
  * present two ADR-0018 loops without inventing a drawing-canvas or wardrobe
- * pack.
+ * pack. Wave 17 stamps `PROGRESSION_STARTER` (`survive` / `run` / null) for
+ * `sw2d.progression` XP/currency/unlocks — not difficulty scaling or
+ * permadeath.
  *
  * Deliberately NOT a universal puzzle DSL.
  */
@@ -133,6 +135,8 @@ export function generatePackConfig(preset: PresetDefinition): string {
     preset.id === 'fishing-game' ? "'fishing'" : preset.id === 'cooking-game' ? "'cooking'" : 'null';
   const pointerStarter =
     preset.id === 'drawing-game' ? "'draw'" : preset.id === 'dress-up-character-toy' ? "'wardrobe'" : 'null';
+  const progressionStarter =
+    preset.id === 'survivor-like' ? "'survive'" : preset.id === 'action-roguelite' ? "'run'" : 'null';
   return [
     '/**',
     " * Config for packs that declare `configSource: 'code'` in their definition -",
@@ -158,6 +162,9 @@ export function generatePackConfig(preset: PresetDefinition): string {
     '',
     '/** Category-C Wave 16: draw vs wardrobe presentation of ADR-0018 interaction. Null otherwise. */',
     `export const POINTER_STARTER: 'draw' | 'wardrobe' | null = ${pointerStarter};`,
+    '',
+    '/** Category-C Wave 17: survive vs run presentation of sw2d.progression. Null otherwise. */',
+    `export const PROGRESSION_STARTER: 'survive' | 'run' | null = ${progressionStarter};`,
     '',
   ]
     .filter((line, index, all) => !(line === '' && all[index - 1] === ''))

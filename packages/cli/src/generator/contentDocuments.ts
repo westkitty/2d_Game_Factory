@@ -991,7 +991,9 @@ export function generateUiCopy(options: {
                 ? 'MOVE WASD/ARROWS  -  AIM WITH MOUSE  -  FIRE J/X'
                 : presetId === 'investigation-game'
                   ? 'MOVE WASD/ARROWS  -  J INSPECTS CLUES'
-                  : 'MOVE WASD/ARROWS  -  PAUSE TO STOP';
+                  : presetId === 'action-roguelite'
+                    ? 'MOVE WASD/ARROWS  -  J TAKES RELICS'
+                    : 'MOVE WASD/ARROWS  -  PAUSE TO STOP';
       break;
     case 'vehicle':
       playHint = has('sw2d.racing')

@@ -172,6 +172,8 @@ describe('required knownLimitations (MASTER_PROJECT.md section 12)', () => {
     { id: 'dress-up-character-toy', pattern: /Wardrobe slots for the generated starter use interaction drag\/drop/ },
     { id: 'sandbox-playground', pattern: /No generalized authoring\/editing sandbox/ },
     { id: 'drawing-game', pattern: /Stroke polylines for the generated starter are captured through the spatial pointer/ },
+    { id: 'survivor-like', pattern: /sw2d\.progression/ },
+    { id: 'action-roguelite', pattern: /sw2d\.progression/ },
     { id: 'fishing-game', pattern: /casting\/line\/tension\/fish behavior system/ },
     { id: 'cooking-game', pattern: /ingredient\/recipe\/action-sequence cooking system/ },
     { id: 'photography-game', pattern: /No reusable camera\/framing\/scoring\/photo-capture gameplay system/ },

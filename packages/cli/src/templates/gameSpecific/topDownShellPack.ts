@@ -10,6 +10,7 @@ import {
   bindStarterStageScroll,
   bindStarterPerception,
   bindStarterNarrative,
+  bindStarterProgression,
   bindStarterWeapon,
   createRoomTransitionRuntime,
   createWorldMapOverlay,
@@ -18,7 +19,7 @@ import {
   type SceneContext,
   type ScenePackDefinition,
 } from '@sw2d/runtime';
-import { NARRATIVE_STARTER } from './packConfig.ts';
+import { NARRATIVE_STARTER, PROGRESSION_STARTER } from './packConfig.ts';
 
 /**
  * Generated starter shell: top-down controller family.
@@ -110,6 +111,16 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       walls.setVisible(false);
       wallCollider.destroy();
     }
+    // Progression (Category-C Wave 17). Inert unless packConfig names a
+    // survive/run starter and sw2d.progression is installed. Survive ticks
+    // in-run XP while the encounter loop fights; run walks to relics.
+    const meta = bindStarterProgression(context, { mode: PROGRESSION_STARTER });
+    const runMeta = meta.active && meta.snapshot().mode === 'run';
+    if (runMeta) {
+      player.setPosition(meta.startX(), meta.startY());
+      walls.setVisible(false);
+      wallCollider.destroy();
+    }
     // Ball / paddle (Category-C Wave 5). Inert unless sw2d.ball-paddle is
     // installed with a non-empty catalog. Then the table owns motion and
     // the dummy wander is hidden.
@@ -175,6 +186,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       ...(battle.active ? { battle: battle.snapshot() } : {}),
       ...(perception.active ? { perception: perception.snapshot() } : {}),
       ...(story.active ? { narrative: story.snapshot() } : {}),
+      ...(meta.active ? { progression: meta.snapshot() } : {}),
       ...(table.active ? { ballPaddle: table.snapshot() } : {}),
       ...(melee.active ? { melee: melee.snapshot() } : {}),
       ...(seats.active ? { localPlay: seats.snapshot() } : {}),
@@ -265,8 +277,14 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
           if (intent.primaryPressed) story.act();
           story.render();
         }
+        if (meta.active) {
+          meta.setPlayer(player.x, player.y);
+          if (intent.primaryPressed && runMeta) meta.act();
+          meta.tick(deltaMs);
+          meta.render();
+        }
         const firing = intent.primaryPressed || (battle.active && context.input.isDown('PRIMARY_ACTION'));
-        if (firing && !perception.active && !story.active) {
+        if (firing && !perception.active && !story.active && !runMeta) {
           (weapon ?? battle).fire(nowMs, facingX, facingY, { x: player.x, y: player.y });
         }
         if (worldGraph && rooms) {
@@ -288,6 +306,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         weapon?.dispose();
         perception.dispose();
         story.dispose();
+        meta.dispose();
         table.dispose();
         melee.dispose();
         seats.dispose();

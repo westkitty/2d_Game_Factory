@@ -87,6 +87,12 @@ export {
   type StarterPointerSnapshot,
   type PointerStarterMode,
 } from './game-support/starterPointer.ts';
+export {
+  bindStarterProgression,
+  type StarterProgressionBinding,
+  type StarterProgressionSnapshot,
+  type ProgressionStarterMode,
+} from './game-support/starterProgression.ts';
 
 export { LocalStorageDriver, MemoryStorageDriver } from './persistence/LocalStorageDriver.ts';
 export { SaveStoreImpl } from './persistence/SaveStoreImpl.ts';

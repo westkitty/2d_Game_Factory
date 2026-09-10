@@ -71,10 +71,12 @@ export const TOP_DOWN_ACTION_PRESETS: readonly PresetDefinition[] = [
     optionalSystemPacks: [pack(PACK_IDS.arcade), pack(PACK_IDS.world)],
     requiredContentRoles: ['tuning'],
     validationProfile: VALIDATION_PROFILES.topDown,
-    // The generated shell now loops content/encounters.json as survival waves
-    // (bindStarterEncounters, Arena finish Wave 2); what is still missing is
-    // escalation between loops.
-    knownLimitations: ['Endless difficulty scaling / meta-progression between runs is not a reusable system; the starter survival loop repeats the authored encounter without escalating it.'],
+    // The generated shell loops content/encounters.json as survival waves
+    // (bindStarterEncounters) and now banks in-run XP on sw2d.progression
+    // (Category-C Wave 17). What is still missing is escalation between loops.
+    knownLimitations: [
+      'In-run XP and unlock flags for the generated starter use sw2d.progression; endless difficulty scaling / meta-progression between runs is not a reusable system; the starter survival loop repeats the authored encounter without escalating it.',
+    ],
   }),
 
   definePreset({
@@ -104,8 +106,10 @@ export const TOP_DOWN_ACTION_PRESETS: readonly PresetDefinition[] = [
     requiredContentRoles: ['tuning', 'levels', 'generation'],
     validationProfile: VALIDATION_PROFILES.topDown,
     // Phase 7 (ADR-0024): deterministic seeded room graph via sw2d.generation.
+    // Category-C Wave 17 banks in-run relics on sw2d.progression; permadeath
+    // and between-run loadouts stay leftover.
     knownLimitations: [
-      'Run-based meta-progression/permadeath state is not yet a reusable capability beyond sw2d.progression.',
+      'In-run currency, XP, items and unlock flags for the generated starter use sw2d.progression; run-based permadeath and between-run loadouts are not a reusable capability.',
     ],
   }),
 

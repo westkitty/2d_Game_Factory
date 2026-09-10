@@ -47,3 +47,4 @@ One short record per decision that constrains later work. No ADR for trivia.
 | [0041](0041-consume-narrative-store-in-if-and-investigation-shells.md) | Consume the narrative store in IF and investigation shells | Category-C Wave 14 |
 | [0042](0042-consume-arcade-score-in-fishing-and-cooking-shells.md) | Consume arcade score in fishing and cooking shells | Category-C Wave 15 |
 | [0043](0043-consume-spatial-pointer-in-drawing-and-wardrobe-shells.md) | Consume spatial pointer drag/drop in drawing and wardrobe shells | Category-C Wave 16 |
+| [0044](0044-consume-progression-in-survivor-and-roguelite-shells.md) | Consume progression XP/currency in survivor and roguelite shells | Category-C Wave 17 |

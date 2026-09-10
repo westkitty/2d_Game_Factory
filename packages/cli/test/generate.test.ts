@@ -805,6 +805,49 @@ describe('generated pointer drawing and dress-up consume ADR-0018 interaction', 
   });
 });
 
+describe('generated top-down survivor and roguelite consume sw2d.progression', () => {
+  it('the generated top-down shell binds bindStarterProgression', () => {
+    const survivor = PRESETS.find((candidate) => candidate.id === 'survivor-like')!;
+    const shell = buildGameFiles('progression-probe', survivor).get('src/game-specific/shellPack.ts')!;
+    expect(shell).toContain('bindStarterProgression(context, { mode: PROGRESSION_STARTER })');
+    expect(shell).toContain('meta.tick(');
+    expect(shell).toContain('meta.act()');
+    expect(shell).toContain("from './packConfig.ts'");
+    expect(buildGameFiles('progression-probe', survivor).get('src/main.ts')).toContain('progressionPack');
+  });
+
+  it('survivor-like and action-roguelite stamp different PROGRESSION_STARTER values; others stay null', () => {
+    const survivor = PRESETS.find((candidate) => candidate.id === 'survivor-like')!;
+    const roguelite = PRESETS.find((candidate) => candidate.id === 'action-roguelite')!;
+    const dungeon = PRESETS.find((candidate) => candidate.id === 'dungeon-crawler')!;
+    const twin = PRESETS.find((candidate) => candidate.id === 'twin-stick-shooter')!;
+    const survivorFiles = buildGameFiles('progression-probe', survivor);
+    const runFiles = buildGameFiles('progression-probe', roguelite);
+    const dungeonFiles = buildGameFiles('progression-probe', dungeon);
+    const twinFiles = buildGameFiles('progression-probe', twin);
+    const survivorJson = JSON.parse(survivorFiles.get('content/game.json')!) as { systemPacks: Array<{ packId: string }> };
+    const runJson = JSON.parse(runFiles.get('content/game.json')!) as { systemPacks: Array<{ packId: string }> };
+    expect(survivorJson.systemPacks.map((s) => s.packId)).toContain('sw2d.progression');
+    expect(runJson.systemPacks.map((s) => s.packId)).toContain('sw2d.progression');
+    expect(survivorFiles.get('src/game-specific/packConfig.ts')).toContain(
+      "PROGRESSION_STARTER: 'survive' | 'run' | null = 'survive'",
+    );
+    expect(runFiles.get('src/game-specific/packConfig.ts')).toContain(
+      "PROGRESSION_STARTER: 'survive' | 'run' | null = 'run'",
+    );
+    expect(dungeonFiles.get('src/game-specific/packConfig.ts')).toContain(
+      "PROGRESSION_STARTER: 'survive' | 'run' | null = null",
+    );
+    expect(twinFiles.get('src/game-specific/packConfig.ts')).toContain(
+      "PROGRESSION_STARTER: 'survive' | 'run' | null = null",
+    );
+    const survivorTheme = JSON.parse(survivorFiles.get('content/themes/default/theme.json')!) as { ui: { playHint: string } };
+    const runTheme = JSON.parse(runFiles.get('content/themes/default/theme.json')!) as { ui: { playHint: string } };
+    expect(survivorTheme.ui.playHint).toContain('SURVIVE THE WAVES');
+    expect(runTheme.ui.playHint).toContain('J TAKES RELICS');
+  });
+});
+
 describe('generated pointer puzzles consume sw2d.puzzle', () => {
   it('the generated pointer shell presents physics-goal and escape-locks on puzzle.state', () => {
     const physics = PRESETS.find((candidate) => candidate.id === 'physics-puzzle')!;
