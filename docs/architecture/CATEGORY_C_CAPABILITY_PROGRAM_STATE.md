@@ -37,7 +37,8 @@ Highest-leverage clusters, from `packages/presets/src/shared.ts` LIMITATIONS + p
 | 12 | Consume existing `sw2d.puzzle` code seam | physics-puzzle, escape-room | **Wave 12 implemented and played** (existing `sw2d.puzzle`; ADR-0039). Residual: rules stay TypeScript not content; no escape-room grammar. Overlay physics/escape stay local. |
 | 13 | Consume existing `sw2d.simulation` ledger/jobs | farming-lite, colony-lite | **Wave 13 implemented and played** (existing `sw2d.simulation`; ADR-0040). Residual: crop/season/plot framework and colony assignment AI stay out. Overlay farming/colony stay local (P3-J). |
 | 14 | Consume existing `sw2d.narrative` store | interactive-fiction-hybrid, investigation-game | **Wave 14 implemented** (existing `sw2d.narrative`; ADR-0041). Residual: parser IF and evidence-board linking stay out. Overlay IF/investigation stay local (P3-K). |
-| — | Tier 4 specialized (parser IF, fishing, cooking, photography, wardrobe, drawing, microgame scheduler, sandbox authoring) | prefer game-specific seam until a second consumer is real | backlog |
+| 15 | Consume existing `sw2d.arcade` score/elapsed | fishing-game, cooking-game | **Wave 15 implemented** (existing `sw2d.arcade`; ADR-0042). Residual: casting/line/tension/fish behaviour and ingredient/recipe cooking stay out. Overlay fishing/cooking stay local (P3-H). Pinball/microgame stay dummy OPTIONS. |
+| — | Tier 4 specialized (parser IF, photography, wardrobe, drawing, microgame scheduler, sandbox authoring) | prefer game-specific seam until a second consumer is real | backlog |
 
 Do not extend `sw2d.simulation` / `sw2d.narrative` / `sw2d.ai` into genre monoliths. New narrow packs compose with them.
 
@@ -1149,4 +1150,101 @@ not screenshots.
 - Do not commit `package-lock.json` workspace links for gitignored `games/wave*`.
 - Residual Category-C: climbing, chase, territory, pinball, crop/season, rail
   camera, run-meta vs survivor, remaining dummy OPTIONS (pinball/auto-battler/
-  microgame/fishing/cooking), maze wanderer, committed proofs.
+  microgame), maze wanderer, committed proofs.
+
+## Wave 15 — consume `sw2d.arcade` in fishing and cooking shells
+
+### Problem
+
+`fishing-game` and `cooking-game` already required `sw2d.arcade`. The
+generated ui-simulation shell never bound it, so both recipes entered play as
+dummy OPTIONS. The leftover was consumption, not a missing pack. Inventing a
+fishing or cooking pack would duplicate 1-consumer leftovers. Folding fishing
+into `sw2d.timing` would lie about reaction/beat windows.
+
+### Consumers
+
+- `fishing-game` — `ARCADE_STARTER = 'fishing'` (cast, wait on `elapsedMs`,
+  land in the bite window or miss, `addScore` per catch; complete at 2 fish).
+- `cooking-game` — `ARCADE_STARTER = 'cooking'` (arrows pick FLOUR/EGG/MIX;
+  confirm matching `[0,1,2]`; complete at 3 correct steps with
+  `addScore(100 - 20 * mistakes)`).
+
+Materially different: timed bite window vs ordered recipe.
+
+Pinball-lite, microgame-collection, rhythm and reaction keep
+`ARCADE_STARTER = null`. Overlay fishing / cooking kits stay local (P3-H).
+
+### ValidationPlan
+
+1. No new pack / schema / capability id. Arcade has no `reset()`; binder zeros
+   score via `addScore(-score)` and uses relative `elapsedMs` snapshots.
+2. Generated packConfig stamps `ARCADE_STARTER` fishing vs cooking vs null.
+3. Generated ui-simulation shell binds `bindStarterArcade` and skips the dummy
+   picker when active.
+4. Honesty / docsSync / uiCopy stay green. ADR-0042.
+5. Real-browser play of factory-generated games. Overlay kits not re-run.
+   Committed proofs + maturity promotion still deferred.
+
+### CompletionContract
+
+- [x] No new pack / schema / capability id.
+- [x] Authority remains the existing `arcade.score` ledger.
+- [x] ≥2 materially different generated consumers (2 wired).
+- [x] Focused generate/honesty/uiCopy tests.
+- [x] Honest residual limitation (casting/tension/fish; recipe cooking).
+- [x] ADR-0042.
+- [x] Real-browser play of factory-generated `wave15-fishing-game` /
+  `wave15-cooking-game` (`tools/scripts/play-arcade-wave15.ts`, 2/2 PASS,
+  0 console errors, 0 external requests).
+- [x] `npm run sw2d -- validate` on those two games (schema + tsc + vite
+  build + boot smoke) PASS (CDP hang after printed success, timeout 90 → 124).
+- [ ] Overlay P3-H re-run. **Not done this wave** — overlay stays unwired.
+- [ ] Committed proofs + maturity promotion. **Not done — evidence rule.**
+
+### Implementation notes
+
+- No new pack. `sw2d.arcade` already exists (score / combo / lives / elapsed).
+- `bindStarterArcade` is INERT unless packConfig names `'fishing'` or
+  `'cooking'` *and* `arcade.score` is installed. Pinball / microgame stay dummy
+  OPTIONS. Rhythm / reaction stay on `sw2d.timing`.
+- Fishing CAST 480 ms (playable; overlay is 1200), BITE 700, LAND 200, catch 2,
+  50 points each.
+- Cooking recipe `[0,1,2]`, wrap select, wrong does not advance, dish score
+  `100 - 20 * mistakes`.
+- Overlay fishing / cooking kits stay local (P3-H).
+
+### Browser journeys (executed)
+
+Factory-generated:
+
+- Fishing-game: Space start idle score 0 → Enter `cast` → bite at elapsed 741
+  → wait miss `missed` 1 → Enter recast bite → Enter `landed` caught 1 score 50
+  → idle → Enter bite → Enter `landed` caught 2 score 100 outcome=complete.
+- Cooking-game: Space start FLOUR step 0 → ArrowRight EGG Enter `wrong`
+  mistakes 1 → ArrowLeft Enter FLOUR `added` step 1 → ArrowRight Enter EGG
+  step 2 → ArrowRight Enter MIX `ready` score 80 outcome=complete.
+
+### Visual inspection
+
+Fishing: water rectangle CAST / WAITING / BITE / LANDED, HUD `caught n/2`,
+title `CAUGHT` on complete. Cooking: three ingredient rectangles, HUD
+`step n/3`, title `DISH READY` on complete. Dummy picker hidden when the
+binder is active. Confirmed via debug snapshots, not screenshots.
+
+### Bugs found and fixed this wave
+
+- None during play. Validate without `PLAYWRIGHT_CDP_URL` reports no Chrome
+  (same as prior waves); with CDP, 4× PASS then hang (exit 124).
+
+### Remaining blockers / unknowns
+
+- No committed `proofs/` for fishing-game or cooking-game; catalog maturity
+  stays `recipe` (23/3/48).
+- Overlay fishing/cooking stay local. Casting/tension and recipe cooking stay
+  out of contract.
+- Chrome wrapper is session-local under `/tmp`.
+- Do not commit `package-lock.json` workspace links for gitignored `games/wave*`.
+- Residual Category-C: climbing, chase, territory, pinball, crop/season, rail
+  camera, run-meta vs survivor, remaining dummy OPTIONS (pinball/auto-battler/
+  microgame), maze wanderer, committed proofs.

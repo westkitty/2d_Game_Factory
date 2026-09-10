@@ -116,7 +116,7 @@ export const PARTY_TOY_WEIRD_PRESETS: readonly PresetDefinition[] = [
     optionalSystemPacks: [pack(PACK_IDS.progression)],
     requiredContentRoles: ['tuning'],
     validationProfile: VALIDATION_PROFILES.partyToyWeird,
-    knownLimitations: ['No reusable casting/line/tension/fish behavior system exists.'],
+    knownLimitations: [LIMITATIONS.arcadeScore],
   }),
 
   definePreset({
@@ -128,7 +128,7 @@ export const PARTY_TOY_WEIRD_PRESETS: readonly PresetDefinition[] = [
     optionalSystemPacks: [pack(PACK_IDS.progression), pack(PACK_IDS.simulation)],
     requiredContentRoles: ['tuning', 'recipes'],
     validationProfile: VALIDATION_PROFILES.partyToyWeird,
-    knownLimitations: ['No reusable ingredient/recipe/action-sequence cooking system exists.'],
+    knownLimitations: [LIMITATIONS.arcadeScore],
   }),
 
   definePreset({

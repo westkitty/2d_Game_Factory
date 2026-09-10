@@ -25,7 +25,9 @@ import type { PresetDefinition } from '@sw2d/contracts';
  * `colony` / null) so the shared ui-simulation shell can present two
  * different `sw2d.simulation` loops without extending that pack into a
  * crop/season or colony-AI monolith. Wave 14 stamps `NARRATIVE_STARTER`
- * (`fiction` / `case` / null) the same way for `sw2d.narrative`.
+ * (`fiction` / `case` / null) the same way for `sw2d.narrative`. Wave 15
+ * stamps `ARCADE_STARTER` (`fishing` / `cooking` / null) for `sw2d.arcade`
+ * score/elapsed — not a casting/tension or recipe pack.
  *
  * Deliberately NOT a universal puzzle DSL.
  */
@@ -124,6 +126,8 @@ export function generatePackConfig(preset: PresetDefinition): string {
     preset.id === 'farming-lite' ? "'farm'" : preset.id === 'colony-lite' ? "'colony'" : 'null';
   const narrativeStarter =
     preset.id === 'interactive-fiction-hybrid' ? "'fiction'" : preset.id === 'investigation-game' ? "'case'" : 'null';
+  const arcadeStarter =
+    preset.id === 'fishing-game' ? "'fishing'" : preset.id === 'cooking-game' ? "'cooking'" : 'null';
   return [
     '/**',
     " * Config for packs that declare `configSource: 'code'` in their definition -",
@@ -143,6 +147,9 @@ export function generatePackConfig(preset: PresetDefinition): string {
     '',
     '/** Category-C Wave 14: fiction vs case presentation of sw2d.narrative. Null otherwise. */',
     `export const NARRATIVE_STARTER: 'fiction' | 'case' | null = ${narrativeStarter};`,
+    '',
+    '/** Category-C Wave 15: fishing vs cooking presentation of sw2d.arcade. Null otherwise. */',
+    `export const ARCADE_STARTER: 'fishing' | 'cooking' | null = ${arcadeStarter};`,
     '',
   ]
     .filter((line, index, all) => !(line === '' && all[index - 1] === ''))

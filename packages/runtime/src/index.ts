@@ -75,6 +75,12 @@ export {
   type StarterNarrativeSnapshot,
   type NarrativeStarterMode,
 } from './game-support/starterNarrative.ts';
+export {
+  bindStarterArcade,
+  type StarterArcadeBinding,
+  type StarterArcadeSnapshot,
+  type ArcadeStarterMode,
+} from './game-support/starterArcade.ts';
 
 export { LocalStorageDriver, MemoryStorageDriver } from './persistence/LocalStorageDriver.ts';
 export { SaveStoreImpl } from './persistence/SaveStoreImpl.ts';

@@ -7,13 +7,14 @@ import {
   bindStarterTiming,
   bindStarterSimulation,
   bindStarterNarrative,
+  bindStarterArcade,
   createAdvancedPhysics,
   mutedStyle,
   uiSimulationController,
   type SceneContext,
   type ScenePackDefinition,
 } from '@sw2d/runtime';
-import { NARRATIVE_STARTER, SIMULATION_STARTER } from './packConfig.ts';
+import { ARCADE_STARTER, NARRATIVE_STARTER, SIMULATION_STARTER } from './packConfig.ts';
 
 /**
  * Generated starter shell: ui-simulation controller family.
@@ -27,8 +28,11 @@ import { NARRATIVE_STARTER, SIMULATION_STARTER } from './packConfig.ts';
  * reading loop (Wave 3). When `SIMULATION_STARTER` is farm or colony the
  * option list is replaced by the existing `sw2d.simulation` ledger/jobs
  * (Wave 13). When `NARRATIVE_STARTER` is fiction the option list is
- * replaced by menu verbs on `sw2d.narrative` (Wave 14). See
- * platformShellPack.ts's file comment for the template pattern.
+ * replaced by menu verbs on `sw2d.narrative` (Wave 14). When
+ * `ARCADE_STARTER` is fishing or cooking the option list is replaced by
+ * a score/elapsed presentation of `sw2d.arcade` (Wave 15). Pinball,
+ * microgame and timing leftovers stay dummy OPTIONS or their own binders.
+ * See platformShellPack.ts's file comment for the template pattern.
  */
 
 const OPTIONS = ['Option A', 'Option B', 'Option C', 'Option D'];
@@ -53,6 +57,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     const clock = bindStarterTiming(context);
     const jobs = bindStarterSimulation(context, { mode: SIMULATION_STARTER });
     const story = bindStarterNarrative(context, { mode: NARRATIVE_STARTER });
+    const arcade = bindStarterArcade(context, { mode: ARCADE_STARTER });
 
     // Optional advanced physics (capability program Phase 9). Inert unless
     // content/game.json sets physicsProfile: 'matter'. Then a ball drops onto a
@@ -66,7 +71,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         })()
       : null;
 
-    const label = economy.active || needs.active || dialogue.active || seats.active || clock.active || jobs.active || story.active
+    const label = economy.active || needs.active || dialogue.active || seats.active || clock.active || jobs.active || story.active || arcade.active
       ? null
       : scene.add
           .text(width * 0.5, height * 0.5, '', mutedStyle(20))
@@ -90,6 +95,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       ...(clock.active ? { timing: clock.snapshot() } : {}),
       ...(jobs.active ? { simulation: jobs.snapshot() } : {}),
       ...(story.active ? { narrative: story.snapshot() } : {}),
+      ...(arcade.active ? { arcade: arcade.snapshot() } : {}),
       ...(physics ? { physics: { enabled: physics.enabled, bodyCount: physics.bodyCount, ball: ball ? physics.bodyState(ball) : null } } : {}),
     }));
 
@@ -158,6 +164,14 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
           story.render();
           return;
         }
+        if (arcade.active) {
+          arcade.tick(deltaMs);
+          if (intent.navigateLeftPressed || intent.navigateUpPressed) arcade.select(-1);
+          else if (intent.navigateRightPressed || intent.navigateDownPressed) arcade.select(1);
+          if (intent.confirmPressed || intent.primaryPressed) arcade.confirm();
+          arcade.render();
+          return;
+        }
         if (intent.navigateLeftPressed) {
           selectionIndex = (selectionIndex - 1 + OPTIONS.length) % OPTIONS.length;
           confirmed = false;
@@ -185,6 +199,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         clock.dispose();
         jobs.dispose();
         story.dispose();
+        arcade.dispose();
         physics?.dispose();
         try {
           label?.destroy();

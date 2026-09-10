@@ -100,5 +100,7 @@ describe('generateUiCopy (generated games announce their genre honestly)', () =>
     expect(copyFor('colony-lite').playHint).toBe('ARROWS PICK A JOB  -  ENTER ASSIGNS OR BUILDS');
     expect(copyFor('interactive-fiction-hybrid').playHint).toBe('ARROWS PICK A VERB  -  ENTER ACTS');
     expect(copyFor('investigation-game').playHint).toBe('MOVE WASD/ARROWS  -  J INSPECTS CLUES');
+    expect(copyFor('fishing-game').playHint).toBe('ENTER CASTS AND LANDS');
+    expect(copyFor('cooking-game').playHint).toBe('ARROWS PICK  -  ENTER ADDS TO THE DISH');
   });
 });

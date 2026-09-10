@@ -93,6 +93,8 @@ export const LIMITATIONS = {
     'Branching dialogue graphs, choices, flags and endings are reusable (sw2d.dialogue); portraits, scene composition, parser IF and evidence-board deduction are not.',
   narrativeStore:
     'Nodes, flags, choices and seen entries are reusable (sw2d.narrative); a dedicated parser/text-command system and an evidence-board/deduction/linking system are not.',
+  arcadeScore:
+    'Score, combo, lives and elapsed are reusable (sw2d.arcade); a reusable casting/line/tension/fish behavior system and an ingredient/recipe/action-sequence cooking system are not.',
   meleeCombat:
     'Melee strike, knockback, hit-stun and contact damage are reusable (sw2d.melee); combo strings, directional attacks and targeting UI are not.',
 } as const;

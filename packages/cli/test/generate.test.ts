@@ -721,6 +721,53 @@ describe('generated narrative games consume sw2d.narrative', () => {
   });
 });
 
+describe('generated ui-simulation fishing and cooking consume sw2d.arcade', () => {
+  it('the generated ui-simulation shell binds bindStarterArcade', () => {
+    const fishing = PRESETS.find((candidate) => candidate.id === 'fishing-game')!;
+    const shell = buildGameFiles('arcade-probe', fishing).get('src/game-specific/shellPack.ts')!;
+    expect(shell).toContain('bindStarterArcade(context, { mode: ARCADE_STARTER })');
+    expect(shell).toContain('arcade.confirm()');
+    expect(shell).toContain("from './packConfig.ts'");
+    expect(buildGameFiles('arcade-probe', fishing).get('src/main.ts')).toContain('arcadePack');
+  });
+
+  it('fishing-game and cooking-game enable sw2d.arcade with different starters; pinball and microgame stay null', () => {
+    const fishing = PRESETS.find((candidate) => candidate.id === 'fishing-game')!;
+    const cooking = PRESETS.find((candidate) => candidate.id === 'cooking-game')!;
+    const pinball = PRESETS.find((candidate) => candidate.id === 'pinball-lite')!;
+    const micro = PRESETS.find((candidate) => candidate.id === 'microgame-collection')!;
+    const shop = PRESETS.find((candidate) => candidate.id === 'shopkeeper')!;
+    const fishingFiles = buildGameFiles('arcade-probe', fishing);
+    const cookingFiles = buildGameFiles('arcade-probe', cooking);
+    const pinballFiles = buildGameFiles('arcade-probe', pinball);
+    const microFiles = buildGameFiles('arcade-probe', micro);
+    const shopFiles = buildGameFiles('arcade-probe', shop);
+    const fishingJson = JSON.parse(fishingFiles.get('content/game.json')!) as { systemPacks: Array<{ packId: string }> };
+    const cookingJson = JSON.parse(cookingFiles.get('content/game.json')!) as { systemPacks: Array<{ packId: string }> };
+    expect(fishingJson.systemPacks.map((s) => s.packId)).toContain('sw2d.arcade');
+    expect(cookingJson.systemPacks.map((s) => s.packId)).toContain('sw2d.arcade');
+    expect(fishingFiles.get('src/game-specific/packConfig.ts')).toContain(
+      "ARCADE_STARTER: 'fishing' | 'cooking' | null = 'fishing'",
+    );
+    expect(cookingFiles.get('src/game-specific/packConfig.ts')).toContain(
+      "ARCADE_STARTER: 'fishing' | 'cooking' | null = 'cooking'",
+    );
+    expect(pinballFiles.get('src/game-specific/packConfig.ts')).toContain(
+      "ARCADE_STARTER: 'fishing' | 'cooking' | null = null",
+    );
+    expect(microFiles.get('src/game-specific/packConfig.ts')).toContain(
+      "ARCADE_STARTER: 'fishing' | 'cooking' | null = null",
+    );
+    expect(shopFiles.get('src/game-specific/packConfig.ts')).toContain(
+      "ARCADE_STARTER: 'fishing' | 'cooking' | null = null",
+    );
+    const fishingTheme = JSON.parse(fishingFiles.get('content/themes/default/theme.json')!) as { ui: { playHint: string } };
+    const cookingTheme = JSON.parse(cookingFiles.get('content/themes/default/theme.json')!) as { ui: { playHint: string } };
+    expect(fishingTheme.ui.playHint).toContain('ENTER CASTS AND LANDS');
+    expect(cookingTheme.ui.playHint).toContain('ENTER ADDS TO THE DISH');
+  });
+});
+
 describe('generated pointer puzzles consume sw2d.puzzle', () => {
   it('the generated pointer shell presents physics-goal and escape-locks on puzzle.state', () => {
     const physics = PRESETS.find((candidate) => candidate.id === 'physics-puzzle')!;

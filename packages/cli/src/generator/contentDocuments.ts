@@ -1039,7 +1039,11 @@ export function generateUiCopy(options: {
                     ? 'ARROWS PICK A JOB  -  ENTER ASSIGNS OR BUILDS'
                     : presetId === 'interactive-fiction-hybrid'
                       ? 'ARROWS PICK A VERB  -  ENTER ACTS'
-                      : 'ARROWS CHANGE THE SELECTION  -  ENTER CONFIRMS  -  PAUSE TO STOP';
+                      : presetId === 'fishing-game'
+                        ? 'ENTER CASTS AND LANDS'
+                        : presetId === 'cooking-game'
+                          ? 'ARROWS PICK  -  ENTER ADDS TO THE DISH'
+                          : 'ARROWS CHANGE THE SELECTION  -  ENTER CONFIRMS  -  PAUSE TO STOP';
       break;
     default:
       break;

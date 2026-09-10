@@ -229,6 +229,6 @@ recipe's *first* stated limitation; see `knownLimitations` in
 | `dress-up-character-toy` | No wardrobe/attachment system is built on the drag/drop capability (ADR-0018) yet. |
 | `sandbox-playground` | No generalized authoring/editing sandbox exists. |
 | `drawing-game` | No canvas-stroke/drawing capture is built on the spatial pointer service (ADR-0018) yet. |
-| `fishing-game` | No reusable casting/line/tension/fish behavior system exists. |
-| `cooking-game` | No reusable ingredient/recipe/action-sequence cooking system exists. |
+| `fishing-game` | Score, combo, lives and elapsed are reusable (sw2d.arcade); a reusable casting/line/tension/fish behavior system and an ingredient/recipe/action-sequence cooking system are not. |
+| `cooking-game` | Score, combo, lives and elapsed are reusable (sw2d.arcade); a reusable casting/line/tension/fish behavior system and an ingredient/recipe/action-sequence cooking system are not. |
 | `photography-game` | No reusable camera/framing/scoring/photo-capture gameplay system exists. |

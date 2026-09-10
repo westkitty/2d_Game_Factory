@@ -43,3 +43,6 @@ One short record per decision that constrains later work. No ADR for trivia.
 | [0037](0037-visual-timing-windows.md) | Visual reaction and beat windows are a timing pack | Category-C Wave 10 |
 | [0038](0038-consume-weapons-in-vehicle-and-pointer-shells.md) | Consume existing weapons in vehicle and pointer shells | Category-C Wave 11 |
 | [0039](0039-consume-puzzle-code-seam-in-pointer-shell.md) | Consume the puzzle code seam in the pointer shell | Category-C Wave 12 |
+| [0040](0040-consume-simulation-ledger-in-farm-and-colony-shells.md) | Consume the simulation ledger in farm and colony shells | Category-C Wave 13 |
+| [0041](0041-consume-narrative-store-in-if-and-investigation-shells.md) | Consume the narrative store in IF and investigation shells | Category-C Wave 14 |
+| [0042](0042-consume-arcade-score-in-fishing-and-cooking-shells.md) | Consume arcade score in fishing and cooking shells | Category-C Wave 15 |
