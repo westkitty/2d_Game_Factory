@@ -108,7 +108,9 @@ export const STRATEGY_DEFENSE_PRESETS: readonly PresetDefinition[] = [
     optionalSystemPacks: [pack(PACK_IDS.ai), pack(PACK_IDS.progression), pack(PACK_IDS.encounters)],
     requiredContentRoles: ['tuning', 'levels'],
     validationProfile: VALIDATION_PROFILES.strategyDefense,
-    knownLimitations: ['Wave spawning is reusable (sw2d.encounters, Phase 4, optional); base-damage/target-priority resolution is still starter-specific.'],
+    knownLimitations: [
+      'Base HP and incoming contact for the generated starter use sw2d.combat; wave spawning is optional (sw2d.encounters); target-priority and upgrade rules stay starter-specific.',
+    ],
   }),
 
   definePreset({

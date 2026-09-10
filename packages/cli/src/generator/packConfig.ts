@@ -40,7 +40,10 @@ import type { PresetDefinition } from '@sw2d/contracts';
  * without inventing fog-of-war, spawn-scheduling or combat packs. Wave 20
  * stamps `TOY_STARTER` (`photo` / `sandbox` / null) so the top-down and
  * pointer shells can present two different ADR-0018 loops without inventing
- * a camera/framing pack or a generalized authoring sandbox.
+ * a camera/framing pack or a generalized authoring sandbox. Wave 21 stamps
+ * `COMBAT_STARTER` (`room` / `hold` / null) so the top-down shell can present
+ * two different `sw2d.combat` loops without inventing targeting, AI or
+ * encounter packs.
  *
  * Deliberately NOT a universal puzzle DSL.
  */
@@ -150,6 +153,8 @@ export function generatePackConfig(preset: PresetDefinition): string {
   const navStarter = preset.id === 'maze-game' ? "'maze'" : preset.id === 'lane-defense' ? "'lane'" : 'null';
   const toyStarter =
     preset.id === 'photography-game' ? "'photo'" : preset.id === 'sandbox-playground' ? "'sandbox'" : 'null';
+  const combatStarter =
+    preset.id === 'dungeon-crawler' ? "'room'" : preset.id === 'base-defense' ? "'hold'" : 'null';
   return [
     '/**',
     " * Config for packs that declare `configSource: 'code'` in their definition -",
@@ -187,6 +192,9 @@ export function generatePackConfig(preset: PresetDefinition): string {
     '',
     '/** Category-C Wave 20: photo vs sandbox presentation of ADR-0018 interaction. Null otherwise. */',
     `export const TOY_STARTER: 'photo' | 'sandbox' | null = ${toyStarter};`,
+    '',
+    '/** Category-C Wave 21: room vs hold presentation of sw2d.combat. Null otherwise. */',
+    `export const COMBAT_STARTER: 'room' | 'hold' | null = ${combatStarter};`,
     '',
   ]
     .filter((line, index, all) => !(line === '' && all[index - 1] === ''))

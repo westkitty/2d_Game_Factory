@@ -109,5 +109,7 @@ describe('generateUiCopy (generated games announce their genre honestly)', () =>
     expect(copyFor('sandbox-playground').playHint).toBe('CLICK STAMPS  -  ARROWS PICK BLOCK OR BALL');
     expect(copyFor('action-roguelite').playHint).toBe('MOVE WASD/ARROWS  -  J TAKES RELICS');
     expect(copyFor('survivor-like').playHint).toContain('SURVIVE THE WAVES');
+    expect(copyFor('dungeon-crawler').playHint).toBe('MOVE WASD/ARROWS  -  STRIKE J/X');
+    expect(copyFor('base-defense').playHint).toBe('MOVE WASD/ARROWS  -  STRIKE J/X  -  DEFEND THE BASE');
   });
 });

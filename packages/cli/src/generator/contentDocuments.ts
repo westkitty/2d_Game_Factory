@@ -995,6 +995,10 @@ export function generateUiCopy(options: {
                     ? 'MOVE WASD/ARROWS  -  J TAKES RELICS'
                     : presetId === 'photography-game'
                       ? 'MOVE WASD/ARROWS  -  J SHOOTS SUBJECTS'
+                    : presetId === 'dungeon-crawler'
+                      ? 'MOVE WASD/ARROWS  -  STRIKE J/X'
+                      : presetId === 'base-defense'
+                        ? 'MOVE WASD/ARROWS  -  STRIKE J/X  -  DEFEND THE BASE'
                     : 'MOVE WASD/ARROWS  -  PAUSE TO STOP';
       break;
     case 'vehicle':

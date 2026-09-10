@@ -172,7 +172,7 @@ recipe's *first* stated limitation; see `knownLimitations` in
 | `action-adventure` | Melee strike, knockback, hit-stun and contact damage are reusable (sw2d.melee); combo strings, directional attacks and targeting UI are not. |
 | `twin-stick-shooter` | The generated starter ships no enemy waves out of the box: sw2d.encounters is optional for this recipe, so opposition is added by enabling that pack or authoring game-specific spawns (the committed proof game demonstrates the latter). |
 | `survivor-like` | In-run XP and unlock flags for the generated starter use sw2d.progression; endless difficulty scaling / meta-progression between runs is not a reusable system; the starter survival loop repeats the authored encounter without escalating it. |
-| `dungeon-crawler` | The room graph places Enemy objects, but the generated top-down shell does not yet wire them into sw2d.combat / sw2d.ai - enemy behaviour is game-specific code. |
+| `dungeon-crawler` | Contact damage and strike for the generated starter use sw2d.combat; generated Enemy objects from the room graph and AI behaviour are not wired. |
 | `action-roguelite` | In-run currency, XP, items and unlock flags for the generated starter use sw2d.progression; run-based permadeath and between-run loadouts are not a reusable capability. |
 | `stealth-game` | Vision cones, occlusion, suspicion, noise and hiding are reusable (sw2d.perception); patrol pathfinding, takedowns and full stealth AI are not. |
 | `heist-game` | Vision cones, occlusion, suspicion, noise and hiding are reusable (sw2d.perception); patrol pathfinding, takedowns and full stealth AI are not. |
@@ -205,7 +205,7 @@ recipe's *first* stated limitation; see `knownLimitations` in
 | `auto-battler` | Teams, active turn, selection and turn advance are reusable (sw2d.strategy); autonomous combat orchestration is not implemented. |
 | `simple-rts` | Unit pathfinding is reusable (sw2d.navigation, optional); box-select and command-queue UI are not implemented. |
 | `turn-based-tactics` | Teams, active turn, selection and turn advance are reusable (sw2d.strategy); attack-range/line-of-fire resolution and a full turn-action state machine are still starter-specific. |
-| `base-defense` | Wave spawning is reusable (sw2d.encounters, Phase 4, optional); base-damage/target-priority resolution is still starter-specific. |
+| `base-defense` | Base HP and incoming contact for the generated starter use sw2d.combat; wave spawning is optional (sw2d.encounters); target-priority and upgrade rules stay starter-specific. |
 | `territory-control` | Reusable capture-zone/territory ownership/scoring mechanics do not exist yet. |
 | `idle-incremental` | The simulation/resource core exists, but full offline-progress/catch-up, prestige, and large economy balancing are not production systems. |
 | `shopkeeper` | Customer demand, queue, stock, transactions and production jobs are reusable (sw2d.economy); shop layout, walking customers, prestige and offline catch-up are not. |

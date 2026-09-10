@@ -991,6 +991,48 @@ describe('generated photography and sandbox consume ADR-0018 interaction', () =>
   });
 });
 
+describe('generated dungeon and base-defense consume sw2d.combat', () => {
+  it('the generated top-down shell binds bindStarterCombat', () => {
+    const dungeon = PRESETS.find((candidate) => candidate.id === 'dungeon-crawler')!;
+    const shell = buildGameFiles('combat-probe', dungeon).get('src/game-specific/shellPack.ts')!;
+    expect(shell).toContain('bindStarterCombat(context, { mode: COMBAT_STARTER })');
+    expect(shell).toContain('fight.setPlayer(');
+    expect(shell).toContain('fight.strike()');
+    expect(shell).toContain("from './packConfig.ts'");
+  });
+
+  it('dungeon-crawler and base-defense stamp different COMBAT_STARTER values; rts and adventure stay null', () => {
+    const dungeon = PRESETS.find((candidate) => candidate.id === 'dungeon-crawler')!;
+    const base = PRESETS.find((candidate) => candidate.id === 'base-defense')!;
+    const rts = PRESETS.find((candidate) => candidate.id === 'simple-rts')!;
+    const adventure = PRESETS.find((candidate) => candidate.id === 'action-adventure')!;
+    const dungeonFiles = buildGameFiles('combat-probe', dungeon);
+    const baseFiles = buildGameFiles('combat-probe', base);
+    const rtsFiles = buildGameFiles('combat-probe', rts);
+    const adventureFiles = buildGameFiles('combat-probe', adventure);
+    const dungeonJson = JSON.parse(dungeonFiles.get('content/game.json')!) as { systemPacks: Array<{ packId: string }> };
+    const baseJson = JSON.parse(baseFiles.get('content/game.json')!) as { systemPacks: Array<{ packId: string }> };
+    expect(dungeonJson.systemPacks.map((s) => s.packId)).toContain('sw2d.combat');
+    expect(baseJson.systemPacks.map((s) => s.packId)).toContain('sw2d.combat');
+    expect(dungeonFiles.get('src/game-specific/packConfig.ts')).toContain(
+      "COMBAT_STARTER: 'room' | 'hold' | null = 'room'",
+    );
+    expect(baseFiles.get('src/game-specific/packConfig.ts')).toContain(
+      "COMBAT_STARTER: 'room' | 'hold' | null = 'hold'",
+    );
+    expect(rtsFiles.get('src/game-specific/packConfig.ts')).toContain(
+      "COMBAT_STARTER: 'room' | 'hold' | null = null",
+    );
+    expect(adventureFiles.get('src/game-specific/packConfig.ts')).toContain(
+      "COMBAT_STARTER: 'room' | 'hold' | null = null",
+    );
+    const dungeonTheme = JSON.parse(dungeonFiles.get('content/themes/default/theme.json')!) as { ui: { playHint: string } };
+    const baseTheme = JSON.parse(baseFiles.get('content/themes/default/theme.json')!) as { ui: { playHint: string } };
+    expect(dungeonTheme.ui.playHint).toContain('STRIKE J/X');
+    expect(baseTheme.ui.playHint).toContain('DEFEND THE BASE');
+  });
+});
+
 describe('generated pointer puzzles consume sw2d.puzzle', () => {
   it('the generated pointer shell presents physics-goal and escape-locks on puzzle.state', () => {
     const physics = PRESETS.find((candidate) => candidate.id === 'physics-puzzle')!;

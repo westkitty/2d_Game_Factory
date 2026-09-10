@@ -111,6 +111,12 @@ export {
   type StarterToySnapshot,
   type ToyStarterMode,
 } from './game-support/starterToy.ts';
+export {
+  bindStarterCombat,
+  type StarterCombatBinding,
+  type StarterCombatSnapshot,
+  type CombatStarterMode,
+} from './game-support/starterCombat.ts';
 
 export { LocalStorageDriver, MemoryStorageDriver } from './persistence/LocalStorageDriver.ts';
 export { SaveStoreImpl } from './persistence/SaveStoreImpl.ts';

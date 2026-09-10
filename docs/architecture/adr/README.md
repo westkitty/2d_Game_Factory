@@ -51,3 +51,4 @@ One short record per decision that constrains later work. No ADR for trivia.
 | [0045](0045-consume-strategy-turns-in-tactics-and-battler-shells.md) | Consume strategy turns in tactics and battler shells | Category-C Wave 18 |
 | [0046](0046-consume-navigation-in-maze-and-lane-shells.md) | Consume navigation in maze and lane shells | Category-C Wave 19 |
 | [0047](0047-consume-spatial-pointer-in-photo-and-sandbox-shells.md) | Consume spatial pointer click in photo and sandbox shells | Category-C Wave 20 |
+| [0048](0048-consume-combat-in-dungeon-and-base-shells.md) | Consume combat health in dungeon and base-defense shells | Category-C Wave 21 |

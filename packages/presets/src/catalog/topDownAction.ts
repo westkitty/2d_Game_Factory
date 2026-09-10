@@ -91,8 +91,9 @@ export const TOP_DOWN_ACTION_PRESETS: readonly PresetDefinition[] = [
     validationProfile: VALIDATION_PROFILES.topDown,
     // Phase 7 (ADR-0024): the dungeon is a deterministic seeded room graph from
     // content/generation.json, driven by the reusable sw2d.generation capability.
+    // Category-C Wave 21: contact/strike for the generated starter use sw2d.combat.
     knownLimitations: [
-      'The room graph places Enemy objects, but the generated top-down shell does not yet wire them into sw2d.combat / sw2d.ai - enemy behaviour is game-specific code.',
+      'Contact damage and strike for the generated starter use sw2d.combat; generated Enemy objects from the room graph and AI behaviour are not wired.',
     ],
   }),
 

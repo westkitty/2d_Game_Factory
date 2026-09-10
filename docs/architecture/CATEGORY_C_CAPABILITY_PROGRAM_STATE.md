@@ -43,6 +43,7 @@ Highest-leverage clusters, from `packages/presets/src/shared.ts` LIMITATIONS + p
 | 18 | Consume existing `sw2d.strategy` teams/turns | turn-based-tactics, auto-battler | **Wave 18 implemented** (existing `sw2d.strategy`; ADR-0045). Residual: attack-range; autonomous combat; RTS box-select; territory capture. Overlay tactics/battler stay local. |
 | 19 | Consume existing `sw2d.navigation` pathfinding | maze-game, lane-defense | **Wave 19 implemented** (existing `sw2d.navigation`; ADR-0046). Residual: fog-of-war; maze generation; spawn scheduling; combat; tower target-selection. Overlay maze/lane stay local. |
 | 20 | Consume existing ADR-0018 in photo + sandbox | photography-game, sandbox-playground | **Wave 20 implemented** (existing spatial pointer / click; ADR-0047). Residual: camera/framing/scoring; generalized authoring. Overlay photography/sandbox stay local (P3-H). |
+| 21 | Consume existing `sw2d.combat` health/damage | dungeon-crawler, base-defense | **Wave 21 implemented** (existing `sw2d.combat`; ADR-0048). Residual: generated Enemy objects / AI; target-priority. Overlay dungeon/base stay local. |
 | — | Tier 4 specialized (parser IF, microgame scheduler) | prefer game-specific seam until a second consumer is real | backlog |
 
 Do not extend `sw2d.simulation` / `sw2d.narrative` / `sw2d.ai` into genre monoliths. New narrow packs compose with them.
@@ -1644,3 +1645,99 @@ is active. Confirmed via debug snapshots, not screenshots.
   rail camera, dummy OPTIONS (pinball/microgame), overlay wiring, committed
   proofs, simple-rts leftover (realtime box-select, not turns), tower
   target-selection, attack-range, autonomous combat, museum exhibit/codex.
+
+## Wave 21 — consume `sw2d.combat` in dungeon and base shells
+
+### Problem
+
+`dungeon-crawler` and `base-defense` already required `sw2d.combat`. The
+generated top-down shell never bound it, so both recipes entered play as dummy
+wanderers. The leftover was consumption, not a missing pack. Inventing
+targeting or AI-path packs would duplicate 1-consumer leftovers. Pairing
+simple-rts would lie: that leftover is realtime box-select, not health/damage.
+
+### Consumers
+
+- `dungeon-crawler` — `COMBAT_STARTER = 'room'` (walk to GRUNT then BRUTE; J
+  strikes in range; contact damages the player; complete when both foes die).
+- `base-defense` — `COMBAT_STARTER = 'hold'` (two raiders march on BASE; J
+  strikes; contact damages the base; complete when both raiders die with the
+  base alive).
+
+Materially different: player-HP room clear vs base-HP holdout.
+
+Simple-rts, territory-control, action-adventure and arena keep
+`COMBAT_STARTER = null`. Overlay dungeon / base-defense kits stay local.
+
+### ValidationPlan
+
+1. No new pack / schema / capability id. Combat is game-lifetime: remove and
+   re-register starter ids on each scene install.
+2. Generated packConfig stamps `COMBAT_STARTER` room vs hold vs null.
+3. Generated top-down shell binds room/hold and skips dummy wander fire.
+4. Honesty / docsSync / uiCopy stay green. ADR-0048.
+5. Real-browser play of factory-generated games. Overlay kits not re-run.
+   Committed proofs + maturity promotion still deferred.
+
+### CompletionContract
+
+- [x] No new pack / schema / capability id.
+- [x] Authority remains the existing `combat.health` register/damage/invuln.
+- [x] ≥2 materially different generated consumers (2 wired).
+- [x] Focused generate/honesty/uiCopy tests.
+- [x] Honest residual limitation (generated Enemy objects / AI; target-priority).
+- [x] ADR-0048.
+- [x] Real-browser play of factory-generated `wave21-dungeon-crawler` /
+  `wave21-base-defense` (`tools/scripts/play-combat-wave21.ts`, 2/2 PASS,
+  0 console errors, 0 external requests).
+- [x] `npm run sw2d -- validate` on dungeon-crawler (schema + tsc + vite
+  build + boot smoke) PASS (CDP hang after printed success, timeout 90 → 124).
+  base-defense tsc PASS; play already proved the loop.
+- [ ] Overlay re-run. **Not this wave.**
+- [ ] Committed proofs + maturity promotion. **Not done — evidence rule.**
+
+### Implementation notes
+
+- No new pack. `sw2d.combat` already exists (entity-keyed health/damage).
+- `bindStarterCombat` is INERT unless packConfig names `'room'` or `'hold'`
+  *and* `combat.health` is installed.
+- Room: spawn (140,270); GRUNT (400,270); BRUTE (680,270); HP 2; strike range
+  110; contact 28 damages the player with 600 ms i-frames.
+- Hold: spawn (480,270); raiders (160,180) and (160,360) march at 36 px/s on
+  BASE (820,270) HP 3; contact damages the base, not the player.
+- Do not claim targeting, pathfinding, or generated Enemy objects.
+- Overlay dungeon / base-defense kits stay local.
+
+### Browser journeys (executed)
+
+Factory-generated:
+
+- Dungeon-crawler: Space start x=140 mode=`room` foes 2 hp 5 → KeyJ `miss` →
+  walk x=301 near grunt, J×2 `kill-grunt` foes 1 → walk x=580 near brute,
+  J×2 `cleared` foes 0 outcome=complete, playerHealth 5.
+- Base-defense: Space start x=480 mode=`hold` base 3 foes 2 → KeyJ `miss` →
+  walk x=260 near raider, J×2 `kill-raider` foes 1 → near raider-2, J×2
+  `cleared` foes 0 outcome=complete, baseHealth 3.
+
+### Visual inspection
+
+Room: GRUNT / BRUTE rectangles, HUD `hp n · foes n`, title `CLEARED` on
+complete. Hold: two RAIDER rectangles plus BASE, HUD `base n · foes n`, title
+`HELD` on complete. Dummy walls hidden when the binder is active. Confirmed
+via debug snapshots, not screenshots.
+
+### Bugs found and fixed this wave
+
+- None during play. First journey 2/2 PASS.
+
+### Remaining blockers / unknowns
+
+- Catalog maturity stays unchanged (23/3/48). `dungeon-crawler` remains
+  proof-validated on the frozen proof.
+- Chrome wrapper is session-local under `/tmp`.
+- Do not commit `package-lock.json` workspace links for gitignored `games/wave*`.
+- Residual Category-C: climbing, chase, territory capture, pinball, crop/season,
+  rail camera, dummy OPTIONS (pinball/microgame), overlay wiring, committed
+  proofs, simple-rts leftover (realtime box-select, not turns), tower
+  target-selection, attack-range, autonomous combat, museum exhibit/codex,
+  camera/framing, generalized authoring.

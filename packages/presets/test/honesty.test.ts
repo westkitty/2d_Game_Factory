@@ -150,7 +150,7 @@ describe('required knownLimitations (MASTER_PROJECT.md section 12)', () => {
     { id: 'auto-battler', pattern: /autonomous combat orchestration is not implemented/ },
     { id: 'simple-rts', pattern: /box-select and command-queue UI are not implemented/ },
     { id: 'turn-based-tactics', pattern: /turn-action state machine are still starter-specific/ },
-    { id: 'base-defense', pattern: /base-damage\/target-priority/ },
+    { id: 'base-defense', pattern: /target-priority/ },
     { id: 'territory-control', pattern: /Reusable capture-zone\/territory ownership\/scoring mechanics/ },
     // Phase 7C (MASTER_PROJECT.md section 11)
     { id: 'idle-incremental', pattern: /offline-progress\/catch-up, prestige, and large economy balancing/ },

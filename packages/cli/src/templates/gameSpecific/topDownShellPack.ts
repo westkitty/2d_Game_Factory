@@ -12,6 +12,7 @@ import {
   bindStarterNarrative,
   bindStarterProgression,
   bindStarterToy,
+  bindStarterCombat,
   bindStarterWeapon,
   createRoomTransitionRuntime,
   createWorldMapOverlay,
@@ -20,7 +21,7 @@ import {
   type SceneContext,
   type ScenePackDefinition,
 } from '@sw2d/runtime';
-import { NARRATIVE_STARTER, PROGRESSION_STARTER, TOY_STARTER } from './packConfig.ts';
+import { COMBAT_STARTER, NARRATIVE_STARTER, PROGRESSION_STARTER, TOY_STARTER } from './packConfig.ts';
 
 /**
  * Generated starter shell: top-down controller family.
@@ -131,6 +132,15 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       walls.setVisible(false);
       wallCollider.destroy();
     }
+    // Combat (Category-C Wave 21). Inert unless packConfig names a room/hold
+    // starter and sw2d.combat is installed. Room walks to stationary foes;
+    // hold intercepts raiders marching on a base.
+    const fight = bindStarterCombat(context, { mode: COMBAT_STARTER });
+    if (fight.active) {
+      player.setPosition(fight.startX(), fight.startY());
+      walls.setVisible(false);
+      wallCollider.destroy();
+    }
     // Ball / paddle (Category-C Wave 5). Inert unless sw2d.ball-paddle is
     // installed with a non-empty catalog. Then the table owns motion and
     // the dummy wander is hidden.
@@ -198,6 +208,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       ...(story.active ? { narrative: story.snapshot() } : {}),
       ...(meta.active ? { progression: meta.snapshot() } : {}),
       ...(toy.active ? { toy: toy.snapshot() } : {}),
+      ...(fight.active ? { combat: fight.snapshot() } : {}),
       ...(table.active ? { ballPaddle: table.snapshot() } : {}),
       ...(melee.active ? { melee: melee.snapshot() } : {}),
       ...(seats.active ? { localPlay: seats.snapshot() } : {}),
@@ -299,8 +310,15 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
           if (intent.primaryPressed) toy.act();
           toy.render();
         }
+        if (fight.active) {
+          fight.setPlayer(player.x, player.y);
+          if (intent.primaryPressed) fight.strike();
+          fight.tick(deltaMs);
+          fight.render();
+          if (fight.snapshot().outcome !== 'playing') player.setVelocity(0, 0);
+        }
         const firing = intent.primaryPressed || (battle.active && context.input.isDown('PRIMARY_ACTION'));
-        if (firing && !perception.active && !story.active && !runMeta && !toy.active) {
+        if (firing && !perception.active && !story.active && !runMeta && !toy.active && !fight.active) {
           (weapon ?? battle).fire(nowMs, facingX, facingY, { x: player.x, y: player.y });
         }
         if (worldGraph && rooms) {
@@ -324,6 +342,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         story.dispose();
         meta.dispose();
         toy.dispose();
+        fight.dispose();
         table.dispose();
         melee.dispose();
         seats.dispose();
