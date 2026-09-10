@@ -65,7 +65,9 @@ export const STRATEGY_DEFENSE_PRESETS: readonly PresetDefinition[] = [
     optionalSystemPacks: [pack(PACK_IDS.progression)],
     requiredContentRoles: ['tuning'],
     validationProfile: VALIDATION_PROFILES.strategyDefense,
-    knownLimitations: ['AI/combat/strategy state foundations exist, but autonomous combat orchestration is not implemented.'],
+    knownLimitations: [
+      'Teams, active turn, selection and turn advance are reusable (sw2d.strategy); autonomous combat orchestration is not implemented.',
+    ],
   }),
 
   definePreset({
@@ -93,7 +95,7 @@ export const STRATEGY_DEFENSE_PRESETS: readonly PresetDefinition[] = [
     // Reachable-cell movement range + deterministic route-following are reusable
     // now (sw2d.navigation, ADR-0022; proof: proofs/turn-based-tactics/).
     knownLimitations: [
-      'Attack-range/line-of-fire resolution and a full turn-action state machine are still starter-specific.',
+      'Teams, active turn, selection and turn advance are reusable (sw2d.strategy); attack-range/line-of-fire resolution and a full turn-action state machine are still starter-specific.',
     ],
   }),
 

@@ -32,7 +32,10 @@ import type { PresetDefinition } from '@sw2d/contracts';
  * present two ADR-0018 loops without inventing a drawing-canvas or wardrobe
  * pack. Wave 17 stamps `PROGRESSION_STARTER` (`survive` / `run` / null) for
  * `sw2d.progression` XP/currency/unlocks — not difficulty scaling or
- * permadeath.
+ * permadeath. Wave 18 stamps `STRATEGY_STARTER` (`tactics` / `battler` /
+ * null) so the grid and ui-simulation shells can present two different
+ * `sw2d.strategy` loops without inventing pathfinding, attack-range or
+ * autonomous-combat packs.
  *
  * Deliberately NOT a universal puzzle DSL.
  */
@@ -137,6 +140,8 @@ export function generatePackConfig(preset: PresetDefinition): string {
     preset.id === 'drawing-game' ? "'draw'" : preset.id === 'dress-up-character-toy' ? "'wardrobe'" : 'null';
   const progressionStarter =
     preset.id === 'survivor-like' ? "'survive'" : preset.id === 'action-roguelite' ? "'run'" : 'null';
+  const strategyStarter =
+    preset.id === 'turn-based-tactics' ? "'tactics'" : preset.id === 'auto-battler' ? "'battler'" : 'null';
   return [
     '/**',
     " * Config for packs that declare `configSource: 'code'` in their definition -",
@@ -165,6 +170,9 @@ export function generatePackConfig(preset: PresetDefinition): string {
     '',
     '/** Category-C Wave 17: survive vs run presentation of sw2d.progression. Null otherwise. */',
     `export const PROGRESSION_STARTER: 'survive' | 'run' | null = ${progressionStarter};`,
+    '',
+    '/** Category-C Wave 18: tactics vs battler presentation of sw2d.strategy. Null otherwise. */',
+    `export const STRATEGY_STARTER: 'tactics' | 'battler' | null = ${strategyStarter};`,
     '',
   ]
     .filter((line, index, all) => !(line === '' && all[index - 1] === ''))

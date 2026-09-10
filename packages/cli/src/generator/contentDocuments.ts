@@ -1007,6 +1007,8 @@ export function generateUiCopy(options: {
         ? 'MOVE WASD/ARROWS  -  ENTER SELECTS OR SWAPS  -  UNDO BACKSPACE'
         : presetId === 'falling-block-puzzle'
           ? 'MOVE WASD/ARROWS  -  ENTER ROTATES  -  DROP K'
+          : presetId === 'turn-based-tactics'
+            ? 'ARROWS MOVE  -  J SELECTS  -  REACH THE FLAG'
           : has('sw2d.puzzle-rules')
             ? 'MOVE / PUSH WASD/ARROWS  -  UNDO BACKSPACE  -  RESET K'
             : 'MOVE WASD/ARROWS  -  PAUSE TO STOP';
@@ -1049,6 +1051,8 @@ export function generateUiCopy(options: {
                         ? 'ENTER CASTS AND LANDS'
                         : presetId === 'cooking-game'
                           ? 'ARROWS PICK  -  ENTER ADDS TO THE DISH'
+                          : presetId === 'auto-battler'
+                            ? 'ARROWS PICK  -  ENTER STRIKES'
                           : 'ARROWS CHANGE THE SELECTION  -  ENTER CONFIRMS  -  PAUSE TO STOP';
       break;
     default:

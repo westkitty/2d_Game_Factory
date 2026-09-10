@@ -202,9 +202,9 @@ recipe's *first* stated limitation; see `knownLimitations` in
 | `pinball-lite` | A full pinball table (flippers, bumpers, scoring lanes) is game-specific code on top of the Matter ball + static collision the shell provides. |
 | `tower-defense` | Spatial hover placement via the pointer shell is available but this starter uses the keyboard grid cursor. |
 | `lane-defense` | Lane-spawn scheduling and combat resolution are still starter-specific. |
-| `auto-battler` | AI/combat/strategy state foundations exist, but autonomous combat orchestration is not implemented. |
+| `auto-battler` | Teams, active turn, selection and turn advance are reusable (sw2d.strategy); autonomous combat orchestration is not implemented. |
 | `simple-rts` | Unit pathfinding is reusable (sw2d.navigation, optional); box-select and command-queue UI are not implemented. |
-| `turn-based-tactics` | Attack-range/line-of-fire resolution and a full turn-action state machine are still starter-specific. |
+| `turn-based-tactics` | Teams, active turn, selection and turn advance are reusable (sw2d.strategy); attack-range/line-of-fire resolution and a full turn-action state machine are still starter-specific. |
 | `base-defense` | Wave spawning is reusable (sw2d.encounters, Phase 4, optional); base-damage/target-priority resolution is still starter-specific. |
 | `territory-control` | Reusable capture-zone/territory ownership/scoring mechanics do not exist yet. |
 | `idle-incremental` | The simulation/resource core exists, but full offline-progress/catch-up, prestige, and large economy balancing are not production systems. |

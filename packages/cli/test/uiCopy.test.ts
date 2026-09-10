@@ -17,7 +17,8 @@ import { generateUiCopy } from '../src/generator/contentDocuments.ts';
 // Control vocabulary the hints may use -> why it is true.
 //  - MOVE / STEER / THROTTLE / ARROWS / WASD: every controller family reads MOVE_*.
 //  - JUMP: platform controller (JUMP: Space/KeyW/ArrowUp).
-//  - FIRE J/X: PRIMARY_ACTION keyboard bindings are KeyJ/KeyX.
+//  - FIRE J/X / J SELECTS: PRIMARY_ACTION keyboard bindings are KeyJ/KeyX.
+//    Grid tactics (Wave 18) reads PRIMARY_ACTION for unit select.
 //  - AIM WITH MOUSE: topDownShellPack consumes aimFromPointer (ADR-0018);
 //    pointerShellPack fires toward context.spatialPointer when weapons are on.
 //  - DRAG: pointerShellPack bindStarterPointer wardrobe/draw uses ADR-0018 drag.

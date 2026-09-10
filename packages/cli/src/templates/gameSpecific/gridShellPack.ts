@@ -1,6 +1,7 @@
 import type { InstalledSystemPack, NormalizedLevel, PuzzleRulesService } from '@sw2d/contracts';
 import { PUZZLE_RULES_CAPABILITY_ID } from '@sw2d/contracts';
-import { bindStarterPuzzle, gridController, type SceneContext, type ScenePackDefinition } from '@sw2d/runtime';
+import { bindStarterPuzzle, bindStarterStrategy, gridController, type SceneContext, type ScenePackDefinition } from '@sw2d/runtime';
+import { STRATEGY_STARTER } from './packConfig.ts';
 
 /**
  * Generated starter shell: grid controller family.
@@ -15,6 +16,10 @@ import { bindStarterPuzzle, gridController, type SceneContext, type ScenePackDef
  * falling-block (Category-C Wave 9) bind `bindStarterPuzzle` so swap /
  * gravity / line-clear come from `content/puzzles.json` - no game-specific
  * rule code here.
+ *
+ * When `STRATEGY_STARTER` is tactics (Category-C Wave 18) the dummy
+ * wanderer is replaced by a select-then-step occupation of a FLAG cell
+ * on `sw2d.strategy`. Attack-range stays leftover.
  */
 
 const LEVEL_DOCUMENT = 'levels/main';
@@ -34,6 +39,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
 
     const puzzle = context.capabilities.get<PuzzleRulesService>(PUZZLE_RULES_CAPABILITY_ID);
     const board = bindStarterPuzzle(context);
+    const turns = bindStarterStrategy(context, { mode: STRATEGY_STARTER });
 
     const spawn = level?.objects.find((object) => object.class === 'PlayerSpawn');
     let col = Math.round((spawn?.x ?? width * 0.5) / CELL_SIZE);
@@ -55,13 +61,14 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     }
 
     const actor = scene.add.sprite(col * CELL_SIZE, row * CELL_SIZE, playerKey);
-    if (board.active) actor.setVisible(false);
+    if (board.active || turns.active) actor.setVisible(false);
 
     const debugHandle = context.debug.contribute('game.grid-shell', () => ({
       col,
       row,
       ...(puzzle ? { puzzle: puzzle.snapshot(), solved: puzzle.isSolved() } : {}),
       ...(board.active ? { puzzleBoard: board.snapshot() } : {}),
+      ...(turns.active ? { strategy: turns.snapshot() } : {}),
     }));
 
     let disposed = false;
@@ -93,6 +100,14 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
           return;
         }
 
+        if (turns.active) {
+          if (intent.step) turns.step(intent.step);
+          if (context.input.justPressed('PRIMARY_ACTION')) turns.act();
+          if (intent.confirmPressed) turns.confirm();
+          turns.tick(deltaMs);
+          return;
+        }
+
         if (intent.step === 'up' && row > minRow) row -= 1;
         else if (intent.step === 'down' && row < maxRow) row += 1;
         else if (intent.step === 'left' && col > minCol) col -= 1;
@@ -105,6 +120,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         disposed = true;
         debugHandle.dispose();
         board.dispose();
+        turns.dispose();
         try {
           actor.destroy();
         } catch {

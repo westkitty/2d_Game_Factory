@@ -848,6 +848,59 @@ describe('generated top-down survivor and roguelite consume sw2d.progression', (
   });
 });
 
+describe('generated tactics and battler consume sw2d.strategy', () => {
+  it('the generated grid shell binds bindStarterStrategy', () => {
+    const tactics = PRESETS.find((candidate) => candidate.id === 'turn-based-tactics')!;
+    const shell = buildGameFiles('strategy-probe', tactics).get('src/game-specific/shellPack.ts')!;
+    expect(shell).toContain('bindStarterStrategy(context, { mode: STRATEGY_STARTER })');
+    expect(shell).toContain('turns.step(');
+    expect(shell).toContain('turns.act()');
+    expect(shell).toContain("justPressed('PRIMARY_ACTION')");
+    expect(shell).toContain("from './packConfig.ts'");
+    expect(buildGameFiles('strategy-probe', tactics).get('src/main.ts')).toContain('strategyPack');
+  });
+
+  it('the generated ui-simulation shell binds battler turns', () => {
+    const battler = PRESETS.find((candidate) => candidate.id === 'auto-battler')!;
+    const shell = buildGameFiles('strategy-probe', battler).get('src/game-specific/shellPack.ts')!;
+    expect(shell).toContain('bindStarterStrategy(context, { mode: STRATEGY_STARTER })');
+    expect(shell).toContain('turns.select(');
+    expect(shell).toContain('turns.confirm()');
+    expect(shell).toContain("from './packConfig.ts'");
+  });
+
+  it('turn-based-tactics and auto-battler stamp different STRATEGY_STARTER values; rts and territory stay null', () => {
+    const tactics = PRESETS.find((candidate) => candidate.id === 'turn-based-tactics')!;
+    const battler = PRESETS.find((candidate) => candidate.id === 'auto-battler')!;
+    const rts = PRESETS.find((candidate) => candidate.id === 'simple-rts')!;
+    const territory = PRESETS.find((candidate) => candidate.id === 'territory-control')!;
+    const tacticsFiles = buildGameFiles('strategy-probe', tactics);
+    const battlerFiles = buildGameFiles('strategy-probe', battler);
+    const rtsFiles = buildGameFiles('strategy-probe', rts);
+    const territoryFiles = buildGameFiles('strategy-probe', territory);
+    const tacticsJson = JSON.parse(tacticsFiles.get('content/game.json')!) as { systemPacks: Array<{ packId: string }> };
+    const battlerJson = JSON.parse(battlerFiles.get('content/game.json')!) as { systemPacks: Array<{ packId: string }> };
+    expect(tacticsJson.systemPacks.map((s) => s.packId)).toContain('sw2d.strategy');
+    expect(battlerJson.systemPacks.map((s) => s.packId)).toContain('sw2d.strategy');
+    expect(tacticsFiles.get('src/game-specific/packConfig.ts')).toContain(
+      "STRATEGY_STARTER: 'tactics' | 'battler' | null = 'tactics'",
+    );
+    expect(battlerFiles.get('src/game-specific/packConfig.ts')).toContain(
+      "STRATEGY_STARTER: 'tactics' | 'battler' | null = 'battler'",
+    );
+    expect(rtsFiles.get('src/game-specific/packConfig.ts')).toContain(
+      "STRATEGY_STARTER: 'tactics' | 'battler' | null = null",
+    );
+    expect(territoryFiles.get('src/game-specific/packConfig.ts')).toContain(
+      "STRATEGY_STARTER: 'tactics' | 'battler' | null = null",
+    );
+    const tacticsTheme = JSON.parse(tacticsFiles.get('content/themes/default/theme.json')!) as { ui: { playHint: string } };
+    const battlerTheme = JSON.parse(battlerFiles.get('content/themes/default/theme.json')!) as { ui: { playHint: string } };
+    expect(tacticsTheme.ui.playHint).toContain('J SELECTS');
+    expect(battlerTheme.ui.playHint).toContain('ENTER STRIKES');
+  });
+});
+
 describe('generated pointer puzzles consume sw2d.puzzle', () => {
   it('the generated pointer shell presents physics-goal and escape-locks on puzzle.state', () => {
     const physics = PRESETS.find((candidate) => candidate.id === 'physics-puzzle')!;

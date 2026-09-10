@@ -39,6 +39,8 @@ Highest-leverage clusters, from `packages/presets/src/shared.ts` LIMITATIONS + p
 | 14 | Consume existing `sw2d.narrative` store | interactive-fiction-hybrid, investigation-game | **Wave 14 implemented** (existing `sw2d.narrative`; ADR-0041). Residual: parser IF and evidence-board linking stay out. Overlay IF/investigation stay local (P3-K). |
 | 15 | Consume existing `sw2d.arcade` score/elapsed | fishing-game, cooking-game | **Wave 15 implemented** (existing `sw2d.arcade`; ADR-0042). Residual: casting/line/tension/fish behaviour and ingredient/recipe cooking stay out. Overlay fishing/cooking stay local (P3-H). Pinball/microgame stay dummy OPTIONS. |
 | 16 | Consume existing ADR-0018 interaction in pointer shells | drawing-game, dress-up-character-toy | **Wave 16 implemented** (existing spatial pointer / drag-drop; ADR-0043). Residual: pressure/layers/export; attachment/skeleton wardrobe. Overlay drawing/dress-up stay local (P3-H). |
+| 17 | Consume existing `sw2d.progression` XP/currency | survivor-like, action-roguelite | **Wave 17 implemented** (existing `sw2d.progression`; ADR-0044). Residual: difficulty scaling; permadeath. Overlay survivor/roguelite stay local (P3-C). |
+| 18 | Consume existing `sw2d.strategy` teams/turns | turn-based-tactics, auto-battler | **Wave 18 implemented** (existing `sw2d.strategy`; ADR-0045). Residual: attack-range; autonomous combat; RTS box-select; territory capture. Overlay tactics/battler stay local. |
 | — | Tier 4 specialized (parser IF, photography, microgame scheduler, sandbox authoring) | prefer game-specific seam until a second consumer is real | backlog |
 
 Do not extend `sw2d.simulation` / `sw2d.narrative` / `sw2d.ai` into genre monoliths. New narrow packs compose with them.
@@ -1345,5 +1347,109 @@ active. Confirmed via debug snapshots, not screenshots.
 - Chrome wrapper is session-local under `/tmp`.
 - Do not commit `package-lock.json` workspace links for gitignored `games/wave*`.
 - Residual Category-C: climbing, chase, territory, pinball, crop/season, rail
-  camera, run-meta vs survivor, remaining dummy OPTIONS (pinball/auto-battler/
-  microgame), maze wanderer, photography/sandbox, committed proofs.
+  camera, remaining dummy OPTIONS (pinball/microgame), maze wanderer,
+  photography/sandbox, overlay wiring, committed proofs, simple-rts leftover
+  (realtime box-select, not turns).
+
+## Wave 17 — consume `sw2d.progression` in survivor and roguelite shells
+
+Shipped in `78ad697` (ADR-0044). `survivor-like` ticks in-run XP; `action-roguelite`
+walks to relics. No new pack. Catalog maturity unchanged. Play:
+`tools/scripts/play-progression-wave17.ts`.
+
+## Wave 18 — consume `sw2d.strategy` in tactics and battler shells
+
+### Problem
+
+`turn-based-tactics` and `auto-battler` already required `sw2d.strategy`. The
+generated shells never bound it, so tactics entered play as a dummy grid
+wanderer and battler as dummy OPTIONS. The leftover was consumption, not a
+missing pack. Inventing attack-range or autonomous-combat packs would duplicate
+1-consumer leftovers. Pairing simple-rts would lie: that leftover is realtime
+box-select, not `strategy.turns`. Territory leftover is capture-zones.
+
+### Consumers
+
+- `turn-based-tactics` — `STRATEGY_STARTER = 'tactics'` (J selects scout, arrows
+  move the unit, occupy FLAG at col 12).
+- `auto-battler` — `STRATEGY_STARTER = 'battler'` (arrows pick FOX/BEAR/OWL,
+  Enter strikes via `combat.health` CPU health 2, CPU auto-`advanceTurn` ~400ms).
+
+Materially different: discrete select-then-step occupation vs menu pick-and-strike.
+
+Simple-rts and territory-control keep `STRATEGY_STARTER = null`. Overlay tactics /
+auto-battler kits stay local.
+
+### ValidationPlan
+
+1. No new pack / schema / capability id. Strategy is game-lifetime: register
+   teams only if empty; heal CPU on rebind.
+2. Generated packConfig stamps `STRATEGY_STARTER` tactics vs battler vs null.
+3. Generated grid shell binds tactics and hides the wanderer. Generated
+   ui-simulation shell binds battler and skips dummy OPTIONS.
+4. Honesty / docsSync / uiCopy stay green. ADR-0045.
+5. Real-browser play of factory-generated games. Overlay kits not re-run.
+   Committed proofs + maturity promotion still deferred.
+
+### CompletionContract
+
+- [x] No new pack / schema / capability id.
+- [x] Authority remains the existing `strategy.turns` teams/select/advanceTurn.
+- [x] ≥2 materially different generated consumers (2 wired).
+- [x] Focused generate/honesty/uiCopy tests.
+- [x] Honest residual limitation (attack-range; autonomous combat).
+- [x] ADR-0045.
+- [ ] Real-browser play of factory-generated `wave18-turn-based-tactics` /
+  `wave18-auto-battler` (`tools/scripts/play-strategy-wave18.ts`).
+- [ ] `npm run sw2d -- validate` on those two games.
+- [ ] Overlay re-run. **Not this wave.**
+- [ ] Committed proofs + maturity promotion. **Not done — evidence rule.**
+
+### Implementation notes
+
+- No new pack. `sw2d.strategy` already exists (teams / active turn / selection /
+  turn advance).
+- `bindStarterStrategy` is INERT unless packConfig names `'tactics'` or
+  `'battler'` *and* `strategy.turns` is installed.
+- Tactics: scout (8,8), flag (12,8), grunt (20,8). J on scout selects. Arrows
+  move the selected unit. Occupy flag completes and `advanceTurn`s.
+- Battler: FOX/BEAR/OWL wrap. Enter `select`s the fighter and `damage('cpu', 1)`.
+  Complete at cpu health 0. CPU turn skips strikes and auto-passes at 400 ms.
+- Do not claim capture-zones or autonomous combat from teams/select/advanceTurn.
+- Overlay tactics / auto-battler kits stay local.
+
+### Browser journeys (executed)
+
+Factory-generated:
+
+- Turn-based-tactics: Space start mode=`tactics` team=player turn 1 cursor/unit
+  (8,8) → ArrowRight `aim` cursor 9 unit 8 → KeyJ `empty` → ArrowLeft KeyJ
+  `selected` scout → ArrowRight×4 `seized` unit (12,8) outcome=complete.
+- Auto-battler: Space start mode=`battler` FOX cpu 2 → ArrowRight BEAR → Enter
+  `hit` cpu 1 team=cpu → Enter `wait` → ~400ms `cpu-pass` team=player → Enter
+  `won` cpu 0 outcome=complete.
+
+### Visual inspection
+
+Tactics: SCOUT / FLAG / GRUNT rectangles, HUD `turn n · player · scout`, title
+`SEIZED` on complete. Battler: FOX/BEAR/OWL slots, HUD `cpu n/2`, title `WON`
+on complete. Dummy wanderer / OPTIONS hidden when the binder is active.
+Confirmed via debug snapshots, not screenshots.
+
+### Bugs found and fixed this wave
+
+- `generatePackConfig` computed `strategyStarter` but the first emit of
+  `STRATEGY_STARTER` missed the return array (`tsc` unused). Same class as
+  Wave 16's `POINTER_STARTER` miss.
+- Tactics catalog limitation row lagged the live `knownLimitations` (`docsSync`).
+
+### Remaining blockers / unknowns
+
+- Catalog maturity stays unchanged (23/3/48). `turn-based-tactics` remains
+  proof-validated on the frozen proof.
+- Chrome wrapper is session-local under `/tmp`.
+- Do not commit `package-lock.json` workspace links for gitignored `games/wave*`.
+- Residual Category-C: climbing, chase, territory capture, pinball, crop/season,
+  rail camera, dummy OPTIONS (pinball/microgame), maze wanderer,
+  photography/sandbox, overlay wiring, committed proofs, simple-rts leftover
+  (realtime, not turns).
