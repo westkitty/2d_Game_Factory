@@ -645,6 +645,37 @@ describe('generated vehicle and pointer shooters consume sw2d.weapons', () => {
   });
 });
 
+describe('generated pointer puzzles consume sw2d.puzzle', () => {
+  it('the generated pointer shell presents physics-goal and escape-locks on puzzle.state', () => {
+    const physics = PRESETS.find((candidate) => candidate.id === 'physics-puzzle')!;
+    const shell = buildGameFiles('puzzle-seam-probe', physics).get('src/game-specific/shellPack.ts')!;
+    expect(shell).toContain("context.capabilities.get<CodePuzzleService>('puzzle.state')");
+    expect(shell).toContain("'physics-goal'");
+    expect(shell).toContain("'escape-locks'");
+    expect(shell).toContain('puzzle.apply(');
+    expect(shell).toContain('physics.setVelocity(');
+  });
+
+  it('physics-puzzle and escape-room enable sw2d.puzzle with different code-seam states', () => {
+    const physics = PRESETS.find((candidate) => candidate.id === 'physics-puzzle')!;
+    const escape = PRESETS.find((candidate) => candidate.id === 'escape-room')!;
+    const physicsFiles = buildGameFiles('puzzle-seam-probe', physics);
+    const escapeFiles = buildGameFiles('puzzle-seam-probe', escape);
+    const physicsJson = JSON.parse(physicsFiles.get('content/game.json')!) as { systemPacks: Array<{ packId: string }> };
+    const escapeJson = JSON.parse(escapeFiles.get('content/game.json')!) as { systemPacks: Array<{ packId: string }> };
+    expect(physicsJson.systemPacks.map((s) => s.packId)).toContain('sw2d.puzzle');
+    expect(escapeJson.systemPacks.map((s) => s.packId)).toContain('sw2d.puzzle');
+    expect(physicsFiles.get('src/game-specific/packConfig.ts')).toContain("kind: 'physics-goal'");
+    expect(physicsFiles.get('src/game-specific/packConfig.ts')).toContain('inGoal');
+    expect(escapeFiles.get('src/game-specific/packConfig.ts')).toContain("kind: 'escape-locks'");
+    expect(escapeFiles.get('src/game-specific/packConfig.ts')).toContain('note');
+    const physicsTheme = JSON.parse(physicsFiles.get('content/themes/default/theme.json')!) as { ui: { playHint: string } };
+    const escapeTheme = JSON.parse(escapeFiles.get('content/themes/default/theme.json')!) as { ui: { playHint: string } };
+    expect(physicsTheme.ui.playHint).toContain('CLICK TO NUDGE');
+    expect(escapeTheme.ui.playHint).toContain('CLICK THE NOTE');
+  });
+});
+
 describe('generated pointer games consume the spatial interaction capability', () => {
   const pointerPreset = PRESETS.find((candidate) => candidate.controllerFamilies[0] === 'pointer')!;
 

@@ -18,7 +18,8 @@ import { LIMITATIONS, POINTER_INPUT_MODES, VALIDATION_PROFILES, definePreset, pa
  * content-authorable through `sw2d.puzzle-rules` + `content/puzzles.json`
  * (ADR-0023, Category-C Wave 9). `sokoban`, `match-puzzle` and
  * `falling-block-puzzle` consume that reusable service. `physics-puzzle`
- * still selects the foundational, code-configured `sw2d.puzzle` and reuses
+ * still selects the foundational, code-configured `sw2d.puzzle` (Category-C
+ * Wave 12 consumes that seam with a Matter ball-in-goal) and reuses
  * `LIMITATIONS.puzzleConfigIsCode` verbatim.
  */
 export const PUZZLE_ARCADE_PRESETS: readonly PresetDefinition[] = [

@@ -15,13 +15,13 @@ import type { PresetDefinition } from '@sw2d/contracts';
  * The fix is a real seam rather than a removal: this file is generated into
  * `src/game-specific/`, which is normal game work, so the game author edits
  * the puzzle's own rules exactly where every other game-specific mechanic
- * already lives. The generated default is a genuinely working placeholder
- * puzzle (a tiny deterministic counter that is "solved" at a target value) -
- * small enough that nobody mistakes it for a designed puzzle, real enough that
- * the generated game actually enters play with `sw2d.puzzle` installed.
+ * already lives. Category-C Wave 12 ships two working, materially different
+ * placeholders (a Matter ball-in-goal and a gated note/key lock) so the two
+ * remaining `sw2d.puzzle` recipes enter play as real games, not a 3-move
+ * counter. The pack keeps `TState` opaque; this file stays plain TypeScript
+ * the author replaces wholesale.
  *
- * Deliberately NOT a universal puzzle DSL: the pack keeps `TState` opaque, and
- * this file stays plain TypeScript the author replaces wholesale.
+ * Deliberately NOT a universal puzzle DSL.
  */
 
 const CODE_CONFIGURED_PACK_IDS = new Set(['sw2d.puzzle']);
@@ -31,7 +31,55 @@ export function requiresCodePackConfig(preset: PresetDefinition): boolean {
   return preset.requiredSystemPacks.some((selection) => CODE_CONFIGURED_PACK_IDS.has(selection.packId));
 }
 
-const PUZZLE_ENTRY = `  /**
+const PHYSICS_PREAMBLE = `/** Physics-puzzle state: solved when the Matter ball rests in the goal. */
+export interface PlaceholderPuzzleState {
+  readonly kind: 'physics-goal';
+  readonly inGoal: boolean;
+}
+
+`;
+
+const PHYSICS_ENTRY = `  /**
+   * sw2d.puzzle is code-configured: its config is two functions, so it can
+   * never live in content/game.json. The generated pointer shell nudges a
+   * Matter ball and calls apply() when it crosses the goal.
+   */
+  'sw2d.puzzle': {
+    createInitialState: (): PlaceholderPuzzleState => ({ kind: 'physics-goal', inGoal: false }),
+    isSolved: (state: PlaceholderPuzzleState): boolean => state.inGoal,
+  },
+`;
+
+const ESCAPE_PREAMBLE = `/** Escape-room state: inspect the note, then the key. */
+export interface PlaceholderPuzzleState {
+  readonly kind: 'escape-locks';
+  readonly note: boolean;
+  readonly key: boolean;
+}
+
+`;
+
+const ESCAPE_ENTRY = `  /**
+   * sw2d.puzzle is code-configured: its config is two functions, so it can
+   * never live in content/game.json. The generated pointer shell registers
+   * two linked hotspots and calls apply() as they unlock.
+   */
+  'sw2d.puzzle': {
+    createInitialState: (): PlaceholderPuzzleState => ({ kind: 'escape-locks', note: false, key: false }),
+    isSolved: (state: PlaceholderPuzzleState): boolean => state.note && state.key,
+  },
+`;
+
+const FALLBACK_PREAMBLE = `/** Replace with this game's real puzzle state. */
+export interface PlaceholderPuzzleState {
+  readonly moves: number;
+}
+
+const SOLVED_AT_MOVES = 3;
+
+`;
+
+const FALLBACK_ENTRY = `  /**
    * sw2d.puzzle is code-configured: its config is two functions, so it can
    * never live in content/game.json. Replace this placeholder with this
    * game's real puzzle state - the pack keeps the state type opaque, so any
@@ -43,15 +91,6 @@ const PUZZLE_ENTRY = `  /**
   },
 `;
 
-const PUZZLE_PREAMBLE = `/** Replace with this game's real puzzle state. */
-export interface PlaceholderPuzzleState {
-  readonly moves: number;
-}
-
-const SOLVED_AT_MOVES = 3;
-
-`;
-
 /**
  * Byte-identical for every preset that needs no code-configured pack (the
  * overwhelming majority): an empty, documented map. Determinism is preserved -
@@ -59,6 +98,22 @@ const SOLVED_AT_MOVES = 3;
  */
 export function generatePackConfig(preset: PresetDefinition): string {
   const needsPuzzle = requiresCodePackConfig(preset);
+  const variant = !needsPuzzle
+    ? 'none'
+    : preset.id === 'escape-room'
+      ? 'escape'
+      : preset.id === 'physics-puzzle'
+        ? 'physics'
+        : 'fallback';
+  const preamble = variant === 'physics' ? PHYSICS_PREAMBLE : variant === 'escape' ? ESCAPE_PREAMBLE : variant === 'fallback' ? FALLBACK_PREAMBLE : '';
+  const entry =
+    variant === 'physics'
+      ? PHYSICS_ENTRY
+      : variant === 'escape'
+        ? ESCAPE_ENTRY
+        : variant === 'fallback'
+          ? FALLBACK_ENTRY
+          : '  // This preset selects no code-configured pack.';
   return [
     '/**',
     " * Config for packs that declare `configSource: 'code'` in their definition -",
@@ -68,9 +123,9 @@ export function generatePackConfig(preset: PresetDefinition): string {
     ' * JSON stay in content/game.json; nothing here overrides those.',
     ' */',
     '',
-    needsPuzzle ? PUZZLE_PREAMBLE.trimEnd() + '\n' : '',
+    preamble ? preamble.trimEnd() + '\n' : '',
     'export const PACK_CONFIG: Readonly<Record<string, unknown>> = {',
-    needsPuzzle ? PUZZLE_ENTRY.trimEnd() : '  // This preset selects no code-configured pack.',
+    entry.trimEnd(),
     '};',
     '',
   ]

@@ -116,6 +116,9 @@ export const NARRATIVE_EXPLORATION_PRESETS: readonly PresetDefinition[] = [
     requiredContentRoles: ['tuning', 'puzzles'],
     supportedInputModes: POINTER_INPUT_MODES,
     validationProfile: VALIDATION_PROFILES.narrativeExploration,
+    // Category-C Wave 12: the generated pointer shell presents two linked
+    // inspect hotspots through sw2d.puzzle. The leftover is still a
+    // content-authored grammar (not match/sokoban kinds).
     knownLimitations: [
       LIMITATIONS.puzzleConfigIsCode,
       'No content-authored escape-room puzzle grammar exists yet.',

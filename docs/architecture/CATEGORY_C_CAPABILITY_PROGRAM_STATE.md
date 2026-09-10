@@ -34,6 +34,7 @@ Highest-leverage clusters, from `packages/presets/src/shared.ts` LIMITATIONS + p
 | — | Tier 3 leftovers (rail camera, territory, chase, climbing, run-meta, crop/season) | 1 live consumer each | backlog |
 | 10 | Visual reaction / beat windows (not audio-sync) | reaction-timing, rhythm-action | **Wave 10 implemented and played** (`sw2d.timing` / `arcade.timing`, ADR-0037). Residual: music-beat/audio-synchronization. Overlay rhythm/reaction stay local (P3-F). |
 | 11 | Consume existing weapons in vehicle + pointer shells | asteroids-shooter, gallery-shooter | **Wave 11 implemented and played** (existing `sw2d.weapons`; ADR-0038). Residual: rail-camera; rail keeps weapons leftover. Overlay shooters stay local. |
+| 12 | Consume existing `sw2d.puzzle` code seam | physics-puzzle, escape-room | **Wave 12 implemented and played** (existing `sw2d.puzzle`; ADR-0039). Residual: rules stay TypeScript not content; no escape-room grammar. Overlay physics/escape stay local. |
 | — | Tier 4 specialized (parser IF, fishing, cooking, photography, wardrobe, drawing, microgame scheduler, sandbox authoring) | prefer game-specific seam until a second consumer is real | backlog |
 
 Do not extend `sw2d.simulation` / `sw2d.narrative` / `sw2d.ai` into genre monoliths. New narrow packs compose with them.
@@ -856,6 +857,91 @@ Confirmed via debug snapshots, not screenshots.
   Phase-1 click-target game. Catalog maturity unchanged (23/3/48).
 - Overlay shooters stay local. Rail-camera leftover remains on `rail-shooter`,
   which still carries `LIMITATIONS.weaponsProjectiles`.
+- Chrome wrapper is session-local under `/tmp`.
+- Do not commit `package-lock.json` workspace links for gitignored `games/wave*`.
+- Residual Category-C: climbing, chase, territory, pinball, crop/season, rail
+  camera, run-meta vs survivor, remaining Tier-4, committed proofs.
+er shell never called, so both recipes entered
+play as a dummy click target. The leftover was consumption, not a missing
+pack. Inventing a new puzzle pack would duplicate ADR-0017 / ADR-0023.
+
+### Consumers
+
+- `physics-puzzle` — `{ kind: 'physics-goal', inGoal }` (Matter ball, click/J
+  nudges, solved when the ball crosses x≥740 on the floor).
+- `escape-room` — `{ kind: 'escape-locks', note, key }` (note hotspot, then
+  gated key; `isSolved` when both flags are set).
+
+Materially different: rigid-body goal vs linked inspect locks.
+
+Overlay physics-puzzle / escape-room kits stay local (P3-E / P3-K).
+
+### ValidationPlan
+
+1. No new pack / schema / capability id.
+2. Generated packConfig is physics-goal vs escape-locks, not a shared counter.
+3. Generated pointer shell presents both kinds on `puzzle.state`.
+4. Honesty / docsSync / uiCopy stay green. ADR-0039.
+5. Real-browser play of factory-generated games. Overlay kits not re-run.
+   Committed proofs + maturity promotion still deferred.
+
+### CompletionContract
+
+- [x] No new pack / schema / capability id.
+- [x] Code-seam authority remains `src/game-specific/packConfig.ts`.
+- [x] ≥2 materially different generated consumers (2 wired).
+- [x] Focused generate/honesty/uiCopy tests.
+- [x] Honest residual limitation (`puzzleConfigIsCode` + escape-room grammar).
+- [x] ADR-0039.
+- [x] Real-browser play of factory-generated `wave12-physics-puzzle` /
+  `wave12-escape-room` (`tools/scripts/play-puzzle-seam-wave12.ts`, 2/2 PASS,
+  0 console errors, 0 external requests).
+- [x] `npm run sw2d -- validate` on those two games (schema + tsc + vite
+  build + boot smoke) PASS (CDP hang after printed success, timeout 90 → 124).
+- [ ] Overlay P3-E / P3-K re-run. **Not done this wave** — overlay stays unwired.
+- [ ] Committed proofs + maturity promotion. **Not done — evidence rule.**
+
+### Implementation notes
+
+- No new pack. `sw2d.puzzle` / `configSource: 'code'` already exist (ADR-0017).
+- Pointer shell branches on `puzzle.current().kind`. Dummy click + demo Matter
+  ball stay for pointer games that do not install the pack (physics-toy).
+- Physics: `setVelocity(10, -4)` on PRIMARY_ACTION or click; `apply({ inGoal })`
+  when the body is past the goal. Floor + left wall via AdvancedPhysicsService.
+- Escape: note at 240,280; key at 480,280 (locked until note); door at 720,280
+  (visual). Clicking the locked key records `lastResult: 'locked'`.
+- Overlay kits stay local.
+- `LIMITATIONS.puzzleConfigIsCode` stays: these rules are TypeScript, not
+  `content/puzzles.json`.
+
+### Browser journeys (executed)
+
+Factory-generated:
+
+- Physics-puzzle: Space start ball 200,492 on the floor, solved false → KeyJ
+  nudge 1 → 90 frames ball x 817, `inGoal` true, `solved` true, lastResult=goal.
+- Escape-room: Space start note/key false → click key 480,280 lastResult=locked
+  → click note 240,280 note true → click key key true, solved true.
+
+### Visual inspection
+
+Physics: visible ball, floor, goal; HUD `BALL x  GOAL 740  NUDGES n` then
+`SOLVED`. Escape: three hotspots, HUD `NOTE N/Y  KEY N/Y` then `ESCAPED`.
+Confirmed via debug snapshots, not screenshots.
+
+### Bugs found and fixed this wave
+
+- First Chrome start this session omitted `swiftshader.tar.br`; EGL failed and
+  CDP `newPage` SIGTRAPed. Inflating SwiftShader to `/tmp` restored play.
+- `timeout 90 npm run sw2d -- validate` still hangs after printed PASS (exit
+  124). Same as Waves 8–11; not a Wave-12 regression.
+
+### Remaining blockers / unknowns
+
+- No committed `proofs/` for physics-puzzle or escape-room; catalog maturity
+  stays `recipe` (23/3/48).
+- Overlay physics-puzzle / escape-room stay local. No content-authored
+  escape-room grammar.
 - Chrome wrapper is session-local under `/tmp`.
 - Do not commit `package-lock.json` workspace links for gitignored `games/wave*`.
 - Residual Category-C: climbing, chase, territory, pinball, crop/season, rail

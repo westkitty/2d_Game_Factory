@@ -94,5 +94,7 @@ describe('generateUiCopy (generated games announce their genre honestly)', () =>
     expect(copyFor('gallery-shooter').playHint).toContain('FIRE J/X');
     expect(copyFor('rail-shooter').playHint).not.toContain('FIRE');
     expect(copyFor('kart-racer').playHint).not.toContain('FIRE');
+    expect(copyFor('physics-puzzle').playHint).toBe('CLICK TO NUDGE  -  LAND IN THE GOAL');
+    expect(copyFor('escape-room').playHint).toBe('CLICK THE NOTE  -  THEN THE KEY');
   });
 });

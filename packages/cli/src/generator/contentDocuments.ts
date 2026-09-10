@@ -1012,7 +1012,11 @@ export function generateUiCopy(options: {
         ? 'CLICK HOTSPOTS  -  ENTER ADVANCES'
         : has('sw2d.weapons')
           ? 'AIM WITH MOUSE  -  FIRE J/X'
-          : 'POINT AT THINGS  -  CLICK TO ACT  -  PAUSE TO STOP';
+          : has('sw2d.puzzle')
+            ? presetId === 'escape-room'
+              ? 'CLICK THE NOTE  -  THEN THE KEY'
+              : 'CLICK TO NUDGE  -  LAND IN THE GOAL'
+            : 'POINT AT THINGS  -  CLICK TO ACT  -  PAUSE TO STOP';
       break;
     case 'ui-simulation':
       playHint = has('sw2d.economy')
