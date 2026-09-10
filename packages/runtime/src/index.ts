@@ -105,6 +105,12 @@ export {
   type StarterNavigationSnapshot,
   type NavigationStarterMode,
 } from './game-support/starterNavigation.ts';
+export {
+  bindStarterToy,
+  type StarterToyBinding,
+  type StarterToySnapshot,
+  type ToyStarterMode,
+} from './game-support/starterToy.ts';
 
 export { LocalStorageDriver, MemoryStorageDriver } from './persistence/LocalStorageDriver.ts';
 export { SaveStoreImpl } from './persistence/SaveStoreImpl.ts';

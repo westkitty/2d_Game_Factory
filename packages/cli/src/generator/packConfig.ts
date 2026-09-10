@@ -37,7 +37,10 @@ import type { PresetDefinition } from '@sw2d/contracts';
  * `sw2d.strategy` loops without inventing pathfinding, attack-range or
  * autonomous-combat packs. Wave 19 stamps `NAV_STARTER` (`maze` / `lane` /
  * null) so the grid shell can present two different `sw2d.navigation` loops
- * without inventing fog-of-war, spawn-scheduling or combat packs.
+ * without inventing fog-of-war, spawn-scheduling or combat packs. Wave 20
+ * stamps `TOY_STARTER` (`photo` / `sandbox` / null) so the top-down and
+ * pointer shells can present two different ADR-0018 loops without inventing
+ * a camera/framing pack or a generalized authoring sandbox.
  *
  * Deliberately NOT a universal puzzle DSL.
  */
@@ -145,6 +148,8 @@ export function generatePackConfig(preset: PresetDefinition): string {
   const strategyStarter =
     preset.id === 'turn-based-tactics' ? "'tactics'" : preset.id === 'auto-battler' ? "'battler'" : 'null';
   const navStarter = preset.id === 'maze-game' ? "'maze'" : preset.id === 'lane-defense' ? "'lane'" : 'null';
+  const toyStarter =
+    preset.id === 'photography-game' ? "'photo'" : preset.id === 'sandbox-playground' ? "'sandbox'" : 'null';
   return [
     '/**',
     " * Config for packs that declare `configSource: 'code'` in their definition -",
@@ -179,6 +184,9 @@ export function generatePackConfig(preset: PresetDefinition): string {
     '',
     '/** Category-C Wave 19: maze vs lane presentation of sw2d.navigation. Null otherwise. */',
     `export const NAV_STARTER: 'maze' | 'lane' | null = ${navStarter};`,
+    '',
+    '/** Category-C Wave 20: photo vs sandbox presentation of ADR-0018 interaction. Null otherwise. */',
+    `export const TOY_STARTER: 'photo' | 'sandbox' | null = ${toyStarter};`,
     '',
   ]
     .filter((line, index, all) => !(line === '' && all[index - 1] === ''))

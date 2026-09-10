@@ -38,11 +38,12 @@ Highest-leverage clusters, from `packages/presets/src/shared.ts` LIMITATIONS + p
 | 13 | Consume existing `sw2d.simulation` ledger/jobs | farming-lite, colony-lite | **Wave 13 implemented and played** (existing `sw2d.simulation`; ADR-0040). Residual: crop/season/plot framework and colony assignment AI stay out. Overlay farming/colony stay local (P3-J). |
 | 14 | Consume existing `sw2d.narrative` store | interactive-fiction-hybrid, investigation-game | **Wave 14 implemented** (existing `sw2d.narrative`; ADR-0041). Residual: parser IF and evidence-board linking stay out. Overlay IF/investigation stay local (P3-K). |
 | 15 | Consume existing `sw2d.arcade` score/elapsed | fishing-game, cooking-game | **Wave 15 implemented** (existing `sw2d.arcade`; ADR-0042). Residual: casting/line/tension/fish behaviour and ingredient/recipe cooking stay out. Overlay fishing/cooking stay local (P3-H). Pinball/microgame stay dummy OPTIONS. |
-| 16 | Consume existing ADR-0018 interaction in pointer shells | drawing-game, dress-up-character-toy | **Wave 16 implemented** (existing spatial pointer / drag-drop; ADR-0043). Residual: pressure/layers/export; attachment/skeleton wardrobe. Overlay drawing/dress-up stay local (P3-H). |
+| 16 | Consume existing ADR-0018 interaction in pointer shells | drawing-game, dress-up-character-toy | **Wave 16 implemented** (existing spatial pointer / drag-drop; ADR-0043). Residual: pressure/layers/export; attachment/skeleton wardrobe. Overlay drawing/dress-up stay local (P3-H). Wave 20 consumes the same service for photo vs sandbox. |
 | 17 | Consume existing `sw2d.progression` XP/currency | survivor-like, action-roguelite | **Wave 17 implemented** (existing `sw2d.progression`; ADR-0044). Residual: difficulty scaling; permadeath. Overlay survivor/roguelite stay local (P3-C). |
 | 18 | Consume existing `sw2d.strategy` teams/turns | turn-based-tactics, auto-battler | **Wave 18 implemented** (existing `sw2d.strategy`; ADR-0045). Residual: attack-range; autonomous combat; RTS box-select; territory capture. Overlay tactics/battler stay local. |
 | 19 | Consume existing `sw2d.navigation` pathfinding | maze-game, lane-defense | **Wave 19 implemented** (existing `sw2d.navigation`; ADR-0046). Residual: fog-of-war; maze generation; spawn scheduling; combat; tower target-selection. Overlay maze/lane stay local. |
-| — | Tier 4 specialized (parser IF, photography, microgame scheduler, sandbox authoring) | prefer game-specific seam until a second consumer is real | backlog |
+| 20 | Consume existing ADR-0018 in photo + sandbox | photography-game, sandbox-playground | **Wave 20 implemented** (existing spatial pointer / click; ADR-0047). Residual: camera/framing/scoring; generalized authoring. Overlay photography/sandbox stay local (P3-H). |
+| — | Tier 4 specialized (parser IF, microgame scheduler) | prefer game-specific seam until a second consumer is real | backlog |
 
 Do not extend `sw2d.simulation` / `sw2d.narrative` / `sw2d.ai` into genre monoliths. New narrow packs compose with them.
 
@@ -694,10 +695,7 @@ High-contrast Phaser HUD (`MATCH` / `FALLING BLOCK`, clears or lines, `MOVE WASD
 
 ### Remaining blockers / unknowns
 
-- No committed `proofs/` for match-puzzle or falling-block-puzzle; catalog maturity stays `recipe`.
-- Overlay boards stay local. Pointer drag-swap and wall-kicks stay out of contract.
-- Chrome wrapper is session-local under `/tmp`.
-- Do not commit `package-lock.json` workspace links for gitignored `games/wave*`.
+- No committed `proofs/` for matorkspace links for gitignored `games/wave*`.
 - Residual Category-C: climbing, chase, territory, pinball, crop/season, rail camera, weapons leftover, run-meta vs survivor, Tier-4, committed proofs.
 
 ## Wave 10 — `sw2d.timing`
@@ -1549,6 +1547,100 @@ not screenshots.
 - Chrome wrapper is session-local under `/tmp`.
 - Do not commit `package-lock.json` workspace links for gitignored `games/wave*`.
 - Residual Category-C: climbing, chase, territory capture, pinball, crop/season,
-  rail camera, dummy OPTIONS (pinball/microgame), photography/sandbox, overlay
-  wiring, committed proofs, simple-rts leftover (realtime box-select, not turns),
-  tower target-selection, attack-range, autonomous combat.
+  rail camera, dummy OPTIONS (pinball/microgame), overlay wiring, committed
+  proofs, simple-rts leftover (realtime box-select, not turns), tower
+  target-selection, attack-range, autonomous combat, museum exhibit/codex.
+  Next wave: **done** — Wave 20 photo/sandbox (see below).
+
+## Wave 20 — consume ADR-0018 in photo and sandbox shells
+
+### Problem
+
+`photography-game` entered play as a dummy top-down wanderer.
+`sandbox-playground` entered play as a dummy pointer click target. Wave 16
+already consumed ADR-0018 for drawing and wardrobe and rejected these two as
+a third `POINTER_STARTER` consumer. Inventing a camera/framing pack or a
+generalized authoring sandbox would duplicate 1-consumer leftovers. Folding
+either into arcade, narrative or puzzle would lie about the genre.
+
+### Consumers
+
+- `photography-game` — `TOY_STARTER = 'photo'` (walk to BIRD then TREE; J
+  captures in range; too-far is rejected; complete at 2 shots).
+- `sandbox-playground` — `TOY_STARTER = 'sandbox'` (click stamps BLOCK or
+  BALL; arrows pick the kind; click a stamp to remove; complete when one of
+  each exists).
+
+Materially different: walk-into-range capture vs click-to-stamp two kinds.
+
+Drawing, dress-up, physics-toy, gallery, rail and museum keep
+`TOY_STARTER = null`. Overlay photography / sandbox kits stay local (P3-H).
+
+### ValidationPlan
+
+1. No new pack / schema / capability id.
+2. Generated packConfig stamps `TOY_STARTER` photo vs sandbox vs null.
+3. Generated top-down shell binds photo and skips dummy wander fire.
+   Generated pointer shell binds sandbox and skips the dummy target.
+4. Honesty / docsSync / uiCopy stay green. ADR-0047.
+5. Real-browser play of factory-generated games. Overlay kits not re-run.
+   Committed proofs + maturity promotion still deferred.
+
+### CompletionContract
+
+- [x] No new pack / schema / capability id.
+- [x] Authority remains the existing ADR-0018 interaction service.
+- [x] ≥2 materially different generated consumers (2 wired).
+- [x] Focused generate/honesty/uiCopy tests.
+- [x] Honest residual limitation (camera/framing; generalized authoring).
+- [x] ADR-0047.
+- [x] Real-browser play of factory-generated `wave20-photography-game` /
+  `wave20-sandbox-playground` (`tools/scripts/play-toy-wave20.ts`, 2/2 PASS,
+  0 console errors, 0 external requests).
+- [x] `npm run sw2d -- validate` on those two games (schema + tsc + vite
+  build + boot smoke) PASS (CDP hang after printed success, timeout 90 → 124).
+- [ ] Overlay P3-H re-run. **Not this wave.**
+- [ ] Committed proofs + maturity promotion. **Not done — evidence rule.**
+
+### Implementation notes
+
+- No new pack. `context.interaction` already exists (ADR-0018).
+- `bindStarterToy` is INERT unless packConfig names `'photo'` or `'sandbox'`.
+- Photo: spawn (120,270); BIRD (280,270); TREE (700,270); range 64.
+- Sandbox: stage 80,140 800×340; palette BLOCK/BALL; max 6 stamps.
+- Overlay photography / sandbox kits stay local (P3-H).
+
+### Browser journeys (executed)
+
+Factory-generated:
+
+- Photography-game: Space start x=120 mode=`photo` shots 0 → KeyJ `too-far` →
+  walk x=237 near bird, J `shot-bird` shots 1 → walk x=648 near tree, J
+  `shot-tree` shots 2 captured [bird, tree] outcome=complete.
+- Sandbox-playground: Space start mode=`sandbox` selected=block 0/0 → click
+  400,280 `stamp-block` blocks 1 → ArrowRight `pick-ball` → click 600,280
+  `stamp-ball` blocks 1 balls 1 outcome=complete.
+
+### Visual inspection
+
+Photo: BIRD / TREE markers, HUD `shots n/2`, title `CAPTURED` on complete.
+Sandbox: BLOCK/BALL palette plus stage, HUD `block n · ball n`, title `BUILT`
+on complete. Dummy wander fire / dummy click target hidden when the binder
+is active. Confirmed via debug snapshots, not screenshots.
+
+### Bugs found and fixed this wave
+
+- Top-down and pointer shells used `TOY_STARTER` before importing it from
+  packConfig (`tsc`).
+- Pointer shell bound `bindStarterToy` but never called `toy.select` /
+  `toy.render`, so ArrowLeft/Right would not pick BLOCK vs BALL.
+
+### Remaining blockers / unknowns
+
+- Catalog maturity stays unchanged (23/3/48).
+- Chrome wrapper is session-local under `/tmp`.
+- Do not commit `package-lock.json` workspace links for gitignored `games/wave*`.
+- Residual Category-C: climbing, chase, territory capture, pinball, crop/season,
+  rail camera, dummy OPTIONS (pinball/microgame), overlay wiring, committed
+  proofs, simple-rts leftover (realtime box-select, not turns), tower
+  target-selection, attack-range, autonomous combat, museum exhibit/codex.

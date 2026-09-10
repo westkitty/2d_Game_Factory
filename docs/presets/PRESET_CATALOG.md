@@ -227,8 +227,8 @@ recipe's *first* stated limitation; see `knownLimitations` in
 | `physics-toy` | (none stated) |
 | `virtual-pet` | Needs, decay, care actions, affinity and wellbeing hold/fail are reusable (sw2d.needs); full creature behaviour AI, relationship graphs and colony assignment are not. |
 | `dress-up-character-toy` | Wardrobe slots for the generated starter use interaction drag/drop (ADR-0018); a reusable attachment/skeleton wardrobe system is not. |
-| `sandbox-playground` | No generalized authoring/editing sandbox exists. |
+| `sandbox-playground` | Block and ball stamps for the generated starter use interaction click (ADR-0018); a generalized authoring/editing sandbox is not. |
 | `drawing-game` | Stroke polylines for the generated starter are captured through the spatial pointer (ADR-0018); pressure, layers, export and a reusable drawing-canvas system are not. |
 | `fishing-game` | Score, combo, lives and elapsed are reusable (sw2d.arcade); a reusable casting/line/tension/fish behavior system and an ingredient/recipe/action-sequence cooking system are not. |
 | `cooking-game` | Score, combo, lives and elapsed are reusable (sw2d.arcade); a reusable casting/line/tension/fish behavior system and an ingredient/recipe/action-sequence cooking system are not. |
-| `photography-game` | No reusable camera/framing/scoring/photo-capture gameplay system exists. |
+| `photography-game` | Subjects for the generated starter are captured through the spatial pointer (ADR-0018) when the player is in range; a reusable camera/framing/scoring/photo-capture gameplay system is not. |

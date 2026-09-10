@@ -3,13 +3,14 @@ import {
   bindStarterDialogue,
   bindStarterWeapon,
   bindStarterPointer,
+  bindStarterToy,
   createAdvancedPhysics,
   mutedStyle,
   pointerActionController,
   type SceneContext,
   type ScenePackDefinition,
 } from '@sw2d/runtime';
-import { POINTER_STARTER } from './packConfig.ts';
+import { POINTER_STARTER, TOY_STARTER } from './packConfig.ts';
 
 /**
  * Generated starter shell: pointer controller family.
@@ -38,6 +39,10 @@ import { POINTER_STARTER } from './packConfig.ts';
  * When `POINTER_STARTER` is draw or wardrobe (Category-C Wave 16) the dummy
  * target is replaced by two ADR-0018 presentations: stroke polylines vs
  * drag/drop wardrobe slots. Overlay drawing / dress-up kits stay local.
+ *
+ * When `TOY_STARTER` is sandbox (Category-C Wave 20) the dummy target is
+ * replaced by click-to-stamp block/ball authoring. Photography binds the
+ * same starter from the top-down shell. Overlay sandbox kits stay local.
  *
  * Press-style semantic actions (`pointerActionController`) are still
  * available for menu-style confirms; this shell demonstrates the spatial
@@ -76,12 +81,13 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     const dialogue = bindStarterDialogue(context);
     const weapon = bindStarterWeapon(context);
     const pointerPlay = bindStarterPointer(context, { mode: POINTER_STARTER });
-    const weaponsActive = Boolean(weapon.snapshot()) && !dialogue.active && !pointerPlay.active;
+    const toy = bindStarterToy(context, { mode: TOY_STARTER });
+    const weaponsActive = Boolean(weapon.snapshot()) && !dialogue.active && !pointerPlay.active && !toy.active;
     const puzzle = context.capabilities.get<CodePuzzleService>('puzzle.state');
     const puzzleKind = puzzle?.current().kind;
     const physicsPuzzle = puzzleKind === 'physics-goal';
     const escapePuzzle = puzzleKind === 'escape-locks';
-    const dummyPointer = !dialogue.active && !weaponsActive && !physicsPuzzle && !escapePuzzle && !pointerPlay.active;
+    const dummyPointer = !dialogue.active && !weaponsActive && !physicsPuzzle && !escapePuzzle && !pointerPlay.active && !toy.active;
 
     let activations = 0;
     let highlighted = false;
@@ -291,6 +297,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       nudges,
       ...(dialogue.active ? { dialogue: dialogue.snapshot() } : {}),
       ...(pointerPlay.active ? { pointerPlay: pointerPlay.snapshot() } : {}),
+      ...(toy.active ? { toy: toy.snapshot() } : {}),
       weapon: weapon.snapshot(),
       ...(puzzle
         ? {
@@ -338,6 +345,13 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
 
         if (pointerPlay.active) {
           pointerPlay.render();
+          return;
+        }
+
+        if (toy.active) {
+          if (context.input.justPressed('MOVE_LEFT')) toy.select(-1);
+          if (context.input.justPressed('MOVE_RIGHT')) toy.select(1);
+          toy.render();
           return;
         }
 
@@ -395,6 +409,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         dialogue.dispose();
         weapon.dispose();
         pointerPlay.dispose();
+        toy.dispose();
         physics?.dispose();
         try {
           target?.destroy();

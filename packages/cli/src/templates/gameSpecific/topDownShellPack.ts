@@ -11,6 +11,7 @@ import {
   bindStarterPerception,
   bindStarterNarrative,
   bindStarterProgression,
+  bindStarterToy,
   bindStarterWeapon,
   createRoomTransitionRuntime,
   createWorldMapOverlay,
@@ -19,7 +20,7 @@ import {
   type SceneContext,
   type ScenePackDefinition,
 } from '@sw2d/runtime';
-import { NARRATIVE_STARTER, PROGRESSION_STARTER } from './packConfig.ts';
+import { NARRATIVE_STARTER, PROGRESSION_STARTER, TOY_STARTER } from './packConfig.ts';
 
 /**
  * Generated starter shell: top-down controller family.
@@ -121,6 +122,15 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       walls.setVisible(false);
       wallCollider.destroy();
     }
+    // Toy (Category-C Wave 20). Inert unless packConfig names a photo/sandbox
+    // starter. Photo walks the player to subjects and captures in range;
+    // dummy wander fire stays off.
+    const toy = bindStarterToy(context, { mode: TOY_STARTER });
+    if (toy.active) {
+      player.setPosition(toy.startX(), toy.startY());
+      walls.setVisible(false);
+      wallCollider.destroy();
+    }
     // Ball / paddle (Category-C Wave 5). Inert unless sw2d.ball-paddle is
     // installed with a non-empty catalog. Then the table owns motion and
     // the dummy wander is hidden.
@@ -187,6 +197,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       ...(perception.active ? { perception: perception.snapshot() } : {}),
       ...(story.active ? { narrative: story.snapshot() } : {}),
       ...(meta.active ? { progression: meta.snapshot() } : {}),
+      ...(toy.active ? { toy: toy.snapshot() } : {}),
       ...(table.active ? { ballPaddle: table.snapshot() } : {}),
       ...(melee.active ? { melee: melee.snapshot() } : {}),
       ...(seats.active ? { localPlay: seats.snapshot() } : {}),
@@ -283,8 +294,13 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
           meta.tick(deltaMs);
           meta.render();
         }
+        if (toy.active) {
+          toy.setPlayer(player.x, player.y);
+          if (intent.primaryPressed) toy.act();
+          toy.render();
+        }
         const firing = intent.primaryPressed || (battle.active && context.input.isDown('PRIMARY_ACTION'));
-        if (firing && !perception.active && !story.active && !runMeta) {
+        if (firing && !perception.active && !story.active && !runMeta && !toy.active) {
           (weapon ?? battle).fire(nowMs, facingX, facingY, { x: player.x, y: player.y });
         }
         if (worldGraph && rooms) {
@@ -307,6 +323,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         perception.dispose();
         story.dispose();
         meta.dispose();
+        toy.dispose();
         table.dispose();
         melee.dispose();
         seats.dispose();

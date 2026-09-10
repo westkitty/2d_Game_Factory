@@ -993,6 +993,8 @@ export function generateUiCopy(options: {
                   ? 'MOVE WASD/ARROWS  -  J INSPECTS CLUES'
                   : presetId === 'action-roguelite'
                     ? 'MOVE WASD/ARROWS  -  J TAKES RELICS'
+                    : presetId === 'photography-game'
+                      ? 'MOVE WASD/ARROWS  -  J SHOOTS SUBJECTS'
                     : 'MOVE WASD/ARROWS  -  PAUSE TO STOP';
       break;
     case 'vehicle':
@@ -1030,6 +1032,8 @@ export function generateUiCopy(options: {
               ? 'DRAW TWO STROKES ON THE PAGE'
               : presetId === 'dress-up-character-toy'
                 ? 'DRAG HAT AND SHIRT ONTO THE FIGURE'
+                : presetId === 'sandbox-playground'
+                  ? 'CLICK STAMPS  -  ARROWS PICK BLOCK OR BALL'
                 : 'POINT AT THINGS  -  CLICK TO ACT  -  PAUSE TO STOP';
       break;
     case 'ui-simulation':

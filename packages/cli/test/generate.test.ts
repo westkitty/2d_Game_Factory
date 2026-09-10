@@ -945,6 +945,52 @@ describe('generated maze and lane-defense consume sw2d.navigation', () => {
   });
 });
 
+describe('generated photography and sandbox consume ADR-0018 interaction', () => {
+  it('the generated top-down shell binds bindStarterToy for photo', () => {
+    const photo = PRESETS.find((candidate) => candidate.id === 'photography-game')!;
+    const shell = buildGameFiles('toy-probe', photo).get('src/game-specific/shellPack.ts')!;
+    expect(shell).toContain('bindStarterToy(context, { mode: TOY_STARTER })');
+    expect(shell).toContain('toy.setPlayer(');
+    expect(shell).toContain('toy.act()');
+    expect(shell).toContain("from './packConfig.ts'");
+  });
+
+  it('the generated pointer shell binds bindStarterToy for sandbox', () => {
+    const sandbox = PRESETS.find((candidate) => candidate.id === 'sandbox-playground')!;
+    const shell = buildGameFiles('toy-probe', sandbox).get('src/game-specific/shellPack.ts')!;
+    expect(shell).toContain('bindStarterToy(context, { mode: TOY_STARTER })');
+    expect(shell).toContain('toy.select(');
+    expect(shell).toContain("from './packConfig.ts'");
+  });
+
+  it('photography-game and sandbox-playground stamp different TOY_STARTER values; drawing and rail stay null', () => {
+    const photo = PRESETS.find((candidate) => candidate.id === 'photography-game')!;
+    const sandbox = PRESETS.find((candidate) => candidate.id === 'sandbox-playground')!;
+    const drawing = PRESETS.find((candidate) => candidate.id === 'drawing-game')!;
+    const rail = PRESETS.find((candidate) => candidate.id === 'rail-shooter')!;
+    const photoFiles = buildGameFiles('toy-probe', photo);
+    const sandboxFiles = buildGameFiles('toy-probe', sandbox);
+    const drawingFiles = buildGameFiles('toy-probe', drawing);
+    const railFiles = buildGameFiles('toy-probe', rail);
+    expect(photoFiles.get('src/game-specific/packConfig.ts')).toContain(
+      "TOY_STARTER: 'photo' | 'sandbox' | null = 'photo'",
+    );
+    expect(sandboxFiles.get('src/game-specific/packConfig.ts')).toContain(
+      "TOY_STARTER: 'photo' | 'sandbox' | null = 'sandbox'",
+    );
+    expect(drawingFiles.get('src/game-specific/packConfig.ts')).toContain(
+      "TOY_STARTER: 'photo' | 'sandbox' | null = null",
+    );
+    expect(railFiles.get('src/game-specific/packConfig.ts')).toContain(
+      "TOY_STARTER: 'photo' | 'sandbox' | null = null",
+    );
+    const photoTheme = JSON.parse(photoFiles.get('content/themes/default/theme.json')!) as { ui: { playHint: string } };
+    const sandboxTheme = JSON.parse(sandboxFiles.get('content/themes/default/theme.json')!) as { ui: { playHint: string } };
+    expect(photoTheme.ui.playHint).toContain('J SHOOTS SUBJECTS');
+    expect(sandboxTheme.ui.playHint).toContain('CLICK STAMPS');
+  });
+});
+
 describe('generated pointer puzzles consume sw2d.puzzle', () => {
   it('the generated pointer shell presents physics-goal and escape-locks on puzzle.state', () => {
     const physics = PRESETS.find((candidate) => candidate.id === 'physics-puzzle')!;

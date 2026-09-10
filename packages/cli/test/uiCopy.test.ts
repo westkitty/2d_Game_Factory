@@ -105,6 +105,8 @@ describe('generateUiCopy (generated games announce their genre honestly)', () =>
     expect(copyFor('cooking-game').playHint).toBe('ARROWS PICK  -  ENTER ADDS TO THE DISH');
     expect(copyFor('drawing-game').playHint).toBe('DRAW TWO STROKES ON THE PAGE');
     expect(copyFor('dress-up-character-toy').playHint).toBe('DRAG HAT AND SHIRT ONTO THE FIGURE');
+    expect(copyFor('photography-game').playHint).toBe('MOVE WASD/ARROWS  -  J SHOOTS SUBJECTS');
+    expect(copyFor('sandbox-playground').playHint).toBe('CLICK STAMPS  -  ARROWS PICK BLOCK OR BALL');
     expect(copyFor('action-roguelite').playHint).toBe('MOVE WASD/ARROWS  -  J TAKES RELICS');
     expect(copyFor('survivor-like').playHint).toContain('SURVIVE THE WAVES');
   });

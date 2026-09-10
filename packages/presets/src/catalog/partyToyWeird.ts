@@ -93,7 +93,9 @@ export const PARTY_TOY_WEIRD_PRESETS: readonly PresetDefinition[] = [
     requiredContentRoles: ['tuning', 'levels'],
     supportedInputModes: POINTER_INPUT_MODES,
     validationProfile: VALIDATION_PROFILES.partyToyWeird,
-    knownLimitations: ['No generalized authoring/editing sandbox exists.'],
+    knownLimitations: [
+      'Block and ball stamps for the generated starter use interaction click (ADR-0018); a generalized authoring/editing sandbox is not.',
+    ],
   }),
 
   definePreset({
@@ -145,6 +147,8 @@ export const PARTY_TOY_WEIRD_PRESETS: readonly PresetDefinition[] = [
     requiredContentRoles: ['tuning', 'levels'],
     supportedInputModes: POINTER_INPUT_MODES,
     validationProfile: VALIDATION_PROFILES.partyToyWeird,
-    knownLimitations: ['No reusable camera/framing/scoring/photo-capture gameplay system exists.'],
+    knownLimitations: [
+      'Subjects for the generated starter are captured through the spatial pointer (ADR-0018) when the player is in range; a reusable camera/framing/scoring/photo-capture gameplay system is not.',
+    ],
   }),
 ];
