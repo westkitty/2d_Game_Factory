@@ -42,6 +42,7 @@ export const PACK_IDS = {
   melee: 'sw2d.melee',
   localPlay: 'sw2d.local-play',
   stageScroll: 'sw2d.stage-scroll',
+  timing: 'sw2d.timing',
 } as const;
 
 export const CAPABILITY_IDS = {
@@ -90,4 +91,6 @@ export const CAPABILITY_IDS = {
   localPlay: 'arcade.seats',
   /** Category-C Wave 8: scrolling stage / player band / streaming hazards. */
   stageScroll: 'world.scroll',
+  /** Category-C Wave 10: visual reaction cues and beat windows (not audio-sync). */
+  timing: 'arcade.timing',
 } as const;

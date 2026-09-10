@@ -93,3 +93,4 @@ export { ballPaddlePack, type BallPaddleService } from './ballPaddle/ballPaddleP
 export { meleePack, type MeleeService } from './melee/meleePack.ts';
 export { localPlayPack, type LocalPlayService } from './localPlay/localPlayPack.ts';
 export { stageScrollPack, type StageScrollService } from './stageScroll/stageScrollPack.ts';
+export { timingPack, type TimingService } from './timing/timingPack.ts';

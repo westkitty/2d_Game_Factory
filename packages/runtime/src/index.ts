@@ -62,6 +62,7 @@ export { bindStarterMelee, type StarterMeleeBinding, type StarterMeleeSnapshot }
 export { bindStarterLocalPlay, type StarterLocalPlayBinding, type StarterLocalPlaySnapshot } from './game-support/starterLocalPlay.ts';
 export { bindStarterStageScroll, type StarterStageScrollBinding, type StarterStageScrollSnapshot } from './game-support/starterStageScroll.ts';
 export { bindStarterPuzzle, type StarterPuzzleBinding, type StarterPuzzleSnapshot } from './game-support/starterPuzzle.ts';
+export { bindStarterTiming, type StarterTimingBinding, type StarterTimingSnapshot } from './game-support/starterTiming.ts';
 
 export { LocalStorageDriver, MemoryStorageDriver } from './persistence/LocalStorageDriver.ts';
 export { SaveStoreImpl } from './persistence/SaveStoreImpl.ts';

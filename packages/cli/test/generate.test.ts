@@ -155,6 +155,12 @@ describe('all 74 presets generate valid, token-free, schema-valid source', () =>
       expect(() => validateContentBundleData({ 'stage-scroll': stageJson })).not.toThrow();
     });
 
+    it(`${preset.id}'s generated content/timing.json validates as a timing catalog`, () => {
+      const files = buildGameFiles('matrix-game', preset);
+      const timingJson: unknown = JSON.parse(files.get('content/timing.json')!);
+      expect(() => validateContentBundleData({ timing: timingJson })).not.toThrow();
+    });
+
     it(`${preset.id} selects a real, resolvable shell template for its primary controller family`, () => {
       const files = buildGameFiles('matrix-game', preset);
       expect(files.has('src/game-specific/shellPack.ts')).toBe(true);
@@ -413,7 +419,7 @@ describe('generated ball-paddle games consume sw2d.ball-paddle', () => {
     expect(shell).toContain('table.tick(');
     expect(buildGameFiles('ball-paddle-probe', breakout).get('src/content.ts')).toContain("'ball-paddle': ballPaddleData");
     expect(buildGameFiles('ball-paddle-probe', breakout).get('src/main.ts')).toContain(
-      'ballPaddlePack, meleePack, localPlayPack, stageScrollPack, GAME_SPECIFIC_PACK',
+      'ballPaddlePack, meleePack, localPlayPack, stageScrollPack, timingPack, GAME_SPECIFIC_PACK',
     );
   });
 
@@ -439,7 +445,7 @@ describe('generated melee games consume sw2d.melee', () => {
     expect(shell).toContain('melee.strike(');
     expect(buildGameFiles('melee-probe', adventure).get('src/content.ts')).toContain('melee: meleeData');
     expect(buildGameFiles('melee-probe', adventure).get('src/main.ts')).toContain(
-      'ballPaddlePack, meleePack, localPlayPack, stageScrollPack, GAME_SPECIFIC_PACK',
+      'ballPaddlePack, meleePack, localPlayPack, stageScrollPack, timingPack, GAME_SPECIFIC_PACK',
     );
   });
 
@@ -464,7 +470,7 @@ describe('generated local-play games consume sw2d.local-play', () => {
     expect(shell).toContain('seats.act()');
     expect(buildGameFiles('local-play-probe', party).get('src/content.ts')).toContain("'local-play': localPlayData");
     expect(buildGameFiles('local-play-probe', party).get('src/main.ts')).toContain(
-      'ballPaddlePack, meleePack, localPlayPack, stageScrollPack, GAME_SPECIFIC_PACK',
+      'ballPaddlePack, meleePack, localPlayPack, stageScrollPack, timingPack, GAME_SPECIFIC_PACK',
     );
   });
 
@@ -515,6 +521,40 @@ describe('generated puzzle-board games consume sw2d.puzzle-rules match and falli
   });
 });
 
+describe('generated timing games consume sw2d.timing', () => {
+  it('the generated ui-simulation shell binds bindStarterTiming', () => {
+    const reaction = PRESETS.find((candidate) => candidate.id === 'reaction-timing')!;
+    const shell = buildGameFiles('timing-probe', reaction).get('src/game-specific/shellPack.ts')!;
+    expect(shell).toContain('bindStarterTiming(context)');
+    expect(shell).toContain('clock.hit()');
+    expect(buildGameFiles('timing-probe', reaction).get('src/content.ts')).toContain('timing: timingData');
+    expect(buildGameFiles('timing-probe', reaction).get('src/main.ts')).toContain(
+      'ballPaddlePack, meleePack, localPlayPack, stageScrollPack, timingPack, GAME_SPECIFIC_PACK',
+    );
+  });
+
+  it('reaction-timing and rhythm-action enable sw2d.timing and emit a non-empty catalog', () => {
+    for (const id of ['reaction-timing', 'rhythm-action'] as const) {
+      const preset = PRESETS.find((candidate) => candidate.id === id)!;
+      const files = buildGameFiles('timing-probe', preset);
+      const gameJson = JSON.parse(files.get('content/game.json')!) as { systemPacks: Array<{ packId: string }> };
+      expect(gameJson.systemPacks.map((s) => s.packId), id).toContain('sw2d.timing');
+      const doc = JSON.parse(files.get('content/timing.json')!) as {
+        mode: string;
+        hitsToWin: number;
+        reaction?: { delaysMs: unknown[] };
+        rhythm?: { periodMs: number };
+      };
+      expect(doc.mode, id).toBe(id === 'rhythm-action' ? 'rhythm' : 'reaction');
+      expect(doc.hitsToWin, id).toBeGreaterThan(0);
+      if (id === 'rhythm-action') expect(doc.rhythm?.periodMs, id).toBeGreaterThan(0);
+      else expect(doc.reaction?.delaysMs.length, id).toBeGreaterThan(0);
+      const theme = JSON.parse(files.get('content/themes/default/theme.json')!) as { ui: { playHint: string } };
+      expect(theme.ui.playHint, id).toContain(id === 'rhythm-action' ? 'ENTER ON THE BEAT' : 'WAIT FOR THE GO');
+    }
+  });
+});
+
 describe('generated stage-scroll games consume sw2d.stage-scroll', () => {
   it('the generated top-down shell binds bindStarterStageScroll', () => {
     const shmup = PRESETS.find((candidate) => candidate.id === 'horizontal-shmup')!;
@@ -523,7 +563,7 @@ describe('generated stage-scroll games consume sw2d.stage-scroll', () => {
     expect(shell).toContain('stage.tick(');
     expect(buildGameFiles('stage-scroll-probe', shmup).get('src/content.ts')).toContain("'stage-scroll': stageScrollData");
     expect(buildGameFiles('stage-scroll-probe', shmup).get('src/main.ts')).toContain(
-      'ballPaddlePack, meleePack, localPlayPack, stageScrollPack, GAME_SPECIFIC_PACK',
+      'ballPaddlePack, meleePack, localPlayPack, stageScrollPack, timingPack, GAME_SPECIFIC_PACK',
     );
   });
 

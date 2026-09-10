@@ -63,6 +63,9 @@ declare module '@sw2d/contracts' {
     'localPlay:completed': { readonly winner: number };
     'stageScroll:hit': { readonly hazardId: string };
     'stageScroll:completed': { readonly mode: string };
+    'timing:hit': { readonly hits: number; readonly lastResult: string };
+    'timing:miss': { readonly misses: number; readonly lastResult: string };
+    'timing:completed': { readonly mode: string; readonly outcome: string };
   }
 }
 

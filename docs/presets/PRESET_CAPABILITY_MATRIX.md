@@ -74,8 +74,8 @@ pack/controller selections were actually exercised through, and
 | `pong` | arcade, ball-paddle, local-play | - | top-down | keyboard, touch | puzzle-arcade-recipe |
 | `physics-puzzle` | puzzle | - | pointer | keyboard, pointer, touch | puzzle-arcade-recipe |
 | `maze-game` | world, world-entities | arcade | grid | keyboard, touch | puzzle-arcade-recipe |
-| `rhythm-action` | arcade | - | ui-simulation | keyboard, touch | puzzle-arcade-recipe |
-| `reaction-timing` | arcade | - | ui-simulation | keyboard, touch | puzzle-arcade-recipe |
+| `rhythm-action` | arcade, timing | - | ui-simulation | keyboard, touch | puzzle-arcade-recipe |
+| `reaction-timing` | arcade, timing | - | ui-simulation | keyboard, touch | puzzle-arcade-recipe |
 | `pinball-lite` | arcade | - | ui-simulation | keyboard, touch | puzzle-arcade-recipe |
 ## Strategy / defense (Phase 7B)
 
@@ -156,8 +156,9 @@ pack/controller selections were actually exercised through, and
 | melee | `sw2d.melee` | `combat.melee` | 2 | 2 |
 | local-play | `sw2d.local-play` | `arcade.seats` | 2 | 2 |
 | stage-scroll | `sw2d.stage-scroll` | `world.scroll` | 2 | 2 |
+| timing | `sw2d.timing` | `arcade.timing` | 2 | 2 |
 
-**All twenty-seven current packs have at least one preset consumer.** `sw2d.items` (capability
+**All twenty-eight current packs have at least one preset consumer.** `sw2d.items` (capability
 program Phase 2) is required by `collectathon-platformer`, whose generated starter consumes
 the reusable item/effect service through the shared platform shell. `sw2d.puzzle-rules`
 (capability program Phase 6 / Category-C Wave 9) is required by `sokoban`, `puzzle-platformer`,
@@ -172,7 +173,10 @@ discovery/visited state and the map from `content/world-graph.json`. `sw2d.vehic
 (`vehicle.motion`) and `sw2d.racing` (`race.state`) - capability program Phase 10 - are
 required by the vehicle-movement family; the generated vehicle shell turns `vehicleController`
 intent into car/kart/boat/flight motion and runs an ordered-checkpoint race from
-`content/vehicles.json` + `content/races.json`.
+`content/vehicles.json` + `content/races.json`. `sw2d.timing` (`arcade.timing`,
+Category-C Wave 10) is required by `reaction-timing` and `rhythm-action`, whose
+generated ui-simulation shells drive visual reaction cues and beat windows from
+`content/timing.json`.
 
 ## Validation profiles
 

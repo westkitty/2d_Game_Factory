@@ -32,7 +32,8 @@ Highest-leverage clusters, from `packages/presets/src/shared.ts` LIMITATIONS + p
 | 8 | Scrolling-stage camera | horizontal-shmup, vertical-shmup | **Wave 8 implemented and played** (`sw2d.stage-scroll` / `world.scroll`, ADR-0035). Residual: rail-path cameras, parallax authoring, bullet-hell pooling. Overlay shmups stay the three-enemy lane fight. |
 | 9 | Match / falling-block consumption | match-puzzle, falling-block-puzzle | **Wave 9 implemented and played** (existing `sw2d.puzzle-rules` kinds; ADR-0036). Residual: pointer drag-swap, wall-kicks, overlay-local boards. |
 | — | Tier 3 leftovers (rail camera, territory, chase, climbing, run-meta, crop/season) | 1 live consumer each | backlog |
-| — | Tier 4 specialized (rhythm, parser IF, fishing, cooking, photography, wardrobe, drawing, microgame scheduler, sandbox authoring) | prefer game-specific seam until a second consumer is real | backlog |
+| 10 | Visual reaction / beat windows (not audio-sync) | reaction-timing, rhythm-action | **Wave 10 implemented and played** (`sw2d.timing` / `arcade.timing`, ADR-0037). Residual: music-beat/audio-synchronization. Overlay rhythm/reaction stay local (P3-F). |
+| — | Tier 4 specialized (parser IF, fishing, cooking, photography, wardrobe, drawing, microgame scheduler, sandbox authoring) | prefer game-specific seam until a second consumer is real | backlog |
 
 Do not extend `sw2d.simulation` / `sw2d.narrative` / `sw2d.ai` into genre monoliths. New narrow packs compose with them.
 
@@ -689,3 +690,79 @@ High-contrast Phaser HUD (`MATCH` / `FALLING BLOCK`, clears or lines, `MOVE WASD
 - Chrome wrapper is session-local under `/tmp`.
 - Do not commit `package-lock.json` workspace links for gitignored `games/wave*`.
 - Residual Category-C: climbing, chase, territory, pinball, crop/season, rail camera, weapons leftover, run-meta vs survivor, Tier-4, committed proofs.
+
+## Wave 10 — `sw2d.timing`
+
+### Problem
+
+`reaction-timing` and `rhythm-action` were dummy ui-simulation pickers. Arcade
+elapsed/score is not a reaction-test or a beat window. Audio-sync is a
+different machine and stays out of contract. Overlay rhythm/reaction already
+have local proofs — leave them unwired (P3-F).
+
+### Consumers
+
+- `reaction-timing` — mode `reaction` (deterministic delay, too-early miss, latency window).
+- `rhythm-action` — mode `rhythm` (periodic visual beats, in-window hit, miss-on-late).
+
+Materially different: one-shot delay+false-start vs repeating visual metronome.
+
+### ValidationPlan
+
+1. Contract + schema (`TimingCatalog` / `timing-catalog`) reject unknown modes.
+2. Pack unit tests: reaction go/hit/false-start/timeout; rhythm in-window hit / late miss / complete-on-hits; missing document inert; empty delays inert; dispose; reset; dt=0.
+3. Generator: all 74 emit schema-valid `content/timing.json`; the two consumers enable `sw2d.timing` and a non-empty catalog; `src/content.ts` passes `'timing': timingData`; `main.ts` installs `timingPack`.
+4. Generated ui-simulation shell binds `bindStarterTiming` and skips the dummy picker when active.
+5. Honesty / docsSync / catalogPackIntegrity / uiCopy allowlist stay green.
+6. Workbench `POST /api/timing/inspect`.
+7. Overlay rhythm/reaction **not** bound (P3-F local journeys).
+8. Real-browser journeys against factory-generated games. Committed `proofs/` + maturity promotion still deferred.
+
+### CompletionContract
+
+- [x] Reusable pack in `@sw2d/packs`, renderer-neutral.
+- [x] Content authority `content/timing.json`.
+- [x] ≥2 materially different generated consumers (2 wired).
+- [x] Focused unit/integration tests.
+- [x] Honest residual limitation (audio-sync is not this pack).
+- [x] ADR-0037.
+- [x] Real-browser play of factory-generated `wave10-reaction-timing` / `wave10-rhythm-action` (`tools/scripts/play-timing-wave10.ts`, 2/2 PASS, 0 console errors, 0 external requests).
+- [x] `npm run sw2d -- validate` on those two games (schema + tsc + vite build + boot smoke) PASS (CDP hang after printed success, timeout 90 → 124).
+- [ ] Overlay P3-F re-run. **Not done this wave** — overlay stays unwired.
+- [ ] Committed proofs + maturity promotion. **Not done — evidence rule.**
+
+### Implementation notes
+
+- Capability id `arcade.timing`. Pack id `sw2d.timing`. Not folded into `sw2d.arcade`.
+- Empty catalog (hitsToWin 0 or empty delays/period) is inert. No duplicate-id error (schedules are arrays, not named cues).
+- Reaction: delays `[700, 700]`, window 400 ms, maxWait 900 ms, hitsToWin 2. False-start restarts the same delay. Timeout miss after maxWait.
+- Rhythm: period 500 ms, offset 700 ms, window ±120 ms, hitsToWin 3. Early press before the window is a miss that does not consume the beat; late close auto-misses.
+- Generated `src/main.ts` must both import and install `timingPack`. `content.ts` unquoted key is `timing: timingData`.
+- Overlay rhythm/reaction kits do not bind (P3-F).
+- `LIMITATIONS.visualTiming` names what is reusable and what is not.
+- `POST /api/timing/inspect` must be a real route (import-only fails `noUnusedLocals`).
+
+### Browser journeys (executed)
+
+Factory-generated (ui-simulation shell HUD):
+
+- Reaction-timing: Space start elapsed 446 wait → GO at 712 → Enter hit latency 17 hits 1 → GO at 1446 → Enter complete hits 2 latency 33, 0 misses.
+- Rhythm-action: Space start elapsed 445 wait → three in-window Enter hits (latencies 71 / 88 / 71) → hits 3 outcome=complete, 0 misses.
+
+### Visual inspection
+
+High-contrast Phaser HUD (`REACTION` / `RHYTHM`, hits/misses, WAIT/GO circle, `WAIT FOR THE GO   ENTER HITS` / `ENTER ON THE BEAT`). Dummy picker hidden when timing is active. Confirmed via debug snapshots, not screenshots.
+
+### Bugs found and fixed this wave
+
+- Generate test initially asserted quoted `'timing': timingData`; the template uses the identifier form `timing: timingData`.
+- Honesty `/sw2d\\.timing/` over-escaped and failed to match `sw2d.timing`.
+- `inspectTiming` import without a route failed `noUnusedLocals`.
+
+### Remaining blockers / unknowns
+
+- No committed `proofs/` for reaction-timing or rhythm-action; catalog maturity stays `recipe`.
+- Overlay rhythm/reaction stay local. Audio-sync stays out of contract.
+- Chrome wrapper is session-local under `/tmp`.
+- Do not commit `package-lock.json` workspace links for gitignored `games/wave*`.
+- Residual Category-C: climbing, chase, territory, pinball, crop/season, rail camera, weapons leftover, run-meta vs survivor, remaining Tier-4, committed proofs.

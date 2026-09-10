@@ -10,7 +10,8 @@ import { LIMITATIONS, POINTER_INPUT_MODES, VALIDATION_PROFILES, definePreset, pa
  * confirm-driven recipes get `ui-simulation`, ball-and-paddle recipes reuse
  * `top-down`'s continuous axis for paddle movement (ball motion is
  * `sw2d.ball-paddle`, see `LIMITATIONS.ballPaddleSystem`),
- * and the one recipe that is genuinely about pointer interaction
+ * timing recipes consume `sw2d.timing` (visual reaction / beat windows,
+ * ADR-0037), and the one recipe that is genuinely about pointer interaction
  * (`physics-puzzle`) gets `pointer`, honestly limited to press-style actions.
  *
  * Standard puzzle kinds (sokoban, switch/sequence, match, falling-block) are
@@ -117,10 +118,10 @@ export const PUZZLE_ARCADE_PRESETS: readonly PresetDefinition[] = [
     displayName: 'Rhythm Action',
     family: 'puzzle-arcade',
     controllerFamilies: ['ui-simulation'],
-    requiredSystemPacks: [pack(PACK_IDS.arcade)],
-    requiredContentRoles: ['tuning'],
+    requiredSystemPacks: [pack(PACK_IDS.arcade), pack(PACK_IDS.timing)],
+    requiredContentRoles: ['tuning', 'timing'],
     validationProfile: VALIDATION_PROFILES.puzzleArcade,
-    knownLimitations: ['No deterministic music-beat/audio-synchronization system exists yet.'],
+    knownLimitations: [LIMITATIONS.visualTiming],
   }),
 
   definePreset({
@@ -128,10 +129,10 @@ export const PUZZLE_ARCADE_PRESETS: readonly PresetDefinition[] = [
     displayName: 'Reaction Timing',
     family: 'puzzle-arcade',
     controllerFamilies: ['ui-simulation'],
-    requiredSystemPacks: [pack(PACK_IDS.arcade)],
-    requiredContentRoles: ['tuning'],
+    requiredSystemPacks: [pack(PACK_IDS.arcade), pack(PACK_IDS.timing)],
+    requiredContentRoles: ['tuning', 'timing'],
     validationProfile: VALIDATION_PROFILES.puzzleArcade,
-    knownLimitations: ['Arcade timing state exists, but no specialized reaction-test flow is implemented.'],
+    knownLimitations: [LIMITATIONS.visualTiming],
   }),
 
   definePreset({

@@ -30,6 +30,7 @@ import ballPaddleCatalogSchema from '../schemas/ball-paddle-catalog.schema.json'
 import meleeCatalogSchema from '../schemas/melee-catalog.schema.json' with { type: 'json' };
 import localPlayCatalogSchema from '../schemas/local-play-catalog.schema.json' with { type: 'json' };
 import stageScrollCatalogSchema from '../schemas/stage-scroll-catalog.schema.json' with { type: 'json' };
+import timingCatalogSchema from '../schemas/timing-catalog.schema.json' with { type: 'json' };
 
 /**
  * Ajv-based validation for every schema this package owns.
@@ -69,7 +70,8 @@ export type SchemaName =
   | 'ball-paddle-catalog'
   | 'melee-catalog'
   | 'local-play-catalog'
-  | 'stage-scroll-catalog';
+  | 'stage-scroll-catalog'
+  | 'timing-catalog';
 
 export const SCHEMA_NAMES: readonly SchemaName[] = [
   'action-bindings',
@@ -101,6 +103,7 @@ export const SCHEMA_NAMES: readonly SchemaName[] = [
   'melee-catalog',
   'local-play-catalog',
   'stage-scroll-catalog',
+  'timing-catalog',
 ];
 
 /** One located problem: which document, where in it, and what is wrong. */
@@ -154,6 +157,7 @@ const SCHEMA_DOCUMENTS: Readonly<Record<SchemaName, SchemaDocument>> = {
   'melee-catalog': meleeCatalogSchema,
   'local-play-catalog': localPlayCatalogSchema,
   'stage-scroll-catalog': stageScrollCatalogSchema,
+  'timing-catalog': timingCatalogSchema,
 };
 
 // Registration order matters: a schema must be added before anything that
@@ -187,6 +191,7 @@ for (const name of [
   'melee-catalog',
   'local-play-catalog',
   'stage-scroll-catalog',
+  'timing-catalog',
 ] as const) {
   const schema = SCHEMA_DOCUMENTS[name];
   ajv.addSchema(schema, schema.$id);

@@ -4,6 +4,7 @@ import {
   bindStarterNeeds,
   bindStarterDialogue,
   bindStarterLocalPlay,
+  bindStarterTiming,
   createAdvancedPhysics,
   mutedStyle,
   uiSimulationController,
@@ -43,6 +44,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     const needs = bindStarterNeeds(context);
     const dialogue = bindStarterDialogue(context);
     const seats = bindStarterLocalPlay(context);
+    const clock = bindStarterTiming(context);
 
     // Optional advanced physics (capability program Phase 9). Inert unless
     // content/game.json sets physicsProfile: 'matter'. Then a ball drops onto a
@@ -56,7 +58,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         })()
       : null;
 
-    const label = economy.active || needs.active || dialogue.active || seats.active
+    const label = economy.active || needs.active || dialogue.active || seats.active || clock.active
       ? null
       : scene.add
           .text(width * 0.5, height * 0.5, '', mutedStyle(20))
@@ -77,6 +79,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       ...(needs.active ? { needs: needs.snapshot() } : {}),
       ...(dialogue.active ? { dialogue: dialogue.snapshot() } : {}),
       ...(seats.active ? { localPlay: seats.snapshot() } : {}),
+      ...(clock.active ? { timing: clock.snapshot() } : {}),
       ...(physics ? { physics: { enabled: physics.enabled, bodyCount: physics.bodyCount, ball: ball ? physics.bodyState(ball) : null } } : {}),
     }));
 
@@ -85,7 +88,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     return {
       id: GAME_SPECIFIC_PACK.id,
 
-      update(): void {
+      update(deltaMs = 16): void {
         if (disposed) return;
         const intent = uiSimulationController.read(context.input);
         if (economy.active) {
@@ -124,6 +127,12 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
           seats.render();
           return;
         }
+        if (clock.active) {
+          clock.tick(deltaMs);
+          if (intent.confirmPressed || intent.primaryPressed) clock.hit();
+          clock.render();
+          return;
+        }
         if (intent.navigateLeftPressed) {
           selectionIndex = (selectionIndex - 1 + OPTIONS.length) % OPTIONS.length;
           confirmed = false;
@@ -148,6 +157,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         needs.dispose();
         dialogue.dispose();
         seats.dispose();
+        clock.dispose();
         physics?.dispose();
         try {
           label?.destroy();

@@ -54,6 +54,7 @@ import { inspectBallPaddle } from './ballPaddleLab.ts';
 import { inspectMelee } from './meleeLab.ts';
 import { inspectLocalPlay } from './localPlayLab.ts';
 import { inspectStageScroll } from './stageScrollLab.ts';
+import { inspectTiming } from './timingLab.ts';
 import { loadScene, listLevels, newObject, objectClassOptions, saveScene, SceneValidationError, type SceneDocument } from './sceneStore.ts';
 import { buildProject, createProject, packProject, validateProject } from './factoryService.ts';
 import { presetEvidenceFor } from './presetEvidence.ts';
@@ -758,6 +759,16 @@ const ROUTES: ReadonlyMap<string, Handler> = new Map<string, Handler>([
     (request) => {
       const body = bodyObject(request);
       return ok(inspectStageScroll(gameIdOf(request, body)));
+    },
+  ],
+
+  [
+    // Timing surface (Category-C Wave 10). Reports content/timing.json
+    // (mode, window). Live elapsed belongs in-game.
+    'POST /timing/inspect',
+    (request) => {
+      const body = bodyObject(request);
+      return ok(inspectTiming(gameIdOf(request, body)));
     },
   ],
 

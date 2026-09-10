@@ -838,6 +838,42 @@ export function generateStageScrollCatalog(kind: 'horizontal' | 'vertical' | 'no
 }
 
 /**
+ * content/timing.json - a TimingCatalog (Category-C Wave 10). Always
+ * emitted; empty/inert unless the preset installs `sw2d.timing`. Two
+ * bounded starter modes match the two consumers: reaction (deterministic
+ * delay, too-early miss) and rhythm (periodic visual beats). Not audio-sync.
+ */
+export function generateTimingCatalog(kind: 'reaction' | 'rhythm' | 'none'): Record<string, unknown> {
+  const empty = {
+    schemaVersion: 1,
+    mode: 'reaction',
+    windowMs: 0,
+    hitsToWin: 0,
+    missesToFail: 0,
+    reaction: { delaysMs: [] as const, maxWaitMs: 0 },
+  };
+  if (kind === 'none') return empty;
+  if (kind === 'reaction') {
+    return {
+      schemaVersion: 1,
+      mode: 'reaction',
+      windowMs: 400,
+      hitsToWin: 2,
+      missesToFail: 3,
+      reaction: { delaysMs: [700, 700], maxWaitMs: 900 },
+    };
+  }
+  return {
+    schemaVersion: 1,
+    mode: 'rhythm',
+    windowMs: 120,
+    hitsToWin: 3,
+    missesToFail: 4,
+    rhythm: { periodMs: 500, offsetMs: 700, beats: 8 },
+  };
+}
+
+/**
  * content/melee.json - a MeleeCatalog (Category-C Wave 6). Always
  * emitted; empty/inert unless the preset installs `sw2d.melee`. Two
  * bounded starter modes match the two consumers: skirmish (one elite
@@ -983,7 +1019,11 @@ export function generateUiCopy(options: {
             ? 'ENTER ADVANCES  -  ARROWS CHOOSE'
             : has('sw2d.local-play')
               ? 'J ACTS  -  PASS THE KEYBOARD  -  SIX TURNS'
-              : 'ARROWS CHANGE THE SELECTION  -  ENTER CONFIRMS  -  PAUSE TO STOP';
+              : has('sw2d.timing')
+                ? presetId === 'rhythm-action'
+                  ? 'ENTER ON THE BEAT'
+                  : 'WAIT FOR THE GO  -  ENTER HITS'
+                : 'ARROWS CHANGE THE SELECTION  -  ENTER CONFIRMS  -  PAUSE TO STOP';
       break;
     default:
       break;

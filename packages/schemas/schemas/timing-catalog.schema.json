@@ -1,0 +1,42 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:sw2d:schema:content-timing-catalog:v1",
+  "title": "TimingCatalog",
+  "description": "Mirrors @sw2d/contracts TimingCatalog (timing.ts). Validated as a ContentBundle.data document (document name 'timing'). Visual reaction cues and beat windows - not audio-sync.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "mode", "windowMs", "hitsToWin", "missesToFail"],
+  "properties": {
+    "schemaVersion": { "type": "integer", "minimum": 1 },
+    "mode": { "type": "string", "enum": ["reaction", "rhythm"] },
+    "windowMs": { "type": "number", "minimum": 0 },
+    "hitsToWin": { "type": "integer", "minimum": 0 },
+    "missesToFail": { "type": "integer", "minimum": 0 },
+    "reaction": { "$ref": "#/definitions/reaction" },
+    "rhythm": { "$ref": "#/definitions/rhythm" }
+  },
+  "definitions": {
+    "reaction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["delaysMs", "maxWaitMs"],
+      "properties": {
+        "delaysMs": {
+          "type": "array",
+          "items": { "type": "number", "minimum": 0 }
+        },
+        "maxWaitMs": { "type": "number", "minimum": 0 }
+      }
+    },
+    "rhythm": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["periodMs", "offsetMs", "beats"],
+      "properties": {
+        "periodMs": { "type": "number", "minimum": 0 },
+        "offsetMs": { "type": "number", "minimum": 0 },
+        "beats": { "type": "integer", "minimum": 0 }
+      }
+    }
+  }
+}

@@ -18,6 +18,7 @@ import {
   meleePack,
   localPlayPack,
   stageScrollPack,
+  timingPack,
   aiPack,
   arcadePack,
   combatPack,
@@ -69,6 +70,7 @@ const ALL_PACKS = [
   meleePack,
   localPlayPack,
   stageScrollPack,
+  timingPack,
 ];
 
 /** `<family>.<service>`: lowercase segments, at least two, dash-separated words allowed after the first. */

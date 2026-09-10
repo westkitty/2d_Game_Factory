@@ -21,6 +21,7 @@ import {
   generateMeleeCatalog,
   generateLocalPlayCatalog,
   generateStageScrollCatalog,
+  generateTimingCatalog,
   generateResourceManifest,
   generateTiledLevel,
   generateTheme,
@@ -274,6 +275,16 @@ export function buildGameFiles(gameId: string, preset: PresetDefinition): Map<st
             ? 'vertical'
             : 'horizontal'
           : 'none',
+      ),
+      null,
+      2,
+    ) + '\n',
+  );
+  files.set(
+    'content/timing.json',
+    JSON.stringify(
+      generateTimingCatalog(
+        requiredPackIds.includes('sw2d.timing') ? (preset.id === 'rhythm-action' ? 'rhythm' : 'reaction') : 'none',
       ),
       null,
       2,

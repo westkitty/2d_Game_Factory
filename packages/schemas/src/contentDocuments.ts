@@ -42,6 +42,7 @@ export const CONTENT_DOCUMENTS: Readonly<Record<string, ContentDocumentRegistryE
   melee: { schemaName: 'melee-catalog' },
   'local-play': { schemaName: 'local-play-catalog' },
   'stage-scroll': { schemaName: 'stage-scroll-catalog' },
+  timing: { schemaName: 'timing-catalog' },
 };
 
 export type ContentDocumentName = keyof typeof CONTENT_DOCUMENTS;

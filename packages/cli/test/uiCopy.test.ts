@@ -85,6 +85,8 @@ describe('generateUiCopy (generated games announce their genre honestly)', () =>
     expect(copyFor('breakout').playHint).toContain('RETURN THE BALL');
     expect(copyFor('pong').playHint).toContain('P1 ARROWS');
     expect(copyFor('local-party-game').playHint).toContain('PASS THE KEYBOARD');
+    expect(copyFor('reaction-timing').playHint).toContain('WAIT FOR THE GO');
+    expect(copyFor('rhythm-action').playHint).toBe('ENTER ON THE BEAT');
     expect(copyFor('action-adventure').playHint).toContain('STRIKE J/X');
     expect(copyFor('arena-combat').playHint).toContain('STRIKE J/X');
   });

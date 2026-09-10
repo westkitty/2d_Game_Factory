@@ -93,8 +93,8 @@ controller/input-mode breakdown and full pack-consumer coverage.
 | `pong` | Pong | top-down | tuning, ball-paddle, local-play | recipe |
 | `physics-puzzle` | Physics Puzzle | pointer | tuning | recipe |
 | `maze-game` | Maze Game | grid | tuning, levels | recipe |
-| `rhythm-action` | Rhythm Action | ui-simulation | tuning | recipe |
-| `reaction-timing` | Reaction Timing | ui-simulation | tuning | recipe |
+| `rhythm-action` | Rhythm Action | ui-simulation | tuning, timing | recipe |
+| `reaction-timing` | Reaction Timing | ui-simulation | tuning, timing | recipe |
 | `pinball-lite` | Pinball Lite | ui-simulation | tuning | recipe |
 
 ## Strategy / defense (Phase 7B)
@@ -197,8 +197,8 @@ recipe's *first* stated limitation; see `knownLimitations` in
 | `pong` | Ball, paddle, rebound, brick-clear and first-to-N scoring are reusable (sw2d.ball-paddle); a full pinball table is not. |
 | `physics-puzzle` | Standard puzzle kinds (sokoban, switch/sequence, match, falling-block) are now content-authorable through the sw2d.puzzle-rules capability and content/puzzles.json (ADR-0023). This recipe's board rules are not one of those built-in kinds, so it still uses the code seam: sw2d.puzzle declares configSource: 'code' (ADR-0017) and a generated game supplies createInitialState/isSolved from src/game-specific/packConfig.ts (shipped with a working placeholder to replace) - the pack really installs, but this puzzle's own rules stay game-specific TypeScript, not content. |
 | `maze-game` | (none stated) |
-| `rhythm-action` | No deterministic music-beat/audio-synchronization system exists yet. |
-| `reaction-timing` | Arcade timing state exists, but no specialized reaction-test flow is implemented. |
+| `rhythm-action` | Visual reaction cues and beat windows are reusable (sw2d.timing); a deterministic music-beat/audio-synchronization system is not. |
+| `reaction-timing` | Visual reaction cues and beat windows are reusable (sw2d.timing); a deterministic music-beat/audio-synchronization system is not. |
 | `pinball-lite` | A full pinball table (flippers, bumpers, scoring lanes) is game-specific code on top of the Matter ball + static collision the shell provides. |
 | `tower-defense` | Spatial hover placement via the pointer shell is available but this starter uses the keyboard grid cursor. |
 | `lane-defense` | Lane-spawn scheduling and combat resolution are still starter-specific. |
