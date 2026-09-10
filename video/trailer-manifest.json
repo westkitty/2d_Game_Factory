@@ -1,0 +1,36 @@
+{
+  "title": "Stinky Weasel: The Moonlit Run",
+  "durationSeconds": 12,
+  "frame": {
+    "width": 960,
+    "height": 540,
+    "fps": 24,
+    "format": "H.264 yuv420p"
+  },
+  "audio": {
+    "format": "AAC",
+    "channels": 1,
+    "sampleRateHz": 44100,
+    "design": "Procedural, offline sound effects; no external music or stock audio"
+  },
+  "beats": [
+    { "start": 0.0, "end": 2.25, "name": "opening title", "story": "Moonlit palace and hero establish the adventure" },
+    { "start": 2.25, "end": 5.35, "name": "the gate is open", "story": "Weasel walks right toward three guiding lights" },
+    { "start": 5.35, "end": 8.55, "name": "follow the light", "story": "Jump and collect three lights, then land" },
+    { "start": 8.55, "end": 10.75, "name": "the night is yours", "story": "The palace doorway glows as the run resolves" },
+    { "start": 10.75, "end": 12.0, "name": "end card", "story": "Clear play call to action" }
+  ],
+  "soundCues": [
+    { "start": 0.35, "name": "title chime", "description": "Warm two-note reveal" },
+    { "start": 2.55, "end": 4.985, "name": "footsteps", "description": "Six soft alternating footfalls" },
+    { "start": 5.53, "name": "jump whoosh", "description": "Descending sine sweep" },
+    { "start": 5.96, "end": 7.12, "name": "light pickups", "description": "Three ascending chimes" },
+    { "start": 7.12, "name": "landing", "description": "Low triangle impact" },
+    { "start": 8.78, "name": "door resolve", "description": "Three-note resolution" },
+    { "start": 10.82, "name": "end card sting", "description": "Short CTA punctuation" }
+  ],
+  "sourceArt": [
+    "workbench/fixtures/palace.png",
+    "workbench/fixtures/weasel.png"
+  ]
+}
