@@ -41,6 +41,7 @@ Highest-leverage clusters, from `packages/presets/src/shared.ts` LIMITATIONS + p
 | 16 | Consume existing ADR-0018 interaction in pointer shells | drawing-game, dress-up-character-toy | **Wave 16 implemented** (existing spatial pointer / drag-drop; ADR-0043). Residual: pressure/layers/export; attachment/skeleton wardrobe. Overlay drawing/dress-up stay local (P3-H). |
 | 17 | Consume existing `sw2d.progression` XP/currency | survivor-like, action-roguelite | **Wave 17 implemented** (existing `sw2d.progression`; ADR-0044). Residual: difficulty scaling; permadeath. Overlay survivor/roguelite stay local (P3-C). |
 | 18 | Consume existing `sw2d.strategy` teams/turns | turn-based-tactics, auto-battler | **Wave 18 implemented** (existing `sw2d.strategy`; ADR-0045). Residual: attack-range; autonomous combat; RTS box-select; territory capture. Overlay tactics/battler stay local. |
+| 19 | Consume existing `sw2d.navigation` pathfinding | maze-game, lane-defense | **Wave 19 implemented** (existing `sw2d.navigation`; ADR-0046). Residual: fog-of-war; maze generation; spawn scheduling; combat; tower target-selection. Overlay maze/lane stay local. |
 | — | Tier 4 specialized (parser IF, photography, microgame scheduler, sandbox authoring) | prefer game-specific seam until a second consumer is real | backlog |
 
 Do not extend `sw2d.simulation` / `sw2d.narrative` / `sw2d.ai` into genre monoliths. New narrow packs compose with them.
@@ -1452,4 +1453,102 @@ Confirmed via debug snapshots, not screenshots.
 - Residual Category-C: climbing, chase, territory capture, pinball, crop/season,
   rail camera, dummy OPTIONS (pinball/microgame), maze wanderer,
   photography/sandbox, overlay wiring, committed proofs, simple-rts leftover
-  (realtime, not turns).
+  (realtime, not turns). Next wave: **done** — Wave 19 navigation (see below).
+
+## Wave 19 — consume `sw2d.navigation` in maze and lane shells
+
+### Problem
+
+`maze-game` was a dummy grid wanderer and did not require `sw2d.navigation`.
+Generated `lane-defense` already required the pack (and has a frozen proof)
+but the factory shell never bound it, so it entered play as the same wanderer.
+The leftover was consumption, not a missing pack. Inventing fog-of-war, spawn
+scheduling or combat packs would duplicate 1-consumer leftovers. Restyling
+Wave 18 tactics as pathfinding would change the FLAG-seize contract.
+
+### Consumers
+
+- `maze-game` — `NAV_STARTER = 'maze'` (arrows step only onto `isWalkable`
+  cells; complete occupying EXIT at col 12).
+- `lane-defense` — `NAV_STARTER = 'lane'` (autonomous `RouteFollower` to BASE;
+  J places a blocker; a trapping placement rolls back; complete on arrival).
+
+Materially different: player-controlled occupancy vs autonomous re-path.
+
+Tower-defense, turn-based-tactics and simple-rts keep `NAV_STARTER = null`.
+Overlay maze / lane-defense kits stay local.
+
+### ValidationPlan
+
+1. No new pack / schema / capability id. Navigation is game-lifetime: remove
+   and redefine the starter grid on each scene install.
+2. Generated packConfig stamps `NAV_STARTER` maze vs lane vs null.
+3. Generated grid shell binds maze/lane and hides the wanderer.
+4. Honesty / docsSync / uiCopy stay green. ADR-0046.
+5. Real-browser play of factory-generated games. Overlay kits not re-run.
+   Committed proofs + maturity promotion still deferred.
+
+### CompletionContract
+
+- [x] No new pack / schema / capability id.
+- [x] Authority remains the existing `world.navigation` grid/path service.
+- [x] ≥2 materially different generated consumers (2 wired).
+- [x] Focused generate/honesty/uiCopy tests.
+- [x] Honest residual limitation (fog-of-war / maze generation; spawn/combat).
+- [x] ADR-0046.
+- [x] Real-browser play of factory-generated `wave19-maze-game` /
+  `wave19-lane-defense` (`tools/scripts/play-navigation-wave19.ts`, 2/2 PASS,
+  0 console errors, 0 external requests).
+- [ ] `npm run sw2d -- validate` on those two games.
+- [ ] Overlay re-run. **Not this wave.**
+- [ ] Committed proofs + maturity promotion. **Not done — evidence rule.**
+
+### Implementation notes
+
+- No new pack. `sw2d.navigation` already exists (A* / reachable / blockers /
+  `RouteFollower`, ADR-0022).
+- `bindStarterNavigation` is INERT unless packConfig names `'maze'` or
+  `'lane'` *and* `world.navigation` is installed.
+- Maze corridor: (4,8)→(6,8)↓(6,10)→(10,10)↑(10,8)→(12,8). ArrowUp from start
+  is a wall. `findPath` length 13 at start.
+- Lane: runner (4,8)→BASE (16,8), cursor starts (10,8). J blocks; detour via
+  row 6. Route-destroying placements roll back.
+- Do not claim spawn waves or combat from path-follow + occupancy.
+- Overlay maze / lane-defense kits stay local.
+
+### Browser journeys (executed)
+
+Factory-generated:
+
+- Maze-game: Space start cell 4,8 path 13 → ArrowUp `wall` still 4,8 →
+  ArrowRight×2 cell 6,8 `moved` → down/right/up/right corridor → cell 12,8
+  `escaped` outcome=complete.
+- Lane-defense: Space start mode=`lane` cursor 10,8 runner on the straight
+  lane → KeyJ `placed` blocks 1 path 11→18 (detour via row 6) → runner
+  arrives 16,8 `arrived` outcome=complete.
+
+### Visual inspection
+
+Maze: corridor floor tiles, EXIT marker, HUD `cell c,r · path n`, title
+`ESCAPED` on complete. Lane: runner rectangle, cursor, BASE marker, HUD
+`runner c,r · path n · blocks n`, title `BREACHED` on complete. Dummy
+wanderer hidden when the binder is active. Confirmed via debug snapshots,
+not screenshots.
+
+### Bugs found and fixed this wave
+
+- Lane play first asserted the runner was still on the spawn cell after the
+  12-frame start warm-in. The follower already advances during those frames
+  (240 px/s). Assertions now require the runner still be on the lane before
+  the mid-lane cursor, and that placing a blocker increases `pathLength`.
+
+### Remaining blockers / unknowns
+
+- Catalog maturity stays unchanged (23/3/48). `lane-defense` remains
+  proof-validated on the frozen proof.
+- Chrome wrapper is session-local under `/tmp`.
+- Do not commit `package-lock.json` workspace links for gitignored `games/wave*`.
+- Residual Category-C: climbing, chase, territory capture, pinball, crop/season,
+  rail camera, dummy OPTIONS (pinball/microgame), photography/sandbox, overlay
+  wiring, committed proofs, simple-rts leftover (realtime box-select, not turns),
+  tower target-selection, attack-range, autonomous combat.

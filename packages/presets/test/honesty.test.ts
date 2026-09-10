@@ -146,6 +146,7 @@ describe('required knownLimitations (MASTER_PROJECT.md section 12)', () => {
     { id: 'tower-defense', pattern: /keyboard grid cursor/ },
     { id: 'tower-defense', pattern: /route-following pathfinding is reusable/ },
     { id: 'lane-defense', pattern: /Lane-spawn scheduling and combat resolution are still starter-specific/ },
+    { id: 'maze-game', pattern: /Grid pathfinding and walkable occupancy are reusable/ },
     { id: 'auto-battler', pattern: /autonomous combat orchestration is not implemented/ },
     { id: 'simple-rts', pattern: /box-select and command-queue UI are not implemented/ },
     { id: 'turn-based-tactics', pattern: /turn-action state machine are still starter-specific/ },

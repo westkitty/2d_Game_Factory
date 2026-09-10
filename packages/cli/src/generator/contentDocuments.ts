@@ -1009,6 +1009,10 @@ export function generateUiCopy(options: {
           ? 'MOVE WASD/ARROWS  -  ENTER ROTATES  -  DROP K'
           : presetId === 'turn-based-tactics'
             ? 'ARROWS MOVE  -  J SELECTS  -  REACH THE FLAG'
+          : presetId === 'maze-game'
+            ? 'ARROWS WALK  -  REACH THE EXIT'
+            : presetId === 'lane-defense'
+              ? 'ARROWS AIM  -  J BLOCKS  -  THE RUNNER REPATHS'
           : has('sw2d.puzzle-rules')
             ? 'MOVE / PUSH WASD/ARROWS  -  UNDO BACKSPACE  -  RESET K'
             : 'MOVE WASD/ARROWS  -  PAUSE TO STOP';

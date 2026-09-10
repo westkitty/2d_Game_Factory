@@ -99,6 +99,12 @@ export {
   type StarterStrategySnapshot,
   type StrategyStarterMode,
 } from './game-support/starterStrategy.ts';
+export {
+  bindStarterNavigation,
+  type StarterNavigationBinding,
+  type StarterNavigationSnapshot,
+  type NavigationStarterMode,
+} from './game-support/starterNavigation.ts';
 
 export { LocalStorageDriver, MemoryStorageDriver } from './persistence/LocalStorageDriver.ts';
 export { SaveStoreImpl } from './persistence/SaveStoreImpl.ts';

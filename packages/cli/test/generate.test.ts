@@ -901,6 +901,50 @@ describe('generated tactics and battler consume sw2d.strategy', () => {
   });
 });
 
+describe('generated maze and lane-defense consume sw2d.navigation', () => {
+  it('the generated grid shell binds bindStarterNavigation', () => {
+    const maze = PRESETS.find((candidate) => candidate.id === 'maze-game')!;
+    const shell = buildGameFiles('navigation-probe', maze).get('src/game-specific/shellPack.ts')!;
+    expect(shell).toContain('bindStarterNavigation(context, { mode: NAV_STARTER })');
+    expect(shell).toContain('route.step(');
+    expect(shell).toContain('route.act()');
+    expect(shell).toContain("justPressed('PRIMARY_ACTION')");
+    expect(shell).toContain("from './packConfig.ts'");
+    expect(buildGameFiles('navigation-probe', maze).get('src/main.ts')).toContain('navigationPack');
+  });
+
+  it('maze-game and lane-defense stamp different NAV_STARTER values; tactics and tower stay null', () => {
+    const maze = PRESETS.find((candidate) => candidate.id === 'maze-game')!;
+    const lane = PRESETS.find((candidate) => candidate.id === 'lane-defense')!;
+    const tactics = PRESETS.find((candidate) => candidate.id === 'turn-based-tactics')!;
+    const tower = PRESETS.find((candidate) => candidate.id === 'tower-defense')!;
+    const mazeFiles = buildGameFiles('navigation-probe', maze);
+    const laneFiles = buildGameFiles('navigation-probe', lane);
+    const tacticsFiles = buildGameFiles('navigation-probe', tactics);
+    const towerFiles = buildGameFiles('navigation-probe', tower);
+    const mazeJson = JSON.parse(mazeFiles.get('content/game.json')!) as { systemPacks: Array<{ packId: string }> };
+    const laneJson = JSON.parse(laneFiles.get('content/game.json')!) as { systemPacks: Array<{ packId: string }> };
+    expect(mazeJson.systemPacks.map((s) => s.packId)).toContain('sw2d.navigation');
+    expect(laneJson.systemPacks.map((s) => s.packId)).toContain('sw2d.navigation');
+    expect(mazeFiles.get('src/game-specific/packConfig.ts')).toContain(
+      "NAV_STARTER: 'maze' | 'lane' | null = 'maze'",
+    );
+    expect(laneFiles.get('src/game-specific/packConfig.ts')).toContain(
+      "NAV_STARTER: 'maze' | 'lane' | null = 'lane'",
+    );
+    expect(tacticsFiles.get('src/game-specific/packConfig.ts')).toContain(
+      "NAV_STARTER: 'maze' | 'lane' | null = null",
+    );
+    expect(towerFiles.get('src/game-specific/packConfig.ts')).toContain(
+      "NAV_STARTER: 'maze' | 'lane' | null = null",
+    );
+    const mazeTheme = JSON.parse(mazeFiles.get('content/themes/default/theme.json')!) as { ui: { playHint: string } };
+    const laneTheme = JSON.parse(laneFiles.get('content/themes/default/theme.json')!) as { ui: { playHint: string } };
+    expect(mazeTheme.ui.playHint).toContain('REACH THE EXIT');
+    expect(laneTheme.ui.playHint).toContain('THE RUNNER REPATHS');
+  });
+});
+
 describe('generated pointer puzzles consume sw2d.puzzle', () => {
   it('the generated pointer shell presents physics-goal and escape-locks on puzzle.state', () => {
     const physics = PRESETS.find((candidate) => candidate.id === 'physics-puzzle')!;

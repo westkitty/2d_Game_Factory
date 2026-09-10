@@ -73,7 +73,7 @@ pack/controller selections were actually exercised through, and
 | `breakout` | arcade, ball-paddle | - | top-down | keyboard, touch | puzzle-arcade-recipe |
 | `pong` | arcade, ball-paddle, local-play | - | top-down | keyboard, touch | puzzle-arcade-recipe |
 | `physics-puzzle` | puzzle | - | pointer | keyboard, pointer, touch | puzzle-arcade-recipe |
-| `maze-game` | world, world-entities | arcade | grid | keyboard, touch | puzzle-arcade-recipe |
+| `maze-game` | world, world-entities, navigation | arcade | grid | keyboard, touch | puzzle-arcade-recipe |
 | `rhythm-action` | arcade, timing | - | ui-simulation | keyboard, touch | puzzle-arcade-recipe |
 | `reaction-timing` | arcade, timing | - | ui-simulation | keyboard, touch | puzzle-arcade-recipe |
 | `pinball-lite` | arcade | - | ui-simulation | keyboard, touch | puzzle-arcade-recipe |

@@ -196,7 +196,7 @@ recipe's *first* stated limitation; see `knownLimitations` in
 | `breakout` | Ball, paddle, rebound, brick-clear and first-to-N scoring are reusable (sw2d.ball-paddle); a full pinball table is not. |
 | `pong` | Ball, paddle, rebound, brick-clear and first-to-N scoring are reusable (sw2d.ball-paddle); a full pinball table is not. |
 | `physics-puzzle` | Standard puzzle kinds (sokoban, switch/sequence, match, falling-block) are now content-authorable through the sw2d.puzzle-rules capability and content/puzzles.json (ADR-0023). This recipe's board rules are not one of those built-in kinds, so it still uses the code seam: sw2d.puzzle declares configSource: 'code' (ADR-0017) and a generated game supplies createInitialState/isSolved from src/game-specific/packConfig.ts (shipped with a working placeholder to replace) - the pack really installs, but this puzzle's own rules stay game-specific TypeScript, not content. |
-| `maze-game` | (none stated) |
+| `maze-game` | Grid pathfinding and walkable occupancy are reusable (sw2d.navigation); fog-of-war, minimap and authored maze generation are not. |
 | `rhythm-action` | Visual reaction cues and beat windows are reusable (sw2d.timing); a deterministic music-beat/audio-synchronization system is not. |
 | `reaction-timing` | Visual reaction cues and beat windows are reusable (sw2d.timing); a deterministic music-beat/audio-synchronization system is not. |
 | `pinball-lite` | A full pinball table (flippers, bumpers, scoring lanes) is game-specific code on top of the Matter ball + static collision the shell provides. |

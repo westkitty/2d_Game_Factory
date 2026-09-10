@@ -49,3 +49,4 @@ One short record per decision that constrains later work. No ADR for trivia.
 | [0043](0043-consume-spatial-pointer-in-drawing-and-wardrobe-shells.md) | Consume spatial pointer drag/drop in drawing and wardrobe shells | Category-C Wave 16 |
 | [0044](0044-consume-progression-in-survivor-and-roguelite-shells.md) | Consume progression XP/currency in survivor and roguelite shells | Category-C Wave 17 |
 | [0045](0045-consume-strategy-turns-in-tactics-and-battler-shells.md) | Consume strategy turns in tactics and battler shells | Category-C Wave 18 |
+| [0046](0046-consume-navigation-in-maze-and-lane-shells.md) | Consume navigation in maze and lane shells | Category-C Wave 19 |

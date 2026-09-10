@@ -35,7 +35,9 @@ import type { PresetDefinition } from '@sw2d/contracts';
  * permadeath. Wave 18 stamps `STRATEGY_STARTER` (`tactics` / `battler` /
  * null) so the grid and ui-simulation shells can present two different
  * `sw2d.strategy` loops without inventing pathfinding, attack-range or
- * autonomous-combat packs.
+ * autonomous-combat packs. Wave 19 stamps `NAV_STARTER` (`maze` / `lane` /
+ * null) so the grid shell can present two different `sw2d.navigation` loops
+ * without inventing fog-of-war, spawn-scheduling or combat packs.
  *
  * Deliberately NOT a universal puzzle DSL.
  */
@@ -142,6 +144,7 @@ export function generatePackConfig(preset: PresetDefinition): string {
     preset.id === 'survivor-like' ? "'survive'" : preset.id === 'action-roguelite' ? "'run'" : 'null';
   const strategyStarter =
     preset.id === 'turn-based-tactics' ? "'tactics'" : preset.id === 'auto-battler' ? "'battler'" : 'null';
+  const navStarter = preset.id === 'maze-game' ? "'maze'" : preset.id === 'lane-defense' ? "'lane'" : 'null';
   return [
     '/**',
     " * Config for packs that declare `configSource: 'code'` in their definition -",
@@ -173,6 +176,9 @@ export function generatePackConfig(preset: PresetDefinition): string {
     '',
     '/** Category-C Wave 18: tactics vs battler presentation of sw2d.strategy. Null otherwise. */',
     `export const STRATEGY_STARTER: 'tactics' | 'battler' | null = ${strategyStarter};`,
+    '',
+    '/** Category-C Wave 19: maze vs lane presentation of sw2d.navigation. Null otherwise. */',
+    `export const NAV_STARTER: 'maze' | 'lane' | null = ${navStarter};`,
     '',
   ]
     .filter((line, index, all) => !(line === '' && all[index - 1] === ''))

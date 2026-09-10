@@ -108,10 +108,13 @@ export const PUZZLE_ARCADE_PRESETS: readonly PresetDefinition[] = [
     displayName: 'Maze Game',
     family: 'puzzle-arcade',
     controllerFamilies: ['grid'],
-    requiredSystemPacks: [pack(PACK_IDS.world), pack(PACK_IDS.worldEntities)],
+    requiredSystemPacks: [pack(PACK_IDS.world), pack(PACK_IDS.worldEntities), pack(PACK_IDS.navigation)],
     optionalSystemPacks: [pack(PACK_IDS.arcade)],
     requiredContentRoles: ['tuning', 'levels'],
     validationProfile: VALIDATION_PROFILES.puzzleArcade,
+    knownLimitations: [
+      'Grid pathfinding and walkable occupancy are reusable (sw2d.navigation); fog-of-war, minimap and authored maze generation are not.',
+    ],
   }),
 
   definePreset({

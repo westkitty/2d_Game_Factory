@@ -1,7 +1,7 @@
 import type { InstalledSystemPack, NormalizedLevel, PuzzleRulesService } from '@sw2d/contracts';
 import { PUZZLE_RULES_CAPABILITY_ID } from '@sw2d/contracts';
-import { bindStarterPuzzle, bindStarterStrategy, gridController, type SceneContext, type ScenePackDefinition } from '@sw2d/runtime';
-import { STRATEGY_STARTER } from './packConfig.ts';
+import { bindStarterNavigation, bindStarterPuzzle, bindStarterStrategy, gridController, type SceneContext, type ScenePackDefinition } from '@sw2d/runtime';
+import { NAV_STARTER, STRATEGY_STARTER } from './packConfig.ts';
 
 /**
  * Generated starter shell: grid controller family.
@@ -20,6 +20,10 @@ import { STRATEGY_STARTER } from './packConfig.ts';
  * When `STRATEGY_STARTER` is tactics (Category-C Wave 18) the dummy
  * wanderer is replaced by a select-then-step occupation of a FLAG cell
  * on `sw2d.strategy`. Attack-range stays leftover.
+ *
+ * When `NAV_STARTER` is maze or lane (Category-C Wave 19) the dummy
+ * wanderer is replaced by walkable occupancy or autonomous route-follow
+ * on `sw2d.navigation`. Fog-of-war, spawn scheduling and combat stay leftover.
  */
 
 const LEVEL_DOCUMENT = 'levels/main';
@@ -40,6 +44,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     const puzzle = context.capabilities.get<PuzzleRulesService>(PUZZLE_RULES_CAPABILITY_ID);
     const board = bindStarterPuzzle(context);
     const turns = bindStarterStrategy(context, { mode: STRATEGY_STARTER });
+    const route = bindStarterNavigation(context, { mode: NAV_STARTER });
 
     const spawn = level?.objects.find((object) => object.class === 'PlayerSpawn');
     let col = Math.round((spawn?.x ?? width * 0.5) / CELL_SIZE);
@@ -61,7 +66,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     }
 
     const actor = scene.add.sprite(col * CELL_SIZE, row * CELL_SIZE, playerKey);
-    if (board.active || turns.active) actor.setVisible(false);
+    if (board.active || turns.active || route.active) actor.setVisible(false);
 
     const debugHandle = context.debug.contribute('game.grid-shell', () => ({
       col,
@@ -69,6 +74,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       ...(puzzle ? { puzzle: puzzle.snapshot(), solved: puzzle.isSolved() } : {}),
       ...(board.active ? { puzzleBoard: board.snapshot() } : {}),
       ...(turns.active ? { strategy: turns.snapshot() } : {}),
+      ...(route.active ? { navigation: route.snapshot() } : {}),
     }));
 
     let disposed = false;
@@ -108,6 +114,13 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
           return;
         }
 
+        if (route.active) {
+          if (intent.step) route.step(intent.step);
+          if (context.input.justPressed('PRIMARY_ACTION')) route.act();
+          route.tick(deltaMs);
+          return;
+        }
+
         if (intent.step === 'up' && row > minRow) row -= 1;
         else if (intent.step === 'down' && row < maxRow) row += 1;
         else if (intent.step === 'left' && col > minCol) col -= 1;
@@ -121,6 +134,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         debugHandle.dispose();
         board.dispose();
         turns.dispose();
+        route.dispose();
         try {
           actor.destroy();
         } catch {
