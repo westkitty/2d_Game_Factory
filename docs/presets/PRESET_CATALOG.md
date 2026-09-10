@@ -199,7 +199,7 @@ recipe's *first* stated limitation; see `knownLimitations` in
 | `maze-game` | Grid pathfinding and walkable occupancy are reusable (sw2d.navigation); fog-of-war, minimap and authored maze generation are not. |
 | `rhythm-action` | Visual reaction cues and beat windows are reusable (sw2d.timing); a deterministic music-beat/audio-synchronization system is not. |
 | `reaction-timing` | Visual reaction cues and beat windows are reusable (sw2d.timing); a deterministic music-beat/audio-synchronization system is not. |
-| `pinball-lite` | A full pinball table (flippers, bumpers, scoring lanes) is game-specific code on top of the Matter ball + static collision the shell provides. |
+| `pinball-lite` | Generated flippers, bumpers and bumper-score are game-specific presentation of Matter + arcade.score; a reusable pinball pack is not. |
 | `tower-defense` | Spatial hover placement via the pointer shell is available but this starter uses the keyboard grid cursor. |
 | `lane-defense` | Lane-spawn scheduling and combat resolution are still starter-specific. |
 | `auto-battler` | Teams, active turn, selection and turn advance are reusable (sw2d.strategy); autonomous combat orchestration is not implemented. |
@@ -224,7 +224,7 @@ recipe's *first* stated limitation; see `knownLimitations` in
 | `escape-room` | Standard puzzle kinds (sokoban, switch/sequence, match, falling-block) are now content-authorable through the sw2d.puzzle-rules capability and content/puzzles.json (ADR-0023). This recipe's board rules are not one of those built-in kinds, so it still uses the code seam: sw2d.puzzle declares configSource: 'code' (ADR-0017) and a generated game supplies createInitialState/isSolved from src/game-specific/packConfig.ts (shipped with a working placeholder to replace) - the pack really installs, but this puzzle's own rules stay game-specific TypeScript, not content. |
 | `microgame-collection` | No microgame scheduler/rotation/meta-framework exists. |
 | `local-party-game` | Local hot-seat turns and simultaneous versus axes are reusable (sw2d.local-play); netcode, gamepads, split-screen cameras and more than two seats are not. |
-| `physics-toy` | (none stated) |
+| `physics-toy` | Toy launch/goal is game-specific presentation of Matter; a reusable pinball pack is not. |
 | `virtual-pet` | Needs, decay, care actions, affinity and wellbeing hold/fail are reusable (sw2d.needs); full creature behaviour AI, relationship graphs and colony assignment are not. |
 | `dress-up-character-toy` | Wardrobe slots for the generated starter use interaction drag/drop (ADR-0018); a reusable attachment/skeleton wardrobe system is not. |
 | `sandbox-playground` | Block and ball stamps for the generated starter use interaction click (ADR-0018); a generalized authoring/editing sandbox is not. |

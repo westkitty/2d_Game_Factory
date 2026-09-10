@@ -13,6 +13,8 @@ import {
   bindStarterProgression,
   bindStarterToy,
   bindStarterCombat,
+  bindStarterCommand,
+  bindStarterLook,
   bindStarterWeapon,
   createRoomTransitionRuntime,
   createWorldMapOverlay,
@@ -21,7 +23,7 @@ import {
   type SceneContext,
   type ScenePackDefinition,
 } from '@sw2d/runtime';
-import { COMBAT_STARTER, NARRATIVE_STARTER, PROGRESSION_STARTER, TOY_STARTER } from './packConfig.ts';
+import { COMBAT_STARTER, COMMAND_STARTER, LOOK_STARTER, NARRATIVE_STARTER, PROGRESSION_STARTER, TOY_STARTER } from './packConfig.ts';
 
 /**
  * Generated starter shell: top-down controller family.
@@ -141,6 +143,23 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       walls.setVisible(false);
       wallCollider.destroy();
     }
+    // Command (Category-C Wave 25). Inert unless packConfig names rts/zone.
+    // RTS selects one unit; zone stands in two circles. Not box-select.
+    const ops = bindStarterCommand(context, { mode: COMMAND_STARTER });
+    if (ops.active) {
+      player.setPosition(ops.startX(), ops.startY());
+      walls.setVisible(false);
+      wallCollider.destroy();
+      if (ops.snapshot().mode === 'rts') player.setVisible(false);
+    }
+    // Look (Category-C Wave 26). Museum plaques on this shell; rail binds
+    // from the pointer shell.
+    const look = bindStarterLook(context, { mode: LOOK_STARTER });
+    if (look.active) {
+      player.setPosition(look.startX(), look.startY());
+      walls.setVisible(false);
+      wallCollider.destroy();
+    }
     // Ball / paddle (Category-C Wave 5). Inert unless sw2d.ball-paddle is
     // installed with a non-empty catalog. Then the table owns motion and
     // the dummy wander is hidden.
@@ -209,6 +228,8 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       ...(meta.active ? { progression: meta.snapshot() } : {}),
       ...(toy.active ? { toy: toy.snapshot() } : {}),
       ...(fight.active ? { combat: fight.snapshot() } : {}),
+      ...(ops.active ? { command: ops.snapshot() } : {}),
+      ...(look.active ? { look: look.snapshot() } : {}),
       ...(table.active ? { ballPaddle: table.snapshot() } : {}),
       ...(melee.active ? { melee: melee.snapshot() } : {}),
       ...(seats.active ? { localPlay: seats.snapshot() } : {}),
@@ -317,8 +338,27 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
           fight.render();
           if (fight.snapshot().outcome !== 'playing') player.setVelocity(0, 0);
         }
+        if (ops.active) {
+          if (ops.snapshot().mode === 'rts') {
+            player.setVelocity(0, 0);
+            if (intent.primaryPressed) ops.select();
+            ops.setMove(intent.moveX, intent.moveY);
+          } else {
+            ops.setPlayer(player.x, player.y);
+          }
+          ops.tick(deltaMs);
+          ops.render();
+          if (ops.snapshot().outcome !== 'playing') player.setVelocity(0, 0);
+        }
+        if (look.active) {
+          look.setPlayer(player.x, player.y);
+          if (intent.primaryPressed) look.act();
+          look.tick(deltaMs);
+          look.render();
+          if (look.snapshot().outcome !== 'playing') player.setVelocity(0, 0);
+        }
         const firing = intent.primaryPressed || (battle.active && context.input.isDown('PRIMARY_ACTION'));
-        if (firing && !perception.active && !story.active && !runMeta && !toy.active && !fight.active) {
+        if (firing && !perception.active && !story.active && !runMeta && !toy.active && !fight.active && !ops.active && !look.active) {
           (weapon ?? battle).fire(nowMs, facingX, facingY, { x: player.x, y: player.y });
         }
         if (worldGraph && rooms) {
@@ -343,6 +383,8 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         meta.dispose();
         toy.dispose();
         fight.dispose();
+        ops.dispose();
+        look.dispose();
         table.dispose();
         melee.dispose();
         seats.dispose();

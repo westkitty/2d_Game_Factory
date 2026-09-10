@@ -46,6 +46,10 @@ Highest-leverage clusters, from `packages/presets/src/shared.ts` LIMITATIONS + p
 | 21 | Consume existing `sw2d.combat` health/damage | dungeon-crawler, base-defense | **Wave 21 implemented** (existing `sw2d.combat`; ADR-0048). Residual: generated Enemy objects / AI; target-priority. Overlay dungeon/base stay local. |
 | 22 | Consume auto-run presentation in platform shells | auto-runner, endless-runner | **Wave 22 implemented** (no new pack; ADR-0049). Residual: climbing / chase-pressure; generated segment solids unused by the starter strip. Overlay runner kits stay local. |
 | 23 | Consume vehicle.motion in road and craft shells | endless-driving, boat-flight-racer | **Wave 23 implemented** (no new pack; ADR-0050). Residual: kart item-fire. Overlay vehicle kits stay local. |
+| 24 | Consume AdvancedPhysics in toy and table shells | physics-toy, pinball-lite | **Wave 24 implemented** (no new pack; ADR-0051). Residual: reusable pinball pack. Overlay physics kits stay local. Frozen physics-toy proof not regenerated. |
+| 25 | Consume one-unit command vs stand-in occupy | simple-rts, territory-control | **Wave 25 implemented** (no new pack; ADR-0052). Residual: box-select; capture-zone pack. Overlay RTS/territory kits stay local. |
+| 26 | Consume look as museum plaques vs rail targets | museum-exhibit, rail-shooter | **Wave 26 implemented** (no new pack; ADR-0053). Residual: exhibit/codex; rail-path camera. Overlay kits stay local. |
+| 27 | Consume player-controlled parkour vs climb | precision-platformer, climbing-game | **Wave 27 implemented** (no new pack; ADR-0054). Residual: wall-slide. Overlay platform kits stay local. |
 | — | Tier 4 specialized (parser IF, microgame scheduler) | prefer game-specific seam until a second consumer is real | backlog |
 
 Do not extend `sw2d.simulation` / `sw2d.narrative` / `sw2d.ai` into genre monoliths. New narrow packs compose with them.
@@ -1901,5 +1905,144 @@ Factory-generated:
   rail camera, dummy OPTIONS (pinball/microgame), overlay wiring, committed
   proofs, simple-rts leftover (realtime box-select, not turns), tower
   target-selection, attack-range, autonomous combat, museum exhibit/codex,
-  camera/framing, generalized authoring, kart item-fire.
+  camera/framing, generalized authoring, kart item-fire. Next waves:
+  **done** — Waves 24–27 (see below). Skip 28–32 unless a later audit finds
+  another ≥2-consumer leftover.
+
+## Wave 24 — consume AdvancedPhysics in toy and table shells
+
+### Problem
+
+`physics-toy` already opted into Matter; the pointer shell dropped a demo ball
+and a dummy click target. `pinball-lite` already required arcade + Matter and
+entered play as dummy OPTIONS. Inventing a pinball pack would duplicate a
+1-consumer leftover.
+
+### Consumers
+
+- `physics-toy` — `PHYSICS_STARTER = 'toy'` (J launches; complete in the goal).
+- `pinball-lite` — `PHYSICS_STARTER = 'table'` (J/K flippers; bumper score 2).
+
+Kart/fishing stay off this stamp. Frozen physics-toy proof is not regenerated.
+
+### CompletionContract
+
+- [x] No new pack / schema / capability id. ADR-0051.
+- [x] Real-browser play of `wave24-physics-toy` / `wave24-pinball-lite`
+  (`tools/scripts/play-physics-wave24.ts`, 2/2 PASS).
+
+### Browser journeys (executed)
+
+- Physics-toy: Space start ball 220,429 → KeyJ nudge 1 → ball 765,494 `goal`
+  outcome=complete.
+- Pinball-lite: Space start score 0 → gravity + bumper contacts score 2
+  `scored` outcome=complete.
+
+### Bugs found and fixed this wave
+
+- First pinball play launched the ball off-world (impulse −620). Flip now
+  `setVelocity` only when the ball is over a flipper; off-table bodies reset;
+  complete at score 2.
+
+## Wave 25 — consume one-unit command vs stand-in occupy
+
+### Problem
+
+`simple-rts` leftover is box-select, not `strategy.turns`. `territory-control`
+leftover is capture-zones. Wave 18 already refused restyling FLAG-seize as RTS.
+
+### Consumers
+
+- `simple-rts` — `COMMAND_STARTER = 'rts'` (J selects one unit; WASD to FLAG).
+- `territory-control` — `COMMAND_STARTER = 'zone'` (stand in two circles).
+
+### CompletionContract
+
+- [x] No new pack. ADR-0052.
+- [x] Real-browser play of `wave25-simple-rts` / `wave25-territory-control`
+  (`tools/scripts/play-command-wave25.ts`, 2/2 PASS).
+
+### Browser journeys (executed)
+
+- Simple-rts: Space start selected=false unit 200,270 → KeyJ `selected` → hold
+  ArrowRight unit 787 `seized` outcome=complete.
+- Territory-control: Space start owned 0 → stand zone A `owned-a` → stand zone B
+  owned 2 `owned` outcome=complete.
+
+### Bugs found and fixed this wave
+
+- First zone play held ArrowRight through zone B (dwell < hold). Hold is 400 ms
+  and radius 72; play now stops in each circle.
+
+## Wave 26 — consume look as museum plaques vs rail targets
+
+### Problem
+
+Museum leftover is exhibit/codex. Rail leftover is a rail-path camera. Wave 11
+already refused to wire weapons on rail.
+
+### Consumers
+
+- `museum-exhibit` — `LOOK_STARTER = 'museum'` (walk + J inspects two plaques).
+- `rail-shooter` — `LOOK_STARTER = 'rail'` (J damages approaching combat HP).
+
+### CompletionContract
+
+- [x] No new pack. ADR-0053.
+- [x] Real-browser play of `wave26-museum-exhibit` / `wave26-rail-shooter`
+  (`tools/scripts/play-look-wave26.ts`, 2/2 PASS).
+
+### Browser journeys (executed)
+
+- Museum: Space start inspected 0 → KeyJ `too-far` → walk plinth J
+  `inspected-plinth` → walk bust J `read` outcome=complete.
+- Rail: Space start foes 2 → J as drones enter range → foes 0 `cleared`
+  outcome=complete.
+
+### Bugs found and fixed this wave
+
+- None during play. First journey 2/2 PASS.
+
+## Wave 27 — consume player-controlled parkour vs climb
+
+### Problem
+
+Precision-platformer was dummy walk-and-jump. Climbing leftover is wall-slide.
+Wave 22 already consumed auto-run and rejected pairing climbing with chase.
+
+### Consumers
+
+- `precision-platformer` — `PARKOUR_STARTER = 'precision'` (hold right, jump the
+  gap, FLAG at 820).
+- `climbing-game` — `PARKOUR_STARTER = 'climb'` (staircase pads, summit).
+
+### CompletionContract
+
+- [x] No new pack. ADR-0054.
+- [x] Real-browser play of `wave27-precision-platformer` / `wave27-climbing-game`
+  (`tools/scripts/play-parkour-wave27.ts`, 2/2 PASS).
+
+### Browser journeys (executed)
+
+- Precision: Space start x=80 → hold ArrowRight, Space at the gap, x=824
+  jumps 1 `finished` outcome=complete.
+- Climb: Space start x=100 y=458 → hold ArrowRight, two Space jumps, x=404
+  y=346 jumps 2 `summit` outcome=complete.
+
+### Bugs found and fixed this wave
+
+- First climb stacked pads on one X; arcade collision blocked the jump from
+  below. Staircase is offset in X.
+
+### Remaining blockers / unknowns
+
+- Catalog maturity stays unchanged (23/3/48). Pack count 28.
+- Chrome wrapper is session-local under `/tmp`.
+- Do not commit `package-lock.json` workspace links for gitignored `games/wave*`.
+- Residual Category-C: wall-slide, chase, box-select, capture-zone pack,
+  pinball pack, crop/season, rail-path camera, exhibit/codex, dummy OPTIONS
+  (microgame), overlay wiring, committed proofs, tower target-selection,
+  attack-range, autonomous combat, camera/framing, generalized authoring,
+  kart item-fire. Skip Waves 28–32 unless a later audit finds another
+  ≥2-consumer leftover.
 

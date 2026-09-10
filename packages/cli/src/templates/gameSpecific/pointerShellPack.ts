@@ -4,13 +4,15 @@ import {
   bindStarterWeapon,
   bindStarterPointer,
   bindStarterToy,
+  bindStarterPhysics,
+  bindStarterLook,
   createAdvancedPhysics,
   mutedStyle,
   pointerActionController,
   type SceneContext,
   type ScenePackDefinition,
 } from '@sw2d/runtime';
-import { POINTER_STARTER, TOY_STARTER } from './packConfig.ts';
+import { LOOK_STARTER, PHYSICS_STARTER, POINTER_STARTER, TOY_STARTER } from './packConfig.ts';
 
 /**
  * Generated starter shell: pointer controller family.
@@ -43,6 +45,14 @@ import { POINTER_STARTER, TOY_STARTER } from './packConfig.ts';
  * When `TOY_STARTER` is sandbox (Category-C Wave 20) the dummy target is
  * replaced by click-to-stamp block/ball authoring. Photography binds the
  * same starter from the top-down shell. Overlay sandbox kits stay local.
+ *
+ * When `PHYSICS_STARTER` is toy (Category-C Wave 24) the dummy click + demo
+ * ball is replaced by a crate/ball launched into a goal. Pinball binds the
+ * same starter from the ui-simulation shell.
+ *
+ * When `LOOK_STARTER` is rail (Category-C Wave 26) the dummy target is
+ * replaced by approaching combat targets. Museum binds from the top-down
+ * shell. Not a rail-path camera.
  *
  * Press-style semantic actions (`pointerActionController`) are still
  * available for menu-style confirms; this shell demonstrates the spatial
@@ -82,12 +92,14 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     const weapon = bindStarterWeapon(context);
     const pointerPlay = bindStarterPointer(context, { mode: POINTER_STARTER });
     const toy = bindStarterToy(context, { mode: TOY_STARTER });
-    const weaponsActive = Boolean(weapon.snapshot()) && !dialogue.active && !pointerPlay.active && !toy.active;
+    const physicsPlay = bindStarterPhysics(context, { mode: PHYSICS_STARTER });
+    const look = bindStarterLook(context, { mode: LOOK_STARTER });
+    const weaponsActive = Boolean(weapon.snapshot()) && !dialogue.active && !pointerPlay.active && !toy.active && !physicsPlay.active && !look.active;
     const puzzle = context.capabilities.get<CodePuzzleService>('puzzle.state');
     const puzzleKind = puzzle?.current().kind;
     const physicsPuzzle = puzzleKind === 'physics-goal';
     const escapePuzzle = puzzleKind === 'escape-locks';
-    const dummyPointer = !dialogue.active && !weaponsActive && !physicsPuzzle && !escapePuzzle && !pointerPlay.active && !toy.active;
+    const dummyPointer = !dialogue.active && !weaponsActive && !physicsPuzzle && !escapePuzzle && !pointerPlay.active && !toy.active && !physicsPlay.active && !look.active;
 
     let activations = 0;
     let highlighted = false;
@@ -181,7 +193,8 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     // Optional advanced physics (capability program Phase 9). Inert unless
     // content/game.json sets physicsProfile: 'matter'. Physics-puzzle owns the
     // ball/goal layout; other matter pointer games keep the demo rigid body.
-    const physics: AdvancedPhysicsService | null = context.definition.physicsProfile === 'matter' ? createAdvancedPhysics(scene) : null;
+    const physics: AdvancedPhysicsService | null =
+      context.definition.physicsProfile === 'matter' && !physicsPlay.active ? createAdvancedPhysics(scene) : null;
     let puzzleBall: PhysicsBodyHandle | null = null;
     const ballSprite = physicsPuzzle ? scene.add.image(200, 400, targetKey) : null;
     ballSprite?.setDisplaySize(32, 32);
@@ -298,6 +311,8 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       ...(dialogue.active ? { dialogue: dialogue.snapshot() } : {}),
       ...(pointerPlay.active ? { pointerPlay: pointerPlay.snapshot() } : {}),
       ...(toy.active ? { toy: toy.snapshot() } : {}),
+      ...(physicsPlay.active ? { physicsPlay: physicsPlay.snapshot() } : {}),
+      ...(look.active ? { look: look.snapshot() } : {}),
       weapon: weapon.snapshot(),
       ...(puzzle
         ? {
@@ -352,6 +367,23 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
           if (context.input.justPressed('MOVE_LEFT')) toy.select(-1);
           if (context.input.justPressed('MOVE_RIGHT')) toy.select(1);
           toy.render();
+          return;
+        }
+
+        if (physicsPlay.active) {
+          const intent = pointerActionController.read(context.input);
+          const ptr = context.spatialPointer.state;
+          if (intent.primaryPressed || ptr.justPressed) physicsPlay.nudge();
+          physicsPlay.tick(deltaMs);
+          physicsPlay.render();
+          return;
+        }
+
+        if (look.active) {
+          const intent = pointerActionController.read(context.input);
+          if (intent.primaryPressed) look.act();
+          look.tick(deltaMs);
+          look.render();
           return;
         }
 
@@ -410,6 +442,8 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         weapon.dispose();
         pointerPlay.dispose();
         toy.dispose();
+        physicsPlay.dispose();
+        look.dispose();
         physics?.dispose();
         try {
           target?.destroy();

@@ -161,6 +161,14 @@ export function generatePackConfig(preset: PresetDefinition): string {
     preset.id === 'auto-runner' ? "'course'" : preset.id === 'endless-runner' ? "'endless'" : 'null';
   const vehicleStarter =
     preset.id === 'endless-driving' ? "'road'" : preset.id === 'boat-flight-racer' ? "'craft'" : 'null';
+  const physicsStarter =
+    preset.id === 'physics-toy' ? "'toy'" : preset.id === 'pinball-lite' ? "'table'" : 'null';
+  const commandStarter =
+    preset.id === 'simple-rts' ? "'rts'" : preset.id === 'territory-control' ? "'zone'" : 'null';
+  const lookStarter =
+    preset.id === 'museum-exhibit' ? "'museum'" : preset.id === 'rail-shooter' ? "'rail'" : 'null';
+  const parkourStarter =
+    preset.id === 'precision-platformer' ? "'precision'" : preset.id === 'climbing-game' ? "'climb'" : 'null';
   return [
     '/**',
     " * Config for packs that declare `configSource: 'code'` in their definition -",
@@ -207,6 +215,18 @@ export function generatePackConfig(preset: PresetDefinition): string {
     '',
     '/** Category-C Wave 23: road vs craft presentation of vehicle.motion. Null otherwise. */',
     `export const VEHICLE_STARTER: 'road' | 'craft' | null = ${vehicleStarter};`,
+    '',
+    '/** Category-C Wave 24: toy vs table presentation of AdvancedPhysics. Null otherwise. */',
+    `export const PHYSICS_STARTER: 'toy' | 'table' | null = ${physicsStarter};`,
+    '',
+    '/** Category-C Wave 25: rts vs zone command/occupy. Null otherwise. */',
+    `export const COMMAND_STARTER: 'rts' | 'zone' | null = ${commandStarter};`,
+    '',
+    '/** Category-C Wave 26: museum vs rail look/damage. Null otherwise. */',
+    `export const LOOK_STARTER: 'museum' | 'rail' | null = ${lookStarter};`,
+    '',
+    '/** Category-C Wave 27: precision vs climb parkour. Null otherwise. */',
+    `export const PARKOUR_STARTER: 'precision' | 'climb' | null = ${parkourStarter};`,
     '',
   ]
     .filter((line, index, all) => !(line === '' && all[index - 1] === ''))

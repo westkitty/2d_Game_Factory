@@ -9,13 +9,14 @@ import {
   bindStarterNarrative,
   bindStarterArcade,
   bindStarterStrategy,
+  bindStarterPhysics,
   createAdvancedPhysics,
   mutedStyle,
   uiSimulationController,
   type SceneContext,
   type ScenePackDefinition,
 } from '@sw2d/runtime';
-import { ARCADE_STARTER, NARRATIVE_STARTER, SIMULATION_STARTER, STRATEGY_STARTER } from './packConfig.ts';
+import { ARCADE_STARTER, NARRATIVE_STARTER, PHYSICS_STARTER, SIMULATION_STARTER, STRATEGY_STARTER } from './packConfig.ts';
 
 /**
  * Generated starter shell: ui-simulation controller family.
@@ -62,12 +63,14 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     const story = bindStarterNarrative(context, { mode: NARRATIVE_STARTER });
     const arcade = bindStarterArcade(context, { mode: ARCADE_STARTER });
     const turns = bindStarterStrategy(context, { mode: STRATEGY_STARTER });
+    const physicsPlay = bindStarterPhysics(context, { mode: PHYSICS_STARTER });
 
     // Optional advanced physics (capability program Phase 9). Inert unless
     // content/game.json sets physicsProfile: 'matter'. Then a ball drops onto a
     // static floor through the reusable Matter-backed service; CONFIRM nudges
-    // it. A full pinball table is game-specific code built on this.
-    const physics: AdvancedPhysicsService | null = context.definition.physicsProfile === 'matter' ? createAdvancedPhysics(scene) : null;
+    // it. Wave 24 table starter owns its own Matter world instead.
+    const physics: AdvancedPhysicsService | null =
+      context.definition.physicsProfile === 'matter' && !physicsPlay.active ? createAdvancedPhysics(scene) : null;
     const ball = physics?.enabled
       ? (() => {
           physics.createBody({ id: 'table-floor', x: width * 0.5, y: height - 20, shape: { kind: 'rect', width, height: 24 }, static: true, category: 'terrain' });
@@ -75,7 +78,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         })()
       : null;
 
-    const label = economy.active || needs.active || dialogue.active || seats.active || clock.active || jobs.active || story.active || arcade.active || turns.active
+    const label = economy.active || needs.active || dialogue.active || seats.active || clock.active || jobs.active || story.active || arcade.active || turns.active || physicsPlay.active
       ? null
       : scene.add
           .text(width * 0.5, height * 0.5, '', mutedStyle(20))
@@ -101,6 +104,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       ...(story.active ? { narrative: story.snapshot() } : {}),
       ...(arcade.active ? { arcade: arcade.snapshot() } : {}),
       ...(turns.active ? { strategy: turns.snapshot() } : {}),
+      ...(physicsPlay.active ? { physicsPlay: physicsPlay.snapshot() } : {}),
       ...(physics ? { physics: { enabled: physics.enabled, bodyCount: physics.bodyCount, ball: ball ? physics.bodyState(ball) : null } } : {}),
     }));
 
@@ -185,6 +189,13 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
           turns.render();
           return;
         }
+        if (physicsPlay.active) {
+          if (intent.primaryPressed) physicsPlay.flip('left');
+          if (context.input.justPressed('SECONDARY_ACTION')) physicsPlay.flip('right');
+          physicsPlay.tick(deltaMs);
+          physicsPlay.render();
+          return;
+        }
         if (intent.navigateLeftPressed) {
           selectionIndex = (selectionIndex - 1 + OPTIONS.length) % OPTIONS.length;
           confirmed = false;
@@ -214,6 +225,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         story.dispose();
         arcade.dispose();
         turns.dispose();
+        physicsPlay.dispose();
         physics?.dispose();
         try {
           label?.destroy();

@@ -977,6 +977,10 @@ export function generateUiCopy(options: {
           ? 'JUMP  -  AUTO RUN  -  REACH THE FLAG'
           : presetId === 'endless-runner'
             ? 'JUMP  -  AUTO RUN  -  SURVIVE'
+            : presetId === 'precision-platformer'
+              ? 'MOVE / JUMP  -  JUMP THE GAPS'
+              : presetId === 'climbing-game'
+                ? 'MOVE / JUMP  -  JUMP UP'
             : has('sw2d.weapons')
               ? 'MOVE / JUMP  -  FIRE J/X  -  PAUSE TO STOP'
               : 'MOVE / JUMP  -  PAUSE TO STOP';
@@ -1006,6 +1010,12 @@ export function generateUiCopy(options: {
                       ? 'MOVE WASD/ARROWS  -  STRIKE J/X'
                       : presetId === 'base-defense'
                         ? 'MOVE WASD/ARROWS  -  STRIKE J/X  -  DEFEND THE BASE'
+                    : presetId === 'simple-rts'
+                      ? 'J SELECTS THE UNIT  -  WASD MOVES'
+                      : presetId === 'territory-control'
+                        ? 'MOVE WASD/ARROWS  -  STAND IN BOTH ZONES'
+                        : presetId === 'museum-exhibit'
+                          ? 'MOVE WASD/ARROWS  -  J INSPECTS PLAQUES'
                     : 'MOVE WASD/ARROWS  -  PAUSE TO STOP';
       break;
     case 'vehicle':
@@ -1050,6 +1060,10 @@ export function generateUiCopy(options: {
                 ? 'DRAG HAT AND SHIRT ONTO THE FIGURE'
                 : presetId === 'sandbox-playground'
                   ? 'CLICK STAMPS  -  ARROWS PICK BLOCK OR BALL'
+                : presetId === 'physics-toy'
+                  ? 'CLICK OR J LAUNCHES  -  LAND IN THE GOAL'
+                  : presetId === 'rail-shooter'
+                    ? 'J DAMAGES APPROACHING TARGETS'
                 : 'POINT AT THINGS  -  CLICK TO ACT  -  PAUSE TO STOP';
       break;
     case 'ui-simulation':
@@ -1077,6 +1091,8 @@ export function generateUiCopy(options: {
                           ? 'ARROWS PICK  -  ENTER ADDS TO THE DISH'
                           : presetId === 'auto-battler'
                             ? 'ARROWS PICK  -  ENTER STRIKES'
+                          : presetId === 'pinball-lite'
+                            ? 'J LEFT K RIGHT  -  HIT BUMPERS'
                           : 'ARROWS CHANGE THE SELECTION  -  ENTER CONFIRMS  -  PAUSE TO STOP';
       break;
     default:

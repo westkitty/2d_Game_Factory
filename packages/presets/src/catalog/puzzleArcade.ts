@@ -151,7 +151,7 @@ export const PUZZLE_ARCADE_PRESETS: readonly PresetDefinition[] = [
     // give the ball real rigid-body motion and collision.
     physicsProfile: 'matter',
     knownLimitations: [
-      'A full pinball table (flippers, bumpers, scoring lanes) is game-specific code on top of the Matter ball + static collision the shell provides.',
+      'Generated flippers, bumpers and bumper-score are game-specific presentation of Matter + arcade.score; a reusable pinball pack is not.',
     ],
   }),
 ];

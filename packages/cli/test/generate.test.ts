@@ -1158,3 +1158,163 @@ describe('generated endless-driving and boat-flight consume vehicle presentation
     expect(vehicles.vehicles.map((v) => v.id)).toEqual(['starter-boat', 'starter-flight']);
   });
 });
+
+describe('generated physics-toy and pinball consume Matter presentation', () => {
+  it('the generated pointer shell binds bindStarterPhysics', () => {
+    const toy = PRESETS.find((candidate) => candidate.id === 'physics-toy')!;
+    const shell = buildGameFiles('physics-probe', toy).get('src/game-specific/shellPack.ts')!;
+    expect(shell).toContain('bindStarterPhysics(context, { mode: PHYSICS_STARTER })');
+    expect(shell).toContain('physicsPlay.nudge()');
+    expect(shell).toContain("from './packConfig.ts'");
+  });
+
+  it('the generated ui-simulation shell binds table flippers', () => {
+    const table = PRESETS.find((candidate) => candidate.id === 'pinball-lite')!;
+    const shell = buildGameFiles('physics-probe', table).get('src/game-specific/shellPack.ts')!;
+    expect(shell).toContain('bindStarterPhysics(context, { mode: PHYSICS_STARTER })');
+    expect(shell).toContain("physicsPlay.flip('left')");
+    expect(shell).toContain("physicsPlay.flip('right')");
+  });
+
+  it('physics-toy and pinball-lite stamp different PHYSICS_STARTER values; physics-puzzle stays null', () => {
+    const toy = PRESETS.find((candidate) => candidate.id === 'physics-toy')!;
+    const table = PRESETS.find((candidate) => candidate.id === 'pinball-lite')!;
+    const puzzle = PRESETS.find((candidate) => candidate.id === 'physics-puzzle')!;
+    const toyFiles = buildGameFiles('physics-probe', toy);
+    const tableFiles = buildGameFiles('physics-probe', table);
+    const puzzleFiles = buildGameFiles('physics-probe', puzzle);
+    const toyJson = JSON.parse(toyFiles.get('content/game.json')!) as { physicsProfile?: string };
+    const tableJson = JSON.parse(tableFiles.get('content/game.json')!) as {
+      physicsProfile?: string;
+      systemPacks: Array<{ packId: string }>;
+    };
+    expect(toyJson.physicsProfile).toBe('matter');
+    expect(tableJson.physicsProfile).toBe('matter');
+    expect(tableJson.systemPacks.map((s) => s.packId)).toContain('sw2d.arcade');
+    expect(toyFiles.get('src/game-specific/packConfig.ts')).toContain(
+      "PHYSICS_STARTER: 'toy' | 'table' | null = 'toy'",
+    );
+    expect(tableFiles.get('src/game-specific/packConfig.ts')).toContain(
+      "PHYSICS_STARTER: 'toy' | 'table' | null = 'table'",
+    );
+    expect(puzzleFiles.get('src/game-specific/packConfig.ts')).toContain(
+      "PHYSICS_STARTER: 'toy' | 'table' | null = null",
+    );
+    const toyTheme = JSON.parse(toyFiles.get('content/themes/default/theme.json')!) as { ui: { playHint: string } };
+    const tableTheme = JSON.parse(tableFiles.get('content/themes/default/theme.json')!) as { ui: { playHint: string } };
+    expect(toyTheme.ui.playHint).toContain('LAND IN THE GOAL');
+    expect(tableTheme.ui.playHint).toContain('HIT BUMPERS');
+  });
+});
+
+describe('generated rts and territory consume command presentation', () => {
+  it('the generated top-down shell binds bindStarterCommand', () => {
+    const rts = PRESETS.find((candidate) => candidate.id === 'simple-rts')!;
+    const shell = buildGameFiles('command-probe', rts).get('src/game-specific/shellPack.ts')!;
+    expect(shell).toContain('bindStarterCommand(context, { mode: COMMAND_STARTER })');
+    expect(shell).toContain('ops.select()');
+    expect(shell).toContain('ops.setMove(');
+    expect(shell).toContain("from './packConfig.ts'");
+  });
+
+  it('simple-rts and territory-control stamp different COMMAND_STARTER values; tactics stays null', () => {
+    const rts = PRESETS.find((candidate) => candidate.id === 'simple-rts')!;
+    const zone = PRESETS.find((candidate) => candidate.id === 'territory-control')!;
+    const tactics = PRESETS.find((candidate) => candidate.id === 'turn-based-tactics')!;
+    const rtsFiles = buildGameFiles('command-probe', rts);
+    const zoneFiles = buildGameFiles('command-probe', zone);
+    const tacticsFiles = buildGameFiles('command-probe', tactics);
+    expect(rtsFiles.get('src/game-specific/packConfig.ts')).toContain(
+      "COMMAND_STARTER: 'rts' | 'zone' | null = 'rts'",
+    );
+    expect(zoneFiles.get('src/game-specific/packConfig.ts')).toContain(
+      "COMMAND_STARTER: 'rts' | 'zone' | null = 'zone'",
+    );
+    expect(tacticsFiles.get('src/game-specific/packConfig.ts')).toContain(
+      "COMMAND_STARTER: 'rts' | 'zone' | null = null",
+    );
+    const rtsTheme = JSON.parse(rtsFiles.get('content/themes/default/theme.json')!) as { ui: { playHint: string } };
+    const zoneTheme = JSON.parse(zoneFiles.get('content/themes/default/theme.json')!) as { ui: { playHint: string } };
+    expect(rtsTheme.ui.playHint).toContain('J SELECTS THE UNIT');
+    expect(zoneTheme.ui.playHint).toContain('STAND IN BOTH ZONES');
+  });
+});
+
+describe('generated museum and rail consume look presentation', () => {
+  it('the generated top-down shell binds bindStarterLook for museum', () => {
+    const museum = PRESETS.find((candidate) => candidate.id === 'museum-exhibit')!;
+    const shell = buildGameFiles('look-probe', museum).get('src/game-specific/shellPack.ts')!;
+    expect(shell).toContain('bindStarterLook(context, { mode: LOOK_STARTER })');
+    expect(shell).toContain('look.setPlayer(');
+    expect(shell).toContain('look.act()');
+    expect(shell).toContain("from './packConfig.ts'");
+  });
+
+  it('the generated pointer shell binds bindStarterLook for rail', () => {
+    const rail = PRESETS.find((candidate) => candidate.id === 'rail-shooter')!;
+    const shell = buildGameFiles('look-probe', rail).get('src/game-specific/shellPack.ts')!;
+    expect(shell).toContain('bindStarterLook(context, { mode: LOOK_STARTER })');
+    expect(shell).toContain('look.act()');
+    expect(shell).toContain('look.tick(');
+  });
+
+  it('museum-exhibit and rail-shooter stamp different LOOK_STARTER values; photography stays null', () => {
+    const museum = PRESETS.find((candidate) => candidate.id === 'museum-exhibit')!;
+    const rail = PRESETS.find((candidate) => candidate.id === 'rail-shooter')!;
+    const photo = PRESETS.find((candidate) => candidate.id === 'photography-game')!;
+    const museumFiles = buildGameFiles('look-probe', museum);
+    const railFiles = buildGameFiles('look-probe', rail);
+    const photoFiles = buildGameFiles('look-probe', photo);
+    const railJson = JSON.parse(railFiles.get('content/game.json')!) as { systemPacks: Array<{ packId: string }> };
+    expect(railJson.systemPacks.map((s) => s.packId)).toContain('sw2d.combat');
+    expect(museumFiles.get('src/game-specific/packConfig.ts')).toContain(
+      "LOOK_STARTER: 'museum' | 'rail' | null = 'museum'",
+    );
+    expect(railFiles.get('src/game-specific/packConfig.ts')).toContain(
+      "LOOK_STARTER: 'museum' | 'rail' | null = 'rail'",
+    );
+    expect(photoFiles.get('src/game-specific/packConfig.ts')).toContain(
+      "LOOK_STARTER: 'museum' | 'rail' | null = null",
+    );
+    const museumTheme = JSON.parse(museumFiles.get('content/themes/default/theme.json')!) as { ui: { playHint: string } };
+    const railTheme = JSON.parse(railFiles.get('content/themes/default/theme.json')!) as { ui: { playHint: string } };
+    expect(museumTheme.ui.playHint).toContain('J INSPECTS PLAQUES');
+    expect(railTheme.ui.playHint).toContain('J DAMAGES APPROACHING TARGETS');
+    expect(railTheme.ui.playHint).not.toContain('FIRE');
+  });
+});
+
+describe('generated precision and climbing consume parkour presentation', () => {
+  it('the generated platform shell binds bindStarterParkour', () => {
+    const precision = PRESETS.find((candidate) => candidate.id === 'precision-platformer')!;
+    const shell = buildGameFiles('parkour-probe', precision).get('src/game-specific/shellPack.ts')!;
+    expect(shell).toContain('bindStarterParkour(context, { mode: PARKOUR_STARTER })');
+    expect(shell).toContain('parkour.attach(');
+    expect(shell).toContain('parkour.jumped()');
+    expect(shell).toContain("from './packConfig.ts'");
+  });
+
+  it('precision-platformer and climbing-game stamp different PARKOUR_STARTER values; auto-runner stays null', () => {
+    const precision = PRESETS.find((candidate) => candidate.id === 'precision-platformer')!;
+    const climb = PRESETS.find((candidate) => candidate.id === 'climbing-game')!;
+    const auto = PRESETS.find((candidate) => candidate.id === 'auto-runner')!;
+    const precisionFiles = buildGameFiles('parkour-probe', precision);
+    const climbFiles = buildGameFiles('parkour-probe', climb);
+    const autoFiles = buildGameFiles('parkour-probe', auto);
+    expect(precisionFiles.get('src/game-specific/packConfig.ts')).toContain(
+      "PARKOUR_STARTER: 'precision' | 'climb' | null = 'precision'",
+    );
+    expect(climbFiles.get('src/game-specific/packConfig.ts')).toContain(
+      "PARKOUR_STARTER: 'precision' | 'climb' | null = 'climb'",
+    );
+    expect(autoFiles.get('src/game-specific/packConfig.ts')).toContain(
+      "PARKOUR_STARTER: 'precision' | 'climb' | null = null",
+    );
+    const precisionTheme = JSON.parse(precisionFiles.get('content/themes/default/theme.json')!) as {
+      ui: { playHint: string };
+    };
+    const climbTheme = JSON.parse(climbFiles.get('content/themes/default/theme.json')!) as { ui: { playHint: string } };
+    expect(precisionTheme.ui.playHint).toContain('JUMP THE GAPS');
+    expect(climbTheme.ui.playHint).toContain('JUMP UP');
+  });
+});

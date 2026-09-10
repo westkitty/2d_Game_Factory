@@ -115,5 +115,13 @@ describe('generateUiCopy (generated games announce their genre honestly)', () =>
     expect(copyFor('endless-runner').playHint).toBe('JUMP  -  AUTO RUN  -  SURVIVE');
     expect(copyFor('endless-driving').playHint).toBe('STEER / THROTTLE WASD/ARROWS  -  HOLD UP TO BANK DISTANCE');
     expect(copyFor('boat-flight-racer').playHint).toBe('STEER / THROTTLE WASD/ARROWS  -  J SWITCHES TO FLIGHT');
+    expect(copyFor('physics-toy').playHint).toBe('CLICK OR J LAUNCHES  -  LAND IN THE GOAL');
+    expect(copyFor('pinball-lite').playHint).toBe('J LEFT K RIGHT  -  HIT BUMPERS');
+    expect(copyFor('simple-rts').playHint).toBe('J SELECTS THE UNIT  -  WASD MOVES');
+    expect(copyFor('territory-control').playHint).toBe('MOVE WASD/ARROWS  -  STAND IN BOTH ZONES');
+    expect(copyFor('museum-exhibit').playHint).toBe('MOVE WASD/ARROWS  -  J INSPECTS PLAQUES');
+    expect(copyFor('rail-shooter').playHint).toBe('J DAMAGES APPROACHING TARGETS');
+    expect(copyFor('precision-platformer').playHint).toBe('MOVE / JUMP  -  JUMP THE GAPS');
+    expect(copyFor('climbing-game').playHint).toBe('MOVE / JUMP  -  JUMP UP');
   });
 });

@@ -53,7 +53,9 @@ export const PARTY_TOY_WEIRD_PRESETS: readonly PresetDefinition[] = [
     // Phase 9 (ADR-0026): the Matter backend + reusable AdvancedPhysicsService
     // (rigid bodies, collision, springs) drive the generated pointer shell.
     physicsProfile: 'matter',
-    knownLimitations: [],
+    knownLimitations: [
+      'Toy launch/goal is game-specific presentation of Matter; a reusable pinball pack is not.',
+    ],
   }),
 
   definePreset({

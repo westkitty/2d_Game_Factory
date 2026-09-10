@@ -54,3 +54,7 @@ One short record per decision that constrains later work. No ADR for trivia.
 | [0048](0048-consume-combat-in-dungeon-and-base-shells.md) | Consume combat health in dungeon and base-defense shells | Category-C Wave 21 |
 | [0049](0049-consume-auto-run-in-course-and-endless-shells.md) | Consume auto-run presentation in course and endless shells | Category-C Wave 22 |
 | [0050](0050-consume-vehicle-in-road-and-craft-shells.md) | Consume vehicle.motion in road and craft shells | Category-C Wave 23 |
+| [0051](0051-consume-physics-in-toy-and-table-shells.md) | Consume AdvancedPhysics in toy and table shells | Category-C Wave 24 |
+| [0052](0052-consume-command-in-rts-and-zone-shells.md) | Consume one-unit command vs stand-in occupy | Category-C Wave 25 |
+| [0053](0053-consume-look-in-museum-and-rail-shells.md) | Consume look as museum plaques vs rail targets | Category-C Wave 26 |
+| [0054](0054-consume-parkour-in-precision-and-climb-shells.md) | Consume player-controlled parkour vs climb | Category-C Wave 27 |

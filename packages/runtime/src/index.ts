@@ -129,6 +129,30 @@ export {
   type StarterVehicleSnapshot,
   type VehicleStarterMode,
 } from './game-support/starterVehicle.ts';
+export {
+  bindStarterPhysics,
+  type StarterPhysicsBinding,
+  type StarterPhysicsSnapshot,
+  type PhysicsStarterMode,
+} from './game-support/starterPhysics.ts';
+export {
+  bindStarterCommand,
+  type StarterCommandBinding,
+  type StarterCommandSnapshot,
+  type CommandStarterMode,
+} from './game-support/starterCommand.ts';
+export {
+  bindStarterLook,
+  type StarterLookBinding,
+  type StarterLookSnapshot,
+  type LookStarterMode,
+} from './game-support/starterLook.ts';
+export {
+  bindStarterParkour,
+  type StarterParkourBinding,
+  type StarterParkourSnapshot,
+  type ParkourStarterMode,
+} from './game-support/starterParkour.ts';
 
 export { LocalStorageDriver, MemoryStorageDriver } from './persistence/LocalStorageDriver.ts';
 export { SaveStoreImpl } from './persistence/SaveStoreImpl.ts';
