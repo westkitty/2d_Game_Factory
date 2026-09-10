@@ -6,7 +6,7 @@
 2. **Action** — the weasel walks toward the gate, leaps through three lights, and lands.
 3. **Resolution** — the palace opens into a clear `RUN GAME` call to action.
 
-The MP4 includes a mono AAC soundtrack with a quiet night bed, title chimes, soft footfalls, a jump sweep, three ascending pickup tones, a landing hit, and a resolve/end-card sting. The generated WAV is included beside it so the sound design can be auditioned independently.
+The MP4 includes a mono AAC soundtrack with a quiet night bed, title chimes, soft footfalls, edit-transition whooshes, a jump sweep, three ascending pickup tones, a landing hit, and a resolve/end-card sting. The picture uses short dip-to-night transitions at each story beat so the still-art shots cut as one coherent piece. The generated WAV is included beside it so the sound design can be auditioned independently.
 
 ## Rebuild
 

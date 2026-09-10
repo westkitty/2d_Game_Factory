@@ -219,6 +219,15 @@ def build_svg(t: float, palace_uri: str, weasel_uri: str) -> str:
             + text("SW2D  /  LOCAL GAME FACTORY", 480, 461, 13, "#d9e5e2", opacity=opacity * 0.78, weight="400", letter_spacing=2.0)
         )
 
+    # A short dip-to-night at each beat boundary gives the still-art shots a
+    # deliberate edit rather than a hard cut. It also lets the sound cues land
+    # cleanly without making the scene changes feel abrupt.
+    for boundary in (2.25, 5.35, 8.55, 10.75):
+        distance = abs(seconds - boundary)
+        if distance < 0.18:
+            transition = 1.0 - distance / 0.18
+            content += f'<rect width="960" height="540" fill="#0e1733" opacity="{transition * 0.78:.3f}"/>'
+
     # Frame-level fades make the handoff between beats feel intentional.
     if seconds < 0.35:
         content += f'<rect width="960" height="540" fill="#0e1733" opacity="{1.0 - ease(seconds / 0.35):.3f}"/>'
@@ -278,6 +287,12 @@ def write_soundtrack(path: Path) -> None:
     add_tone(samples, 0.35, 0.23, 523, 0.18, "sine")
     add_tone(samples, 0.48, 0.35, 784, 0.16, "sine")
     add_tone(samples, 0.78, 0.55, 1047, 0.11, "sine")
+
+    # Small edit whooshes mirror the dip-to-night transitions in the picture.
+    add_tone(samples, 2.11, 0.20, 430, 0.055, "sine", 220)
+    add_tone(samples, 5.22, 0.22, 260, 0.065, "sine", 720)
+    add_tone(samples, 8.42, 0.22, 760, 0.050, "sine", 310)
+    add_tone(samples, 10.62, 0.20, 330, 0.055, "sine", 680)
 
     # Soft footfalls during the walk.
     for index, start in enumerate([2.55, 3.02, 3.49, 3.96, 4.43, 4.90]):

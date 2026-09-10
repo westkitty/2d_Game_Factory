@@ -22,6 +22,7 @@
   ],
   "soundCues": [
     { "start": 0.35, "name": "title chime", "description": "Warm two-note reveal" },
+    { "start": 2.11, "end": 10.82, "name": "edit whooshes", "description": "Four low-volume transition sweeps at beat changes" },
     { "start": 2.55, "end": 4.985, "name": "footsteps", "description": "Six soft alternating footfalls" },
     { "start": 5.53, "name": "jump whoosh", "description": "Descending sine sweep" },
     { "start": 5.96, "end": 7.12, "name": "light pickups", "description": "Three ascending chimes" },
