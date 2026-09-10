@@ -81,6 +81,12 @@ export {
   type StarterArcadeSnapshot,
   type ArcadeStarterMode,
 } from './game-support/starterArcade.ts';
+export {
+  bindStarterPointer,
+  type StarterPointerBinding,
+  type StarterPointerSnapshot,
+  type PointerStarterMode,
+} from './game-support/starterPointer.ts';
 
 export { LocalStorageDriver, MemoryStorageDriver } from './persistence/LocalStorageDriver.ts';
 export { SaveStoreImpl } from './persistence/SaveStoreImpl.ts';

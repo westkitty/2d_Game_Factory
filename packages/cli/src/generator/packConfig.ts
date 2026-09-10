@@ -27,7 +27,10 @@ import type { PresetDefinition } from '@sw2d/contracts';
  * crop/season or colony-AI monolith. Wave 14 stamps `NARRATIVE_STARTER`
  * (`fiction` / `case` / null) the same way for `sw2d.narrative`. Wave 15
  * stamps `ARCADE_STARTER` (`fishing` / `cooking` / null) for `sw2d.arcade`
- * score/elapsed — not a casting/tension or recipe pack.
+ * score/elapsed — not a casting/tension or recipe pack. Wave 16 stamps
+ * `POINTER_STARTER` (`draw` / `wardrobe` / null) so the pointer shell can
+ * present two ADR-0018 loops without inventing a drawing-canvas or wardrobe
+ * pack.
  *
  * Deliberately NOT a universal puzzle DSL.
  */
@@ -128,6 +131,8 @@ export function generatePackConfig(preset: PresetDefinition): string {
     preset.id === 'interactive-fiction-hybrid' ? "'fiction'" : preset.id === 'investigation-game' ? "'case'" : 'null';
   const arcadeStarter =
     preset.id === 'fishing-game' ? "'fishing'" : preset.id === 'cooking-game' ? "'cooking'" : 'null';
+  const pointerStarter =
+    preset.id === 'drawing-game' ? "'draw'" : preset.id === 'dress-up-character-toy' ? "'wardrobe'" : 'null';
   return [
     '/**',
     " * Config for packs that declare `configSource: 'code'` in their definition -",
@@ -150,6 +155,9 @@ export function generatePackConfig(preset: PresetDefinition): string {
     '',
     '/** Category-C Wave 15: fishing vs cooking presentation of sw2d.arcade. Null otherwise. */',
     `export const ARCADE_STARTER: 'fishing' | 'cooking' | null = ${arcadeStarter};`,
+    '',
+    '/** Category-C Wave 16: draw vs wardrobe presentation of ADR-0018 interaction. Null otherwise. */',
+    `export const POINTER_STARTER: 'draw' | 'wardrobe' | null = ${pointerStarter};`,
     '',
   ]
     .filter((line, index, all) => !(line === '' && all[index - 1] === ''))

@@ -20,6 +20,7 @@ import { generateUiCopy } from '../src/generator/contentDocuments.ts';
 //  - FIRE J/X: PRIMARY_ACTION keyboard bindings are KeyJ/KeyX.
 //  - AIM WITH MOUSE: topDownShellPack consumes aimFromPointer (ADR-0018);
 //    pointerShellPack fires toward context.spatialPointer when weapons are on.
+//  - DRAG: pointerShellPack bindStarterPointer wardrobe/draw uses ADR-0018 drag.
 //  - UNDO BACKSPACE: CANCEL is Backspace; gridShellPack calls puzzle.undo() on CANCEL.
 //  - RESET K: SECONDARY_ACTION is KeyK/KeyC; gridShellPack calls puzzle.reset().
 //  - ENTER: CONFIRM is Enter/Space/NumpadEnter; vehicle shell starts the race,
@@ -28,7 +29,6 @@ import { generateUiCopy } from '../src/generator/contentDocuments.ts';
 const ALLOWED_HINT_WORDS = /^[A-Z0-9\/() .-]+$/;
 const FORBIDDEN_CLAIMS: readonly { pattern: RegExp; reason: string }[] = [
   { pattern: /INTERACT/, reason: 'no generated shell reads the INTERACT action' },
-  { pattern: /DRAG/, reason: 'the pointer shell hit-tests hover/click; it has no drag interaction' },
   { pattern: /GAMEPAD|STICK/, reason: 'gamepad honesty: the starter does not claim device support it cannot prove' },
 ];
 
@@ -102,5 +102,7 @@ describe('generateUiCopy (generated games announce their genre honestly)', () =>
     expect(copyFor('investigation-game').playHint).toBe('MOVE WASD/ARROWS  -  J INSPECTS CLUES');
     expect(copyFor('fishing-game').playHint).toBe('ENTER CASTS AND LANDS');
     expect(copyFor('cooking-game').playHint).toBe('ARROWS PICK  -  ENTER ADDS TO THE DISH');
+    expect(copyFor('drawing-game').playHint).toBe('DRAW TWO STROKES ON THE PAGE');
+    expect(copyFor('dress-up-character-toy').playHint).toBe('DRAG HAT AND SHIRT ONTO THE FIGURE');
   });
 });

@@ -2,12 +2,14 @@ import type { AdvancedPhysicsService, InstalledSystemPack, PhysicsBodyHandle } f
 import {
   bindStarterDialogue,
   bindStarterWeapon,
+  bindStarterPointer,
   createAdvancedPhysics,
   mutedStyle,
   pointerActionController,
   type SceneContext,
   type ScenePackDefinition,
 } from '@sw2d/runtime';
+import { POINTER_STARTER } from './packConfig.ts';
 
 /**
  * Generated starter shell: pointer controller family.
@@ -32,6 +34,10 @@ import {
  * a Matter ball-in-goal (`physics-goal`) or two linked inspect hotspots
  * (`escape-locks`). The pack keeps TState opaque; packConfig.ts owns the
  * shape; this shell presents it. Overlays stay local.
+ *
+ * When `POINTER_STARTER` is draw or wardrobe (Category-C Wave 16) the dummy
+ * target is replaced by two ADR-0018 presentations: stroke polylines vs
+ * drag/drop wardrobe slots. Overlay drawing / dress-up kits stay local.
  *
  * Press-style semantic actions (`pointerActionController`) are still
  * available for menu-style confirms; this shell demonstrates the spatial
@@ -69,12 +75,13 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
 
     const dialogue = bindStarterDialogue(context);
     const weapon = bindStarterWeapon(context);
-    const weaponsActive = Boolean(weapon.snapshot()) && !dialogue.active;
+    const pointerPlay = bindStarterPointer(context, { mode: POINTER_STARTER });
+    const weaponsActive = Boolean(weapon.snapshot()) && !dialogue.active && !pointerPlay.active;
     const puzzle = context.capabilities.get<CodePuzzleService>('puzzle.state');
     const puzzleKind = puzzle?.current().kind;
     const physicsPuzzle = puzzleKind === 'physics-goal';
     const escapePuzzle = puzzleKind === 'escape-locks';
-    const dummyPointer = !dialogue.active && !weaponsActive && !physicsPuzzle && !escapePuzzle;
+    const dummyPointer = !dialogue.active && !weaponsActive && !physicsPuzzle && !escapePuzzle && !pointerPlay.active;
 
     let activations = 0;
     let highlighted = false;
@@ -283,6 +290,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       lastResult,
       nudges,
       ...(dialogue.active ? { dialogue: dialogue.snapshot() } : {}),
+      ...(pointerPlay.active ? { pointerPlay: pointerPlay.snapshot() } : {}),
       weapon: weapon.snapshot(),
       ...(puzzle
         ? {
@@ -325,6 +333,11 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
             else dialogue.advance();
           }
           dialogue.render();
+          return;
+        }
+
+        if (pointerPlay.active) {
+          pointerPlay.render();
           return;
         }
 
@@ -381,6 +394,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         }
         dialogue.dispose();
         weapon.dispose();
+        pointerPlay.dispose();
         physics?.dispose();
         try {
           target?.destroy();

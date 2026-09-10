@@ -78,7 +78,9 @@ export const PARTY_TOY_WEIRD_PRESETS: readonly PresetDefinition[] = [
     requiredContentRoles: ['tuning', 'characters'],
     supportedInputModes: POINTER_INPUT_MODES,
     validationProfile: VALIDATION_PROFILES.partyToyWeird,
-    knownLimitations: ['No wardrobe/attachment system is built on the drag/drop capability (ADR-0018) yet.'],
+    knownLimitations: [
+      'Wardrobe slots for the generated starter use interaction drag/drop (ADR-0018); a reusable attachment/skeleton wardrobe system is not.',
+    ],
   }),
 
   definePreset({
@@ -104,7 +106,9 @@ export const PARTY_TOY_WEIRD_PRESETS: readonly PresetDefinition[] = [
     requiredContentRoles: ['tuning'],
     supportedInputModes: POINTER_INPUT_MODES,
     validationProfile: VALIDATION_PROFILES.partyToyWeird,
-    knownLimitations: ['No canvas-stroke/drawing capture is built on the spatial pointer service (ADR-0018) yet.'],
+    knownLimitations: [
+      'Stroke polylines for the generated starter are captured through the spatial pointer (ADR-0018); pressure, layers, export and a reusable drawing-canvas system are not.',
+    ],
   }),
 
   definePreset({

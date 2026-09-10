@@ -38,7 +38,8 @@ Highest-leverage clusters, from `packages/presets/src/shared.ts` LIMITATIONS + p
 | 13 | Consume existing `sw2d.simulation` ledger/jobs | farming-lite, colony-lite | **Wave 13 implemented and played** (existing `sw2d.simulation`; ADR-0040). Residual: crop/season/plot framework and colony assignment AI stay out. Overlay farming/colony stay local (P3-J). |
 | 14 | Consume existing `sw2d.narrative` store | interactive-fiction-hybrid, investigation-game | **Wave 14 implemented** (existing `sw2d.narrative`; ADR-0041). Residual: parser IF and evidence-board linking stay out. Overlay IF/investigation stay local (P3-K). |
 | 15 | Consume existing `sw2d.arcade` score/elapsed | fishing-game, cooking-game | **Wave 15 implemented** (existing `sw2d.arcade`; ADR-0042). Residual: casting/line/tension/fish behaviour and ingredient/recipe cooking stay out. Overlay fishing/cooking stay local (P3-H). Pinball/microgame stay dummy OPTIONS. |
-| — | Tier 4 specialized (parser IF, photography, wardrobe, drawing, microgame scheduler, sandbox authoring) | prefer game-specific seam until a second consumer is real | backlog |
+| 16 | Consume existing ADR-0018 interaction in pointer shells | drawing-game, dress-up-character-toy | **Wave 16 implemented** (existing spatial pointer / drag-drop; ADR-0043). Residual: pressure/layers/export; attachment/skeleton wardrobe. Overlay drawing/dress-up stay local (P3-H). |
+| — | Tier 4 specialized (parser IF, photography, microgame scheduler, sandbox authoring) | prefer game-specific seam until a second consumer is real | backlog |
 
 Do not extend `sw2d.simulation` / `sw2d.narrative` / `sw2d.ai` into genre monoliths. New narrow packs compose with them.
 
@@ -1248,3 +1249,101 @@ binder is active. Confirmed via debug snapshots, not screenshots.
 - Residual Category-C: climbing, chase, territory, pinball, crop/season, rail
   camera, run-meta vs survivor, remaining dummy OPTIONS (pinball/auto-battler/
   microgame), maze wanderer, committed proofs.
+
+## Wave 16 — consume ADR-0018 in drawing and wardrobe shells
+
+### Problem
+
+`drawing-game` and `dress-up-character-toy` already sat on the pointer shell
+(`context.spatialPointer` / `context.interaction`, ADR-0018). Both recipes
+entered play as a dummy click target. Inventing a drawing-canvas pack or a
+wardrobe/attachment pack would duplicate 1-consumer leftovers.
+
+### Consumers
+
+- `drawing-game` — `POINTER_STARTER = 'draw'` (drag polylines on the page;
+  a stroke counts at ≥80 px; complete at 2 strokes).
+- `dress-up-character-toy` — `POINTER_STARTER = 'wardrobe'` (drag hat and
+  shirt onto a figure drop zone; complete when both are attached).
+
+Materially different: stroke capture vs drag/drop slots.
+
+Sandbox, photography, physics-toy, gallery and rail keep
+`POINTER_STARTER = null`. Overlay drawing / dress-up kits stay local (P3-H).
+
+### ValidationPlan
+
+1. No new pack / schema / capability id.
+2. Generated packConfig stamps `POINTER_STARTER` draw vs wardrobe vs null.
+3. Generated pointer shell binds `bindStarterPointer` and skips the dummy
+   target when active.
+4. Honesty / docsSync / uiCopy stay green. ADR-0043.
+5. Real-browser play of factory-generated games. Overlay kits not re-run.
+   Committed proofs + maturity promotion still deferred.
+
+### CompletionContract
+
+- [x] No new pack / schema / capability id.
+- [x] Authority remains the existing ADR-0018 interaction service.
+- [x] ≥2 materially different generated consumers (2 wired).
+- [x] Focused generate/honesty/uiCopy tests.
+- [x] Honest residual limitation (pressure/layers/export; skeleton wardrobe).
+- [x] ADR-0043.
+- [x] Real-browser play of factory-generated `wave16-drawing-game` /
+  `wave16-dress-up-character-toy` (`tools/scripts/play-pointer-wave16.ts`, 2/2 PASS,
+  0 console errors, 0 external requests).
+- [x] `npm run sw2d -- validate` on those two games (schema + tsc + vite
+  build + boot smoke) PASS (CDP hang after printed success, timeout 90 → 124).
+- [ ] Overlay P3-H re-run. **Not done this wave** — overlay stays unwired.
+- [ ] Committed proofs + maturity promotion. **Not done — evidence rule.**
+
+### Implementation notes
+
+- No new pack. `context.interaction` already exists (ADR-0018).
+- `bindStarterPointer` is INERT unless packConfig names `'draw'` or
+  `'wardrobe'`. Physics-toy / sandbox / gallery / rail stay dummy or their
+  own binders.
+- Drawing: paper rect 80,80 800×380; min stroke 80 px; two strokes complete.
+- Wardrobe: hat (200,160) and shirt (200,340) drop onto figure (700,270).
+- Overlay drawing / dress-up kits stay local (P3-H).
+
+### Browser journeys (executed)
+
+Factory-generated:
+
+- Drawing-game: Space start mode=`draw` strokes 0 → drag 200,200→520,200
+  lastResult=`stroke` strokes 1 length 320 outcome=playing → drag 200,320→520,320
+  strokes 2 length 640 outcome=complete.
+- Dress-up-character-toy: Space start mode=`wardrobe` attached [] → drag hat
+  200,160→700,200 lastResult=`drop-hat` attached [hat] → drag shirt 200,340→700,300
+  lastResult=`drop-shirt` attached [hat, shirt] outcome=complete.
+
+### Visual inspection
+
+Drawing: paper rectangle, two polylines, HUD `strokes n/2`, title `DRAWN` on
+complete. Wardrobe: hat/shirt rectangles and figure drop zone, HUD `on n/2`,
+title `DRESSED` on complete. Dummy click target hidden when the binder is
+active. Confirmed via debug snapshots, not screenshots.
+
+### Bugs found and fixed this wave
+
+- `generatePackConfig` computed `pointerStarter` but never emitted
+  `POINTER_STARTER`, so generated shells would fail tsc on the import.
+- `drawing-game` catalog/docs still claimed no stroke capture (docsSync).
+- `hatX`/`hatY`/`shirtX`/`shirtY` inferred as numeric literals from `as const`
+  rack positions (`tsc`).
+- `outcome === 'complete'` after `if (outcome !== 'playing') return` was a
+  narrowing contradiction (`tsc`).
+- Pointer shell dispose omitted `pointerPlay.dispose()`.
+
+### Remaining blockers / unknowns
+
+- No committed `proofs/` for drawing-game or dress-up-character-toy; catalog
+  maturity stays `recipe` (23/3/48).
+- Overlay drawing/dress-up stay local. Pressure/layers/export and
+  attachment/skeleton wardrobe stay out of contract.
+- Chrome wrapper is session-local under `/tmp`.
+- Do not commit `package-lock.json` workspace links for gitignored `games/wave*`.
+- Residual Category-C: climbing, chase, territory, pinball, crop/season, rail
+  camera, run-meta vs survivor, remaining dummy OPTIONS (pinball/auto-battler/
+  microgame), maze wanderer, photography/sandbox, committed proofs.

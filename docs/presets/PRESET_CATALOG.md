@@ -226,9 +226,9 @@ recipe's *first* stated limitation; see `knownLimitations` in
 | `local-party-game` | Local hot-seat turns and simultaneous versus axes are reusable (sw2d.local-play); netcode, gamepads, split-screen cameras and more than two seats are not. |
 | `physics-toy` | (none stated) |
 | `virtual-pet` | Needs, decay, care actions, affinity and wellbeing hold/fail are reusable (sw2d.needs); full creature behaviour AI, relationship graphs and colony assignment are not. |
-| `dress-up-character-toy` | No wardrobe/attachment system is built on the drag/drop capability (ADR-0018) yet. |
+| `dress-up-character-toy` | Wardrobe slots for the generated starter use interaction drag/drop (ADR-0018); a reusable attachment/skeleton wardrobe system is not. |
 | `sandbox-playground` | No generalized authoring/editing sandbox exists. |
-| `drawing-game` | No canvas-stroke/drawing capture is built on the spatial pointer service (ADR-0018) yet. |
+| `drawing-game` | Stroke polylines for the generated starter are captured through the spatial pointer (ADR-0018); pressure, layers, export and a reusable drawing-canvas system are not. |
 | `fishing-game` | Score, combo, lives and elapsed are reusable (sw2d.arcade); a reusable casting/line/tension/fish behavior system and an ingredient/recipe/action-sequence cooking system are not. |
 | `cooking-game` | Score, combo, lives and elapsed are reusable (sw2d.arcade); a reusable casting/line/tension/fish behavior system and an ingredient/recipe/action-sequence cooking system are not. |
 | `photography-game` | No reusable camera/framing/scoring/photo-capture gameplay system exists. |

@@ -768,6 +768,43 @@ describe('generated ui-simulation fishing and cooking consume sw2d.arcade', () =
   });
 });
 
+describe('generated pointer drawing and dress-up consume ADR-0018 interaction', () => {
+  it('the generated pointer shell binds bindStarterPointer', () => {
+    const drawing = PRESETS.find((candidate) => candidate.id === 'drawing-game')!;
+    const shell = buildGameFiles('pointer-probe', drawing).get('src/game-specific/shellPack.ts')!;
+    expect(shell).toContain('bindStarterPointer(context, { mode: POINTER_STARTER })');
+    expect(shell).toContain('pointerPlay.render()');
+    expect(shell).toContain("from './packConfig.ts'");
+  });
+
+  it('drawing-game and dress-up-character-toy stamp different POINTER_STARTER values; others stay null', () => {
+    const drawing = PRESETS.find((candidate) => candidate.id === 'drawing-game')!;
+    const dress = PRESETS.find((candidate) => candidate.id === 'dress-up-character-toy')!;
+    const physics = PRESETS.find((candidate) => candidate.id === 'physics-toy')!;
+    const sandbox = PRESETS.find((candidate) => candidate.id === 'sandbox-playground')!;
+    const drawingFiles = buildGameFiles('pointer-probe', drawing);
+    const dressFiles = buildGameFiles('pointer-probe', dress);
+    const physicsFiles = buildGameFiles('pointer-probe', physics);
+    const sandboxFiles = buildGameFiles('pointer-probe', sandbox);
+    expect(drawingFiles.get('src/game-specific/packConfig.ts')).toContain(
+      "POINTER_STARTER: 'draw' | 'wardrobe' | null = 'draw'",
+    );
+    expect(dressFiles.get('src/game-specific/packConfig.ts')).toContain(
+      "POINTER_STARTER: 'draw' | 'wardrobe' | null = 'wardrobe'",
+    );
+    expect(physicsFiles.get('src/game-specific/packConfig.ts')).toContain(
+      "POINTER_STARTER: 'draw' | 'wardrobe' | null = null",
+    );
+    expect(sandboxFiles.get('src/game-specific/packConfig.ts')).toContain(
+      "POINTER_STARTER: 'draw' | 'wardrobe' | null = null",
+    );
+    const drawingTheme = JSON.parse(drawingFiles.get('content/themes/default/theme.json')!) as { ui: { playHint: string } };
+    const dressTheme = JSON.parse(dressFiles.get('content/themes/default/theme.json')!) as { ui: { playHint: string } };
+    expect(drawingTheme.ui.playHint).toContain('DRAW TWO STROKES');
+    expect(dressTheme.ui.playHint).toContain('DRAG HAT AND SHIRT');
+  });
+});
+
 describe('generated pointer puzzles consume sw2d.puzzle', () => {
   it('the generated pointer shell presents physics-goal and escape-locks on puzzle.state', () => {
     const physics = PRESETS.find((candidate) => candidate.id === 'physics-puzzle')!;

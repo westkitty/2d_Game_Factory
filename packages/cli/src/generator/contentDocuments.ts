@@ -1018,7 +1018,11 @@ export function generateUiCopy(options: {
             ? presetId === 'escape-room'
               ? 'CLICK THE NOTE  -  THEN THE KEY'
               : 'CLICK TO NUDGE  -  LAND IN THE GOAL'
-            : 'POINT AT THINGS  -  CLICK TO ACT  -  PAUSE TO STOP';
+            : presetId === 'drawing-game'
+              ? 'DRAW TWO STROKES ON THE PAGE'
+              : presetId === 'dress-up-character-toy'
+                ? 'DRAG HAT AND SHIRT ONTO THE FIGURE'
+                : 'POINT AT THINGS  -  CLICK TO ACT  -  PAUSE TO STOP';
       break;
     case 'ui-simulation':
       playHint = has('sw2d.economy')
