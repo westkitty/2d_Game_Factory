@@ -35,7 +35,13 @@ harness's virtual clock
 (`packages/qa/src/harness.ts`'s `stepFrames()`): each call advances Phaser's loop by exactly
 16.67ms of *simulated* time, regardless of how long the real `page.evaluate()` round-trip actually
 took. This proves the game's logic is **deterministic** - the same input sequence always produces
-the same state - which is what every proof/smoke assertion actually checks.
+the same state - which is what every proof/smoke assertion actually checks. (The Category-C
+convergence program found the harness had not owned the *first* stepped frames: Phaser's
+ten-frame delta smoothing still carried the real rAF deltas from before the loop was stopped,
+so the first ~8 stepped frames ran at ~13.4 ms and a `jumpPressed && blocked.down` edge could
+land one frame off in one run out of many. `stopRequestAnimationFrameLoop()` now seeds the
+delta history, `lastTime` and the virtual clock so frame 1 is exactly 16.67 ms;
+`qa:adversarial` asserts it on every proof.)
 
 It proves **nothing** about real-time frame pacing, GPU cost, or FPS under actual wall-clock
 timing. The one command that measures real pacing is `npm run qa:performance`, which deliberately

@@ -59,6 +59,13 @@ async function probe(harness: Harness): Promise<SmokeOutcome> {
   };
   const snap = () => readSnapshot(harness);
 
+  // The harness must own the clock from frame 1: Phaser's smoothed delta
+  // must already be exactly one 16.67 ms frame, not an average that still
+  // carries the real rAF frames from before the harness stopped the loop.
+  await harness.stepFrames(1);
+  const firstDelta = await harness.page.evaluate(() => (window as unknown as { __SW2D__: { phaser: { loop: { delta: number } } } }).__SW2D__.phaser.loop.delta);
+  check(`first stepped delta is one fixed frame (got ${firstDelta})`, Math.abs(firstDelta - 16.67) < 0.01);
+
   await harness.keyTap('Space');
   await harness.stepFrames(12);
   const booted = await snap();
