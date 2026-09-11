@@ -97,9 +97,11 @@ npm run starter:dev      # the Phase 1 foundation slice (engine evidence)
 npm run validate         # typecheck + unit tests + build + offline guard
 npm run qa:workbench     # real-browser workbench journeys (16)
 npm run qa:smoke         # build and real-browser-smoke every demo + starter journey
-npm run qa:proof         # build and real-browser-prove every deep proof game
+npm run qa:proof         # build and real-browser-prove every proof game (74, one per preset)
+npm run qa:adversarial   # hostile-input sweep over every built proof (run after qa:proof)
+npm run qa:performance   # real-time frame pacing + heap across restarts, 8 desktop workloads
 npm run qa:responsive    # real-browser responsive/mobile check: 19 surfaces x 2 viewports
-npm run qa:matrix        # one game per distinct runtime signature: 40 targets covering all 74 presets
+npm run qa:matrix        # one game per distinct runtime signature: 56 targets covering all 74 presets
 npm run release:verify   # generate+validate+pack+verify one game per controller-shell family
 ```
 

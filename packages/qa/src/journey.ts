@@ -7,7 +7,7 @@ import { readShellState, readSnapshot } from './snapshot.ts';
  * Every generated shell boots the same way (CONFIRM on the start scene), is
  * paused the same way (PAUSE) and is restarted the same way (SECONDARY_ACTION
  * from the pause overlay - `PauseScene.ts`). The first twenty-three proof
- * specs each re-typed those key sequences; the Category-C proofs share them
+ * specs each re-typed those key sequences; the 51 Category-C proofs share them
  * here so a change to the runtime's pause/restart contract fails in one
  * place. Nothing here asserts anything - a spec still owns its oracle.
  */

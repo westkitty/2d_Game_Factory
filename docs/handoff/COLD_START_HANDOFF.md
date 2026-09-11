@@ -82,7 +82,7 @@ packages/cli/              @sw2d/cli              `npm run sw2d -- <command>`.
 packages/qa/               @sw2d/qa               real-browser (system Chrome) QA harness.
 starter/                   @sw2d/starter          the vertical slice: boot -> title -> play -> pause -> restart.
 demos/                                             12 real, smoke-validated demo games (one per genre family).
-proofs/                                            5 deep, end-to-end proof-validated games.
+proofs/                                            74 committed proof games, one per preset (frozen PROOF_CONTRACT.md + real-browser spec).
 games/                                             generated games (gitignored, created by `sw2d new`).
 docs/                                              architecture, ADRs, QA evidence, agent workflow, handoff.
 tools/scripts/                                     repository-level checks and matrices.
@@ -118,9 +118,11 @@ Full reference: `docs/cli/CLI_REFERENCE.md`. Release process detail: `release/RE
 ```bash
 npm run validate       # typecheck + unit tests + build + offline guard (fast, no browser)
 npm run qa:smoke       # 14 targets (12 demos + 2 starter pages), real Chrome, 14/14
-npm run qa:proof       # 5 deep proof games, real Chrome, 5/5
+npm run qa:proof       # 74 proof games (one per preset), real Chrome, 74/74; ids narrow the run
+npm run qa:adversarial # hostile-input sweep over every built proof, 74/74 (run after qa:proof)
+npm run qa:performance # real-time rAF frame pacing + heap across restarts, 8 desktop workloads
 npm run qa:responsive  # 19 surfaces x 2 viewports, real Chromium touch/coarse-pointer emulation, 19/19
-npm run qa:matrix      # 40 generate+build+play targets covering all 74 presets by runtime signature, 40/40
+npm run qa:matrix      # 56 generate+build+play targets covering all 74 presets by runtime signature, 56/56
 npm run release:verify # 6/6 controller-shell families: generate->validate->pack->verify, real Chrome
 ```
 
@@ -128,7 +130,7 @@ Full explanation of what each proves and does not: `docs/qa/QA_MATRIX.md`.
 
 ## 8. Current maturity state
 
-74 total presets: **23 `proof-validated`, 3 `smoke-validated`, 48 `recipe`, 0 `experimental`** (reconciled by the Arena finish program - docs/architecture/ARENA_FACTORY_FINISH_STATE.md).
+74 total presets: **74 `proof-validated`, 0 `smoke-validated`, 0 `recipe`, 0 `experimental`** (23/3/48 after the Arena finish program - docs/architecture/ARENA_FACTORY_FINISH_STATE.md; the Category-C convergence program committed the remaining 51 proofs - docs/architecture/CATEGORY_C_CONVERGENCE_MATRIX.md).
 Mechanically enforced by `packages/presets/test/honesty.test.ts` - a maturity label cannot drift
 from real evidence without a test failing. Detail: `docs/presets/PRESET_CATALOG.md`,
 `docs/presets/PRESET_CAPABILITY_MATRIX.md`, `docs/demos/DEMO_MATRIX.md`, `docs/proofs/PROOF_MATRIX.md`.
@@ -153,10 +155,11 @@ The durable ones, unlikely to close soon without a specific forcing event:
 
 - Real-device touch (only Chromium emulation exercised).
 - Gamepad feasibility (input adapter exists, no polling device ever exercised against it).
-- Real wall-clock performance/FPS (every QA journey uses deterministic fixed-step timing, never a
-  performance claim).
-- Spatial pointer, a universal puzzle DSL, a shared grid-cursor abstraction - all deliberately
-  deferred with explicit triggers recorded in `OPERATIONAL_STATE.md`.
+- Real wall-clock performance on anything but the desktop machine that ran `npm run qa:performance`
+  (every proof/smoke journey still uses deterministic fixed-step timing; the performance pass is
+  a desktop record, not a promise).
+- A universal puzzle DSL and a shared grid-cursor abstraction - deliberately deferred with explicit
+  triggers recorded in `OPERATIONAL_STATE.md` (the spatial pointer exists since ADR-0018).
 - The project software license.
 
 ## 11. Resource / license state
@@ -195,8 +198,9 @@ evidence packet it was judged against: `docs/architecture/PHASE11_FINAL_OPUS_HAN
 
 "Complete" means MASTER_PROJECT.md section 54's twenty criteria are satisfied and evidenced and
 none of section 46's thirteen failure conditions is present. It does **not** mean every possible
-mechanic exists, every preset is proof-validated, real-device performance is benchmarked, or public
-licensing is granted - see §10 and §11 above, which are still current and still open.
+mechanic exists, real-device performance is benchmarked, or public licensing is granted - see §10
+and §11 above, which are still current and still open. (Every preset *is* now proof-validated on
+committed evidence; that closed a documented gap, not this plan's definition of complete.)
 
 If you have arrived here intending to "continue the project": there is nothing left to continue
 under this plan. Scope the new work explicitly, with its own acceptance contract, and do not treat
