@@ -40,6 +40,8 @@ export interface TargetingService {
   pick(attackerId: string): string | null;
   strike(attackerId: string, targetId: string, nowMs: number): boolean;
   alive(team: 'player' | 'enemy'): number;
+  /** Remaining health of one actor (0 when dead or unknown). The pack is the one health owner for its actors; consumers must read it here rather than mirror it. */
+  health(actorId: string): number;
   lastResult(): string | null;
   outcome(): TargetingOutcome;
   reset(): void;

@@ -140,7 +140,14 @@ export function bindStarterStrategy(
   }
   strategy.deselect();
 
-  if (combat) {
+  // Wave 30: in battler-auto mode `sw2d.targeting` owns both fighters' health
+  // and resolves the fight. Registering a `cpu` entity in `combat.health` too
+  // would create a second, never-damaged owner the HUD then reports at full
+  // health while declaring victory (Category-C convergence bug). Only the
+  // manual battler / tactics paths register the combat entity.
+  const autoTargeting = mode === 'battler' && targeting?.active() === true && targeting.mode() === 'auto';
+  const cpuMax = autoTargeting ? targeting!.health('cpu') : CPU_MAX;
+  if (combat && !autoTargeting) {
     if (!combat.has('cpu')) combat.register('cpu', CPU_MAX);
     else {
       const state = combat.get('cpu');
@@ -201,6 +208,9 @@ export function bindStarterStrategy(
   let outcome: 'playing' | 'complete' = 'playing';
   let nowMs = 0;
   let cpuWait = 0;
+  // Battler-auto: the lineup pick is a phase. The autonomous fight starts on
+  // CONFIRM, not at install, so a player really gets to pick first.
+  let fightStarted = false;
   let disposed = false;
 
   function playerTurn(): boolean {
@@ -208,6 +218,7 @@ export function bindStarterStrategy(
   }
 
   function cpuHealth(): number {
+    if (autoTargeting) return targeting!.health('cpu');
     if (!combat || !combat.has('cpu')) return 0;
     return combat.get('cpu').current;
   }
@@ -273,11 +284,19 @@ export function bindStarterStrategy(
     } else {
       title.setText(snap.outcome === 'complete' ? 'WON' : 'BATTLER');
       status.setText(
-        `turn ${snap.turnNumber}  ·  ${snap.team ?? 'none'}  ·  cpu ${snap.cpuHealth}/${CPU_MAX}${
+        `turn ${snap.turnNumber}  ·  ${snap.team ?? 'none'}  ·  cpu ${snap.cpuHealth}/${cpuMax}${
           snap.fighter ? `  ·  ${snap.fighter}` : ''
         }${snap.lastResult ? `  ·  ${snap.lastResult}` : ''}`,
       );
-      hint.setText(snap.outcome === 'complete' ? 'ROUND WON' : 'ARROWS PICK   ENTER STRIKES');
+      hint.setText(
+        snap.outcome === 'complete'
+          ? 'ROUND WON'
+          : autoTargeting
+            ? fightStarted
+              ? 'AUTO-STRIKING'
+              : 'ARROWS PICK   ENTER FIGHTS'
+            : 'ARROWS PICK   ENTER STRIKES',
+      );
     }
   }
 
@@ -326,7 +345,7 @@ export function bindStarterStrategy(
       paint();
     },
     select(delta: number): void {
-      if (disposed || mode !== 'battler' || outcome !== 'playing') return;
+      if (disposed || mode !== 'battler' || outcome !== 'playing' || fightStarted) return;
       selectedIndex = wrap(selectedIndex + delta, FIGHTERS.length);
       paint();
     },
@@ -348,8 +367,14 @@ export function bindStarterStrategy(
     },
     confirm(): void {
       if (disposed || outcome !== 'playing') return;
-      if (mode === 'battler' && targeting?.active() && targeting.mode() === 'auto') {
-        lastResult = 'auto';
+      if (autoTargeting) {
+        if (!fightStarted) {
+          fightStarted = true;
+          lastResult = 'fight';
+          context.audio.playCue('ui.confirm');
+        } else {
+          lastResult = 'auto';
+        }
         paint();
         return;
       }
@@ -398,9 +423,10 @@ export function bindStarterStrategy(
         targeting.setPos('scout', scoutCol * CELL, scoutRow * CELL);
         targeting.setPos('grunt', GRUNT.col * CELL, GRUNT.row * CELL);
       }
-      if (mode === 'battler' && targeting?.active() && targeting.mode() === 'auto') {
-        targeting.tick(deltaMs, nowMs);
-        if (targeting.outcome() === 'complete') {
+      if (autoTargeting) {
+        if (!fightStarted) return;
+        targeting!.tick(deltaMs, nowMs);
+        if (targeting!.outcome() === 'complete') {
           outcome = 'complete';
           lastResult = 'won';
         }

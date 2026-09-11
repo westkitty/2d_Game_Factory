@@ -959,21 +959,26 @@ export function generatePinballCatalog(kind: 'table' | 'toy' | 'none'): Record<s
     return {
       schemaVersion: 1,
       mode: 'table',
-      ball: { x: 480, y: 90, radius: 14, vx: 0, vy: 8 },
+      // Category-C convergence: the first table launched the ball dead-centre
+      // above bumper-c with vx 0, so it scored the win with zero input. This
+      // table drifts right on launch, misses every bumper on its own, drains
+      // (table mode resets the ball) and only scores when a flipper kicks it
+      // back up - cli/test/pinballTable.test.ts pins both halves of that.
+      ball: { x: 480, y: 80, radius: 14, vx: 3, vy: 2 },
       gravity: 18,
       bounce: 0.7,
       bounds: { minX: 24, maxX: 936, minY: 24, maxY: 520 },
       bumpers: [
-        { id: 'bumper-a', x: 400, y: 220, radius: 40, score: 1 },
-        { id: 'bumper-b', x: 560, y: 220, radius: 40, score: 1 },
-        { id: 'bumper-c', x: 480, y: 320, radius: 40, score: 1 },
+        { id: 'bumper-a', x: 330, y: 200, radius: 36, score: 1 },
+        { id: 'bumper-b', x: 630, y: 200, radius: 36, score: 1 },
+        { id: 'bumper-c', x: 480, y: 300, radius: 36, score: 1 },
       ],
       flippers: [
-        { id: 'left', x: 300, y: 470, halfWidth: 50, kick: 10 },
-        { id: 'right', x: 660, y: 470, halfWidth: 50, kick: 10 },
+        { id: 'left', x: 320, y: 480, halfWidth: 90, kick: 14 },
+        { id: 'right', x: 640, y: 480, halfWidth: 90, kick: 14 },
       ],
       drainY: 530,
-      winScore: 2,
+      winScore: 3,
     };
   }
   return {

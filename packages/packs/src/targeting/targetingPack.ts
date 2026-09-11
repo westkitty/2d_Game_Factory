@@ -94,6 +94,11 @@ class TargetingServiceImpl implements TargetingService {
     return [...this.actors.values()].filter((a) => a.def.team === team && a.hp > 0 && a.def.id !== 'none').length;
   }
 
+  health(actorId: string): number {
+    const live = this.actors.get(actorId);
+    return live && live.def.id !== 'none' ? Math.max(0, live.hp) : 0;
+  }
+
   lastResult(): string | null {
     return this.last;
   }

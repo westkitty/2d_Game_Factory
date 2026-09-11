@@ -96,10 +96,20 @@ function bindPinballTable(
           scene.add.circle(bumper.x, bumper.y, bumper.radius, BUMPER_COLOR, 0.9).setStrokeStyle(2, 0xffffff, 0.8).setDepth(18),
         )
       : [];
+  // Flippers and the win score come from the same catalog the pack simulates;
+  // a hard-coded sprite position would draw a flipper the ball cannot reach.
+  const flipperDefs = catalog?.flippers ?? [];
+  const winScore = catalog?.winScore ?? 0;
+  const leftDef = flipperDefs.find((f) => f.id === 'left');
+  const rightDef = flipperDefs.find((f) => f.id === 'right');
   const leftSprite =
-    hud ? scene.add.rectangle(300, 470, 90, 16, FLIPPER_COLOR, 0.95).setStrokeStyle(2, 0xffffff, 0.8).setDepth(19) : null;
+    hud && leftDef
+      ? scene.add.rectangle(leftDef.x, leftDef.y, leftDef.halfWidth * 2, 16, FLIPPER_COLOR, 0.95).setStrokeStyle(2, 0xffffff, 0.8).setDepth(19)
+      : null;
   const rightSprite =
-    hud ? scene.add.rectangle(660, 470, 90, 16, FLIPPER_COLOR, 0.95).setStrokeStyle(2, 0xffffff, 0.8).setDepth(19) : null;
+    hud && rightDef
+      ? scene.add.rectangle(rightDef.x, rightDef.y, rightDef.halfWidth * 2, 16, FLIPPER_COLOR, 0.95).setStrokeStyle(2, 0xffffff, 0.8).setDepth(19)
+      : null;
   let flips = 0;
   let lastResult: string | null = null;
   let outcome: 'playing' | 'complete' = 'playing';
@@ -124,7 +134,7 @@ function bindPinballTable(
     ballSprite?.setPosition(pinball.ballX(), pinball.ballY());
     if (!title || !status || !hint) return;
     title.setText(snap.outcome === 'complete' ? 'TABLE' : 'PINBALL');
-    status.setText(`score ${snap.score}/${TABLE_SCORE}  ·  flips ${snap.flips}${snap.lastResult ? `  ·  ${snap.lastResult}` : ''}`);
+    status.setText(`score ${snap.score}/${winScore}  ·  flips ${snap.flips}${snap.lastResult ? `  ·  ${snap.lastResult}` : ''}`);
     hint.setText(snap.outcome === 'playing' ? 'J LEFT K RIGHT   HIT BUMPERS' : 'TABLE');
   }
 

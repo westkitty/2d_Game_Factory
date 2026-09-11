@@ -79,6 +79,26 @@ describe('sw2d.targeting - auto', () => {
     expect(aim.outcome()).toBe('complete');
     expect(aim.alive('enemy')).toBe(0);
   });
+
+  it('health() is the one readable health owner: full before the fight, zero for the dead side, restored by reset()', () => {
+    // Category-C convergence: the generated auto-battler HUD once mirrored a
+    // separate combat.health entity and reported the cpu at full health while
+    // the targeting fight declared victory. Consumers read health here instead.
+    const { aim } = install(AUTO);
+    expect(aim.health('fox')).toBe(2);
+    expect(aim.health('cpu')).toBe(1);
+    expect(aim.health('nobody')).toBe(0);
+    aim.tick(16, 0);
+    expect(aim.health('cpu')).toBe(0);
+    expect(aim.health('fox')).toBeGreaterThan(0);
+    aim.reset();
+    expect(aim.health('cpu')).toBe(1);
+  });
+
+  it('an inert (empty) catalog reports zero health for every id', () => {
+    const { aim } = install();
+    expect(aim.health('none')).toBe(0);
+  });
 });
 
 describe('sw2d.targeting - range', () => {
