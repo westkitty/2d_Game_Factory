@@ -25,6 +25,7 @@ Generated via `npm run sw2d -- new proof-traditional-platformer --preset traditi
 4. Pause/resume -> `resets 1`.
 5. Hold Right to x >= 380, JUMP over the spikes -> `cleared`, `complete`, `resets 1`, x >= 860; Left ×10 frames -> x unchanged.
 6. Restart: `collected 0`, `resets 0`, `checkpoint null`, x < 100.
+7. Hold Right -> the coin is collected again (`collected 1`, checkpoint active): `sw2d.world` is scene-scoped, so no flag survived the reinstall.
 
 ## Acceptance
 

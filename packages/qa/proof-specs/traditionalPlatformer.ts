@@ -82,7 +82,11 @@ export async function run(harness: Harness): Promise<SmokeOutcome> {
   const fresh = await read();
   evidence.restart = { ...run, x: fresh.x, objectives: fresh.objectives };
   const restartOk = run.after === run.before + 1 && fresh.objectives?.collected === 0 && fresh.objectives.resets === 0 && !fresh.objectives.cleared && fresh.objectives.checkpoint === null && fresh.x < 100;
+  // The coin is collectable again: sw2d.world is scene-scoped, so its `collected.<id>` flag did not survive the reinstall.
+  const recollected = await holdUntil(harness, ['ArrowRight'], read, (s) => (s.objectives?.collected ?? 0) >= 1, 40, 4);
+  evidence.recollected = recollected.objectives;
+  const recollectOk = recollected.objectives?.collected === 1 && recollected.objectives.checkpoint === 'checkpoint-1';
 
-  const passed = startedOk && moveOk && jumpOk && collectOk && resetOk && pauseOk && clearedOk && frozenOk && restartOk;
-  return { passed, details: { ...evidence, startedOk, moveOk, jumpOk, collectOk, resetOk, pauseOk, clearedOk, frozenOk, restartOk } };
+  const passed = startedOk && moveOk && jumpOk && collectOk && resetOk && pauseOk && clearedOk && frozenOk && restartOk && recollectOk;
+  return { passed, details: { ...evidence, startedOk, moveOk, jumpOk, collectOk, resetOk, pauseOk, clearedOk, frozenOk, restartOk, recollectOk } };
 }
