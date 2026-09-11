@@ -93,9 +93,9 @@ controller/input-mode breakdown and full pack-consumer coverage.
 | `pong` | Pong | top-down | tuning, ball-paddle, local-play | recipe |
 | `physics-puzzle` | Physics Puzzle | pointer | tuning | recipe |
 | `maze-game` | Maze Game | grid | tuning, levels | recipe |
-| `rhythm-action` | Rhythm Action | ui-simulation | tuning, timing | recipe |
-| `reaction-timing` | Reaction Timing | ui-simulation | tuning, timing | recipe |
-| `pinball-lite` | Pinball Lite | ui-simulation | tuning, pinball | recipe |
+| `rhythm-action` | Rhythm Action | ui-simulation | tuning, timing | proof-validated |
+| `reaction-timing` | Reaction Timing | ui-simulation | tuning, timing | proof-validated |
+| `pinball-lite` | Pinball Lite | ui-simulation | tuning, pinball | proof-validated |
 
 ## Strategy / defense (Phase 7B)
 
@@ -103,7 +103,7 @@ controller/input-mode breakdown and full pack-consumer coverage.
 |---|---|---|---|---|
 | `tower-defense` | Tower Defense | grid, pointer | tuning, levels, targeting | proof-validated |
 | `lane-defense` | Lane Defense | grid, pointer | tuning, levels | proof-validated |
-| `auto-battler` | Auto Battler | ui-simulation | tuning, targeting | recipe |
+| `auto-battler` | Auto Battler | ui-simulation | tuning, targeting | proof-validated |
 | `simple-rts` | Simple RTS | top-down | tuning, levels, territory | recipe |
 | `turn-based-tactics` | Turn-Based Tactics | grid, ui-simulation | tuning, levels, targeting | proof-validated |
 | `base-defense` | Base Defense | top-down | tuning, levels | recipe |
@@ -114,22 +114,22 @@ controller/input-mode breakdown and full pack-consumer coverage.
 | id | display name | controller(s) | content roles | maturity |
 |---|---|---|---|---|
 | `idle-incremental` | Idle Incremental | ui-simulation | tuning | proof-validated |
-| `shopkeeper` | Shopkeeper | ui-simulation | tuning, economy | recipe |
-| `tycoon-lite` | Tycoon Lite | ui-simulation | tuning, economy | recipe |
-| `farming-lite` | Farming Lite | ui-simulation | tuning | recipe |
-| `pet-creature` | Pet Creature | ui-simulation | tuning, needs | recipe |
-| `colony-lite` | Colony Lite | ui-simulation | tuning | recipe |
-| `restaurant` | Restaurant | ui-simulation | tuning, economy | recipe |
-| `aquarium-terrarium` | Aquarium / Terrarium | ui-simulation | tuning, needs | recipe |
+| `shopkeeper` | Shopkeeper | ui-simulation | tuning, economy | proof-validated |
+| `tycoon-lite` | Tycoon Lite | ui-simulation | tuning, economy | proof-validated |
+| `farming-lite` | Farming Lite | ui-simulation | tuning | proof-validated |
+| `pet-creature` | Pet Creature | ui-simulation | tuning, needs | proof-validated |
+| `colony-lite` | Colony Lite | ui-simulation | tuning | proof-validated |
+| `restaurant` | Restaurant | ui-simulation | tuning, economy | proof-validated |
+| `aquarium-terrarium` | Aquarium / Terrarium | ui-simulation | tuning, needs | proof-validated |
 
 ## Narrative / exploration (Phase 7C)
 
 | id | display name | controller(s) | content roles | maturity |
 |---|---|---|---|---|
 | `exploration-game` | Exploration Game | top-down | tuning, levels | proof-validated |
-| `visual-novel` | Visual Novel | ui-simulation | tuning, dialogue | smoke-validated |
+| `visual-novel` | Visual Novel | ui-simulation | tuning, dialogue | proof-validated |
 | `point-and-click` | Point and Click | pointer, ui-simulation | tuning, levels, dialogue | proof-validated |
-| `interactive-fiction-hybrid` | Interactive Fiction Hybrid | ui-simulation | tuning, dialogue | recipe |
+| `interactive-fiction-hybrid` | Interactive Fiction Hybrid | ui-simulation | tuning, dialogue | proof-validated |
 | `investigation-game` | Investigation Game | top-down, pointer | tuning, levels, dialogue, codex | recipe |
 | `museum-exhibit` | Museum Exhibit | top-down, pointer | tuning, levels, exhibits, codex | recipe |
 | `escape-room` | Escape Room | pointer, ui-simulation | tuning, puzzles | recipe |
@@ -138,15 +138,15 @@ controller/input-mode breakdown and full pack-consumer coverage.
 
 | id | display name | controller(s) | content roles | maturity |
 |---|---|---|---|---|
-| `microgame-collection` | Microgame Collection | ui-simulation | tuning, microgames | recipe |
-| `local-party-game` | Local Party Game | ui-simulation | tuning, local-play | recipe |
+| `microgame-collection` | Microgame Collection | ui-simulation | tuning, microgames | proof-validated |
+| `local-party-game` | Local Party Game | ui-simulation | tuning, local-play | proof-validated |
 | `physics-toy` | Physics Toy | pointer | tuning | proof-validated |
-| `virtual-pet` | Virtual Pet | ui-simulation | tuning, needs | recipe |
+| `virtual-pet` | Virtual Pet | ui-simulation | tuning, needs | proof-validated |
 | `dress-up-character-toy` | Dress-Up Character Toy | pointer, ui-simulation | tuning, characters | recipe |
 | `sandbox-playground` | Sandbox Playground | pointer, ui-simulation | tuning, levels | recipe |
 | `drawing-game` | Drawing Game | pointer | tuning | recipe |
-| `fishing-game` | Fishing Game | ui-simulation | tuning | recipe |
-| `cooking-game` | Cooking Game | ui-simulation | tuning, recipes | recipe |
+| `fishing-game` | Fishing Game | ui-simulation | tuning | proof-validated |
+| `cooking-game` | Cooking Game | ui-simulation | tuning, recipes | proof-validated |
 | `photography-game` | Photography Game | top-down, pointer | tuning, levels, camera | recipe |
 
 ## Key limitations by recipe

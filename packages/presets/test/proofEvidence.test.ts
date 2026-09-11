@@ -40,10 +40,11 @@ const proofPresetIds = new Set(
 
 describe('proof evidence reconciliation (proofs/ directory vs catalog maturity)', () => {
   it('found the committed proof games on disk', () => {
-    // 23 as of the Arena finish program's Wave 1. Grows when a new proof
-    // game is committed - and then the promotion test below forces the
-    // catalog to acknowledge it in the same change.
-    expect(proofPresetIds.size).toBeGreaterThanOrEqual(23);
+    // 23 as of the Arena finish program's Wave 1; 41 after the Category-C
+    // convergence program's first (ui-simulation) proof wave. Grows when a
+    // new proof game is committed - and then the promotion test below forces
+    // the catalog to acknowledge it in the same change.
+    expect(proofPresetIds.size).toBeGreaterThanOrEqual(41);
   });
 
   it('every proof-validated preset has a committed proof game under proofs/<id>/', () => {

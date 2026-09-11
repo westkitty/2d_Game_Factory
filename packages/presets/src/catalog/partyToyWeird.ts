@@ -17,6 +17,7 @@ import { LIMITATIONS, POINTER_INPUT_MODES, VALIDATION_PROFILES, definePreset, pa
 export const PARTY_TOY_WEIRD_PRESETS: readonly PresetDefinition[] = [
   definePreset({
     id: 'microgame-collection',
+    maturity: 'proof-validated',
     displayName: 'Microgame Collection',
     family: 'party-toy-weird',
     controllerFamilies: ['ui-simulation'],
@@ -31,6 +32,7 @@ export const PARTY_TOY_WEIRD_PRESETS: readonly PresetDefinition[] = [
 
   definePreset({
     id: 'local-party-game',
+    maturity: 'proof-validated',
     displayName: 'Local Party Game',
     family: 'party-toy-weird',
     controllerFamilies: ['ui-simulation'],
@@ -62,6 +64,7 @@ export const PARTY_TOY_WEIRD_PRESETS: readonly PresetDefinition[] = [
 
   definePreset({
     id: 'virtual-pet',
+    maturity: 'proof-validated',
     displayName: 'Virtual Pet',
     family: 'party-toy-weird',
     controllerFamilies: ['ui-simulation'],
@@ -119,6 +122,7 @@ export const PARTY_TOY_WEIRD_PRESETS: readonly PresetDefinition[] = [
 
   definePreset({
     id: 'fishing-game',
+    maturity: 'proof-validated',
     displayName: 'Fishing Game',
     family: 'party-toy-weird',
     controllerFamilies: ['ui-simulation'],
@@ -131,6 +135,7 @@ export const PARTY_TOY_WEIRD_PRESETS: readonly PresetDefinition[] = [
 
   definePreset({
     id: 'cooking-game',
+    maturity: 'proof-validated',
     displayName: 'Cooking Game',
     family: 'party-toy-weird',
     controllerFamilies: ['ui-simulation'],

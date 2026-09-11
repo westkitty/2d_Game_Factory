@@ -13,12 +13,15 @@ import { PRESETS } from '../src/index.ts';
  * Every preset here has a committed, frozen proof game under `proofs/<id>/`
  * (PROOF_CONTRACT.md + real generated composition) and a dedicated
  * real-browser proof spec in `packages/qa/proof-specs/*.ts`, wired into
- * `npm run qa:proof` (23/23 as of this revision). Phase 10 established the
- * first five; the capability-completion program (Phases 1-10, ADR-0018..0027)
- * added the other eighteen. The Arena finish program reconciled the catalog
- * with this evidence one preset at a time - see
- * docs/architecture/ARENA_FACTORY_FINISH_STATE.md. Only these twenty-three
- * may claim 'proof-validated'.
+ * `npm run qa:proof`. Phase 10 established the first five; the capability
+ * program (Phases 1-10, ADR-0018..0027) added eighteen; the Arena finish
+ * program reconciled the catalog with that evidence
+ * (docs/architecture/ARENA_FACTORY_FINISH_STATE.md); the Category-C
+ * convergence program (docs/architecture/CATEGORY_C_CONVERGENCE_MATRIX.md)
+ * committed the proofs the Category-C waves had played but deferred, one
+ * preset at a time, each promoted only after its proof passed `qa:proof`.
+ * Only the ids below may claim 'proof-validated'. `proofEvidence.test.ts`
+ * derives the same set mechanically from the proofs/ directory.
  */
 const PROOF_VALIDATED_IDS = [
   'chase-platformer',
@@ -46,6 +49,25 @@ const PROOF_VALIDATED_IDS = [
   'physics-toy',
   'top-down-racer',
   'time-trial-racer',
+  // Category-C convergence - ui-simulation shell consumers (Waves 1/2/3/7/10/13/14/15/18/24/28/30).
+  'shopkeeper',
+  'restaurant',
+  'tycoon-lite',
+  'pet-creature',
+  'aquarium-terrarium',
+  'virtual-pet',
+  'visual-novel',
+  'local-party-game',
+  'reaction-timing',
+  'rhythm-action',
+  'farming-lite',
+  'colony-lite',
+  'interactive-fiction-hybrid',
+  'fishing-game',
+  'cooking-game',
+  'microgame-collection',
+  'auto-battler',
+  'pinball-lite',
 ].sort();
 
 /**
@@ -53,24 +75,25 @@ const PROOF_VALIDATED_IDS = [
  * real, committed browser smoke test (packages/qa/specs/*.ts) that passed
  * against system Chrome - see docs/architecture/PHASE8_OPUS_GATE_B_HANDOFF.md.
  * Everything that has since earned a committed proof game graduated to
- * 'proof-validated' (above); these three still have demo-level evidence only.
+ * 'proof-validated' (above); these still have demo-level evidence only.
  * Every other preset stays 'recipe' until it earns the same real evidence.
  */
 const SMOKE_VALIDATED_IDS = [
   'traditional-platformer',
   'stealth-game',
-  'visual-novel',
 ].sort();
 
+const TOTAL_PRESETS = 74;
+
 describe('maturity honesty', () => {
-  it('exactly the twenty-three presets with committed passing proof games are "proof-validated", nothing else', () => {
+  it('exactly the presets with committed passing proof games are "proof-validated", nothing else', () => {
     const actual = PRESETS.filter((p) => p.maturity === 'proof-validated')
       .map((p) => p.id)
       .sort();
     expect(actual).toEqual(PROOF_VALIDATED_IDS);
   });
 
-  it('exactly the remaining three Phase 8 demo presets are "smoke-validated", nothing else', () => {
+  it('exactly the remaining Phase 8 demo presets without a proof game are "smoke-validated", nothing else', () => {
     const actual = PRESETS.filter((p) => p.maturity === 'smoke-validated')
       .map((p) => p.id)
       .sort();
@@ -95,11 +118,15 @@ describe('maturity honesty', () => {
     }
   });
 
-  it('exactly 23 proof-validated, 3 smoke-validated and 48 recipe presets out of the full 74-preset catalog', () => {
-    expect(PRESETS.length).toBe(74);
-    expect(PRESETS.filter((p) => p.maturity === 'proof-validated').length).toBe(23);
-    expect(PRESETS.filter((p) => p.maturity === 'smoke-validated').length).toBe(3);
-    expect(PRESETS.filter((p) => p.maturity === 'recipe').length).toBe(48);
+  it('the pinned lists partition the full 74-preset catalog (no preset unaccounted for, no overlap)', () => {
+    expect(PRESETS.length).toBe(TOTAL_PRESETS);
+    const overlap = PROOF_VALIDATED_IDS.filter((id) => SMOKE_VALIDATED_IDS.includes(id));
+    expect(overlap).toEqual([]);
+    expect(PRESETS.filter((p) => p.maturity === 'proof-validated').length).toBe(PROOF_VALIDATED_IDS.length);
+    expect(PRESETS.filter((p) => p.maturity === 'smoke-validated').length).toBe(SMOKE_VALIDATED_IDS.length);
+    expect(PRESETS.filter((p) => p.maturity === 'recipe').length).toBe(
+      TOTAL_PRESETS - PROOF_VALIDATED_IDS.length - SMOKE_VALIDATED_IDS.length,
+    );
   });
 });
 

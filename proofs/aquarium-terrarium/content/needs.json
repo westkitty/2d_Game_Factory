@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 1,
+  "mode": "habitat",
+  "subject": {
+    "id": "tank",
+    "displayName": "Tank"
+  },
+  "needs": [
+    {
+      "id": "water",
+      "displayName": "Water",
+      "value": 78,
+      "min": 0,
+      "max": 100,
+      "decayPerSecond": 3
+    },
+    {
+      "id": "food",
+      "displayName": "Food",
+      "value": 78,
+      "min": 0,
+      "max": 100,
+      "decayPerSecond": 3.5
+    }
+  ],
+  "actions": [
+    {
+      "id": "feed",
+      "displayName": "Feed",
+      "effects": [
+        {
+          "needId": "food",
+          "delta": 24
+        }
+      ]
+    },
+    {
+      "id": "refresh",
+      "displayName": "Refresh",
+      "effects": [
+        {
+          "needId": "water",
+          "delta": 24
+        }
+      ]
+    }
+  ],
+  "win": {
+    "minValue": 55,
+    "holdMs": 7000,
+    "minActions": 2
+  },
+  "loseBelow": 10
+}

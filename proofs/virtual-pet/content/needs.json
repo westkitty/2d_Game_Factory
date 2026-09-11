@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "mode": "companion",
+  "subject": {
+    "id": "buddy",
+    "displayName": "Buddy"
+  },
+  "needs": [
+    {
+      "id": "hunger",
+      "displayName": "Hunger",
+      "value": 70,
+      "min": 0,
+      "max": 100,
+      "decayPerSecond": 3
+    },
+    {
+      "id": "happiness",
+      "displayName": "Happiness",
+      "value": 70,
+      "min": 0,
+      "max": 100,
+      "decayPerSecond": 2.5
+    }
+  ],
+  "actions": [
+    {
+      "id": "feed",
+      "displayName": "Feed",
+      "effects": [
+        {
+          "needId": "hunger",
+          "delta": 25
+        }
+      ],
+      "affinityDelta": 2
+    },
+    {
+      "id": "play",
+      "displayName": "Play",
+      "effects": [
+        {
+          "needId": "happiness",
+          "delta": 25
+        }
+      ],
+      "affinityDelta": 2
+    }
+  ],
+  "win": {
+    "minValue": 85,
+    "holdMs": 0,
+    "minActions": 2
+  },
+  "affinity": 0
+}

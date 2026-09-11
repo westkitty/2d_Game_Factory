@@ -1,0 +1,29 @@
+{
+  "id": "proof-pinball-lite",
+  "displayName": "Proof Pinball Lite",
+  "version": "0.1.0",
+  "schemaVersion": 1,
+  "viewport": {
+    "width": 960,
+    "height": 540
+  },
+  "bindings": {},
+  "systemPacks": [
+    {
+      "packId": "sw2d.arcade",
+      "config": {}
+    },
+    {
+      "packId": "sw2d.pinball",
+      "config": {}
+    },
+    {
+      "packId": "game.ui-simulation-shell",
+      "config": {}
+    }
+  ],
+  "defaultSettings": {
+    "masterVolume": 0.7
+  },
+  "physicsProfile": "matter"
+}

@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "mode": "factory",
+  "cash": 8,
+  "autoSell": true,
+  "goods": [
+    {
+      "id": "widget",
+      "displayName": "Widget",
+      "price": 6,
+      "stock": 0
+    }
+  ],
+  "recipes": [
+    {
+      "id": "make-widget",
+      "displayName": "Stamp widget",
+      "outputGoodId": "widget",
+      "outputCount": 1,
+      "durationMs": 600
+    }
+  ],
+  "demand": [
+    {
+      "id": "buyer-a",
+      "displayName": "Buyer",
+      "goodId": "widget",
+      "patienceMs": 16000
+    },
+    {
+      "id": "buyer-b",
+      "displayName": "Client",
+      "goodId": "widget",
+      "patienceMs": 16000
+    }
+  ],
+  "spawn": {
+    "firstDelayMs": 400,
+    "intervalMs": 1800,
+    "maxQueue": 3
+  }
+}

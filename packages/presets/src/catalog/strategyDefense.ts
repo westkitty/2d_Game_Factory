@@ -58,6 +58,7 @@ export const STRATEGY_DEFENSE_PRESETS: readonly PresetDefinition[] = [
 
   definePreset({
     id: 'auto-battler',
+    maturity: 'proof-validated',
     displayName: 'Auto Battler',
     family: 'strategy-defense',
     controllerFamilies: ['ui-simulation'],

@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "inert",
+  "startNodeId": "root",
+  "nodes": [
+    {
+      "id": "root",
+      "displayName": "Root",
+      "level": "levels/main",
+      "mapX": 0,
+      "mapY": 0,
+      "entrances": [
+        {
+          "id": "start",
+          "x": 60,
+          "y": 440
+        }
+      ],
+      "connections": []
+    }
+  ]
+}

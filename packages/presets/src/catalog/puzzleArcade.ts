@@ -119,6 +119,7 @@ export const PUZZLE_ARCADE_PRESETS: readonly PresetDefinition[] = [
 
   definePreset({
     id: 'rhythm-action',
+    maturity: 'proof-validated',
     displayName: 'Rhythm Action',
     family: 'puzzle-arcade',
     controllerFamilies: ['ui-simulation'],
@@ -130,6 +131,7 @@ export const PUZZLE_ARCADE_PRESETS: readonly PresetDefinition[] = [
 
   definePreset({
     id: 'reaction-timing',
+    maturity: 'proof-validated',
     displayName: 'Reaction Timing',
     family: 'puzzle-arcade',
     controllerFamilies: ['ui-simulation'],
@@ -141,6 +143,7 @@ export const PUZZLE_ARCADE_PRESETS: readonly PresetDefinition[] = [
 
   definePreset({
     id: 'pinball-lite',
+    maturity: 'proof-validated',
     displayName: 'Pinball Lite',
     family: 'puzzle-arcade',
     controllerFamilies: ['ui-simulation'],

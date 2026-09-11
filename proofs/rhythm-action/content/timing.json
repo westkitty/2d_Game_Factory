@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "mode": "rhythm",
+  "windowMs": 120,
+  "hitsToWin": 3,
+  "missesToFail": 4,
+  "rhythm": {
+    "periodMs": 500,
+    "offsetMs": 700,
+    "beats": 8
+  }
+}

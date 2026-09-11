@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "mode": "rail",
+  "points": [
+    {
+      "x": 0,
+      "y": 0
+    }
+  ],
+  "speed": 0,
+  "frame": {
+    "width": 1,
+    "height": 1
+  },
+  "subjects": [],
+  "shotsToWin": 0
+}

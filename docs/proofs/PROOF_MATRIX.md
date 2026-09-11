@@ -84,6 +84,40 @@ folded into a capability phase.
 | `proofs/top-down-racer/` (new) | `top-down-racer` | `sw2d.vehicles` (`VehicleService`, `vehicle.motion`) - `VehicleIntent` in, car motion out; `sw2d.racing` (`RaceService`, `race.state`) - four ordered checkpoints, two laps, a countdown, simulation time | A tiny autopilot points the wheel at `expectedCheckpoint()` (produces intent only); CONFIRM starts the race; SECONDARY_ACTION fires the last checkpoint out of order | Start + CONFIRM → `phase 'countdown'`; countdown elapses → `'racing'`, `expectedCheckpoint 'cp-1'`; the car accelerates (`maxSpeed > 100`) and steers; a skipped-checkpoint shortcut → `lastShortcutCounted false`, lap unchanged; the autopilot runs two ordered laps → `finished`, `lapCount 2`, `phase 'finished'`; restart → fresh race (`finished false`, `lapCount 0`) | PASS |
 | `proofs/time-trial-racer/` (new) | `time-trial-racer` | Same services in `time-trial` mode; best lap / total persisted through `context.saves` | Same autopilot; PRIMARY_ACTION restarts the attempt; holding INTERACT slows the autopilot for a deliberately slow first run | Start (INTERACT held, slow) + CONFIRM → countdown → `elapsedMs` climbs (a live timer); an out-of-order checkpoint is rejected; the slow lap finishes and sets `bestTotalMs`; PRIMARY_ACTION restarts (`phase 'idle'`, `elapsedMs 0`, best retained); a full-speed second lap finishes with `bestTotalMs` **less than** the first - a better valid run updates the best, and no invalid sequence is ever accepted as a run | PASS |
 
+## Category-C convergence program — committed proofs (ADR-0028..0058)
+
+The Category-C waves (`docs/architecture/CATEGORY_C_CAPABILITY_PROGRAM_STATE.md`) played every
+one of these journeys against factory-generated games but deferred the committed proof. The
+convergence program (`docs/architecture/CATEGORY_C_CONVERGENCE_MATRIX.md`) generated each proof
+through the unmodified canonical factory (`npm run sw2d -- new proof-<id> --preset <id>` - no
+`src/game-specific/` customization, because the Category-C shells consume the capability
+directly), froze a `PROOF_CONTRACT.md`, and committed a real-browser spec under
+`packages/qa/proof-specs/`. Every row below includes a genuine scene reinstall
+(`restartRun`: `runIndex` advances, state returns to the install values).
+
+### ui-simulation shell consumers
+
+| Proof | Preset | Reusable capability exercised | Game-specific mechanics | Browser journey | Status |
+|---|---|---|---|---|---|
+| `proofs/shopkeeper/` | `shopkeeper` | `sw2d.economy` (shop mode): demand queue, matching-good serve, restock cost, refusals | None beyond the generated shell (`bindStarterEconomy`) | Serve the wanted good; serve-spam refused (`no-customer`); restock then `cannot-afford`; second customer; pause/resume keeps cash; restart resets | PASS |
+| `proofs/restaurant/` | `restaurant` | `sw2d.economy` (kitchen mode): time-gated cook job then serve | None | Serve before cooking refused; three cook→serve tickets (`served 3`, cash up); pause/resume; restart (`producing null`) | PASS |
+| `proofs/tycoon-lite/` | `tycoon-lite` | `sw2d.economy` (factory mode, `autoSell`) | None | Production job is time-gated; auto-sells (`served 1`); spam while busy does not double-produce; `served 2`; pause/resume; restart | PASS |
+| `proofs/pet-creature/` | `pet-creature` | `sw2d.needs` (creature mode): decay, feed/play, affinity, 1600 ms hold | None | Hunger decays; feed raises and clamps ≤100; play raises mood; hold → `complete`; pause/resume; restart (`affinity 0`) | PASS |
+| `proofs/aquarium-terrarium/` | `aquarium-terrarium` | `sw2d.needs` (habitat mode): two meters, 7 s hold, fail floor | None | Feed + refresh water; still `playing` at 2 s of hold; `complete` at ≥7000 ms; restart | PASS |
+| `proofs/virtual-pet/` | `virtual-pet` | `sw2d.needs` (companion mode): complete on threshold after two acts | None | One act still `playing`; second act `complete`; post-complete acts inert; restart | PASS |
+| `proofs/visual-novel/` | `visual-novel` | `sw2d.dialogue` (novel mode): lines, a two-option choice, two branches, two endings | None | Choice at step 2; option 1 → `keep-the-secret` → `midnight-ending`; inert past the ending; restart; option 0 → `dawn-ending` | PASS |
+| `proofs/local-party-game/` | `local-party-game` | `sw2d.local-play` (hotseat mode): seat ownership passes per act | None | Seat 0 scores then seat 1; six acts decide a winner; inert after; restart | PASS |
+| `proofs/reaction-timing/` | `reaction-timing` | `sw2d.timing` (reaction mode): visual go-cue, hit window, latency | None | Early press not a hit; hit inside the window with numeric latency; second cue completes; restart | PASS |
+| `proofs/rhythm-action/` | `rhythm-action` | `sw2d.timing` (rhythm mode): repeating beat windows | None | Three presses each inside an open window; `complete`; restart | PASS |
+| `proofs/farming-lite/` | `farming-lite` | `sw2d.simulation` jobs as plots (`SIMULATION_STARTER 'farm'`) | Plot/crop presentation | Plant → `growing` (job queued); early harvest refused; ripe → harvest; three harvests `complete`; restart (all plots `empty`) | PASS |
+| `proofs/colony-lite/` | `colony-lite` | `sw2d.simulation` jobs as workers + construction (`'colony'`) | Worker/build presentation | Build refused (`need-materials`); assign worker (busy, re-assign refused); gather ×2; build → `built`; restart | PASS |
+| `proofs/interactive-fiction-hybrid/` | `interactive-fiction-hybrid` | `sw2d.narrative` flags/seen/choices (`NARRATIVE_STARTER 'fiction'`) | Menu verbs | TAKE `locked` before LOOK; LOOK sets flag + seen; TAKE ends `escaped`; restart | PASS |
+| `proofs/fishing-game/` | `fishing-game` | `sw2d.arcade` score (`ARCADE_STARTER 'fishing'`) | Cast/bite/land presentation | Missed bite scores nothing; strike in the window lands; second fish `complete`; restart | PASS |
+| `proofs/cooking-game/` | `cooking-game` | `sw2d.arcade` score (`'cooking'`) | Ordered recipe steps | Wrong ingredient counted, no advance; flour → egg → ready (`recipeStep 3`); restart | PASS |
+| `proofs/microgame-collection/` | `microgame-collection` | `sw2d.arcade` score (`'micro'`) | Wait/go tap + mash rounds | Tap during `wait` ignored; tap at `go` scores; five-press mash `complete`; inert after; restart | PASS |
+| `proofs/auto-battler/` | `auto-battler` | `sw2d.strategy` + `sw2d.targeting` (auto mode) - the pack is the one health owner (`health(id)`) | Lineup pick phase; CONFIRM locks and starts the fight | Idle 40 frames: nothing fights; pick changes fighter; CONFIRM `fight`, pick frozen, second CONFIRM `auto`; cpu health falls to 0 → `won`; restart restores full health | PASS |
+| `proofs/pinball-lite/` | `pinball-lite` | `sw2d.pinball` (table mode): gravity, bumpers, flippers, drain-reset, win score | Flipper sprites and HUD score read from the same catalog | Hands off: ball drains and resets with `score 0`; flipping only when the ball is over a flipper hits bumpers to `score 3` / `complete`, `flips` == presses; restart | PASS |
+
 ## Phase 10 deep proofs
 
 See [`PHASE10_PROOF_HANDOFF.md`](../architecture/PHASE10_PROOF_HANDOFF.md) for the phase-level

@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "mode": "table",
+  "ball": {
+    "x": 480,
+    "y": 80,
+    "radius": 14,
+    "vx": 3,
+    "vy": 2
+  },
+  "gravity": 18,
+  "bounce": 0.7,
+  "bounds": {
+    "minX": 24,
+    "maxX": 936,
+    "minY": 24,
+    "maxY": 520
+  },
+  "bumpers": [
+    {
+      "id": "bumper-a",
+      "x": 330,
+      "y": 200,
+      "radius": 36,
+      "score": 1
+    },
+    {
+      "id": "bumper-b",
+      "x": 630,
+      "y": 200,
+      "radius": 36,
+      "score": 1
+    },
+    {
+      "id": "bumper-c",
+      "x": 480,
+      "y": 300,
+      "radius": 36,
+      "score": 1
+    }
+  ],
+  "flippers": [
+    {
+      "id": "left",
+      "x": 320,
+      "y": 480,
+      "halfWidth": 90,
+      "kick": 14
+    },
+    {
+      "id": "right",
+      "x": 640,
+      "y": 480,
+      "halfWidth": 90,
+      "kick": 14
+    }
+  ],
+  "drainY": 530,
+  "winScore": 3
+}

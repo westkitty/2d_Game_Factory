@@ -46,6 +46,7 @@ export const SIMULATION_MANAGEMENT_PRESETS: readonly PresetDefinition[] = [
 
   definePreset({
     id: 'shopkeeper',
+    maturity: 'proof-validated',
     displayName: 'Shopkeeper',
     family: 'simulation-management',
     controllerFamilies: ['ui-simulation'],
@@ -58,6 +59,7 @@ export const SIMULATION_MANAGEMENT_PRESETS: readonly PresetDefinition[] = [
 
   definePreset({
     id: 'tycoon-lite',
+    maturity: 'proof-validated',
     displayName: 'Tycoon Lite',
     family: 'simulation-management',
     controllerFamilies: ['ui-simulation'],
@@ -70,6 +72,7 @@ export const SIMULATION_MANAGEMENT_PRESETS: readonly PresetDefinition[] = [
 
   definePreset({
     id: 'farming-lite',
+    maturity: 'proof-validated',
     displayName: 'Farming Lite',
     family: 'simulation-management',
     controllerFamilies: ['ui-simulation'],
@@ -84,6 +87,7 @@ export const SIMULATION_MANAGEMENT_PRESETS: readonly PresetDefinition[] = [
 
   definePreset({
     id: 'pet-creature',
+    maturity: 'proof-validated',
     displayName: 'Pet Creature',
     family: 'simulation-management',
     controllerFamilies: ['ui-simulation'],
@@ -96,6 +100,7 @@ export const SIMULATION_MANAGEMENT_PRESETS: readonly PresetDefinition[] = [
 
   definePreset({
     id: 'colony-lite',
+    maturity: 'proof-validated',
     displayName: 'Colony Lite',
     family: 'simulation-management',
     controllerFamilies: ['ui-simulation'],
@@ -110,6 +115,7 @@ export const SIMULATION_MANAGEMENT_PRESETS: readonly PresetDefinition[] = [
 
   definePreset({
     id: 'restaurant',
+    maturity: 'proof-validated',
     displayName: 'Restaurant',
     family: 'simulation-management',
     controllerFamilies: ['ui-simulation'],
@@ -122,6 +128,7 @@ export const SIMULATION_MANAGEMENT_PRESETS: readonly PresetDefinition[] = [
 
   definePreset({
     id: 'aquarium-terrarium',
+    maturity: 'proof-validated',
     displayName: 'Aquarium / Terrarium',
     family: 'simulation-management',
     controllerFamilies: ['ui-simulation'],

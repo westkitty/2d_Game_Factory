@@ -94,8 +94,11 @@ describe('starter kit registry', () => {
       .filter((preset) => preset.maturity === 'proof-validated')
       .map((preset) => preset.id)
       .sort();
-    // 5 original + 18 reconciled by the Arena finish program.
-    expect(proofValidated.length).toBe(23);
+    // 5 original + 18 reconciled by the Arena finish program + the
+    // Category-C convergence proofs. All 74 presets have a kit (69 expanded +
+    // 5 references), so the count itself is pinned by presets/honesty.test.ts,
+    // not here; this suite only guards that no promotion outruns the registry.
+    expect(proofValidated.length).toBeGreaterThanOrEqual(23);
     for (const presetId of proofValidated) {
       expect(starterKitFor(presetId), `no starter kit for proof-validated preset ${presetId}`).toBeDefined();
     }

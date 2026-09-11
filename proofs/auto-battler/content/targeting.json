@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "mode": "auto",
+  "actors": [
+    {
+      "id": "fox",
+      "x": 260,
+      "y": 270,
+      "range": 520,
+      "damage": 1,
+      "cooldownMs": 280,
+      "team": "player",
+      "health": 2
+    },
+    {
+      "id": "cpu",
+      "x": 700,
+      "y": 270,
+      "range": 520,
+      "damage": 1,
+      "cooldownMs": 400,
+      "team": "enemy",
+      "health": 2
+    }
+  ]
+}
