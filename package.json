@@ -35,6 +35,7 @@
     "qa:smoke": "node --experimental-strip-types packages/qa/src/runAll.ts",
     "qa:proof": "node --experimental-strip-types packages/qa/src/runProofs.ts",
     "qa:adversarial": "node --experimental-strip-types tools/scripts/qa-adversarial.ts",
+    "qa:performance": "node --experimental-strip-types tools/scripts/qa-performance.ts",
     "qa:responsive": "node --experimental-strip-types tools/scripts/qa-responsive.ts",
     "release:verify": "node --experimental-strip-types tools/scripts/release-verify.ts",
     "qa:matrix": "node --experimental-strip-types tools/scripts/generated-runtime-matrix.ts",
