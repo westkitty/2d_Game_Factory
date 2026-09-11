@@ -322,6 +322,51 @@ and move held). First run 73/74: `bullet-hell`'s frozen proof shell leaked one
 `combat:entityDied` listener per restart (22 → 24 across two restarts). Fixed (subscription held
 and disposed); 74/74 after. Every other probe passed on every proof.
 
-## Phase 8 — certification (exact PR head; filled at the end of the program)
+## Phase 8 — certification (clean checkouts, `npm ci`, complete ladder)
 
-See the "Certification results" section appended below.
+Method: a fresh detached `git worktree` of the head under test (no `node_modules`, no `games/`,
+no Workbench vault), `npm ci`, then every QA command in `package.json` plus the two workflow-only
+scripts, in order, with the tracked tree checked clean afterwards. Three runs were needed because
+each caught something:
+
+| head | result | what it caught |
+|---|---|---|
+| `926c77d` | `npm ci`, validate, check:offline, qa:smoke, qa:proof 74/74, qa:adversarial 74/74, qa:performance, qa:responsive, qa:workbench **PASS**; qa:matrix and release:verify **FAIL** | TS2448 in the top-down template (repair #8) — Vite and the browser proofs had not seen it; only `tsc` on a fresh generation did |
+| `6b79b8f` | everything **PASS** except qa:starter-kits: run-and-gun kit **1 of 4** runs | the harness's first ~8 stepped frames were real-time dependent (repair #9) |
+| `1d18692` | `npm ci` · validate (typecheck, **4173 tests**, workbench build, starter build, offline guard) · check:offline · qa:smoke 14/14 · qa:adversarial 74/74 · qa:performance 8/8 · qa:matrix 56/56 · qa:responsive 19/19 · release:verify 6/6 · qa:workbench 16/16 · qa:starter-kits 69/69 · qa-frame-group-animation · qa-start-controls — all **PASS**; tracked tree clean; qa:proof **73/74**: `breakout` alone — its rally reached one brick left inside the spec's fixed 1400-step budget under the corrected clock (game still `playing`, no defect); budget raised to 4000 steps, re-passes | the one spec whose step budget had been tuned against the old ~13 ms prologue |
+
+The commit that adds this section also carries the breakout budget change; the complete ladder
+was re-run on that exact head and its results are recorded in the pull request body (a document
+cannot contain the SHA of the commit that contains it).
+
+Clean-checkout reproducibility: verified three times as above. `npm ci` fails only when a
+gitignored `games/<id>` scratch game is present (it is a declared workspace) — the intended
+policy, pinned by `packages/cli/test/lockfileWorkspacePolicy.test.ts`; `npm install` is the
+development path, `npm ci` the clean-checkout path.
+
+CI: the repository's two workflows trigger only on `starter-kits/implement-all`, `feature/**`,
+`qa/full-workbench-revalidation` and `workflow_dispatch` — nothing runs on a pull request or on a
+`claude/**` branch by itself. The "Full Workbench Revalidation" workflow was dispatched by hand
+against the final head; its outcome is recorded in the pull request.
+
+## Final state
+
+- Starting `main`: `150cdb6698aa44bc14db03165c3dd3a49d6f08b2` (unchanged throughout; never
+  committed to).
+- Starting Category-C tip: `81fcb514a7f687da257c7fea4adb090371d263bd` (preserved).
+- Convergence branch: `claude/category-c-final-convergence` — final SHA in the pull request.
+- Maturity 23 / 3 / 48 → **74 / 0 / 0**. Packs 34 → 34. Proofs 23 → **74**. Demos 12.
+  Starter kits 5 reference + 69 expanded (unchanged, overlays left local).
+- Tests: 3953 → 4173 unit tests; real-browser journeys: 74 proofs, 74 adversarial probes, 14
+  smoke targets, 56 matrix boots, 19 responsive surfaces, 6 release-verify packs, 16 Workbench
+  journeys, 69 starter-kit mechanic proofs, 2 workflow scripts, 8 real-time performance
+  workloads, one manual Workbench session (create → run → reopen → validate → build → pack →
+  `shasum -c`).
+- Bugs found and fixed: the nine repairs tabled above.
+- Remaining true technical limitations: every catalog `knownLimitations` string (all re-read and
+  still accurate); no rock field in asteroids-shooter; no projectiles on the rail-shooter rail;
+  auto-battler's pick is presentation; run-and-gun / twin-stick generated starters ship no waves
+  unless `sw2d.encounters` is enabled; real-device touch and gamepad remain unmeasured (no
+  hardware).
+- External / human-owned: the public software license (`UNLICENSED`); whether to close PR #7 in
+  favour of the convergence PR; the merge itself (not performed).

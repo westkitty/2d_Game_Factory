@@ -44,7 +44,7 @@ export async function run(harness: Harness): Promise<SmokeOutcome> {
   // Track the ball with the paddle until every brick is cleared.
   let state = resumed;
   let midway: Table | null = null;
-  for (let step = 0; step < 1400 && state.outcome === 'playing'; step++) {
+  for (let step = 0; step < 4000 && state.outcome === 'playing'; step++) {
     const delta = state.ballX - state.paddleX;
     if (Math.abs(delta) > 14) {
       const key = delta < 0 ? 'ArrowLeft' : 'ArrowRight';
