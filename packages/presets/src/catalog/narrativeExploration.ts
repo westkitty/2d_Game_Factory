@@ -111,6 +111,7 @@ export const NARRATIVE_EXPLORATION_PRESETS: readonly PresetDefinition[] = [
 
   definePreset({
     id: 'escape-room',
+    maturity: 'proof-validated',
     displayName: 'Escape Room',
     family: 'narrative-exploration',
     controllerFamilies: ['pointer', 'ui-simulation'],

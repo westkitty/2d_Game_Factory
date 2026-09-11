@@ -34,14 +34,14 @@ controller/input-mode breakdown and full pack-consumer coverage.
 
 | id | display name | controller(s) | content roles | maturity |
 |---|---|---|---|---|
-| `traditional-platformer` | Traditional Platformer | platform | tuning, levels | smoke-validated |
+| `traditional-platformer` | Traditional Platformer | platform | tuning, levels | proof-validated |
 | `chase-platformer` | Chase Platformer | platform | tuning, levels | proof-validated |
 | `endless-runner` | Endless Runner | platform | tuning, levels | proof-validated |
-| `precision-platformer` | Precision Platformer | platform | tuning, levels, wall | recipe |
+| `precision-platformer` | Precision Platformer | platform | tuning, levels, wall | proof-validated |
 | `metroidvania` | Metroidvania | platform | tuning, levels | proof-validated |
 | `puzzle-platformer` | Puzzle Platformer | platform, grid | tuning, levels | proof-validated |
-| `auto-runner` | Auto Runner | platform | tuning, levels | recipe |
-| `climbing-game` | Climbing Game | platform | tuning, levels, wall | recipe |
+| `auto-runner` | Auto Runner | platform | tuning, levels | proof-validated |
+| `climbing-game` | Climbing Game | platform | tuning, levels, wall | proof-validated |
 | `grappling-platformer` | Grappling Platformer | platform | tuning, levels | proof-validated |
 | `collectathon-platformer` | Collectathon Platformer | platform | tuning, levels, items | proof-validated |
 
@@ -67,32 +67,32 @@ controller/input-mode breakdown and full pack-consumer coverage.
 | `horizontal-shmup` | Horizontal Shmup | top-down | tuning, stage-scroll | proof-validated |
 | `vertical-shmup` | Vertical Shmup | top-down | tuning, stage-scroll | proof-validated |
 | `bullet-hell` | Bullet Hell | top-down | tuning | proof-validated |
-| `asteroids-shooter` | Asteroids Shooter | vehicle | tuning | recipe |
+| `asteroids-shooter` | Asteroids Shooter | vehicle | tuning | proof-validated |
 | `gallery-shooter` | Gallery Shooter | pointer | tuning | proof-validated |
 | `run-and-gun` | Run and Gun | platform | tuning, levels | proof-validated |
-| `rail-shooter` | Rail Shooter | pointer | tuning, camera | recipe |
+| `rail-shooter` | Rail Shooter | pointer | tuning, camera | proof-validated |
 
 ## Vehicle / movement (Phase 7B)
 
 | id | display name | controller(s) | content roles | maturity |
 |---|---|---|---|---|
 | `top-down-racer` | Top-Down Racer | vehicle | tuning, levels | proof-validated |
-| `kart-racer` | Kart Racer | vehicle | tuning, levels | recipe |
+| `kart-racer` | Kart Racer | vehicle | tuning, levels | proof-validated |
 | `time-trial-racer` | Time Trial Racer | vehicle | tuning, levels | proof-validated |
-| `endless-driving` | Endless Driving | vehicle | tuning | recipe |
-| `boat-flight-racer` | Boat / Flight Racer | vehicle | tuning, levels | recipe |
+| `endless-driving` | Endless Driving | vehicle | tuning | proof-validated |
+| `boat-flight-racer` | Boat / Flight Racer | vehicle | tuning, levels | proof-validated |
 
 ## Puzzle / arcade (Phase 7B)
 
 | id | display name | controller(s) | content roles | maturity |
 |---|---|---|---|---|
 | `sokoban` | Sokoban | grid | tuning | proof-validated |
-| `match-puzzle` | Match Puzzle | grid | tuning, puzzles | recipe |
-| `falling-block-puzzle` | Falling Block Puzzle | grid, ui-simulation | tuning, puzzles | recipe |
+| `match-puzzle` | Match Puzzle | grid | tuning, puzzles | proof-validated |
+| `falling-block-puzzle` | Falling Block Puzzle | grid, ui-simulation | tuning, puzzles | proof-validated |
 | `breakout` | Breakout | top-down | tuning, ball-paddle | proof-validated |
 | `pong` | Pong | top-down | tuning, ball-paddle, local-play | proof-validated |
-| `physics-puzzle` | Physics Puzzle | pointer | tuning | recipe |
-| `maze-game` | Maze Game | grid | tuning, levels | recipe |
+| `physics-puzzle` | Physics Puzzle | pointer | tuning | proof-validated |
+| `maze-game` | Maze Game | grid | tuning, levels | proof-validated |
 | `rhythm-action` | Rhythm Action | ui-simulation | tuning, timing | proof-validated |
 | `reaction-timing` | Reaction Timing | ui-simulation | tuning, timing | proof-validated |
 | `pinball-lite` | Pinball Lite | ui-simulation | tuning, pinball | proof-validated |
@@ -132,7 +132,7 @@ controller/input-mode breakdown and full pack-consumer coverage.
 | `interactive-fiction-hybrid` | Interactive Fiction Hybrid | ui-simulation | tuning, dialogue | proof-validated |
 | `investigation-game` | Investigation Game | top-down, pointer | tuning, levels, dialogue, codex | proof-validated |
 | `museum-exhibit` | Museum Exhibit | top-down, pointer | tuning, levels, exhibits, codex | proof-validated |
-| `escape-room` | Escape Room | pointer, ui-simulation | tuning, puzzles | recipe |
+| `escape-room` | Escape Room | pointer, ui-simulation | tuning, puzzles | proof-validated |
 
 ## Party / toy / weird (Phase 7C)
 
@@ -142,9 +142,9 @@ controller/input-mode breakdown and full pack-consumer coverage.
 | `local-party-game` | Local Party Game | ui-simulation | tuning, local-play | proof-validated |
 | `physics-toy` | Physics Toy | pointer | tuning | proof-validated |
 | `virtual-pet` | Virtual Pet | ui-simulation | tuning, needs | proof-validated |
-| `dress-up-character-toy` | Dress-Up Character Toy | pointer, ui-simulation | tuning, characters | recipe |
-| `sandbox-playground` | Sandbox Playground | pointer, ui-simulation | tuning, levels | recipe |
-| `drawing-game` | Drawing Game | pointer | tuning | recipe |
+| `dress-up-character-toy` | Dress-Up Character Toy | pointer, ui-simulation | tuning, characters | proof-validated |
+| `sandbox-playground` | Sandbox Playground | pointer, ui-simulation | tuning, levels | proof-validated |
+| `drawing-game` | Drawing Game | pointer | tuning | proof-validated |
 | `fishing-game` | Fishing Game | ui-simulation | tuning | proof-validated |
 | `cooking-game` | Cooking Game | ui-simulation | tuning, recipes | proof-validated |
 | `photography-game` | Photography Game | top-down, pointer | tuning, levels, camera | proof-validated |

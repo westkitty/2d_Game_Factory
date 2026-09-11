@@ -139,6 +139,28 @@ directly), froze a `PROOF_CONTRACT.md`, and committed a real-browser spec under
 | `proofs/territory-control/` | `territory-control` | `sw2d.territory` (stand): timed capture, ownership persists on leave | None | Pass-through does not capture; standing does (`owned 1`); kept on leave; zone B → `complete`; restart | PASS |
 | `proofs/museum-exhibit/` | `museum-exhibit` | `sw2d.codex` (exhibit) via `bindStarterLook` museum | Plaque walk | `too-far`; plinth inspected once; bust completes; restart | PASS |
 
+### pointer, grid, platform and vehicle shell consumers
+
+| Proof | Preset | Reusable capability exercised | Game-specific mechanics | Browser journey | Status |
+|---|---|---|---|---|---|
+| `proofs/physics-puzzle/` | `physics-puzzle` | `sw2d.puzzle` code seam (`physics-goal`) + Matter ball | Nudge presentation | Idle 60 frames never solves; one nudge lands the ball in the goal (`solved`, x ≥ 740); restart | PASS |
+| `proofs/escape-room/` | `escape-room` | `sw2d.puzzle` code seam (`escape-locks`) + ADR-0018 clicks | Two hotspots | Lock before note `locked`; note (idempotent); lock → key + `solved`; restart | PASS |
+| `proofs/drawing-game/` | `drawing-game` | ADR-0018 spatial-pointer drag (`POINTER_STARTER 'draw'`) | Stroke presentation | Tap is not a stroke; 320 px drag is one stroke ≥ 300; second completes; restart | PASS |
+| `proofs/dress-up-character-toy/` | `dress-up-character-toy` | ADR-0018 drag capture + drop-zone (`'wardrobe'`) | Wardrobe | Off-figure drop does not attach; mid-drag `draggingId 'hat'`; hat then shirt attach → `complete`; restart | PASS |
+| `proofs/sandbox-playground/` | `sandbox-playground` | ADR-0018 click stamps + pick/move/delete (`TOY_STARTER 'sandbox'`) | Authoring | Stamp → hold → move; remove then `empty`; re-stamp + ball → `complete`; restart | PASS |
+| `proofs/rail-shooter/` | `rail-shooter` | `sw2d.camera` (rail) + look targets + `sw2d.combat` | Reticle fire | Miss with nothing near; kill each target as the rail brings it in (2→1→0) → `cleared`; restart | PASS |
+| `proofs/match-puzzle/` | `match-puzzle` | `sw2d.puzzle-rules` match kind (board, swap legality, cascade, objective all content) | Cursor only | Cursor/select; adjacent swap clears to the objective → `solved`; restart; non-adjacent confirm is not a swap | PASS |
+| `proofs/falling-block-puzzle/` | `falling-block-puzzle` | `sw2d.puzzle-rules` falling-block kind (gravity, move/rotate/hard-drop, line-clear) | None | Shift + hard-drop parks; next hard-drop clears the line → `solved`; restart (`moves ≤ 1`: a gravity tick is a move) | PASS |
+| `proofs/maze-game/` | `maze-game` | `sw2d.navigation` occupancy + `findPath` hint (`NAV_STARTER 'maze'`) | None | Wall step refused; corridor steps shrink the path; exit `escaped`; inert after; restart | PASS |
+| `proofs/precision-platformer/` | `precision-platformer` | parkour gap course + `sw2d.wall` (leap) | None | No jump → falls, `failed` (fail line fixed below the platform row); restart; one timed jump → `finished` | PASS |
+| `proofs/climbing-game/` | `climbing-game` | parkour ledges + `sw2d.wall` (slide) | None | Walking into the ledge gains no height; two jumps → `summit`; restart | PASS |
+| `proofs/auto-runner/` | `auto-runner` | auto-run course over `sw2d.generation` (`RUN_STARTER 'course'`) | None | Runs on its own; pause freezes; no jump → `failed`; restart; timed jump → `finished` | PASS |
+| `proofs/traditional-platformer/` | `traditional-platformer` | `bindLevelObjectives` over `sw2d.world` + `sw2d.world-entities` (Checkpoint / Hazard / Collectible / Exit) | None | Jump; walk; checkpoint + coin; spikes reset to checkpoint; pause; jump the spikes → `cleared`; input frozen; restart | PASS |
+| `proofs/asteroids-shooter/` | `asteroids-shooter` | `vehicleController` + drag body + `sw2d.weapons` heading-fire | Open space | Turn at rest; thrust moves; drag halves speed; fire spawns/expires; cooldown gates spam; restart | PASS |
+| `proofs/endless-driving/` | `endless-driving` | `sw2d.vehicles` car motion as arcade distance (`VEHICLE_STARTER 'road'`) over `sw2d.generation` | None | No throttle no distance; throttle builds; pause freezes; goal → `distance`; restart | PASS |
+| `proofs/boat-flight-racer/` | `boat-flight-racer` | `sw2d.vehicles` definition reload boat → flight (`'craft'`) | None | Boat never climbs; PRIMARY → `flight`; climb → `airborne`; restart as boat | PASS |
+| `proofs/kart-racer/` | `kart-racer` | `sw2d.racing` countdown/checkpoints on the `sw2d.vehicles` kart profile | Item box + on-demand fire | `empty`; CONFIRM → countdown → racing; pickup on the straight; cp-1 passed; fire; keyboard steering to cp-2; restart | PASS |
+
 ## Phase 10 deep proofs
 
 See [`PHASE10_PROOF_HANDOFF.md`](../architecture/PHASE10_PROOF_HANDOFF.md) for the phase-level

@@ -63,7 +63,12 @@ const PRECISION_START = { x: 80, y: 458 };
 const CLIMB_START = { x: 100, y: 458 };
 const FLAG_X = 820;
 const CLIMB_FLAG = { x: 420, y: 338 };
-const FAIL_Y = 520;
+// Platform tops are at y 480 (floors at y 500, 40 tall); a standing player is
+// at y 458. Anything lower is in a pit. The first value (520) sat below the
+// Arcade world-bounds floor (~518 for this sprite), so a player who fell into
+// the precision gap landed on the world edge and was stuck 'playing' forever
+// - Category-C convergence bug found by the proof journey.
+const FAIL_Y = 490;
 const FLAG_COLOR = 0xb98af0;
 const CLEAR_COLOR = 0x65d0a8;
 

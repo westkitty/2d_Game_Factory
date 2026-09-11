@@ -31,6 +31,7 @@ export const VEHICLE_MOVEMENT_PRESETS: readonly PresetDefinition[] = [
 
   definePreset({
     id: 'kart-racer',
+    maturity: 'proof-validated',
     displayName: 'Kart Racer',
     family: 'vehicle-movement',
     controllerFamilies: ['vehicle'],
@@ -59,6 +60,7 @@ export const VEHICLE_MOVEMENT_PRESETS: readonly PresetDefinition[] = [
 
   definePreset({
     id: 'endless-driving',
+    maturity: 'proof-validated',
     displayName: 'Endless Driving',
     family: 'vehicle-movement',
     controllerFamilies: ['vehicle'],
@@ -76,6 +78,7 @@ export const VEHICLE_MOVEMENT_PRESETS: readonly PresetDefinition[] = [
 
   definePreset({
     id: 'boat-flight-racer',
+    maturity: 'proof-validated',
     displayName: 'Boat / Flight Racer',
     family: 'vehicle-movement',
     controllerFamilies: ['vehicle'],

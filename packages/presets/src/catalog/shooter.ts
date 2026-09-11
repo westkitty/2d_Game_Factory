@@ -69,6 +69,7 @@ export const SHOOTER_PRESETS: readonly PresetDefinition[] = [
 
   definePreset({
     id: 'asteroids-shooter',
+    maturity: 'proof-validated',
     displayName: 'Asteroids Shooter',
     family: 'shooter',
     controllerFamilies: ['vehicle'],
@@ -120,6 +121,7 @@ export const SHOOTER_PRESETS: readonly PresetDefinition[] = [
 
   definePreset({
     id: 'rail-shooter',
+    maturity: 'proof-validated',
     displayName: 'Rail Shooter',
     family: 'shooter',
     controllerFamilies: ['pointer'],

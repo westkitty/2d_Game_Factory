@@ -39,6 +39,7 @@ export {
 export { ProjectilePool, type ProjectileOptions } from './game-support/projectilePool.ts';
 export { InteractionServiceImpl, phaserBoundsShape } from './game-support/interactionService.ts';
 export { bindCollectiblePickups, type CollectiblePickupBinding } from './game-support/itemPickups.ts';
+export { bindLevelObjectives, type LevelObjectivesBinding, type LevelObjectivesSnapshot } from './game-support/levelObjectives.ts';
 export { createProjectileRuntime, type ProjectileRuntime, type ProjectileRuntimeOptions } from './game-support/projectileRuntime.ts';
 export { bindStarterWeapon, type StarterWeaponBinding } from './game-support/starterWeapon.ts';
 export {

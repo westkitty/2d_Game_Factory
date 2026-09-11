@@ -106,6 +106,27 @@ const PROOF_SPEC_MODULES: Readonly<Record<string, string>> = {
   'simple-rts': 'simpleRts',
   'territory-control': 'territoryControl',
   'museum-exhibit': 'museumExhibit',
+  // Category-C convergence - pointer shell consumers
+  'physics-puzzle': 'physicsPuzzle',
+  'escape-room': 'escapeRoom',
+  'drawing-game': 'drawingGame',
+  'dress-up-character-toy': 'dressUpCharacterToy',
+  'sandbox-playground': 'sandboxPlayground',
+  'rail-shooter': 'railShooter',
+  // Category-C convergence - platform shell consumers
+  'traditional-platformer': 'traditionalPlatformer',
+  'precision-platformer': 'precisionPlatformer',
+  'climbing-game': 'climbingGame',
+  'auto-runner': 'autoRunner',
+  // Category-C convergence - grid shell consumers
+  'match-puzzle': 'matchPuzzle',
+  'falling-block-puzzle': 'fallingBlockPuzzle',
+  'maze-game': 'mazeGame',
+  // Category-C convergence - vehicle shell consumers
+  'asteroids-shooter': 'asteroidsShooter',
+  'endless-driving': 'endlessDriving',
+  'boat-flight-racer': 'boatFlightRacer',
+  'kart-racer': 'kartRacer',
 };
 
 /**

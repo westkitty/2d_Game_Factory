@@ -85,19 +85,34 @@ const PROOF_VALIDATED_IDS = [
   'simple-rts',
   'territory-control',
   'museum-exhibit',
+  // Category-C convergence - pointer / grid / platform / vehicle shell consumers.
+  'physics-puzzle',
+  'escape-room',
+  'drawing-game',
+  'dress-up-character-toy',
+  'sandbox-playground',
+  'rail-shooter',
+  'match-puzzle',
+  'falling-block-puzzle',
+  'maze-game',
+  'precision-platformer',
+  'climbing-game',
+  'auto-runner',
+  'traditional-platformer',
+  'asteroids-shooter',
+  'endless-driving',
+  'boat-flight-racer',
+  'kart-racer',
 ].sort();
 
 /**
- * Phase 8's remaining representative demos (demos/<preset-id>/), each with a
- * real, committed browser smoke test (packages/qa/specs/*.ts) that passed
- * against system Chrome - see docs/architecture/PHASE8_OPUS_GATE_B_HANDOFF.md.
- * Everything that has since earned a committed proof game graduated to
- * 'proof-validated' (above); these still have demo-level evidence only.
- * Every other preset stays 'recipe' until it earns the same real evidence.
+ * Phase 8's representative demos (demos/<preset-id>/) once held three presets
+ * at 'smoke-validated' on demo-level evidence alone. Every one of them has
+ * since earned a committed proof game and graduated to 'proof-validated'
+ * (above), so this list is empty - kept so the partition below stays explicit
+ * and a future demo-only preset has somewhere honest to go.
  */
-const SMOKE_VALIDATED_IDS = [
-  'traditional-platformer',
-].sort();
+const SMOKE_VALIDATED_IDS: readonly string[] = [];
 
 const TOTAL_PRESETS = 74;
 

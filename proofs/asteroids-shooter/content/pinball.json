@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "mode": "table",
+  "ball": {
+    "x": 0,
+    "y": 0,
+    "radius": 1,
+    "vx": 0,
+    "vy": 0
+  },
+  "gravity": 0,
+  "bounce": 0,
+  "bounds": {
+    "minX": 0,
+    "maxX": 1,
+    "minY": 0,
+    "maxY": 1
+  },
+  "bumpers": [],
+  "drainY": 0,
+  "winScore": 0
+}

@@ -21,7 +21,7 @@ import { LIMITATIONS, VALIDATION_PROFILES, definePreset, pack } from '../shared.
 export const PLATFORMING_PRESETS: readonly PresetDefinition[] = [
   definePreset({
     id: 'traditional-platformer',
-    maturity: 'smoke-validated',
+    maturity: 'proof-validated',
     displayName: 'Traditional Platformer',
     family: 'platforming',
     controllerFamilies: ['platform'],
@@ -64,6 +64,7 @@ export const PLATFORMING_PRESETS: readonly PresetDefinition[] = [
 
   definePreset({
     id: 'precision-platformer',
+    maturity: 'proof-validated',
     displayName: 'Precision Platformer',
     family: 'platforming',
     controllerFamilies: ['platform'],
@@ -107,6 +108,7 @@ export const PLATFORMING_PRESETS: readonly PresetDefinition[] = [
 
   definePreset({
     id: 'auto-runner',
+    maturity: 'proof-validated',
     displayName: 'Auto Runner',
     family: 'platforming',
     controllerFamilies: ['platform'],
@@ -123,6 +125,7 @@ export const PLATFORMING_PRESETS: readonly PresetDefinition[] = [
 
   definePreset({
     id: 'climbing-game',
+    maturity: 'proof-validated',
     displayName: 'Climbing Game',
     family: 'platforming',
     controllerFamilies: ['platform'],

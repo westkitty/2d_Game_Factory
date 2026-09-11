@@ -41,6 +41,7 @@ export const PUZZLE_ARCADE_PRESETS: readonly PresetDefinition[] = [
 
   definePreset({
     id: 'match-puzzle',
+    maturity: 'proof-validated',
     displayName: 'Match Puzzle',
     family: 'puzzle-arcade',
     controllerFamilies: ['grid'],
@@ -56,6 +57,7 @@ export const PUZZLE_ARCADE_PRESETS: readonly PresetDefinition[] = [
 
   definePreset({
     id: 'falling-block-puzzle',
+    maturity: 'proof-validated',
     displayName: 'Falling Block Puzzle',
     family: 'puzzle-arcade',
     controllerFamilies: ['grid', 'ui-simulation'],
@@ -92,6 +94,7 @@ export const PUZZLE_ARCADE_PRESETS: readonly PresetDefinition[] = [
 
   definePreset({
     id: 'physics-puzzle',
+    maturity: 'proof-validated',
     displayName: 'Physics Puzzle',
     family: 'puzzle-arcade',
     controllerFamilies: ['pointer'],
@@ -107,6 +110,7 @@ export const PUZZLE_ARCADE_PRESETS: readonly PresetDefinition[] = [
 
   definePreset({
     id: 'maze-game',
+    maturity: 'proof-validated',
     displayName: 'Maze Game',
     family: 'puzzle-arcade',
     controllerFamilies: ['grid'],

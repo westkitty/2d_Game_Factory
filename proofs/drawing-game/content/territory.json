@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "mode": "stand",
+  "zones": [
+    {
+      "id": "none",
+      "x": 0,
+      "y": 0,
+      "radius": 1,
+      "holdMs": 1
+    }
+  ]
+}

@@ -77,6 +77,7 @@ export const PARTY_TOY_WEIRD_PRESETS: readonly PresetDefinition[] = [
 
   definePreset({
     id: 'dress-up-character-toy',
+    maturity: 'proof-validated',
     displayName: 'Dress-Up Character Toy',
     family: 'party-toy-weird',
     controllerFamilies: ['pointer', 'ui-simulation'],
@@ -92,6 +93,7 @@ export const PARTY_TOY_WEIRD_PRESETS: readonly PresetDefinition[] = [
 
   definePreset({
     id: 'sandbox-playground',
+    maturity: 'proof-validated',
     displayName: 'Sandbox Playground',
     family: 'party-toy-weird',
     controllerFamilies: ['pointer', 'ui-simulation'],
@@ -107,6 +109,7 @@ export const PARTY_TOY_WEIRD_PRESETS: readonly PresetDefinition[] = [
 
   definePreset({
     id: 'drawing-game',
+    maturity: 'proof-validated',
     displayName: 'Drawing Game',
     family: 'party-toy-weird',
     controllerFamilies: ['pointer'],

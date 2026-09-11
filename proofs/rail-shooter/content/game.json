@@ -1,0 +1,28 @@
+{
+  "id": "proof-rail-shooter",
+  "displayName": "Proof Rail Shooter",
+  "version": "0.1.0",
+  "schemaVersion": 1,
+  "viewport": {
+    "width": 960,
+    "height": 540
+  },
+  "bindings": {},
+  "systemPacks": [
+    {
+      "packId": "sw2d.combat",
+      "config": {}
+    },
+    {
+      "packId": "sw2d.camera",
+      "config": {}
+    },
+    {
+      "packId": "game.pointer-shell",
+      "config": {}
+    }
+  ],
+  "defaultSettings": {
+    "masterVolume": 0.7
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "vehicles": [
+    {
+      "id": "starter-car",
+      "profile": "car",
+      "acceleration": 520,
+      "braking": 780,
+      "reverseAcceleration": 260,
+      "maxForwardSpeed": 340,
+      "maxReverseSpeed": 120,
+      "steeringRate": 2.6,
+      "speedSensitiveSteering": 0.5,
+      "drag": 0.7,
+      "lateralGrip": 0.9,
+      "traction": 0.85,
+      "driftFactor": 0.15,
+      "boostForce": 320,
+      "boostDurationMs": 900,
+      "boostCooldownMs": 2600,
+      "surfaceModifiers": {
+        "dirt": {
+          "traction": 0.7,
+          "maxSpeed": 0.9
+        },
+        "ice": {
+          "traction": 0.35,
+          "steering": 0.8
+        }
+      }
+    }
+  ]
+}

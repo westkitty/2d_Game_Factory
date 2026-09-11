@@ -3,6 +3,7 @@ import type { AdvancedPhysicsService, InstalledSystemPack, PuzzleRulesService, W
 import { PUZZLE_RULES_CAPABILITY_ID, WALL_CAPABILITY_ID, WORLD_GRAPH_CAPABILITY_ID } from '@sw2d/contracts';
 import {
   bindCollectiblePickups,
+  bindLevelObjectives,
   bindStarterChase,
   bindStarterParkour,
   bindStarterRun,
@@ -126,6 +127,17 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     // catalog entry grants that item and applies its effects through the
     // reusable service - no per-pickup code here.
     const pickups = bindCollectiblePickups(context, player, level);
+    // Level objectives (Category-C convergence): the universal level's
+    // Checkpoint / Hazard / Collectible / Exit objects become a real
+    // checkpoint-respawn, hazard-reset, collect-then-exit loop through
+    // sw2d.world. Only on the plain walk-and-jump path - the auto-run,
+    // parkour and chase starters author their own strips, and a world graph
+    // owns the right edge as a room transition. Inert without sw2d.world.
+    // When sw2d.items owns the collectibles, the exit waits for every pickup.
+    const objectives =
+      run.active || parkour.active || chase.active || context.capabilities.has(WORLD_GRAPH_CAPABILITY_ID)
+        ? bindLevelObjectives(context, player, undefined)
+        : bindLevelObjectives(context, player, level, { exitRequires: () => pickups.remaining() === 0 });
     // Weapons (capability program Phase 3). Inert unless sw2d.weapons is installed.
     const weapon = bindStarterWeapon(context);
     // Data-driven puzzle rules (capability program Phase 6). Inert unless
@@ -180,6 +192,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       items: pickups.inventory(),
       pickupsRemaining: pickups.remaining(),
       weapon: weapon.snapshot(),
+      ...(objectives.active ? { objectives: objectives.snapshot() } : {}),
       ...(puzzle ? { puzzle: puzzle.snapshot(), solved: puzzle.isSolved() } : {}),
       ...(run.active ? { run: run.snapshot() } : {}),
       ...(parkour.active ? { parkour: parkour.snapshot() } : {}),
@@ -213,6 +226,8 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
           player.setVelocityX(260);
           player.setFlipX(false);
           facing = 1;
+        } else if (objectives.active && objectives.snapshot().cleared) {
+          player.setVelocityX(0);
         } else {
           player.setVelocityX(intent.moveAxis * tuning.moveSpeed);
           if (intent.moveAxis !== 0) {
@@ -222,6 +237,10 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         }
         weapon.update(deltaMs, nowMs);
         if (intent.primaryPressed) weapon.fire(nowMs, facing, 0, { x: player.x, y: player.y });
+        if (objectives.active) {
+          objectives.tick(deltaMs);
+          objectives.render();
+        }
         if (puzzle) {
           if (context.input.consumePress('SECONDARY_ACTION')) {
             const snap = puzzle.snapshot() as { switches?: readonly string[]; on?: readonly string[] };
@@ -290,6 +309,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         disposed = true;
         debugHandle.dispose();
         pickups.dispose();
+        objectives.dispose();
         weapon.dispose();
         run.dispose();
         parkour.dispose();

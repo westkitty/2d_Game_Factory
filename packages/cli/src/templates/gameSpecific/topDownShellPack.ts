@@ -3,6 +3,7 @@ import type { InstalledSystemPack, WorldGraphService } from '@sw2d/contracts';
 import { WORLD_GRAPH_CAPABILITY_ID, aimFromPointer } from '@sw2d/contracts';
 import {
   bindCollectiblePickups,
+  bindLevelObjectives,
   bindStarterEncounters,
   bindStarterBallPaddle,
   bindStarterMelee,
@@ -193,6 +194,16 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     // installed. When the encounter binding is active it owns the weapon and
     // its projectile runtime, so the plain starter weapon stays inert too.
     const weapon = battle.active ? null : bindStarterWeapon(context);
+    // Level objectives (Category-C convergence): on the plain walk path -
+    // no starter presentation owns the field - the universal level's
+    // Checkpoint / Hazard / Collectible / Exit objects become a real
+    // collect-then-exit loop through sw2d.world (see platformShellPack.ts).
+    const plainWalk =
+      !battle.active && !perception.active && !story.active && !meta.active && !toy.active && !fight.active &&
+      !ops.active && !look.active && !table.active && !melee.active && !stage.active && !worldGraph;
+    const objectives = plainWalk
+      ? bindLevelObjectives(context, player, level, { exitRequires: () => pickups.remaining() === 0 })
+      : bindLevelObjectives(context, player, undefined);
     // World graph / rooms / transitions / map (capability program Phase 8).
     // Inert unless sw2d.world-graph is installed.
     const worldGraph = context.capabilities.get<WorldGraphService>(WORLD_GRAPH_CAPABILITY_ID);
@@ -222,6 +233,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       items: pickups.inventory(),
       pickupsRemaining: pickups.remaining(),
       weapon: weapon?.snapshot() ?? null,
+      ...(objectives.active ? { objectives: objectives.snapshot() } : {}),
       ...(battle.active ? { battle: battle.snapshot() } : {}),
       ...(perception.active ? { perception: perception.snapshot() } : {}),
       ...(story.active ? { narrative: story.snapshot() } : {}),
@@ -264,6 +276,11 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         }
         player.setVelocityX(intent.moveX * tuning.moveSpeed);
         player.setVelocityY(intent.moveY * tuning.moveSpeed);
+        if (objectives.active) {
+          objectives.tick(deltaMs);
+          objectives.render();
+          if (objectives.snapshot().cleared) player.setVelocity(0, 0);
+        }
         if (melee.active) {
           melee.setPlayer(player.x, player.y);
           if (intent.primaryPressed) melee.strike(nowMs);
@@ -376,6 +393,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         disposed = true;
         debugHandle.dispose();
         pickups.dispose();
+        objectives.dispose();
         battle.dispose();
         weapon?.dispose();
         perception.dispose();
