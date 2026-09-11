@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "mode": "skirmish",
+  "player": {
+    "id": "player",
+    "x": 120,
+    "y": 270,
+    "radius": 16,
+    "health": 5
+  },
+  "foes": [],
+  "strike": {
+    "range": 145,
+    "damage": 1,
+    "cooldownMs": 0,
+    "knockback": 8,
+    "stunMs": 80
+  },
+  "contact": {
+    "range": 34,
+    "damage": 1,
+    "cooldownMs": 650
+  }
+}

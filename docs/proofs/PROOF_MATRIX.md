@@ -118,6 +118,27 @@ directly), froze a `PROOF_CONTRACT.md`, and committed a real-browser spec under
 | `proofs/auto-battler/` | `auto-battler` | `sw2d.strategy` + `sw2d.targeting` (auto mode) - the pack is the one health owner (`health(id)`) | Lineup pick phase; CONFIRM locks and starts the fight | Idle 40 frames: nothing fights; pick changes fighter; CONFIRM `fight`, pick frozen, second CONFIRM `auto`; cpu health falls to 0 → `won`; restart restores full health | PASS |
 | `proofs/pinball-lite/` | `pinball-lite` | `sw2d.pinball` (table mode): gravity, bumpers, flippers, drain-reset, win score | Flipper sprites and HUD score read from the same catalog | Hands off: ball drains and resets with `score 0`; flipping only when the ball is over a flipper hits bumpers to `score 3` / `complete`, `flips` == presses; restart | PASS |
 
+### top-down shell consumers
+
+| Proof | Preset | Reusable capability exercised | Game-specific mechanics | Browser journey | Status |
+|---|---|---|---|---|---|
+| `proofs/stealth-game/` | `stealth-game` | `sw2d.perception` (infiltrate): vision cone, suspicion, seen/alarm, loot, exit | None beyond the generated shell | Walk into the cone → `seen`/`failed`; restart; sneak above the cone, take the loot unseen, exit → `complete`, no alarm | PASS |
+| `proofs/heist-game/` | `heist-game` | `sw2d.perception` (heist): loot trips the alarm, escape under alarm | None | Exit before loot stays `playing`; loot → `alarm true`; exit → `complete` with alarm; restart | PASS |
+| `proofs/breakout/` | `breakout` | `sw2d.ball-paddle` (breakout): rebound, 12 bricks, lives, score | None | Paddle moves; pause/resume mid-rally; track the ball → `paddleReturns ≥ 1`, all bricks cleared, `complete`; restart | PASS |
+| `proofs/pong/` | `pong` | `sw2d.ball-paddle` (pong, first-to-3) + `sw2d.local-play` (versus seats: Arrow keys vs W/S) | None | Seat axes move their own paddle only; a real `player-return`; first-to-3 decides (`complete`/`failed`), no point after; restart | PASS |
+| `proofs/action-adventure/` | `action-adventure` | `sw2d.melee` (skirmish): reach, knockback, hit-stun | None | Whiff at range; close in, `hit` leaves the foe alive; two more kill → `complete`; restart | PASS |
+| `proofs/arena-combat/` | `arena-combat` | `sw2d.melee` (arena): three foes | None | Foes 3→2→1→0 with two strikes each; inert after clear; restart | PASS |
+| `proofs/horizontal-shmup/` | `horizontal-shmup` | `sw2d.stage-scroll` (horizontal) over `sw2d.weapons` + `sw2d.encounters` | None | Offset advances on its own; ship moves in band; fire spawns projectiles; pause freezes scroll; stage-clear; restart | PASS |
+| `proofs/vertical-shmup/` | `vertical-shmup` | `sw2d.stage-scroll` (vertical, -Y fire axis) | None | Same journey on the vertical axis contract | PASS |
+| `proofs/survivor-like/` | `survivor-like` | `sw2d.progression` survive (XP from kills via `combat:entityDied` + survival ticks) over the encounter loop | None | XP ticks slowly; pause freezes the clock; aim up + fire kills a chaser (`kills ≥ 1`, +2 XP); surge at ≥6 XP; restart | PASS |
+| `proofs/action-roguelite/` | `action-roguelite` | `sw2d.progression` run (items/currency/xp/unlock) over `sw2d.generation` | Relic walk | `too-far`; core `taken` (no double-credit); spark `cleared` (currency 2, xp 10, `run-cleared`); restart | PASS |
+| `proofs/investigation-game/` | `investigation-game` | `sw2d.narrative` case + `sw2d.codex` (case) | Clue walk | `too-far`; print/photo `inspected` once each; desk `deduced` → `closed`; restart | PASS |
+| `proofs/photography-game/` | `photography-game` | `sw2d.camera` (frame) via `bindStarterToy` photo | Subject walk | `too-far`; bird captured once; tree completes the album; restart | PASS |
+| `proofs/base-defense/` | `base-defense` | `sw2d.combat` via `bindStarterCombat` hold | Raider intercept | `miss`; intercept and kill both raiders; `baseHealth 3` at `complete`; restart | PASS |
+| `proofs/simple-rts/` | `simple-rts` | `sw2d.strategy` + `sw2d.territory` (occupy catalog) + ADR-0018 drag box-select | One-unit select, two-unit box | Orders with nothing selected move nobody; PRIMARY selects one; restart; drag boxes 2; march → `seized` both ≥ 780 | PASS |
+| `proofs/territory-control/` | `territory-control` | `sw2d.territory` (stand): timed capture, ownership persists on leave | None | Pass-through does not capture; standing does (`owned 1`); kept on leave; zone B → `complete`; restart | PASS |
+| `proofs/museum-exhibit/` | `museum-exhibit` | `sw2d.codex` (exhibit) via `bindStarterLook` museum | Plaque walk | `too-far`; plinth inspected once; bust completes; restart | PASS |
+
 ## Phase 10 deep proofs
 
 See [`PHASE10_PROOF_HANDOFF.md`](../architecture/PHASE10_PROOF_HANDOFF.md) for the phase-level

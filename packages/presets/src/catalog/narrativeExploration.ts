@@ -81,6 +81,7 @@ export const NARRATIVE_EXPLORATION_PRESETS: readonly PresetDefinition[] = [
 
   definePreset({
     id: 'investigation-game',
+    maturity: 'proof-validated',
     displayName: 'Investigation Game',
     family: 'narrative-exploration',
     controllerFamilies: ['top-down', 'pointer'],
@@ -94,6 +95,7 @@ export const NARRATIVE_EXPLORATION_PRESETS: readonly PresetDefinition[] = [
 
   definePreset({
     id: 'museum-exhibit',
+    maturity: 'proof-validated',
     displayName: 'Museum Exhibit',
     family: 'narrative-exploration',
     controllerFamilies: ['top-down', 'pointer'],

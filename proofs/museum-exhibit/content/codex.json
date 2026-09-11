@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "mode": "exhibit",
+  "entries": [
+    {
+      "id": "plinth",
+      "title": "Plinth",
+      "body": "A stone plinth holds the first exhibit."
+    },
+    {
+      "id": "bust",
+      "title": "Bust",
+      "body": "A carved bust watches the hall."
+    }
+  ]
+}

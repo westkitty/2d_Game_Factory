@@ -50,22 +50,22 @@ controller/input-mode breakdown and full pack-consumer coverage.
 | id | display name | controller(s) | content roles | maturity |
 |---|---|---|---|---|
 | `top-down-adventure` | Top-Down Adventure | top-down | tuning, levels | proof-validated |
-| `action-adventure` | Action Adventure | top-down | tuning, levels, melee | recipe |
+| `action-adventure` | Action Adventure | top-down | tuning, levels, melee | proof-validated |
 | `twin-stick-shooter` | Twin-Stick Shooter | top-down | tuning, levels | proof-validated |
-| `survivor-like` | Survivor-Like | top-down | tuning | recipe |
+| `survivor-like` | Survivor-Like | top-down | tuning | proof-validated |
 | `dungeon-crawler` | Dungeon Crawler | top-down | tuning, levels | proof-validated |
-| `action-roguelite` | Action Roguelite | top-down | tuning, levels | recipe |
-| `stealth-game` | Stealth Game | top-down | tuning, levels | smoke-validated |
-| `heist-game` | Heist Game | top-down | tuning, levels | recipe |
-| `arena-combat` | Arena Combat | top-down | tuning, levels, melee | recipe |
+| `action-roguelite` | Action Roguelite | top-down | tuning, levels | proof-validated |
+| `stealth-game` | Stealth Game | top-down | tuning, levels | proof-validated |
+| `heist-game` | Heist Game | top-down | tuning, levels | proof-validated |
+| `arena-combat` | Arena Combat | top-down | tuning, levels, melee | proof-validated |
 | `boss-rush` | Boss Rush | top-down | tuning, levels | proof-validated |
 
 ## Shooter (Phase 7A)
 
 | id | display name | controller(s) | content roles | maturity |
 |---|---|---|---|---|
-| `horizontal-shmup` | Horizontal Shmup | top-down | tuning, stage-scroll | recipe |
-| `vertical-shmup` | Vertical Shmup | top-down | tuning, stage-scroll | recipe |
+| `horizontal-shmup` | Horizontal Shmup | top-down | tuning, stage-scroll | proof-validated |
+| `vertical-shmup` | Vertical Shmup | top-down | tuning, stage-scroll | proof-validated |
 | `bullet-hell` | Bullet Hell | top-down | tuning | proof-validated |
 | `asteroids-shooter` | Asteroids Shooter | vehicle | tuning | recipe |
 | `gallery-shooter` | Gallery Shooter | pointer | tuning | proof-validated |
@@ -89,8 +89,8 @@ controller/input-mode breakdown and full pack-consumer coverage.
 | `sokoban` | Sokoban | grid | tuning | proof-validated |
 | `match-puzzle` | Match Puzzle | grid | tuning, puzzles | recipe |
 | `falling-block-puzzle` | Falling Block Puzzle | grid, ui-simulation | tuning, puzzles | recipe |
-| `breakout` | Breakout | top-down | tuning, ball-paddle | recipe |
-| `pong` | Pong | top-down | tuning, ball-paddle, local-play | recipe |
+| `breakout` | Breakout | top-down | tuning, ball-paddle | proof-validated |
+| `pong` | Pong | top-down | tuning, ball-paddle, local-play | proof-validated |
 | `physics-puzzle` | Physics Puzzle | pointer | tuning | recipe |
 | `maze-game` | Maze Game | grid | tuning, levels | recipe |
 | `rhythm-action` | Rhythm Action | ui-simulation | tuning, timing | proof-validated |
@@ -104,10 +104,10 @@ controller/input-mode breakdown and full pack-consumer coverage.
 | `tower-defense` | Tower Defense | grid, pointer | tuning, levels, targeting | proof-validated |
 | `lane-defense` | Lane Defense | grid, pointer | tuning, levels | proof-validated |
 | `auto-battler` | Auto Battler | ui-simulation | tuning, targeting | proof-validated |
-| `simple-rts` | Simple RTS | top-down | tuning, levels, territory | recipe |
+| `simple-rts` | Simple RTS | top-down | tuning, levels, territory | proof-validated |
 | `turn-based-tactics` | Turn-Based Tactics | grid, ui-simulation | tuning, levels, targeting | proof-validated |
-| `base-defense` | Base Defense | top-down | tuning, levels | recipe |
-| `territory-control` | Territory Control | top-down | tuning, levels, territory | recipe |
+| `base-defense` | Base Defense | top-down | tuning, levels | proof-validated |
+| `territory-control` | Territory Control | top-down | tuning, levels, territory | proof-validated |
 
 ## Simulation / management (Phase 7C)
 
@@ -130,8 +130,8 @@ controller/input-mode breakdown and full pack-consumer coverage.
 | `visual-novel` | Visual Novel | ui-simulation | tuning, dialogue | proof-validated |
 | `point-and-click` | Point and Click | pointer, ui-simulation | tuning, levels, dialogue | proof-validated |
 | `interactive-fiction-hybrid` | Interactive Fiction Hybrid | ui-simulation | tuning, dialogue | proof-validated |
-| `investigation-game` | Investigation Game | top-down, pointer | tuning, levels, dialogue, codex | recipe |
-| `museum-exhibit` | Museum Exhibit | top-down, pointer | tuning, levels, exhibits, codex | recipe |
+| `investigation-game` | Investigation Game | top-down, pointer | tuning, levels, dialogue, codex | proof-validated |
+| `museum-exhibit` | Museum Exhibit | top-down, pointer | tuning, levels, exhibits, codex | proof-validated |
 | `escape-room` | Escape Room | pointer, ui-simulation | tuning, puzzles | recipe |
 
 ## Party / toy / weird (Phase 7C)
@@ -147,7 +147,7 @@ controller/input-mode breakdown and full pack-consumer coverage.
 | `drawing-game` | Drawing Game | pointer | tuning | recipe |
 | `fishing-game` | Fishing Game | ui-simulation | tuning | proof-validated |
 | `cooking-game` | Cooking Game | ui-simulation | tuning, recipes | proof-validated |
-| `photography-game` | Photography Game | top-down, pointer | tuning, levels, camera | recipe |
+| `photography-game` | Photography Game | top-down, pointer | tuning, levels, camera | proof-validated |
 
 ## Key limitations by recipe
 

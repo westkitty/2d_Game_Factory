@@ -148,6 +148,7 @@ export const PARTY_TOY_WEIRD_PRESETS: readonly PresetDefinition[] = [
 
   definePreset({
     id: 'photography-game',
+    maturity: 'proof-validated',
     displayName: 'Photography Game',
     family: 'party-toy-weird',
     controllerFamilies: ['top-down', 'pointer'],

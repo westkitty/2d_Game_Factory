@@ -73,6 +73,7 @@ export const STRATEGY_DEFENSE_PRESETS: readonly PresetDefinition[] = [
 
   definePreset({
     id: 'simple-rts',
+    maturity: 'proof-validated',
     displayName: 'Simple RTS',
     family: 'strategy-defense',
     controllerFamilies: ['top-down'],
@@ -104,6 +105,7 @@ export const STRATEGY_DEFENSE_PRESETS: readonly PresetDefinition[] = [
 
   definePreset({
     id: 'base-defense',
+    maturity: 'proof-validated',
     displayName: 'Base Defense',
     family: 'strategy-defense',
     controllerFamilies: ['top-down'],
@@ -118,6 +120,7 @@ export const STRATEGY_DEFENSE_PRESETS: readonly PresetDefinition[] = [
 
   definePreset({
     id: 'territory-control',
+    maturity: 'proof-validated',
     displayName: 'Territory Control',
     family: 'strategy-defense',
     controllerFamilies: ['top-down'],

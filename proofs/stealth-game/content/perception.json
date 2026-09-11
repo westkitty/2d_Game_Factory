@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "start": {
+    "x": 120,
+    "y": 270
+  },
+  "playerRadius": 14,
+  "hiddenMultiplier": 0.15,
+  "observers": [
+    {
+      "id": "guard",
+      "x": 520,
+      "y": 270,
+      "facingDeg": 180,
+      "fovDeg": 50,
+      "range": 220,
+      "suspicionRisePerSecond": 2,
+      "suspicionDecayPerSecond": 0.5
+    }
+  ],
+  "cover": [
+    {
+      "id": "crate",
+      "x": 400,
+      "y": 180,
+      "radius": 36
+    }
+  ],
+  "objectives": [
+    {
+      "id": "intel",
+      "x": 790,
+      "y": 140,
+      "radius": 42
+    }
+  ],
+  "exits": [
+    {
+      "id": "vent",
+      "x": 110,
+      "y": 90,
+      "radius": 48
+    }
+  ],
+  "mode": "infiltrate"
+}

@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "mode": "infiltrate",
+  "start": {
+    "x": 0,
+    "y": 0
+  },
+  "playerRadius": 14,
+  "hiddenMultiplier": 0.2,
+  "observers": []
+}

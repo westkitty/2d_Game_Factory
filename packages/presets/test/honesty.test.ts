@@ -68,6 +68,23 @@ const PROOF_VALIDATED_IDS = [
   'microgame-collection',
   'auto-battler',
   'pinball-lite',
+  // Category-C convergence - top-down shell consumers (Waves 4/5/6/7/8/14/17/20/21/25/26/30/31).
+  'stealth-game',
+  'heist-game',
+  'breakout',
+  'pong',
+  'action-adventure',
+  'arena-combat',
+  'horizontal-shmup',
+  'vertical-shmup',
+  'survivor-like',
+  'action-roguelite',
+  'investigation-game',
+  'photography-game',
+  'base-defense',
+  'simple-rts',
+  'territory-control',
+  'museum-exhibit',
 ].sort();
 
 /**
@@ -80,7 +97,6 @@ const PROOF_VALIDATED_IDS = [
  */
 const SMOKE_VALIDATED_IDS = [
   'traditional-platformer',
-  'stealth-game',
 ].sort();
 
 const TOTAL_PRESETS = 74;

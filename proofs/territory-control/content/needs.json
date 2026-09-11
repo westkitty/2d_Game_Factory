@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "mode": "creature",
+  "subject": {
+    "id": "none",
+    "displayName": "None"
+  },
+  "needs": [],
+  "actions": [],
+  "win": {
+    "minValue": 100,
+    "holdMs": 0,
+    "minActions": 0
+  }
+}

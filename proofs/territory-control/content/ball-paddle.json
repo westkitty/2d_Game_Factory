@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "mode": "breakout",
+  "court": {
+    "width": 960,
+    "height": 540
+  },
+  "paddle": {
+    "x": 480,
+    "y": 485,
+    "width": 150,
+    "height": 22,
+    "speed": 0,
+    "axis": "x",
+    "min": 85,
+    "max": 875,
+    "hitHalf": 86
+  },
+  "ball": {
+    "x": 480,
+    "y": 270,
+    "vx": 0,
+    "vy": 0,
+    "radius": 18
+  },
+  "walls": {
+    "insetX": 12,
+    "top": 50,
+    "bottom": 522
+  },
+  "bricks": [],
+  "lives": 0
+}

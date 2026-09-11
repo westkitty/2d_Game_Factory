@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "mode": "versus",
+  "players": [
+    {
+      "id": "p1",
+      "label": "P1",
+      "negative": [
+        "ArrowUp"
+      ],
+      "positive": [
+        "ArrowDown"
+      ]
+    },
+    {
+      "id": "p2",
+      "label": "P2",
+      "negative": [
+        "KeyW"
+      ],
+      "positive": [
+        "KeyS"
+      ]
+    }
+  ]
+}

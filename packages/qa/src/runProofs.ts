@@ -89,6 +89,23 @@ const PROOF_SPEC_MODULES: Readonly<Record<string, string>> = {
   'auto-battler': 'autoBattler',
   // Wave 24 / 30 pinball table (ADR-0051 / ADR-0057)
   'pinball-lite': 'pinballLite',
+  // Category-C convergence - top-down shell consumers
+  'stealth-game': 'stealthGame',
+  'heist-game': 'heistGame',
+  breakout: 'breakout',
+  pong: 'pong',
+  'action-adventure': 'actionAdventure',
+  'arena-combat': 'arenaCombat',
+  'horizontal-shmup': 'horizontalShmup',
+  'vertical-shmup': 'verticalShmup',
+  'survivor-like': 'survivorLike',
+  'action-roguelite': 'actionRoguelite',
+  'investigation-game': 'investigationGame',
+  'photography-game': 'photographyGame',
+  'base-defense': 'baseDefense',
+  'simple-rts': 'simpleRts',
+  'territory-control': 'territoryControl',
+  'museum-exhibit': 'museumExhibit',
 };
 
 /**

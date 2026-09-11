@@ -34,6 +34,7 @@ export const TOP_DOWN_ACTION_PRESETS: readonly PresetDefinition[] = [
 
   definePreset({
     id: 'action-adventure',
+    maturity: 'proof-validated',
     displayName: 'Action Adventure',
     family: 'top-down-action',
     controllerFamilies: ['top-down'],
@@ -64,6 +65,7 @@ export const TOP_DOWN_ACTION_PRESETS: readonly PresetDefinition[] = [
 
   definePreset({
     id: 'survivor-like',
+    maturity: 'proof-validated',
     displayName: 'Survivor-Like',
     family: 'top-down-action',
     controllerFamilies: ['top-down'],
@@ -99,6 +101,7 @@ export const TOP_DOWN_ACTION_PRESETS: readonly PresetDefinition[] = [
 
   definePreset({
     id: 'action-roguelite',
+    maturity: 'proof-validated',
     displayName: 'Action Roguelite',
     family: 'top-down-action',
     controllerFamilies: ['top-down'],
@@ -116,7 +119,7 @@ export const TOP_DOWN_ACTION_PRESETS: readonly PresetDefinition[] = [
 
   definePreset({
     id: 'stealth-game',
-    maturity: 'smoke-validated',
+    maturity: 'proof-validated',
     displayName: 'Stealth Game',
     family: 'top-down-action',
     controllerFamilies: ['top-down'],
@@ -129,6 +132,7 @@ export const TOP_DOWN_ACTION_PRESETS: readonly PresetDefinition[] = [
 
   definePreset({
     id: 'heist-game',
+    maturity: 'proof-validated',
     displayName: 'Heist Game',
     family: 'top-down-action',
     controllerFamilies: ['top-down'],
@@ -141,6 +145,7 @@ export const TOP_DOWN_ACTION_PRESETS: readonly PresetDefinition[] = [
 
   definePreset({
     id: 'arena-combat',
+    maturity: 'proof-validated',
     displayName: 'Arena Combat',
     family: 'top-down-action',
     controllerFamilies: ['top-down'],

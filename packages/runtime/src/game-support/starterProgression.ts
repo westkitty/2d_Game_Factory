@@ -18,6 +18,8 @@ export interface StarterProgressionSnapshot {
   readonly active: boolean;
   readonly mode: ProgressionStarterMode | null;
   readonly xp: number;
+  /** Survive mode: kills credited to XP this run (0 in run mode). */
+  readonly kills: number;
   readonly currency: number;
   readonly items: readonly string[];
   readonly unlocked: readonly string[];
@@ -49,6 +51,7 @@ const INERT: StarterProgressionBinding = {
     active: false,
     mode: null,
     xp: 0,
+    kills: 0,
     currency: 0,
     items: [],
     unlocked: [],
@@ -74,8 +77,14 @@ interface ProgressionStore {
 
 const START_X = 120;
 const START_Y = 270;
-const XP_TICK_MS = 400;
-const XP_TARGET = 2;
+// Survive mode: XP comes from kills (the encounter loop's combat:entityDied,
+// +2 each) and from staying alive (+1 per XP_TICK_MS). The target needs
+// real play: the first Wave-17 values (tick 400 ms, target 2) surged 0.8 s
+// after install with no input - Category-C convergence bug.
+const XP_TICK_MS = 1000;
+const XP_PER_KILL = 2;
+const XP_TARGET = 6;
+const PLAYER_COMBAT_ID = 'player';
 const FLAG_SURGE = 'surge';
 const FLAG_RUN = 'run-cleared';
 const RELICS = [
@@ -135,7 +144,21 @@ export function bindStarterProgression(
   let tickAcc = 0;
   let lastResult: string | null = null;
   let outcome: 'playing' | 'complete' = 'playing';
+  let kills = 0;
   let disposed = false;
+
+  // Survive: a kill in the encounter loop is worth more than waiting it out.
+  const onDeath =
+    mode === 'survive'
+      ? context.events.on('combat:entityDied', ({ entityId }) => {
+          if (disposed || outcome !== 'playing' || entityId === PLAYER_COMBAT_ID) return;
+          kills += 1;
+          progression.addXp(XP_PER_KILL);
+          lastResult = 'kill';
+          finishSurvive();
+          paint();
+        })
+      : null;
 
   function nearId(): string | null {
     if (mode !== 'run') return null;
@@ -154,6 +177,7 @@ export function bindStarterProgression(
       active: true,
       mode,
       xp: progression.xp(),
+      kills,
       currency: progression.currency(),
       items: itemsHeld(),
       unlocked: progression.unlockedFlags(),
@@ -185,7 +209,7 @@ export function bindStarterProgression(
           snap.outcome === 'complete' ? '  ·  complete' : ''
         }`,
       );
-      hint.setText(snap.outcome === 'complete' ? 'SURGE UNLOCKED  -  KEEP FIGHTING' : 'STAY ALIVE  -  XP BUILDS  -  FIRE J/X');
+      hint.setText(snap.outcome === 'complete' ? 'SURGE UNLOCKED  -  KEEP FIGHTING' : 'STAY ALIVE  -  KILLS BUILD XP  -  FIRE J/X');
     } else {
       title.setText(snap.outcome === 'complete' ? 'CLEARED' : 'RUN');
       status.setText(
@@ -259,6 +283,7 @@ export function bindStarterProgression(
       if (disposed) return;
       disposed = true;
       try {
+        onDeath?.dispose();
         title?.destroy();
         status?.destroy();
         hint?.destroy();

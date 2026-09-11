@@ -21,6 +21,7 @@ import { LIMITATIONS, POINTER_INPUT_MODES, VALIDATION_PROFILES, definePreset, pa
 export const SHOOTER_PRESETS: readonly PresetDefinition[] = [
   definePreset({
     id: 'horizontal-shmup',
+    maturity: 'proof-validated',
     displayName: 'Horizontal Shmup',
     family: 'shooter',
     controllerFamilies: ['top-down'],
@@ -37,6 +38,7 @@ export const SHOOTER_PRESETS: readonly PresetDefinition[] = [
 
   definePreset({
     id: 'vertical-shmup',
+    maturity: 'proof-validated',
     displayName: 'Vertical Shmup',
     family: 'shooter',
     controllerFamilies: ['top-down'],

@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "mode": "case",
+  "entries": [
+    {
+      "id": "print",
+      "title": "Print",
+      "body": "A boot print by the window."
+    },
+    {
+      "id": "photo",
+      "title": "Photo",
+      "body": "A torn photograph of the hall."
+    }
+  ]
+}

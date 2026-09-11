@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "mode": "horizontal",
+  "speed": 180,
+  "length": 720,
+  "viewport": {
+    "width": 960,
+    "height": 540
+  },
+  "player": {
+    "x": 120,
+    "y": 270,
+    "radius": 16,
+    "speed": 210,
+    "minX": 40,
+    "maxX": 420,
+    "minY": 40,
+    "maxY": 500
+  },
+  "hazards": [
+    {
+      "id": "rock-a",
+      "along": 280,
+      "cross": 90,
+      "radius": 18
+    },
+    {
+      "id": "rock-b",
+      "along": 480,
+      "cross": 450,
+      "radius": 18
+    },
+    {
+      "id": "rock-c",
+      "along": 640,
+      "cross": 90,
+      "radius": 18
+    }
+  ]
+}

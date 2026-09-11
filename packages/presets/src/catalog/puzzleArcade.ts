@@ -68,6 +68,7 @@ export const PUZZLE_ARCADE_PRESETS: readonly PresetDefinition[] = [
 
   definePreset({
     id: 'breakout',
+    maturity: 'proof-validated',
     displayName: 'Breakout',
     family: 'puzzle-arcade',
     controllerFamilies: ['top-down'],
@@ -79,6 +80,7 @@ export const PUZZLE_ARCADE_PRESETS: readonly PresetDefinition[] = [
 
   definePreset({
     id: 'pong',
+    maturity: 'proof-validated',
     displayName: 'Pong',
     family: 'puzzle-arcade',
     controllerFamilies: ['top-down'],
