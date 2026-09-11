@@ -286,3 +286,40 @@ rewritten. The generated canonical game (proof) and the Workbench product (kit) 
 genre story for every preset; the six generated-product repairs above touch only canonical
 shells and runtime binders that overlays replace or do not consume.
 
+## Phase 6 — salvage audit (inspected, compared by behaviour, not merged)
+
+| branch | what it holds | verdict | reasoning |
+|---|---|---|---|
+| `candidate/antigravity-post-ten-program` (`bc0e893`, 24 commits on the pre-PR-#6 `main` `acf802f`, 490 files / 52 k lines; the primary checkout still carries its uncommitted "commands" pack) | its own perception, climbing (wall-slide / wall-jump / ledge-hang), runs (lifecycle + meta-progression), strategy orders, local multiplayer + gamepad routing, ball/paddle, rhythm, simulation agents / needs / schedules, economy + customers, dialogue + portraits, defense / territory objectives, autonomous combat, farming / seasons, construction / colony expansion; 38 proofs of its own | **SUPERSEDED** for every mechanic that overlaps Category-C (perception, wall, progression, strategy/targeting, local-play, ball-paddle, timing, needs, economy, dialogue, territory, simulation) — the convergence branch has a proven, generated-game-consumed, evidence-backed implementation of each, with different contract names and state owners, so cherry-picking would create duplicate authorities. **UNIQUE BUT OPTIONAL** for its residuals — ledge-hang, between-run meta-progression, gamepad routing (the catalog forbids claiming gamepad without hardware evidence), portraits, agent schedules, construction placement — every one of which is already an explicit catalog limitation, none is required by the completion target. Not integrated. Branch preserved. |
+| `salvage/antigravity-dungeon-chests` (`29ae639`, 5 commits on `acf802f`) | chest types + loot tables (schemas, pack), lock-picking, plus its own perception/climbing runtimes and rewritten `dungeon-crawler` / `stealth-game` / `precision-platformer` proof shells | **UNIQUE BUT OPTIONAL**, not integrated: chests are not a documented gap for `dungeon-crawler` (its limitation is room-graph Enemy objects / AI), the branch rewrites a frozen proof, and its perception/climbing duplicate `sw2d.perception` / `sw2d.wall`. Branch preserved. |
+
+## Phase 7 — real-time desktop performance (`npm run qa:performance`)
+
+Machine: macOS arm64 (Darwin 25.6), Chrome 152.0.7977.84 (system install, headless, rAF-driven),
+viewport 1024x768, 6 s play sample per workload, five restarts. Headless Chrome vsync-caps
+rAF at 60 Hz, so 60 fps means "never over budget", not a ceiling.
+
+| workload | mean fps | p95 frame | max frame | frames > 50 ms | JS heap before → after 5 restarts |
+|---|---|---|---|---|---|
+| traditional-platformer (world objectives) | 60.1 | 16.7 ms | 16.8 ms | 0 / 361 | 21.8 → 26.4 MB |
+| twin-stick-shooter (waves + projectiles) | 60.1 | 16.7 ms | 16.8 ms | 0 / 361 | 26.7 → 25.5 MB |
+| bullet-hell (bullet-heavy encounter) | 60.1 | 16.8 ms | 16.8 ms | 0 / 361 | 40.2 → 29.6 MB |
+| lane-defense (navigation re-path) | 60.2 | 16.8 ms | 16.8 ms | 0 / 361 | 31.8 → 32.1 MB |
+| grappling-platformer (Matter + constraint) | 60.0 | 16.7 ms | 16.8 ms | 0 / 361 | 42.6 → 38.7 MB |
+| kart-racer (vehicle + racing) | 60.1 | 16.8 ms | 16.8 ms | 0 / 361 | 48.0 → 49.6 MB |
+| shopkeeper (UI / simulation ledger) | 60.1 | 16.7 ms | 16.8 ms | 0 / 361 | 53.4 → 48.3 MB |
+| dungeon-crawler (generated room graph + combat) | 60.1 | 16.7 ms | 16.8 ms | 0 / 361 | 58.6 → 54.7 MB |
+
+No pathological regression found; no mobile or physical-device claim is made from these numbers.
+
+## Phase 4 — adversarial sweep (`npm run qa:adversarial`)
+
+All 74 built proofs attacked (opposing axes + action spam; PAUSE/CONFIRM spam with keys held;
+off-canvas pointer drag/press; mid-play resize; 2 s single-frame dt; three restarts with fire
+and move held). First run 73/74: `bullet-hell`'s frozen proof shell leaked one
+`combat:entityDied` listener per restart (22 → 24 across two restarts). Fixed (subscription held
+and disposed); 74/74 after. Every other probe passed on every proof.
+
+## Phase 8 — certification (exact PR head; filled at the end of the program)
+
+See the "Certification results" section appended below.

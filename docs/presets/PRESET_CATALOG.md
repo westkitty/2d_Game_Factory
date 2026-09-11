@@ -6,21 +6,22 @@ strategy/defense, 22 more), and Phase 7C (simulation/management, narrative/explo
 party/toy/weird, the final 25). This completes the catalog MASTER_PROJECT.md section 21
 names - no further families remain. A recipe is a composition of real controller
 families and real `@sw2d/packs` system packs - never an engine fork (MASTER_PROJECT.md
-section 3.1). Twenty-three presets are `maturity: "proof-validated"`: each has a
-committed proof game under `proofs/<preset-id>/` with a frozen `PROOF_CONTRACT.md`
-and a dedicated real-browser proof test wired into `npm run qa:proof` (23/23; see
+section 3.1). Every one of the 74 presets is `maturity: "proof-validated"`: each has a
+committed proof game under `proofs/<preset-id>/` with a frozen `PROOF_CONTRACT.md` and a
+dedicated real-browser proof test wired into `npm run qa:proof` (74/74; see
 [`PROOF_MATRIX.md`](../proofs/PROOF_MATRIX.md)). Phase 10 established the first five
 (`chase-platformer`, `twin-stick-shooter`, `tower-defense`, `sokoban`,
 `idle-incremental`); the capability-completion program (ADR-0018..0027) built the
-other eighteen proof games, and the Arena finish program reconciled the catalog
-with that evidence one preset at a time
-(docs/architecture/ARENA_FACTORY_FINISH_STATE.md). Three presets
-(`traditional-platformer`, `stealth-game`, `visual-novel`) remain
-`maturity: "smoke-validated"` - Phase 8 demo-level evidence only
-(`demos/<preset-id>/`; see [`DEMO_MATRIX.md`](../demos/DEMO_MATRIX.md)). The other
-48 remain `maturity: "recipe"`: no committed per-preset browser journey yet
-(the generated-runtime matrix still proves every one of them generates, builds
-and enters play).
+next eighteen proof games, and the Arena finish program reconciled the catalog with
+that evidence one preset at a time
+(docs/architecture/ARENA_FACTORY_FINISH_STATE.md). The Category-C convergence program
+(docs/architecture/CATEGORY_C_CONVERGENCE_MATRIX.md) committed the remaining 51 proofs -
+each the unmodified canonical factory output for its preset, promoted only after its
+journey passed `qa:proof` - so no preset is `smoke-validated` or `recipe` any more. A
+proof-validated preset is still a *recipe* in the sense of MASTER_PROJECT.md section 3.1:
+the "Key limitations by recipe" table below is what each generated game deliberately does
+not do yet, and the generated-runtime matrix still proves every preset generates, builds
+and enters play.
 
 Source of truth: `packages/presets/src/catalog/*.ts`. This file is mechanically checked
 against the catalog by `packages/presets/test/catalog.test.ts` (exact id/count/family

@@ -2,8 +2,8 @@
 
 Project: **Stinky Weasel 2D Browser Game Factory** (`sw2d`)
 Repository: `westkitty/2d_Game_Factory`
-State revision: **19**
-Updated: 2026-09-09
+State revision: **20**
+Updated: 2026-09-11
 
 Read this before doing anything. Governing spec: [`MASTER_PROJECT.md`](MASTER_PROJECT.md).
 Workflow: [`docs/AGENT_WORKFLOW.md`](docs/AGENT_WORKFLOW.md).
@@ -11,6 +11,50 @@ Workflow: [`docs/AGENT_WORKFLOW.md`](docs/AGENT_WORKFLOW.md).
 ---
 
 ## Current phase
+
+**Category-C capability program — evidence convergence (Opus 5, 2026-09-11) — COMPLETE on
+branch `claude/category-c-final-convergence`; not merged.**
+
+Durable ledgers: [`docs/architecture/CATEGORY_C_CAPABILITY_PROGRAM_STATE.md`](docs/architecture/CATEGORY_C_CAPABILITY_PROGRAM_STATE.md)
+(Waves 1–31, implementation) and
+[`docs/architecture/CATEGORY_C_CONVERGENCE_MATRIX.md`](docs/architecture/CATEGORY_C_CONVERGENCE_MATRIX.md)
+(the 74-preset matrix, reconciliation, repairs, certification).
+
+What is now **verified** (real system Chrome, this machine, exact commands in the matrix's
+"Certification" section):
+
+- **Catalog maturity 23 / 3 / 48 → 74 proof-validated / 0 / 0**, every promotion backed by a
+  committed `proofs/<id>/` game (the unmodified canonical factory output for that preset), a
+  frozen `PROOF_CONTRACT.md`, and a real-browser spec: `npm run qa:proof` **74/74**. No preset
+  was promoted by arithmetic; `honesty.test.ts` pins the id list, `proofEvidence.test.ts`
+  derives it from the `proofs/` directory and now also requires the contract.
+- **Every Category-C Wave 1–31 capability is consumed by the generated game it was built for**,
+  proven by playing the generated game, not by reading the pack. Six generated-product defects
+  found by that play were repaired at the correct level (generator content, runtime binder,
+  shell template, frozen proof shell) with regression coverage: pinball table that completed
+  with zero input; auto-battler with two health owners and a fight that started before the
+  pick; survivor-like that "survived" 0.8 s with no input; precision-platformer pit that never
+  failed; plain platform/top-down shells that dispatched none of the universal level's
+  Checkpoint/Hazard/Collectible/Exit objects (new reusable `bindLevelObjectives`); vehicle
+  shell binders never disposed; bullet-hell proof leaking one listener per restart.
+- `npm run qa:adversarial` (new) 74/74 after that fix; `npm run qa:performance` (new): eight
+  workloads at 60 fps, 0 frames > 50 ms, heap flat across five restarts (desktop only).
+- Workbench exercised manually in a real browser on the convergence head: preset catalogue
+  shows 74/0/0 with limitations; create `pinball-lite` without assets through the canonical
+  shell; Run game (live preview, then own tab) played the repaired table to `score 3/3` with
+  real keyboard events; reopen; Validate / Build / Pack all Done; `shasum -a 256 -c SHA256SUMS`
+  OK on the packed artifact; zero external requests.
+- Clean-checkout reproducibility: `npm ci` on a fresh worktree of the tip succeeds; the
+  full ladder was re-run on the exact PR head (see the matrix).
+
+Unchanged, deliberately: engine, renderer, runtime, Workbench host, package boundaries, the 34
+packs (no new pack; one new runtime binder with two consumers), the 69 expanded starter-kit
+overlays (left local — see the matrix), `UNLICENSED`, and every physical-device / gamepad unknown.
+Not decided here: the public license; merge to `main` (PR opened, not merged).
+
+---
+
+**Previous: Phase 12 - Final Cross-System Acceptance and Cold-Start Gate - COMPLETE (Opus 5).**
 
 **Phase 12 - Final Cross-System Acceptance and Cold-Start Gate - COMPLETE (Opus 5).**
 

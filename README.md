@@ -11,12 +11,17 @@ and theme packs, so a new game is a *composition* rather than a fork.
 > **Status: the 12-phase core is complete and accepted, and the Asset-Driven
 > Game Factory Workbench is built on top of it.**
 >
-> The core - runtime, ten system-pack cores, 74 genre presets (23
-> proof-validated / 3 smoke-validated / 48 recipe), a real factory CLI with a
-> release packer, twelve committed demo games, twenty-three deep proof games, a 6/6
-> release-verification matrix, a 19-surface responsive suite and a 40-target
-> generated-runtime matrix - is recorded in
-> [`docs/architecture/PHASE12_FINAL_ACCEPTANCE.md`](docs/architecture/PHASE12_FINAL_ACCEPTANCE.md).
+> The core - runtime, 34 reusable system packs, 74 genre presets (all 74
+> proof-validated: each has a committed proof game under `proofs/<id>/` and a
+> real-browser proof journey in `npm run qa:proof`, 74/74), a real factory CLI
+> with a release packer, twelve committed demo games, a 6/6
+> release-verification matrix, a 19-surface responsive suite, a 56-target
+> generated-runtime matrix, an adversarial sweep and a real-time performance
+> pass over every proof - is recorded in
+> [`docs/architecture/PHASE12_FINAL_ACCEPTANCE.md`](docs/architecture/PHASE12_FINAL_ACCEPTANCE.md)
+> (the accepted core) and
+> [`docs/architecture/CATEGORY_C_CONVERGENCE_MATRIX.md`](docs/architecture/CATEGORY_C_CONVERGENCE_MATRIX.md)
+> (the Category-C capability program's evidence convergence).
 >
 > The workbench - the visual, asset-driven product that core exists to serve -
 > is recorded in
@@ -61,7 +66,7 @@ Everything runs on your machine: no account, no API key, no upload, no network.
 ```text
 packages/contracts/       @sw2d/contracts        interfaces. Zero dependencies, no Phaser, no DOM.
 packages/runtime/         @sw2d/runtime          the reusable machine.
-packages/packs/           @sw2d/packs            ten reusable system-pack cores.
+packages/packs/           @sw2d/packs            34 reusable system packs.
 packages/presets/         @sw2d/presets          74 genre preset recipes.
 packages/content-pipeline/ @sw2d/content-pipeline Tiled normalization, entity registry, themes.
 packages/schemas/         @sw2d/schemas          Ajv validators for every content document.
@@ -70,7 +75,7 @@ packages/qa/              @sw2d/qa               real-browser (system Chrome) sm
 workbench/                @sw2d/workbench        the visual asset-driven game factory (the product).
 starter/                  @sw2d/starter          the Phase 1 vertical slice, kept as engine evidence.
 demos/                                            twelve real, committed demo games (one per genre family).
-proofs/                                            twenty-three deep, end-to-end proof-validated games.
+proofs/                                            74 committed proof games, one per preset (frozen PROOF_CONTRACT.md + real-browser spec).
 docs/                                             architecture, ADRs, QA evidence, agent workflow.
 tools/scripts/                                    repository checks.
 ```

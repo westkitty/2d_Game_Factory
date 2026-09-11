@@ -1,10 +1,14 @@
 # Proof Matrix
 
 Phase 10's five deep, end-to-end proof games - the tier above Phase 8's smoke bar - plus the
-capability-completion program's per-phase proof consumers. Each row is backed by a frozen
-`proofs/<id>/PROOF_CONTRACT.md`, a real generated composition, and a committed real-browser proof
-spec run through `npm run qa:proof`. Mechanically, `npm run qa:proof` is **23/23** as of this
-revision.
+capability-completion program's per-phase proof consumers and the Category-C convergence
+program's 51 committed proofs. Each row is backed by a frozen `proofs/<id>/PROOF_CONTRACT.md`
+(mechanically required for every `proofs/<id>/` by `packages/presets/test/proofEvidence.test.ts`),
+a real generated composition, and a committed real-browser proof spec run through
+`npm run qa:proof`. Mechanically, `npm run qa:proof` is **74/74** as of this revision - one proof
+per preset. `npm run qa:adversarial` additionally attacks every built proof with hostile input
+(73/74 on first run; the one leak it found is fixed) and `npm run qa:performance` records
+real-time frame pacing for eight representative workloads.
 
 ## Capability program — Phase 1: reusable spatial pointer & interaction (ADR-0018)
 
@@ -14,12 +18,12 @@ revision.
 | `proofs/point-and-click/` | `point-and-click` | `SceneContext.interaction` (hover enter/leave, click, drag→drop, pointer capture), `phaserBoundsShape` (live bounds), drop-zone resolution | A lever (hover state + click-to-pull) and a key dragged onto a chest drop-zone | Start; hover enter/leave on the lever; click pulls it; drag the key (captured while the pointer leaves its bounds) onto the chest; drop sets `keyInChest`; restart reinstalls | PASS |
 | `proofs/twin-stick-shooter/` (upgraded) | `twin-stick-shooter` | `aimFromPointer` as an **optional** aim source | Existing wave/projectile proof + step 1b: with no digital `AIM_*` held, the mouse position yields `aimX>0, aimY<0` without firing; steps 2-5 prove digital aim still overrides and is independent | PASS |
 
-The formal `proof-validated` promotion for every preset in this matrix landed in the Arena
-finish program's catalog reconciliation (docs/architecture/ARENA_FACTORY_FINISH_STATE.md):
-the catalog is now 23 proof-validated / 3 smoke-validated / 48 recipe, matching the 23
-committed proof games exactly. The paragraph below records why promotion was originally
-deferred during the capability program, not
-folded into a capability phase.
+The formal `proof-validated` promotion for every preset in this section landed in the Arena
+finish program's catalog reconciliation (docs/architecture/ARENA_FACTORY_FINISH_STATE.md),
+which took the catalog to 23 proof-validated / 3 smoke-validated / 48 recipe; the Category-C
+convergence program then committed the other 51 proofs (74 / 0 / 0). The paragraph below
+records why promotion was originally deferred during the capability program, not folded into
+a capability phase.
 
 ## Capability program — Phase 2: data-driven items / effects / pickups (ADR-0019)
 

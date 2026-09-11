@@ -2220,3 +2220,22 @@ No new pack. Overlay kits stay local. Frozen proofs are not regenerated.
 - Committed proofs deferred.
 - Do not merge to main.
 
+
+## Convergence — the deferred evidence, committed (2026-09-11)
+
+The `[ ] Committed proofs + maturity promotion` line every wave above left open is closed on
+branch `claude/category-c-final-convergence` (based on this branch's tip `81fcb51`; this branch
+is preserved unchanged as the historical checkpoint). The full per-preset ledger, the
+wave-by-wave reconciliation, the six generated-product repairs that playing the generated games
+surfaced, the salvage verdicts, the performance pass and the certification results are in
+[`CATEGORY_C_CONVERGENCE_MATRIX.md`](CATEGORY_C_CONVERGENCE_MATRIX.md). Summary:
+
+- Catalog maturity **23 / 3 / 48 → 74 proof-validated / 0 / 0**; pack count **34 → 34** (no new
+  pack; one new runtime binder, `bindLevelObjectives`, with two shell consumers); proofs
+  **23 → 74**; demos 12 (unchanged); starter kits 5 + 69 (unchanged, overlays left local).
+- Each of the 51 new proofs is the unmodified canonical factory output for its preset plus a
+  frozen `PROOF_CONTRACT.md` and a spec in `packages/qa/proof-specs/`; `npm run qa:proof` 74/74.
+- The environment note above ("npm ci fails") was an artifact of that sandbox: `npm ci` on a
+  clean worktree of this tip succeeds; `packages/cli/test/lockfileWorkspacePolicy.test.ts` now
+  pins the policy (no `games/*` links, every `demos/*` / `proofs/*` linked).
+- Do not merge this branch; the convergence branch is the merge candidate (PR against `main`).

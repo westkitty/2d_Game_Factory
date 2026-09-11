@@ -55,3 +55,14 @@ Additional requirement: It also needs to validate and create sprite assets again
 - `npm run qa:matrix` passed: 40/40 distinct generated games entered play, covering all 74 presets.
 - Full `npm run qa:workbench` passed: 16/16 real-browser journeys.
 - Additional runtime gates passed: 14/14 smoke demos and 5/5 proof games.
+
+## 2026-09-11 — Category-C evidence convergence (`claude/category-c-final-convergence`)
+
+- Started from `origin/arena/01a086ec-2d-game-factory` (`81fcb51`, 27 commits on `main` `150cdb6`) in a separate worktree; the primary checkout's uncommitted AntiGravity work was left untouched.
+- Baseline on the tip was fully green (typecheck, 3953 tests, qa:proof 23/23, smoke 14/14, matrix 56/56, responsive 19/19, release:verify, qa:workbench, qa:starter-kits 69/69); `npm ci` on a clean worktree succeeds - the ledger's earlier failure was environmental. Lockfile policy now pinned by a test.
+- Committed the 51 deferred proofs (each the unmodified canonical factory output + frozen contract + real-browser spec) in three waves and promoted only after `qa:proof` passed: catalog 23/3/48 → 74/0/0.
+- Playing the generated games found and fixed: pinball table self-completing; auto-battler duplicate health owner + fight before the pick; survivor-like surging with no input; precision-platformer pit never failing; plain shells ignoring the universal level's objectives (new `bindLevelObjectives`); vehicle shell binders never disposed; bullet-hell listener leak.
+- New repeatable guards: `npm run qa:adversarial` (74/74) and `npm run qa:performance` (8 workloads, 60 fps, flat heap).
+- Workbench exercised by hand in a real browser (create → run → reopen → validate → build → pack → `shasum -c`).
+- Salvage verdicts: `candidate/antigravity-post-ten-program` SUPERSEDED for every overlapping mechanic, UNIQUE BUT OPTIONAL for its residuals (ledge-hang, run meta-progression, gamepad routing, portraits, agent schedules, construction placement — each already a documented limitation); `salvage/antigravity-dungeon-chests` UNIQUE BUT OPTIONAL, not integrated (it also rewrites a frozen proof and duplicates perception/climbing).
+- Full ladder re-run on the final head and PR opened against `main`; not merged. License remains the owner's decision.
