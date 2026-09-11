@@ -366,6 +366,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         if (toy.active) {
           if (context.input.justPressed('MOVE_LEFT')) toy.select(-1);
           if (context.input.justPressed('MOVE_RIGHT')) toy.select(1);
+          if (context.input.justPressed('SECONDARY_ACTION')) toy.remove();
           toy.render();
           return;
         }

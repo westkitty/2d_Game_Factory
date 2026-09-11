@@ -8,8 +8,9 @@ import type { SceneContext } from '../scenes/SceneContext.ts';
  *
  * Inert unless the generated packConfig names a photo or sandbox starter.
  * The reusable machine stays ADR-0018 (world cursor, hover, click) — this
- * file is presentation, not a camera/framing pack or a generalized
- * authoring sandbox. Overlay photography / sandbox kits stay local (P3-H).
+ * file is presentation, not a camera/framing pack. Wave 31 adds pick-up,
+ * move and delete on the same click targets; a generalized authoring pack
+ * is still not. Overlay photography / sandbox kits stay local (P3-H).
  */
 
 export type ToyStarterMode = 'photo' | 'sandbox';
@@ -24,6 +25,8 @@ export interface StarterToySnapshot {
   readonly blocks: number;
   readonly balls: number;
   readonly stamps: number;
+  readonly held: 'block' | 'ball' | 'crate' | null;
+  readonly moved: number;
   readonly nearId: string | null;
   readonly lastResult: string | null;
   readonly outcome: 'playing' | 'complete';
@@ -36,6 +39,7 @@ export interface StarterToyBinding {
   setPlayer(x: number, y: number): void;
   select(delta: number): void;
   act(): void;
+  remove(): void;
   snapshot(): StarterToySnapshot;
   render(): void;
   dispose(): void;
@@ -48,6 +52,7 @@ const INERT: StarterToyBinding = {
   setPlayer: () => undefined,
   select: () => undefined,
   act: () => undefined,
+  remove: () => undefined,
   snapshot: () => ({
     active: false,
     mode: null,
@@ -58,6 +63,8 @@ const INERT: StarterToyBinding = {
     balls: 0,
     crates: 0,
     stamps: 0,
+    held: null,
+    moved: 0,
     nearId: null,
     lastResult: null,
     outcome: 'playing',
@@ -89,11 +96,16 @@ const STAGE_COLOR = 0x1a1f2b;
 interface Stamp {
   readonly id: string;
   readonly kind: 'block' | 'ball' | 'crate';
-  readonly x: number;
-  readonly y: number;
-  readonly handle: { dispose(): void };
-  readonly sprite: { setFillStyle(color: number, alpha?: number): unknown; destroy(): void };
-  readonly label: { destroy(): void };
+  x: number;
+  y: number;
+  handle: { dispose(): void };
+  readonly sprite: {
+    setPosition(x: number, y: number): unknown;
+    setFillStyle(color: number, alpha?: number): unknown;
+    setStrokeStyle(width: number, color: number, alpha?: number): unknown;
+    destroy(): void;
+  };
+  readonly label: { setPosition(x: number, y: number): unknown; destroy(): void };
 }
 
 function wrap(index: number, length: number): number {
@@ -132,6 +144,8 @@ export function bindStarterToy(
   let outcome: 'playing' | 'complete' = 'playing';
   let disposed = false;
   let nextStamp = 0;
+  let heldId: string | null = null;
+  let moved = 0;
 
   if (hud && mode === 'photo') {
     for (const subject of SUBJECTS) {
@@ -189,6 +203,8 @@ export function bindStarterToy(
       balls,
       crates,
       stamps: stamps.length,
+      held: stamps.find((stamp) => stamp.id === heldId)?.kind ?? null,
+      moved,
       nearId: nearId(),
       lastResult,
       outcome,
@@ -222,6 +238,9 @@ export function bindStarterToy(
         );
       }
       stageRect?.setFillStyle(snap.outcome === 'complete' ? SHOT_COLOR : STAGE_COLOR, 0.95);
+      for (const stamp of stamps) {
+        stamp.sprite.setStrokeStyle(stamp.id === heldId ? 4 : 2, 0xffffff, 0.95);
+      }
     }
     if (!title || !status || !hint) return;
     if (mode === 'photo') {
@@ -241,7 +260,13 @@ export function bindStarterToy(
           snap.outcome === 'complete' ? '  ·  complete' : ''
         }`,
       );
-      hint.setText(snap.outcome === 'complete' ? 'BUILT' : 'CLICK STAMPS   ARROWS PICK BLOCK BALL OR CRATE');
+      hint.setText(
+        snap.outcome === 'complete'
+          ? 'BUILT'
+          : snap.held
+            ? 'CLICK STAGE TO MOVE   K DELETES'
+            : 'CLICK STAMPS   ARROWS PICK   CLICK OBJECT TO MOVE   K DELETES',
+      );
     }
   }
 
@@ -268,6 +293,21 @@ export function bindStarterToy(
     return kind === 'block' ? BLOCK_COLOR : kind === 'ball' ? BALL_COLOR : CRATE_COLOR;
   }
 
+  function destroyStampAt(index: number): 'block' | 'ball' | 'crate' | null {
+    const stamp = stamps[index];
+    if (!stamp) return null;
+    if (heldId === stamp.id) heldId = null;
+    stamp.handle.dispose();
+    try {
+      stamp.sprite.destroy();
+      stamp.label.destroy();
+    } catch {
+      /* scene already tearing down */
+    }
+    stamps.splice(index, 1);
+    return stamp.kind;
+  }
+
   function placeStamp(kind: 'block' | 'ball' | 'crate', x: number, y: number): void {
     if (stamps.length >= MAX_STAMPS) {
       lastResult = 'full';
@@ -279,28 +319,19 @@ export function bindStarterToy(
       .setStrokeStyle(2, 0xffffff, 0.9)
       .setDepth(15);
     const label = scene.add.text(x, y, kind === 'block' ? 'B' : kind === 'ball' ? 'O' : 'C', mutedStyle(12)).setOrigin(0.5).setDepth(16);
-    const handle = context.interaction.register({
+    const stamp: Stamp = { id, kind, x, y, handle: { dispose: () => undefined }, sprite, label };
+    stamp.handle = context.interaction.register({
       id,
       priority: 1,
-      shape: { kind: 'circle', x, y, radius: 28 },
+      shape: () => ({ kind: 'circle' as const, x: stamp.x, y: stamp.y, radius: 28 }),
       onClick: () => {
         if (disposed || outcome !== 'playing') return;
-        const index = stamps.findIndex((stamp) => stamp.id === id);
-        if (index < 0) return;
-        const stamp = stamps[index]!;
-        stamp.handle.dispose();
-        try {
-          stamp.sprite.destroy();
-          stamp.label.destroy();
-        } catch {
-          /* scene already tearing down */
-        }
-        stamps.splice(index, 1);
-        lastResult = `remove-${kind}`;
+        heldId = id;
+        lastResult = `hold-${kind}`;
         paint();
       },
     });
-    stamps.push({ id, kind, x, y, handle, sprite, label });
+    stamps.push(stamp);
     lastResult = `stamp-${kind}`;
     finishIfReady();
     if (outcome === 'complete') context.audio.playCue('ui.confirm');
@@ -328,6 +359,20 @@ export function bindStarterToy(
         shape: { kind: 'rect', x: STAGE.x, y: STAGE.y, width: STAGE.width, height: STAGE.height },
         onClick: (info) => {
           if (disposed || outcome !== 'playing') return;
+          if (heldId) {
+            const stamp = stamps.find((entry) => entry.id === heldId);
+            if (stamp) {
+              stamp.x = info.worldX;
+              stamp.y = info.worldY;
+              stamp.sprite.setPosition(stamp.x, stamp.y);
+              stamp.label.setPosition(stamp.x, stamp.y);
+              moved += 1;
+              lastResult = `move-${stamp.kind}`;
+              heldId = null;
+              paint();
+              return;
+            }
+          }
           placeStamp(selectedKind(), info.worldX, info.worldY);
           paint();
         },
@@ -372,6 +417,20 @@ export function bindStarterToy(
       if (disposed || outcome !== 'playing' || mode !== 'photo') return;
       shoot(nearId());
       context.audio.playCue('ui.confirm');
+      paint();
+    },
+    remove(): void {
+      if (disposed || mode !== 'sandbox' || outcome !== 'playing') return;
+      const index = heldId
+        ? stamps.findIndex((stamp) => stamp.id === heldId)
+        : stamps.length - 1;
+      const kind = destroyStampAt(index);
+      if (!kind) {
+        lastResult = 'empty';
+        paint();
+        return;
+      }
+      lastResult = `remove-${kind}`;
       paint();
     },
     snapshot,

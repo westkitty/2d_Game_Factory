@@ -2179,3 +2179,44 @@ Factory-generated (`tools/scripts/play-wave30.ts`, 12/12 PASS):
 - Residual Category-C: chase (no second pairing-legal consumer), committed proofs, overlay wiring, generalized sandbox authoring beyond crate-stamp, kart item-fire (Wave 29: game-specific).
 - Do not merge to main.
 
+## Wave 31 — leftover presentations (chase, box-select, sandbox authoring)
+
+### Problem
+
+The named leftovers after Wave 30 packs were chase, two-unit box-select,
+generalized sandbox authoring, and `parkour.dispose()`. Pairing still forbids a
+chase pack (frozen `proofs/chase-platformer`). Crop/season and kart item-fire
+were already presentations.
+
+### Consumers
+
+| Leftover | Presentation | Consumer |
+|---|---|---|
+| Chase | Closing-wall pursuit (`CHASE_STARTER = 'pursuit'`) | `chase-platformer` |
+| Box-select | Two units on ADR-0018 drag; J still selects unit A | `simple-rts` |
+| Sandbox authoring | Pick-up, move, K-delete on ADR-0018 stamps | `sandbox-playground` |
+| parkour.dispose | Platform shell dispose | `precision-platformer`, `climbing-game` |
+
+No new pack. Overlay kits stay local. Frozen proofs are not regenerated.
+
+### ValidationPlan
+
+1. Generator stamps `CHASE_STARTER`; platform shell binds `bindStarterChase` and calls `parkour.dispose()` / `chase.dispose()`.
+2. Honesty / docsSync / uiCopy stay green.
+3. Real-browser play of factory-generated Wave-31 games. Committed proofs + maturity promotion still deferred.
+
+### CompletionContract
+
+- [x] Game-specific chase / two-unit box-select / sandbox pick-move-delete.
+- [x] `parkour.dispose()` called.
+- [x] ADR-0058.
+- [x] Real-browser play of factory-generated Wave-31 games (`tools/scripts/play-wave31.ts`).
+- [ ] Committed proofs + maturity promotion. **Not done — evidence rule.**
+
+### Remaining blockers / unknowns
+
+- Catalog maturity stays 23/3/48. Pack count 34.
+- Overlay kits stay local.
+- Committed proofs deferred.
+- Do not merge to main.
+

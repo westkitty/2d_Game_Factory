@@ -159,7 +159,7 @@ recipe's *first* stated limitation; see `knownLimitations` in
 | id | most important current limitation |
 |---|---|
 | `traditional-platformer` | (none stated) |
-| `chase-platformer` | A reusable chase/pursuit-pressure system does not exist yet; it must be authored as game-specific code, the same pattern starter/src/game-specific/ demonstrates. |
+| `chase-platformer` | Closing-wall pursuit for the generated starter is game-specific presentation; a reusable chase/pursuit-pressure pack is not. |
 | `endless-runner` | Auto-run and the starter gap for the generated starter are game-specific presentation; a reusable climbing or chase-pressure system is not. |
 | `precision-platformer` | Wall-slide and wall-jump contact are reusable (sw2d.wall); ledge-grab and a full parkour grammar are not. |
 | `metroidvania` | (none stated) |
@@ -203,7 +203,7 @@ recipe's *first* stated limitation; see `knownLimitations` in
 | `tower-defense` | Spatial hover placement via the pointer shell is available but this starter uses the keyboard grid cursor. |
 | `lane-defense` | Lane-spawn scheduling and combat resolution are still starter-specific. |
 | `auto-battler` | Teams, active turn, selection and turn advance are reusable (sw2d.strategy); autonomous strikes are reusable (sw2d.targeting); loadout drafting stays starter-specific. |
-| `simple-rts` | Unit pathfinding is reusable (sw2d.navigation, optional); box-select for the generated starter is a one-unit presentation; a command-queue UI is not implemented. |
+| `simple-rts` | Unit pathfinding is reusable (sw2d.navigation, optional); box-select for the generated starter is a two-unit presentation on the spatial pointer; a command-queue UI is not implemented. |
 | `turn-based-tactics` | Teams, active turn, selection and turn advance are reusable (sw2d.strategy); attack-range is reusable (sw2d.targeting); a full turn-action state machine is still starter-specific. |
 | `base-defense` | Base HP and incoming contact for the generated starter use sw2d.combat; wave spawning is optional (sw2d.encounters); target-priority and upgrade rules stay starter-specific. |
 | `territory-control` | Capture-zone occupancy is reusable (sw2d.territory); scoring overlays and contested multi-faction capture stay starter-specific. |
@@ -227,7 +227,7 @@ recipe's *first* stated limitation; see `knownLimitations` in
 | `physics-toy` | Toy launch/goal is game-specific presentation of Matter; pinball-lite consumes sw2d.pinball instead. |
 | `virtual-pet` | Needs, decay, care actions, affinity and wellbeing hold/fail are reusable (sw2d.needs); full creature behaviour AI, relationship graphs and colony assignment are not. |
 | `dress-up-character-toy` | Wardrobe slots for the generated starter use interaction drag/drop (ADR-0018); a reusable attachment/skeleton wardrobe system is not. |
-| `sandbox-playground` | Block, ball and crate stamps for the generated starter use interaction click (ADR-0018); a generalized authoring/editing sandbox pack is not. |
+| `sandbox-playground` | Block, ball and crate stamps, plus pick-up/move/delete, for the generated starter use interaction click (ADR-0018); a generalized authoring/editing sandbox pack is not. |
 | `drawing-game` | Stroke polylines for the generated starter are captured through the spatial pointer (ADR-0018); pressure, layers, export and a reusable drawing-canvas system are not. |
 | `fishing-game` | Score, combo, lives and elapsed are reusable (sw2d.arcade); a reusable casting/line/tension/fish behavior system and an ingredient/recipe/action-sequence cooking system are not. |
 | `cooking-game` | Score, combo, lives and elapsed are reusable (sw2d.arcade); a reusable casting/line/tension/fish behavior system and an ingredient/recipe/action-sequence cooking system are not. |

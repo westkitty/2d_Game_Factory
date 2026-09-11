@@ -61,3 +61,4 @@ One short record per decision that constrains later work. No ADR for trivia.
 | [0055](0055-consume-arcade-in-microgame-shell.md) | Consume arcade score as microgame tap-then-mash | Category-C Wave 28 |
 | [0056](0056-kart-item-fire-is-game-specific.md) | Kart on-demand item-fire is game-specific | Category-C Wave 29 |
 | [0057](0057-wave-30-leftover-packs.md) | Six leftover packs: wall, territory, pinball, camera, codex, targeting | Category-C Wave 30 |
+| [0058](0058-wave-31-leftover-presentations.md) | Chase, two-unit box-select, sandbox pick/move/delete are game-specific | Category-C Wave 31 |

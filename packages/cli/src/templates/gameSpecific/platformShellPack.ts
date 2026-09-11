@@ -3,6 +3,7 @@ import type { AdvancedPhysicsService, InstalledSystemPack, PuzzleRulesService, W
 import { PUZZLE_RULES_CAPABILITY_ID, WALL_CAPABILITY_ID, WORLD_GRAPH_CAPABILITY_ID } from '@sw2d/contracts';
 import {
   bindCollectiblePickups,
+  bindStarterChase,
   bindStarterParkour,
   bindStarterRun,
   bindStarterWeapon,
@@ -14,7 +15,7 @@ import {
   type SceneContext,
   type ScenePackDefinition,
 } from '@sw2d/runtime';
-import { PARKOUR_STARTER, RUN_STARTER } from './packConfig.ts';
+import { CHASE_STARTER, PARKOUR_STARTER, RUN_STARTER } from './packConfig.ts';
 
 /**
  * Generated starter shell: platform controller family.
@@ -110,6 +111,15 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       player.setPosition(parkour.startX(), parkour.startY());
       parkour.attach(player);
     }
+    // Chase (Category-C Wave 31). Inert unless packConfig names pursuit.
+    // Player-controlled closing wall; not auto-run, not a chase pack.
+    const chase = bindStarterChase(context, { mode: CHASE_STARTER });
+    if (chase.active) {
+      ground.setVisible(false);
+      groundCollider.destroy();
+      player.setPosition(chase.startX(), chase.startY());
+      chase.attach(player);
+    }
 
     // Data-driven item pickups (capability program Phase 2). Inert unless the
     // game installs sw2d.items; then every Collectible whose itemId names a
@@ -173,6 +183,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       ...(puzzle ? { puzzle: puzzle.snapshot(), solved: puzzle.isSolved() } : {}),
       ...(run.active ? { run: run.snapshot() } : {}),
       ...(parkour.active ? { parkour: parkour.snapshot() } : {}),
+      ...(chase.active ? { chase: chase.snapshot() } : {}),
       ...(wallsCap?.active()
         ? { wall: { sliding: wallsCap.sliding(), wallId: wallsCap.wallId(), lastResult: wallsCap.lastResult(), outcome: wallsCap.outcome() } }
         : {}),
@@ -196,6 +207,8 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
           player.setVelocity(0, 0);
         } else if (parkour.active && parkour.snapshot().outcome !== 'playing') {
           player.setVelocity(0, 0);
+        } else if (chase.active && chase.snapshot().outcome !== 'playing') {
+          player.setVelocity(0, 0);
         } else if (run.active) {
           player.setVelocityX(260);
           player.setFlipX(false);
@@ -217,7 +230,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
           }
           if (context.input.consumePress('CANCEL')) puzzle.undo();
         }
-        if (worldGraph && rooms && !run.active && !parkour.active) {
+        if (worldGraph && rooms && !run.active && !parkour.active && !chase.active) {
           rooms.tick();
           if (!puzzle && context.input.consumePress('SECONDARY_ACTION')) worldMap?.toggle();
           if (!rooms.transitioning && !(worldMap?.isOpen ?? false) && player.x > context.definition.viewport.width - 48) {
@@ -243,12 +256,14 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
           intent.jumpPressed &&
           player.body.blocked.down &&
           (!run.active || run.snapshot().outcome === 'playing') &&
-          (!parkour.active || parkour.snapshot().outcome === 'playing')
+          (!parkour.active || parkour.snapshot().outcome === 'playing') &&
+          (!chase.active || chase.snapshot().outcome === 'playing')
         ) {
           player.setVelocityY(-tuning.jumpVelocity);
           context.audio.playCue('ui.confirm');
           if (run.active) run.jumped();
           if (parkour.active) parkour.jumped();
+          if (chase.active) chase.jumped();
         }
         if (run.active) {
           run.setPlayer(player.x, player.y, player.body.blocked.down);
@@ -262,6 +277,12 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
           parkour.render();
           if (parkour.snapshot().outcome !== 'playing') player.setVelocity(0, 0);
         }
+        if (chase.active) {
+          chase.setPlayer(player.x, player.y, player.body.blocked.down);
+          chase.tick(deltaMs);
+          chase.render();
+          if (chase.snapshot().outcome !== 'playing') player.setVelocity(0, 0);
+        }
       },
 
       dispose(): void {
@@ -271,6 +292,8 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         pickups.dispose();
         weapon.dispose();
         run.dispose();
+        parkour.dispose();
+        chase.dispose();
         rooms?.dispose();
         worldMap?.dispose();
         advPhysics?.dispose();

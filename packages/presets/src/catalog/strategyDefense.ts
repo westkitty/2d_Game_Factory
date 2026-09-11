@@ -80,7 +80,7 @@ export const STRATEGY_DEFENSE_PRESETS: readonly PresetDefinition[] = [
     requiredContentRoles: ['tuning', 'levels', 'territory'],
     validationProfile: VALIDATION_PROFILES.strategyDefense,
     knownLimitations: [
-      'Unit pathfinding is reusable (sw2d.navigation, optional); box-select for the generated starter is a one-unit presentation; a command-queue UI is not implemented.',
+      'Unit pathfinding is reusable (sw2d.navigation, optional); box-select for the generated starter is a two-unit presentation on the spatial pointer; a command-queue UI is not implemented.',
     ],
   }),
 

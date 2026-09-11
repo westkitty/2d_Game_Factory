@@ -48,7 +48,9 @@ import type { PresetDefinition } from '@sw2d/contracts';
  * inventing a climbing, chase, or scrolling-stage pack. Wave 28 extends
  * `ARCADE_STARTER` with `'micro'` (tap-then-mash rounds on the existing
  * arcade ledger — not a scheduler pack). Wave 29 stamps `KART_STARTER`
- * (`item` / null) for game-specific on-demand kart item-fire.
+ * (`item` / null) for game-specific on-demand kart item-fire. Wave 31 stamps
+ * `CHASE_STARTER` (`pursuit` / null) for closing-wall pursuit on
+ * chase-platformer — not a reusable chase pack.
  *
  * Deliberately NOT a universal puzzle DSL.
  */
@@ -179,6 +181,7 @@ export function generatePackConfig(preset: PresetDefinition): string {
   const parkourStarter =
     preset.id === 'precision-platformer' ? "'precision'" : preset.id === 'climbing-game' ? "'climb'" : 'null';
   const kartStarter = preset.id === 'kart-racer' ? "'item'" : 'null';
+  const chaseStarter = preset.id === 'chase-platformer' ? "'pursuit'" : 'null';
   return [
     '/**',
     " * Config for packs that declare `configSource: 'code'` in their definition -",
@@ -240,6 +243,9 @@ export function generatePackConfig(preset: PresetDefinition): string {
     '',
     '/** Category-C Wave 29: kart on-demand item-fire. Null otherwise. */',
     `export const KART_STARTER: 'item' | null = ${kartStarter};`,
+    '',
+    '/** Category-C Wave 31: closing-wall pursuit. Null otherwise. */',
+    `export const CHASE_STARTER: 'pursuit' | null = ${chaseStarter};`,
     '',
   ]
     .filter((line, index, all) => !(line === '' && all[index - 1] === ''))

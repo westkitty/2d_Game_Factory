@@ -72,7 +72,7 @@ export const LIMITATIONS = {
   puzzleBoardRules:
     'Match-detection/cascade and falling-piece/line-clear are reusable (sw2d.puzzle-rules); pointer drag-swap, wall-kicks and overlay-local boards are not.',
   chasePressure:
-    'A reusable chase/pursuit-pressure system does not exist yet; it must be authored as game-specific code, the same pattern starter/src/game-specific/ demonstrates.',
+    'Closing-wall pursuit for the generated starter is game-specific presentation; a reusable chase/pursuit-pressure pack is not.',
   scrollingShmupCamera:
     'Horizontal and vertical scrolling-stage camera movement, player band clamp, streaming hazards and stage-clear are reusable (sw2d.stage-scroll); rail-path cameras, parallax authoring and bullet-hell pooling are not.',
   // Phase 7B additions - each reused by two or more recipes; a recipe-specific gap gets an

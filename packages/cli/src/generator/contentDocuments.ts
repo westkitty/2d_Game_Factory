@@ -1215,6 +1215,8 @@ export function generateUiCopy(options: {
               ? 'MOVE / JUMP  -  JUMP THE GAPS'
               : presetId === 'climbing-game'
                 ? 'MOVE / JUMP  -  JUMP UP'
+                : presetId === 'chase-platformer'
+                  ? 'MOVE / JUMP  -  OUTRUN THE WALL'
             : has('sw2d.weapons')
               ? 'MOVE / JUMP  -  FIRE J/X  -  PAUSE TO STOP'
               : 'MOVE / JUMP  -  PAUSE TO STOP';
@@ -1245,7 +1247,7 @@ export function generateUiCopy(options: {
                       : presetId === 'base-defense'
                         ? 'MOVE WASD/ARROWS  -  STRIKE J/X  -  DEFEND THE BASE'
                     : presetId === 'simple-rts'
-                      ? 'J SELECTS THE UNIT  -  WASD MOVES'
+                      ? 'J SELECTS UNIT A  -  DRAG BOX-SELECTS  -  WASD MOVES'
                       : presetId === 'territory-control'
                         ? 'MOVE WASD/ARROWS  -  STAND IN BOTH ZONES'
                         : presetId === 'museum-exhibit'
@@ -1295,7 +1297,7 @@ export function generateUiCopy(options: {
               : presetId === 'dress-up-character-toy'
                 ? 'DRAG HAT AND SHIRT ONTO THE FIGURE'
                 : presetId === 'sandbox-playground'
-                  ? 'CLICK STAMPS  -  ARROWS PICK BLOCK BALL OR CRATE'
+                  ? 'CLICK STAMPS  -  ARROWS PICK  -  CLICK OBJECT TO MOVE  -  K DELETES'
                 : presetId === 'physics-toy'
                   ? 'CLICK OR J LAUNCHES  -  LAND IN THE GOAL'
                   : presetId === 'rail-shooter'

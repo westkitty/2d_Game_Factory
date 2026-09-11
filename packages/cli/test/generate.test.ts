@@ -1000,6 +1000,7 @@ describe('generated photography and sandbox consume ADR-0018 interaction', () =>
     const shell = buildGameFiles('toy-probe', sandbox).get('src/game-specific/shellPack.ts')!;
     expect(shell).toContain('bindStarterToy(context, { mode: TOY_STARTER })');
     expect(shell).toContain('toy.select(');
+    expect(shell).toContain('toy.remove()');
     expect(shell).toContain("from './packConfig.ts'");
   });
 
@@ -1028,6 +1029,7 @@ describe('generated photography and sandbox consume ADR-0018 interaction', () =>
     const sandboxTheme = JSON.parse(sandboxFiles.get('content/themes/default/theme.json')!) as { ui: { playHint: string } };
     expect(photoTheme.ui.playHint).toContain('J SHOOTS SUBJECTS');
     expect(sandboxTheme.ui.playHint).toContain('CLICK STAMPS');
+    expect(sandboxTheme.ui.playHint).toContain('CLICK OBJECT TO MOVE');
   });
 });
 
@@ -1280,7 +1282,7 @@ describe('generated rts and territory consume command presentation', () => {
     );
     const rtsTheme = JSON.parse(rtsFiles.get('content/themes/default/theme.json')!) as { ui: { playHint: string } };
     const zoneTheme = JSON.parse(zoneFiles.get('content/themes/default/theme.json')!) as { ui: { playHint: string } };
-    expect(rtsTheme.ui.playHint).toContain('J SELECTS THE UNIT');
+    expect(rtsTheme.ui.playHint).toContain('J SELECTS UNIT A');
     expect(zoneTheme.ui.playHint).toContain('STAND IN BOTH ZONES');
   });
 });
@@ -1361,6 +1363,38 @@ describe('generated precision and climbing consume parkour presentation', () => 
     const climbTheme = JSON.parse(climbFiles.get('content/themes/default/theme.json')!) as { ui: { playHint: string } };
     expect(precisionTheme.ui.playHint).toContain('JUMP THE GAPS');
     expect(climbTheme.ui.playHint).toContain('JUMP UP');
+  });
+});
+
+describe('generated chase-platformer consumes chase presentation', () => {
+  it('the generated platform shell binds bindStarterChase', () => {
+    const chase = PRESETS.find((candidate) => candidate.id === 'chase-platformer')!;
+    const shell = buildGameFiles('chase-probe', chase).get('src/game-specific/shellPack.ts')!;
+    expect(shell).toContain('bindStarterChase(context, { mode: CHASE_STARTER })');
+    expect(shell).toContain('chase.attach(');
+    expect(shell).toContain('chase.setPlayer(');
+    expect(shell).toContain('chase.tick(');
+    expect(shell).toContain('parkour.dispose()');
+    expect(shell).toContain('chase.dispose()');
+    expect(shell).toContain("from './packConfig.ts'");
+  });
+
+  it('chase-platformer stamps CHASE_STARTER pursuit; precision and auto-runner stay null', () => {
+    const chase = PRESETS.find((candidate) => candidate.id === 'chase-platformer')!;
+    const precision = PRESETS.find((candidate) => candidate.id === 'precision-platformer')!;
+    const auto = PRESETS.find((candidate) => candidate.id === 'auto-runner')!;
+    const chaseFiles = buildGameFiles('chase-probe', chase);
+    const precisionFiles = buildGameFiles('chase-probe', precision);
+    const autoFiles = buildGameFiles('chase-probe', auto);
+    expect(chaseFiles.get('src/game-specific/packConfig.ts')).toContain(
+      "CHASE_STARTER: 'pursuit' | null = 'pursuit'",
+    );
+    expect(precisionFiles.get('src/game-specific/packConfig.ts')).toContain(
+      "CHASE_STARTER: 'pursuit' | null = null",
+    );
+    expect(autoFiles.get('src/game-specific/packConfig.ts')).toContain("CHASE_STARTER: 'pursuit' | null = null");
+    const chaseTheme = JSON.parse(chaseFiles.get('content/themes/default/theme.json')!) as { ui: { playHint: string } };
+    expect(chaseTheme.ui.playHint).toContain('OUTRUN THE WALL');
   });
 });
 

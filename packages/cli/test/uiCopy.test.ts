@@ -21,7 +21,8 @@ import { generateUiCopy } from '../src/generator/contentDocuments.ts';
 //    Grid tactics (Wave 18) reads PRIMARY_ACTION for unit select.
 //  - AIM WITH MOUSE: topDownShellPack consumes aimFromPointer (ADR-0018);
 //    pointerShellPack fires toward context.spatialPointer when weapons are on.
-//  - DRAG: pointerShellPack bindStarterPointer wardrobe/draw uses ADR-0018 drag.
+//  - DRAG: pointerShellPack bindStarterPointer wardrobe/draw uses ADR-0018 drag;
+//    top-down command starter box-select also reads spatialPointer drag.
 //  - UNDO BACKSPACE: CANCEL is Backspace; gridShellPack calls puzzle.undo() on CANCEL.
 //  - RESET K: SECONDARY_ACTION is KeyK/KeyC; gridShellPack calls puzzle.reset().
 //  - ENTER: CONFIRM is Enter/Space/NumpadEnter; vehicle shell starts the race,
@@ -105,7 +106,9 @@ describe('generateUiCopy (generated games announce their genre honestly)', () =>
     expect(copyFor('drawing-game').playHint).toBe('DRAW TWO STROKES ON THE PAGE');
     expect(copyFor('dress-up-character-toy').playHint).toBe('DRAG HAT AND SHIRT ONTO THE FIGURE');
     expect(copyFor('photography-game').playHint).toBe('MOVE WASD/ARROWS  -  J SHOOTS SUBJECTS');
-    expect(copyFor('sandbox-playground').playHint).toBe('CLICK STAMPS  -  ARROWS PICK BLOCK BALL OR CRATE');
+    expect(copyFor('sandbox-playground').playHint).toBe(
+      'CLICK STAMPS  -  ARROWS PICK  -  CLICK OBJECT TO MOVE  -  K DELETES',
+    );
     expect(copyFor('action-roguelite').playHint).toBe('MOVE WASD/ARROWS  -  J TAKES RELICS');
     expect(copyFor('survivor-like').playHint).toContain('SURVIVE THE WAVES');
     expect(copyFor('dungeon-crawler').playHint).toBe('MOVE WASD/ARROWS  -  STRIKE J/X');
@@ -116,10 +119,13 @@ describe('generateUiCopy (generated games announce their genre honestly)', () =>
     expect(copyFor('boat-flight-racer').playHint).toBe('STEER / THROTTLE WASD/ARROWS  -  J SWITCHES TO FLIGHT');
     expect(copyFor('physics-toy').playHint).toBe('CLICK OR J LAUNCHES  -  LAND IN THE GOAL');
     expect(copyFor('pinball-lite').playHint).toBe('J LEFT K RIGHT  -  HIT BUMPERS');
-    expect(copyFor('simple-rts').playHint).toBe('J SELECTS THE UNIT  -  WASD MOVES');
+    expect(copyFor('simple-rts').playHint).toBe(
+      'J SELECTS UNIT A  -  DRAG BOX-SELECTS  -  WASD MOVES',
+    );
     expect(copyFor('territory-control').playHint).toBe('MOVE WASD/ARROWS  -  STAND IN BOTH ZONES');
     expect(copyFor('museum-exhibit').playHint).toBe('MOVE WASD/ARROWS  -  J INSPECTS PLAQUES');
     expect(copyFor('rail-shooter').playHint).toBe('J DAMAGES APPROACHING TARGETS');
+    expect(copyFor('chase-platformer').playHint).toBe('MOVE / JUMP  -  OUTRUN THE WALL');
     expect(copyFor('precision-platformer').playHint).toBe('MOVE / JUMP  -  JUMP THE GAPS');
     expect(copyFor('climbing-game').playHint).toBe('MOVE / JUMP  -  JUMP UP');
     expect(copyFor('microgame-collection').playHint).toBe('ENTER ON GO  -  THEN MASH J');

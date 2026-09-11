@@ -159,6 +159,12 @@ export {
   type StarterKartItemSnapshot,
 } from './game-support/starterKartItem.ts';
 export {
+  bindStarterChase,
+  type StarterChaseBinding,
+  type StarterChaseSnapshot,
+  type ChaseStarterMode,
+} from './game-support/starterChase.ts';
+export {
   bindStarterTargeting,
   type StarterTargetingBinding,
   type StarterTargetingSnapshot,

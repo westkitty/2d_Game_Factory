@@ -98,7 +98,7 @@ export const PARTY_TOY_WEIRD_PRESETS: readonly PresetDefinition[] = [
     supportedInputModes: POINTER_INPUT_MODES,
     validationProfile: VALIDATION_PROFILES.partyToyWeird,
     knownLimitations: [
-      'Block, ball and crate stamps for the generated starter use interaction click (ADR-0018); a generalized authoring/editing sandbox pack is not.',
+      'Block, ball and crate stamps, plus pick-up/move/delete, for the generated starter use interaction click (ADR-0018); a generalized authoring/editing sandbox pack is not.',
     ],
   }),
 
