@@ -108,4 +108,11 @@ async function main(): Promise<number> {
   return passed === outcomes.length ? 0 : 1;
 }
 
-process.exitCode = await main();
+const exitCode = await main();
+process.exitCode = exitCode;
+// A failed journey can leave a stray handle behind (a preview whose dev server
+// never announced and so was never tracked, for one - the Category-C
+// convergence CI run hung 40 minutes after printing 15/16). The verdict is
+// already printed; an unref'd timer ends the process if anything else keeps
+// the loop alive, and costs nothing when the loop drains on its own.
+setTimeout(() => process.exit(exitCode), 5_000).unref();

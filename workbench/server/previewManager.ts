@@ -19,9 +19,10 @@
 
 import { type ChildProcess, spawn } from 'node:child_process';
 import { existsSync } from 'node:fs';
+import path from 'node:path';
 import { serveStatic, type StaticServerHandle } from '@sw2d/qa';
 import type { PreviewMode, PreviewState } from '../shared/types.ts';
-import { gameRoot, resolveContained } from './paths.ts';
+import { REPO_ROOT, gameRoot, resolveContained } from './paths.ts';
 import { SecurityError, assertValidGameId } from './security.ts';
 
 interface PreviewRecord {
@@ -58,14 +59,26 @@ export async function startFastPreview(gameId: string): Promise<PreviewState> {
   await stopPreview(gameId);
 
   const generation = nextGeneration();
-  const child = spawn('npx', ['vite', '--host', '127.0.0.1', '--port', '0', '--strictPort', 'false'], { cwd: root, shell: false });
+  // The repository's own vite bin, spawned directly (as `qa:proof` and
+  // `release:verify` already do) rather than through `npx`: `npm exec` first
+  // loads the whole workspace tree, and with 74 proof workspaces that alone
+  // could outlast the 30 s announcement window on a slow CI runner
+  // (Category-C convergence: WB-IMAGE-001 timed out on GitHub Actions while
+  // passing on the dev machine). `detached` puts the dev server in its own
+  // process group so stopping it stops everything it spawned - an orphaned
+  // grandchild otherwise keeps the QA runner's event loop alive forever.
+  const child = spawn(
+    path.join(REPO_ROOT, 'node_modules', '.bin', 'vite'),
+    ['--host', '127.0.0.1', '--port', '0', '--strictPort', 'false'],
+    { cwd: root, shell: false, detached: process.platform !== 'win32', stdio: ['ignore', 'pipe', 'pipe'] },
+  );
 
   const url = await new Promise<string>((resolve, reject) => {
     let settled = false;
     const timeout = setTimeout(() => {
       if (settled) return;
       settled = true;
-      child.kill('SIGTERM');
+      killPreviewProcess(child);
       reject(new Error('The dev server did not report a URL within 30 seconds.'));
     }, 30_000);
 
@@ -143,15 +156,23 @@ export async function stopPreview(gameId: string): Promise<void> {
   const record = PREVIEWS.get(gameId);
   if (!record) return;
   PREVIEWS.delete(gameId);
-  if (record.child) {
-    record.child.kill('SIGTERM');
-    // A dev server that ignores SIGTERM is still a process holding a port.
-    const child = record.child;
-    setTimeout(() => {
-      if (child.exitCode === null && child.signalCode === null) child.kill('SIGKILL');
-    }, 3000).unref();
-  }
+  if (record.child) killPreviewProcess(record.child);
   if (record.server) await record.server.close();
+}
+
+/** Terminate a dev server and everything in its process group; escalate to SIGKILL for one that ignores SIGTERM and would otherwise keep holding its port. */
+function killPreviewProcess(child: ChildProcess): void {
+  const signalGroup = (signal: NodeJS.Signals): void => {
+    if (child.exitCode !== null || child.signalCode !== null) return;
+    try {
+      if (process.platform !== 'win32' && child.pid) process.kill(-child.pid, signal);
+      else child.kill(signal);
+    } catch {
+      /* already gone */
+    }
+  };
+  signalGroup('SIGTERM');
+  setTimeout(() => signalGroup('SIGKILL'), 3000).unref();
 }
 
 export async function stopAllPreviews(): Promise<void> {
