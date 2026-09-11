@@ -1,3 +1,5 @@
+import type { TargetingService } from '@sw2d/contracts';
+import { TARGETING_CAPABILITY_ID } from '@sw2d/contracts';
 import { accentStyle, headingStyle, mutedStyle } from '../scenes/theme.ts';
 import type { SceneContext } from '../scenes/SceneContext.ts';
 
@@ -127,6 +129,7 @@ export function bindStarterStrategy(
   const combat = context.capabilities.has(COMBAT_CAPABILITY_ID)
     ? context.capabilities.require<CombatStore>(COMBAT_CAPABILITY_ID)
     : null;
+  const targeting = context.capabilities.get<TargetingService>(TARGETING_CAPABILITY_ID);
 
   if (strategy.teams().length === 0) {
     strategy.registerTeam('player');
@@ -258,6 +261,12 @@ export function bindStarterStrategy(
       status.setText(
         `turn ${snap.turnNumber}  ·  ${snap.team ?? 'none'}${snap.selected ? `  ·  ${snap.selected}` : ''}${
           snap.nearId ? `  ·  near ${snap.nearId}` : ''
+        }${
+          targeting?.active() && targeting.mode() === 'range'
+            ? targeting.canStrike('scout', 'grunt')
+              ? '  ·  in range'
+              : '  ·  out of range'
+            : ''
         }${snap.lastResult ? `  ·  ${snap.lastResult}` : ''}`,
       );
       hint.setText(snap.outcome === 'complete' ? 'FLAG SEIZED' : 'ARROWS MOVE   J SELECTS   REACH THE FLAG');
@@ -339,6 +348,11 @@ export function bindStarterStrategy(
     },
     confirm(): void {
       if (disposed || outcome !== 'playing') return;
+      if (mode === 'battler' && targeting?.active() && targeting.mode() === 'auto') {
+        lastResult = 'auto';
+        paint();
+        return;
+      }
       if (mode === 'tactics') {
         if (!playerTurn()) {
           lastResult = 'wait';
@@ -380,6 +394,19 @@ export function bindStarterStrategy(
     tick(deltaMs: number): void {
       if (disposed || outcome !== 'playing') return;
       nowMs += deltaMs;
+      if (mode === 'tactics' && targeting?.active() && targeting.mode() === 'range') {
+        targeting.setPos('scout', scoutCol * CELL, scoutRow * CELL);
+        targeting.setPos('grunt', GRUNT.col * CELL, GRUNT.row * CELL);
+      }
+      if (mode === 'battler' && targeting?.active() && targeting.mode() === 'auto') {
+        targeting.tick(deltaMs, nowMs);
+        if (targeting.outcome() === 'complete') {
+          outcome = 'complete';
+          lastResult = 'won';
+        }
+        paint();
+        return;
+      }
       if (strategy.activeTeam() === 'cpu') {
         cpuWait += deltaMs;
         if (cpuWait >= CPU_PASS_MS) {

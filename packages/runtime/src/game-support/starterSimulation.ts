@@ -6,8 +6,8 @@ import type { SceneContext } from '../scenes/SceneContext.ts';
  *
  * Inert unless the game installed the pack *and* the generated packConfig
  * names a farm or colony starter. The pack stays a resource ledger plus
- * timed jobs — this file is presentation, not a crop/season or colony-AI
- * framework. Overlay farming/colony kits stay local (P3-J).
+ * timed jobs. Farm seasons rotate in the snapshot while GROW_MS stays 480
+ * in spring so Wave 13 harvest still ripens. Overlay kits stay local.
  */
 
 const SIMULATION_CAPABILITY_ID = 'simulation.resources';
@@ -38,6 +38,7 @@ export interface StarterSimulationSnapshot {
   readonly lastResult: string | null;
   readonly outcome: 'playing' | 'complete';
   readonly jobCount: number;
+  readonly season: string | null;
 }
 
 export interface StarterSimulationBinding {
@@ -69,6 +70,7 @@ const INERT: StarterSimulationBinding = {
     lastResult: null,
     outcome: 'playing',
     jobCount: 0,
+    season: null,
   }),
   render: () => undefined,
   dispose: () => undefined,
@@ -83,6 +85,7 @@ interface SimulationLedger {
   listJobs(): readonly { readonly id: string; readonly remainingMs: number; readonly totalMs: number }[];
 }
 
+const SEASONS = ['spring', 'summer', 'autumn', 'winter'] as const;
 const GROW_MS = 480;
 const GATHER_MS = 400;
 const CONSTRUCT_MS = 480;
@@ -171,6 +174,7 @@ export function bindStarterSimulation(
   let lastResult: string | null = null;
   let outcome: 'playing' | 'complete' = 'playing';
   let disposed = false;
+  let elapsedMs = 0;
 
   function snapshot(): StarterSimulationSnapshot {
     return {
@@ -193,6 +197,7 @@ export function bindStarterSimulation(
       lastResult,
       outcome,
       jobCount: sim.listJobs().length,
+      season: mode === 'farm' ? (elapsedMs < 2000 ? 'spring' : SEASONS[Math.floor(elapsedMs / 2000) % SEASONS.length]!) : null,
     };
   }
 
@@ -221,7 +226,7 @@ export function bindStarterSimulation(
     if (mode === 'farm') {
       title.setText(snap.outcome === 'complete' ? 'HARVESTED' : 'FARM');
       status.setText(
-        `crops ${snap.crops}/${HARVEST_TARGET}${snap.lastResult ? `  ·  ${snap.lastResult}` : ''}${
+        `crops ${snap.crops}/${HARVEST_TARGET}  ·  ${snap.season ?? 'spring'}${snap.lastResult ? `  ·  ${snap.lastResult}` : ''}${
           snap.outcome === 'complete' ? '  ·  complete' : ''
         }`,
       );
@@ -329,8 +334,9 @@ export function bindStarterSimulation(
       context.audio.playCue('ui.confirm');
       paint();
     },
-    tick(_deltaMs: number): void {
+    tick(deltaMs: number): void {
       if (disposed) return;
+      elapsedMs += deltaMs;
       poll();
       paint();
     },

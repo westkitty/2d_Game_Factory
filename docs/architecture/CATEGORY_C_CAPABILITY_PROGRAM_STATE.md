@@ -2095,4 +2095,87 @@ item-fire pack would be one consumer.
 - Kart-racer: Space start x=160 empty → KeyJ `empty` → hold ArrowUp x=381
   `pickup` held → KeyJ `fired` 1 outcome=complete.
 
+## Wave 30 — leftover packs (wall, territory, pinball, camera, codex, targeting)
+
+### Problem
+
+The user reversed the Wave 22–29 “skip 1-consumer packs” rule and asked to
+**finish** wall-slide, chase, box-select, capture-zone pack, pinball pack,
+crop/season, rail-path camera, exhibit/codex, microgame scheduler, tower
+target-select, attack-range, autonomous combat, camera/framing, and
+generalized authoring.
+
+Chase still has no second consumer that pairing allows (frozen
+chase-platformer proof). Microgame already has a generated wait/go/mash
+scheduler on `sw2d.arcade` (Wave 28). Crop/season stays presentation of
+`sw2d.simulation` jobs (`GROW_MS` 480; first 2000 ms stay spring so Wave 13
+harvest still ripens). Box-select is a one-unit presentation on ADR-0018
+edges. Sandbox crate-stamp is still game-specific authoring, not a pack.
+
+### Consumers
+
+| Pack | Capability | Consumers |
+|---|---|---|
+| `sw2d.wall` | `movement.wall` | `climbing-game` (slide), `precision-platformer` (leap; visual face, original gap stay) |
+| `sw2d.territory` | `strategy.zones` | `territory-control` (stand/occupy tick), `simple-rts` (occupy catalog; **do not tick** — FLAG path crosses both zones) |
+| `sw2d.pinball` | `arcade.table` | `pinball-lite` (table). Physics-toy stays Matter and never ticks pinball. |
+| `sw2d.camera` | `world.camera` | `rail-shooter` (rail origin; look still owns the kill-win), `photography-game` (frame capture) |
+| `sw2d.codex` | `narrative.codex` | `museum-exhibit` (exhibit inspect), `investigation-game` (case inspect/deduce) |
+| `sw2d.targeting` | `combat.targeting` | `tower-defense` (tower auto-strike), `auto-battler` (auto), `turn-based-tactics` (`canStrike` HUD only; FLAG stay) |
+
+Materially different per pack as in ADR-0057. Frozen proofs are not regenerated.
+
+### ValidationPlan
+
+1. Contracts + schemas for the six catalogs reject unknown modes / empty-none sentinels stay inert.
+2. Pack unit tests for slide/leap, stand/occupy, table bumper-score, rail/frame, exhibit/case, tower/auto/range.
+3. Generator: all 74 emit schema-valid catalogs; consumers enable the matching pack and a non-empty document; `src/content.ts` / `main.ts` / shells bind.
+4. Honesty / docsSync / catalogPackIntegrity / uiCopy stay green.
+5. Workbench `POST /wave30/inspect` + inspector Wave-30 lab.
+6. Real-browser play of factory-generated Wave-30 games. Committed `proofs/` + maturity promotion still deferred.
+
+### CompletionContract
+
+- [x] Six reusable packs in `@sw2d/packs`, renderer-neutral.
+- [x] Content authority `content/{wall,territory,pinball,camera,codex,targeting}.json`.
+- [x] ≥2 materially different generated consumers except pinball (1 consumer by pairing: physics-toy stays Matter).
+- [x] Focused unit/integration tests.
+- [x] Honest residual limitations (chase, box-select, crop/season, weapons-on-rail, command-queue, ledge-grab).
+- [x] ADR-0057.
+- [x] Real-browser play of factory-generated Wave-30 games (`tools/scripts/play-wave30.ts`, 12/12 PASS, 0 console errors, 0 external requests).
+- [ ] Committed proofs + maturity promotion. **Not done — evidence rule.**
+
+### Implementation notes
+
+- Pack count 28 → 34. Catalog maturity stays 23/3/48.
+- Precision wall at x=240 is visual-only (not `addFloor`) so the Wave-27 gap still works.
+- Platform `parkour.dispose()` is still uncalled (pre-existing).
+- Camera rail does not emit a game win at t=1 (`camera:completed` would freeze rail-shooter).
+- Tactics never `strike`s the grunt (HP 2; HUD `canStrike` only).
+- Pinball `lastResult` on win is `'score'`.
+- Overlay kits stay local. No merge to main.
+
+### Browser journeys (executed)
+
+Factory-generated (`tools/scripts/play-wave30.ts`, 12/12 PASS):
+
+- Precision: Space start x=80 wall present → hold ArrowRight, Space at the gap, x=824 jumps 1 `finished` outcome=complete (original gap stay; wall lastResult `goal`).
+- Climb: Space start x=100 y=458 wall present → hold ArrowRight, two Space jumps, x=404 y=346 jumps 2 `summit` outcome=complete.
+- Simple-rts: Space start → J `selected` → hold ArrowRight unitX=787 `seized` owned 0 (occupy not ticked).
+- Territory-control: Space start owned 0 → stand in zone-a owned 1 → zone-b owned 2 `owned` outcome=complete.
+- Pinball-lite: Space start mode=`table` → drop onto bumpers score 2 `score` outcome=complete (0 flips).
+- Museum-exhibit: J `too-far` → walk plinth J inspect 1 → bust J inspect 2 `read` outcome=complete.
+- Rail-shooter: Space start foes 2 → J on approaching targets foes 0 `cleared` (look owns the win; rail does not freeze at t=1).
+- Photography-game: J `too-far` → bird `shot-bird` → tree `shot-tree` shots 2 outcome=complete (frame capture).
+- Investigation-game: J `too-far` → print/photo inspect → desk `deduced` case-closed outcome=complete.
+- Tower-defense: Space start foes 2 → wait auto-strike foes 0 `cleared` outcome=complete.
+- Auto-battler: Space start FOX cpu 2 → wait autonomous `won` outcome=complete (ENTER strike path is auto now).
+- Turn-based-tactics: aim empty select scout → four ArrowRight FLAG `seized` (grunt HP stay 2; no strike).
+
+### Remaining blockers / unknowns
+
+- Catalog maturity stays unchanged (23/3/48). Pack count 34.
+- Do not commit `package-lock.json` workspace links for gitignored `games/wave*`.
+- Residual Category-C: chase (no second pairing-legal consumer), committed proofs, overlay wiring, generalized sandbox authoring beyond crate-stamp, kart item-fire (Wave 29: game-specific).
+- Do not merge to main.
 

@@ -1,3 +1,5 @@
+import type { CameraService } from '@sw2d/contracts';
+import { CAMERA_CAPABILITY_ID } from '@sw2d/contracts';
 import { accentStyle, headingStyle, mutedStyle } from '../scenes/theme.ts';
 import type { SceneContext } from '../scenes/SceneContext.ts';
 
@@ -17,7 +19,8 @@ export interface StarterToySnapshot {
   readonly mode: ToyStarterMode | null;
   readonly shots: number;
   readonly captured: readonly string[];
-  readonly selected: 'block' | 'ball';
+  readonly selected: 'block' | 'ball' | 'crate';
+  readonly crates: number;
   readonly blocks: number;
   readonly balls: number;
   readonly stamps: number;
@@ -53,6 +56,7 @@ const INERT: StarterToyBinding = {
     selected: 'block',
     blocks: 0,
     balls: 0,
+    crates: 0,
     stamps: 0,
     nearId: null,
     lastResult: null,
@@ -71,7 +75,9 @@ const SUBJECTS = [
 const PALETTE = [
   { id: 'pick-block', kind: 'block' as const, label: 'BLOCK', x: 200, y: 72 },
   { id: 'pick-ball', kind: 'ball' as const, label: 'BALL', x: 360, y: 72 },
+  { id: 'pick-crate', kind: 'crate' as const, label: 'CRATE', x: 520, y: 72 },
 ] as const;
+const CRATE_COLOR = 0xf0c274;
 const STAGE = { x: 80, y: 140, width: 800, height: 340 } as const;
 const MAX_STAMPS = 6;
 const MARK_COLOR = 0xf0c274;
@@ -82,7 +88,7 @@ const STAGE_COLOR = 0x1a1f2b;
 
 interface Stamp {
   readonly id: string;
-  readonly kind: 'block' | 'ball';
+  readonly kind: 'block' | 'ball' | 'crate';
   readonly x: number;
   readonly y: number;
   readonly handle: { dispose(): void };
@@ -105,6 +111,7 @@ export function bindStarterToy(
   const mode = options?.mode ?? null;
   if (mode !== 'photo' && mode !== 'sandbox') return INERT;
 
+  const cam = context.capabilities.get<CameraService>(CAMERA_CAPABILITY_ID);
   const hud = options?.hud !== false;
   const scene = context.scene;
   const { width, height } = context.definition.viewport;
@@ -159,16 +166,18 @@ export function bindStarterToy(
     return null;
   }
 
-  function selectedKind(): 'block' | 'ball' {
+  function selectedKind(): 'block' | 'ball' | 'crate' {
     return PALETTE[selectedIndex]?.kind ?? 'block';
   }
 
   function snapshot(): StarterToySnapshot {
     let blocks = 0;
     let balls = 0;
+    let crates = 0;
     for (const stamp of stamps) {
       if (stamp.kind === 'block') blocks += 1;
-      else balls += 1;
+      else if (stamp.kind === 'ball') balls += 1;
+      else crates += 1;
     }
     return {
       active: true,
@@ -178,6 +187,7 @@ export function bindStarterToy(
       selected: selectedKind(),
       blocks,
       balls,
+      crates,
       stamps: stamps.length,
       nearId: nearId(),
       lastResult,
@@ -206,7 +216,10 @@ export function bindStarterToy(
       for (let i = 0; i < PALETTE.length; i++) {
         const slot = PALETTE[i]!;
         const on = snap.selected === slot.kind;
-        paletteRects[i]?.setFillStyle(slot.kind === 'block' ? BLOCK_COLOR : BALL_COLOR, on ? 0.95 : 0.45);
+        paletteRects[i]?.setFillStyle(
+          slot.kind === 'block' ? BLOCK_COLOR : slot.kind === 'ball' ? BALL_COLOR : CRATE_COLOR,
+          on ? 0.95 : 0.45,
+        );
       }
       stageRect?.setFillStyle(snap.outcome === 'complete' ? SHOT_COLOR : STAGE_COLOR, 0.95);
     }
@@ -224,11 +237,11 @@ export function bindStarterToy(
     } else {
       title.setText(snap.outcome === 'complete' ? 'BUILT' : 'SANDBOX');
       status.setText(
-        `block ${snap.blocks}  ·  ball ${snap.balls}${snap.lastResult ? `  ·  ${snap.lastResult}` : ''}${
+        `block ${snap.blocks}  ·  ball ${snap.balls}  ·  crate ${snap.crates}${snap.lastResult ? `  ·  ${snap.lastResult}` : ''}${
           snap.outcome === 'complete' ? '  ·  complete' : ''
         }`,
       );
-      hint.setText(snap.outcome === 'complete' ? 'BUILT' : 'CLICK STAMPS   ARROWS PICK BLOCK OR BALL');
+      hint.setText(snap.outcome === 'complete' ? 'BUILT' : 'CLICK STAMPS   ARROWS PICK BLOCK BALL OR CRATE');
     }
   }
 
@@ -242,22 +255,30 @@ export function bindStarterToy(
       return;
     }
     captured.add(id);
+    if (cam?.active() && cam.mode() === 'frame') {
+      cam.setFrame(playerX, playerY);
+      cam.capture();
+    }
     lastResult = `shot-${id}`;
     finishIfReady();
     if (captured.size >= SUBJECTS.length) context.audio.playCue('ui.confirm');
   }
 
-  function placeStamp(kind: 'block' | 'ball', x: number, y: number): void {
+  function stampColor(kind: 'block' | 'ball' | 'crate'): number {
+    return kind === 'block' ? BLOCK_COLOR : kind === 'ball' ? BALL_COLOR : CRATE_COLOR;
+  }
+
+  function placeStamp(kind: 'block' | 'ball' | 'crate', x: number, y: number): void {
     if (stamps.length >= MAX_STAMPS) {
       lastResult = 'full';
       return;
     }
     const id = `${kind}-${nextStamp++}`;
     const sprite = scene.add
-      .rectangle(x, y, kind === 'block' ? 48 : 40, kind === 'block' ? 48 : 40, kind === 'block' ? BLOCK_COLOR : BALL_COLOR, 0.95)
+      .rectangle(x, y, kind === 'block' ? 48 : 40, kind === 'block' ? 48 : 40, stampColor(kind), 0.95)
       .setStrokeStyle(2, 0xffffff, 0.9)
       .setDepth(15);
-    const label = scene.add.text(x, y, kind === 'block' ? 'B' : 'O', mutedStyle(12)).setOrigin(0.5).setDepth(16);
+    const label = scene.add.text(x, y, kind === 'block' ? 'B' : kind === 'ball' ? 'O' : 'C', mutedStyle(12)).setOrigin(0.5).setDepth(16);
     const handle = context.interaction.register({
       id,
       priority: 1,

@@ -24,7 +24,9 @@ export const PARTY_TOY_WEIRD_PRESETS: readonly PresetDefinition[] = [
     optionalSystemPacks: [pack(PACK_IDS.progression)],
     requiredContentRoles: ['tuning', 'microgames'],
     validationProfile: VALIDATION_PROFILES.partyToyWeird,
-    knownLimitations: ['No microgame scheduler/rotation/meta-framework exists.'],
+    knownLimitations: [
+      'Wait/go then mash rounds are a generated starter scheduler on sw2d.arcade; a content-authored rotation/meta-framework is not.',
+    ],
   }),
 
   definePreset({
@@ -54,7 +56,7 @@ export const PARTY_TOY_WEIRD_PRESETS: readonly PresetDefinition[] = [
     // (rigid bodies, collision, springs) drive the generated pointer shell.
     physicsProfile: 'matter',
     knownLimitations: [
-      'Toy launch/goal is game-specific presentation of Matter; a reusable pinball pack is not.',
+      'Toy launch/goal is game-specific presentation of Matter; pinball-lite consumes sw2d.pinball instead.',
     ],
   }),
 
@@ -96,7 +98,7 @@ export const PARTY_TOY_WEIRD_PRESETS: readonly PresetDefinition[] = [
     supportedInputModes: POINTER_INPUT_MODES,
     validationProfile: VALIDATION_PROFILES.partyToyWeird,
     knownLimitations: [
-      'Block and ball stamps for the generated starter use interaction click (ADR-0018); a generalized authoring/editing sandbox is not.',
+      'Block, ball and crate stamps for the generated starter use interaction click (ADR-0018); a generalized authoring/editing sandbox pack is not.',
     ],
   }),
 
@@ -144,13 +146,13 @@ export const PARTY_TOY_WEIRD_PRESETS: readonly PresetDefinition[] = [
     displayName: 'Photography Game',
     family: 'party-toy-weird',
     controllerFamilies: ['top-down', 'pointer'],
-    requiredSystemPacks: [pack(PACK_IDS.world), pack(PACK_IDS.worldEntities)],
+    requiredSystemPacks: [pack(PACK_IDS.world), pack(PACK_IDS.worldEntities), pack(PACK_IDS.camera)],
     optionalSystemPacks: [pack(PACK_IDS.arcade)],
-    requiredContentRoles: ['tuning', 'levels'],
+    requiredContentRoles: ['tuning', 'levels', 'camera'],
     supportedInputModes: POINTER_INPUT_MODES,
     validationProfile: VALIDATION_PROFILES.partyToyWeird,
     knownLimitations: [
-      'Subjects for the generated starter are captured through the spatial pointer (ADR-0018) when the player is in range; a reusable camera/framing/scoring/photo-capture gameplay system is not.',
+      'Subjects for the generated starter are captured through the spatial pointer (ADR-0018) when the player is in range; framing capture is reusable (sw2d.camera); pressure, exposure and a photography scoring overlay are not.',
     ],
   }),
 ];

@@ -1,3 +1,5 @@
+import type { CodexService } from '@sw2d/contracts';
+import { CODEX_CAPABILITY_ID } from '@sw2d/contracts';
 import { accentStyle, headingStyle, mutedStyle } from '../scenes/theme.ts';
 import type { SceneContext } from '../scenes/SceneContext.ts';
 
@@ -119,6 +121,7 @@ export function bindStarterNarrative(
   if (mode !== 'fiction' && mode !== 'case') return INERT;
   if (!context.capabilities.has(NARRATIVE_CAPABILITY_ID)) return INERT;
   const narrative = context.capabilities.require<NarrativeStore>(NARRATIVE_CAPABILITY_ID);
+  const codex = context.capabilities.get<CodexService>(CODEX_CAPABILITY_ID);
 
   narrative.reset();
   narrative.goTo(mode === 'fiction' ? FICTION_START : 'scene');
@@ -258,6 +261,7 @@ export function bindStarterNarrative(
         lastResult = 'need-clues';
         return;
       }
+      if (codex?.active()) codex.deduce();
       narrative.setFlag('case-closed', true);
       narrative.choose('deduce', 'closed');
       ending = 'closed';
@@ -269,6 +273,7 @@ export function bindStarterNarrative(
       lastResult = 'already';
       return;
     }
+    if (codex?.active()) codex.inspect(id);
     narrative.markSeen(id);
     lastResult = 'inspected';
   }

@@ -158,6 +158,11 @@ export {
   type StarterKartItemBinding,
   type StarterKartItemSnapshot,
 } from './game-support/starterKartItem.ts';
+export {
+  bindStarterTargeting,
+  type StarterTargetingBinding,
+  type StarterTargetingSnapshot,
+} from './game-support/starterTargeting.ts';
 
 export { LocalStorageDriver, MemoryStorageDriver } from './persistence/LocalStorageDriver.ts';
 export { SaveStoreImpl } from './persistence/SaveStoreImpl.ts';

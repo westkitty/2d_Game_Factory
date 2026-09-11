@@ -43,6 +43,12 @@ export const CONTENT_DOCUMENTS: Readonly<Record<string, ContentDocumentRegistryE
   'local-play': { schemaName: 'local-play-catalog' },
   'stage-scroll': { schemaName: 'stage-scroll-catalog' },
   timing: { schemaName: 'timing-catalog' },
+  wall: { schemaName: 'wall-catalog' },
+  territory: { schemaName: 'territory-catalog' },
+  pinball: { schemaName: 'pinball-catalog' },
+  camera: { schemaName: 'camera-catalog' },
+  codex: { schemaName: 'codex-catalog' },
+  targeting: { schemaName: 'targeting-catalog' },
 };
 
 export type ContentDocumentName = keyof typeof CONTENT_DOCUMENTS;

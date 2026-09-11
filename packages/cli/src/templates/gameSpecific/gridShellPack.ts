@@ -1,6 +1,6 @@
 import type { InstalledSystemPack, NormalizedLevel, PuzzleRulesService } from '@sw2d/contracts';
 import { PUZZLE_RULES_CAPABILITY_ID } from '@sw2d/contracts';
-import { bindStarterNavigation, bindStarterPuzzle, bindStarterStrategy, gridController, type SceneContext, type ScenePackDefinition } from '@sw2d/runtime';
+import { bindStarterNavigation, bindStarterPuzzle, bindStarterStrategy, bindStarterTargeting, gridController, type SceneContext, type ScenePackDefinition } from '@sw2d/runtime';
 import { NAV_STARTER, STRATEGY_STARTER } from './packConfig.ts';
 
 /**
@@ -19,7 +19,10 @@ import { NAV_STARTER, STRATEGY_STARTER } from './packConfig.ts';
  *
  * When `STRATEGY_STARTER` is tactics (Category-C Wave 18) the dummy
  * wanderer is replaced by a select-then-step occupation of a FLAG cell
- * on `sw2d.strategy`. Attack-range stays leftover.
+ * on `sw2d.strategy`. Attack-range HUD is sw2d.targeting.
+ *
+ * When targeting mode is tower (Category-C Wave 30) the dummy wanderer is
+ * replaced by `bindStarterTargeting`.
  *
  * When `NAV_STARTER` is maze or lane (Category-C Wave 19) the dummy
  * wanderer is replaced by walkable occupancy or autonomous route-follow
@@ -45,6 +48,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     const board = bindStarterPuzzle(context);
     const turns = bindStarterStrategy(context, { mode: STRATEGY_STARTER });
     const route = bindStarterNavigation(context, { mode: NAV_STARTER });
+    const towers = bindStarterTargeting(context);
 
     const spawn = level?.objects.find((object) => object.class === 'PlayerSpawn');
     let col = Math.round((spawn?.x ?? width * 0.5) / CELL_SIZE);
@@ -66,7 +70,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     }
 
     const actor = scene.add.sprite(col * CELL_SIZE, row * CELL_SIZE, playerKey);
-    if (board.active || turns.active || route.active) actor.setVisible(false);
+    if (board.active || turns.active || route.active || towers.active) actor.setVisible(false);
 
     const debugHandle = context.debug.contribute('game.grid-shell', () => ({
       col,
@@ -75,6 +79,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       ...(board.active ? { puzzleBoard: board.snapshot() } : {}),
       ...(turns.active ? { strategy: turns.snapshot() } : {}),
       ...(route.active ? { navigation: route.snapshot() } : {}),
+      ...(towers.active ? { targeting: towers.snapshot() } : {}),
     }));
 
     let disposed = false;
@@ -118,6 +123,11 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
           if (intent.step) route.step(intent.step);
           if (context.input.justPressed('PRIMARY_ACTION')) route.act();
           route.tick(deltaMs);
+          return;
+        }
+
+        if (towers.active) {
+          towers.tick(deltaMs);
           return;
         }
 

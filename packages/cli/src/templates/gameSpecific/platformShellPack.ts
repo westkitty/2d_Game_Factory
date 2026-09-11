@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
-import type { AdvancedPhysicsService, InstalledSystemPack, PuzzleRulesService, WorldGraphService } from '@sw2d/contracts';
-import { PUZZLE_RULES_CAPABILITY_ID, WORLD_GRAPH_CAPABILITY_ID } from '@sw2d/contracts';
+import type { AdvancedPhysicsService, InstalledSystemPack, PuzzleRulesService, WallService, WorldGraphService } from '@sw2d/contracts';
+import { PUZZLE_RULES_CAPABILITY_ID, WALL_CAPABILITY_ID, WORLD_GRAPH_CAPABILITY_ID } from '@sw2d/contracts';
 import {
   bindCollectiblePickups,
   bindStarterParkour,
@@ -124,6 +124,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     // switch/goal ruleset and solved-detection are content/puzzles.json, not
     // code here.
     const puzzle = context.capabilities.get<PuzzleRulesService>(PUZZLE_RULES_CAPABILITY_ID);
+    const wallsCap = context.capabilities.get<WallService>(WALL_CAPABILITY_ID);
     // Optional advanced physics (capability program Phase 9). Inert unless
     // content/game.json sets physicsProfile: 'matter'. Then a demo crate rests
     // on a static Matter floor - the reusable Matter-backed service, no raw
@@ -172,6 +173,9 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       ...(puzzle ? { puzzle: puzzle.snapshot(), solved: puzzle.isSolved() } : {}),
       ...(run.active ? { run: run.snapshot() } : {}),
       ...(parkour.active ? { parkour: parkour.snapshot() } : {}),
+      ...(wallsCap?.active()
+        ? { wall: { sliding: wallsCap.sliding(), wallId: wallsCap.wallId(), lastResult: wallsCap.lastResult(), outcome: wallsCap.outcome() } }
+        : {}),
       ...(generationManifest ? { generation: generationManifest } : {}),
       ...(worldGraph
         ? { worldGraph: { current: worldGraph.currentNode().id, ...worldGraph.mapState(), mapOpen: worldMap?.isOpen ?? false, transitions: rooms?.transitions ?? 0 } }
@@ -221,7 +225,21 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
             if (conn) rooms.requestTransition(conn.id);
           }
         }
-        if (
+        if (wallsCap?.active() && parkour.active && parkour.snapshot().outcome === 'playing') {
+          wallsCap.setPlayer(player.x, player.y, player.body.velocity.x, player.body.velocity.y, player.body.blocked.down);
+          wallsCap.setHoldX(intent.moveAxis);
+          wallsCap.tick(deltaMs);
+          if (wallsCap.sliding()) {
+            player.setVelocityY(Math.min(player.body.velocity.y, wallsCap.vy()));
+          }
+        }
+        const wallKick =
+          intent.jumpPressed && wallsCap?.active() && wallsCap.sliding() ? wallsCap.jump() : null;
+        if (wallKick) {
+          player.setVelocity(wallKick.vx, wallKick.vy);
+          context.audio.playCue('ui.confirm');
+          if (parkour.active) parkour.jumped();
+        } else if (
           intent.jumpPressed &&
           player.body.blocked.down &&
           (!run.active || run.snapshot().outcome === 'playing') &&

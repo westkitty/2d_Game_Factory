@@ -22,6 +22,12 @@ import {
   generateLocalPlayCatalog,
   generateStageScrollCatalog,
   generateTimingCatalog,
+  generateWallCatalog,
+  generateTerritoryCatalog,
+  generatePinballCatalog,
+  generateCameraCatalog,
+  generateCodexCatalog,
+  generateTargetingCatalog,
   generateResourceManifest,
   generateTiledLevel,
   generateTheme,
@@ -285,6 +291,72 @@ export function buildGameFiles(gameId: string, preset: PresetDefinition): Map<st
     JSON.stringify(
       generateTimingCatalog(
         requiredPackIds.includes('sw2d.timing') ? (preset.id === 'rhythm-action' ? 'rhythm' : 'reaction') : 'none',
+      ),
+      null,
+      2,
+    ) + '\n',
+  );
+  files.set(
+    'content/wall.json',
+    JSON.stringify(
+      generateWallCatalog(
+        requiredPackIds.includes('sw2d.wall') ? (preset.id === 'climbing-game' ? 'slide' : 'leap') : 'none',
+      ),
+      null,
+      2,
+    ) + '\n',
+  );
+  files.set(
+    'content/territory.json',
+    JSON.stringify(
+      generateTerritoryCatalog(
+        requiredPackIds.includes('sw2d.territory') ? (preset.id === 'simple-rts' ? 'occupy' : 'stand') : 'none',
+      ),
+      null,
+      2,
+    ) + '\n',
+  );
+  files.set(
+    'content/pinball.json',
+    JSON.stringify(
+      generatePinballCatalog(
+        requiredPackIds.includes('sw2d.pinball') ? (preset.id === 'physics-toy' ? 'toy' : 'table') : 'none',
+      ),
+      null,
+      2,
+    ) + '\n',
+  );
+  files.set(
+    'content/camera.json',
+    JSON.stringify(
+      generateCameraCatalog(
+        requiredPackIds.includes('sw2d.camera') ? (preset.id === 'photography-game' ? 'frame' : 'rail') : 'none',
+      ),
+      null,
+      2,
+    ) + '\n',
+  );
+  files.set(
+    'content/codex.json',
+    JSON.stringify(
+      generateCodexCatalog(
+        requiredPackIds.includes('sw2d.codex') ? (preset.id === 'investigation-game' ? 'case' : 'exhibit') : 'none',
+      ),
+      null,
+      2,
+    ) + '\n',
+  );
+  files.set(
+    'content/targeting.json',
+    JSON.stringify(
+      generateTargetingCatalog(
+        requiredPackIds.includes('sw2d.targeting')
+          ? preset.id === 'auto-battler'
+            ? 'auto'
+            : preset.id === 'turn-based-tactics'
+              ? 'range'
+              : 'tower'
+          : 'none',
       ),
       null,
       2,

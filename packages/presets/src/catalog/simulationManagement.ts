@@ -78,7 +78,7 @@ export const SIMULATION_MANAGEMENT_PRESETS: readonly PresetDefinition[] = [
     requiredContentRoles: ['tuning'],
     validationProfile: VALIDATION_PROFILES.simulationManagement,
     knownLimitations: [
-      'Resource ledger and timed jobs are reusable (sw2d.simulation); a crop-growth/season/plot framework is not.',
+      'Resource ledger and timed jobs are reusable (sw2d.simulation); crop growth and season rotation for the generated starter are presentation of those jobs; a plot-framework pack is not.',
     ],
   }),
 

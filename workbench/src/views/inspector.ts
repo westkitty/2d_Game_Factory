@@ -28,6 +28,7 @@ import { renderMeleeLab } from './meleeLab.ts';
 import { renderLocalPlayLab } from './localPlayLab.ts';
 import { renderStageScrollLab } from './stageScrollLab.ts';
 import { renderTimingLab } from './timingLab.ts';
+import { renderWave30Lab } from './wave30Lab.ts';
 import { thumbnailFor } from '../image/clientImage.ts';
 import { ROLE_LABELS, type AssetRecord, type Provenance, type RoleAssignment } from '../../shared/types.ts';
 import { classifyFrames } from '../../shared/spritePresentation.ts';
@@ -59,6 +60,7 @@ export function renderInspector(host: HTMLElement): () => void {
   const localPlayHost = el('div', { class: 'pane__body', style: { 'border-top': '1px solid var(--line, #2a2a2a)' } });
   const stageScrollHost = el('div', { class: 'pane__body', style: { 'border-top': '1px solid var(--line, #2a2a2a)' } });
   const timingHost = el('div', { class: 'pane__body', style: { 'border-top': '1px solid var(--line, #2a2a2a)' } });
+  const wave30Host = el('div', { class: 'pane__body', style: { 'border-top': '1px solid var(--line, #2a2a2a)' } });
   let genLabGameId: string | null = null;
   let disposeGenLab: (() => void) | null = null;
   let disposeWorldGraphLab: (() => void) | null = null;
@@ -73,6 +75,7 @@ export function renderInspector(host: HTMLElement): () => void {
   let disposeLocalPlayLab: (() => void) | null = null;
   let disposeStageScrollLab: (() => void) | null = null;
   let disposeTimingLab: (() => void) | null = null;
+  let disposeWave30Lab: (() => void) | null = null;
 
   function roleRow(assignment: RoleAssignment, state: AppState): HTMLElement {
     const current = state.current!;
@@ -323,6 +326,8 @@ export function renderInspector(host: HTMLElement): () => void {
     disposeStageScrollLab = null;
     disposeTimingLab?.();
     disposeTimingLab = null;
+    disposeWave30Lab?.();
+    disposeWave30Lab = null;
     replace(genLabHost);
     replace(worldGraphHost);
     replace(physicsHost);
@@ -336,6 +341,7 @@ export function renderInspector(host: HTMLElement): () => void {
     replace(localPlayHost);
     replace(stageScrollHost);
     replace(timingHost);
+    replace(wave30Host);
     if (gameId) {
       disposeGenLab = renderGenerationLab(genLabHost, gameId);
       disposeWorldGraphLab = renderWorldGraphLab(worldGraphHost, gameId);
@@ -350,6 +356,7 @@ export function renderInspector(host: HTMLElement): () => void {
       disposeLocalPlayLab = renderLocalPlayLab(localPlayHost, gameId);
       disposeStageScrollLab = renderStageScrollLab(stageScrollHost, gameId);
       disposeTimingLab = renderTimingLab(timingHost, gameId);
+      disposeWave30Lab = renderWave30Lab(wave30Host, gameId);
     }
   }
 
@@ -390,7 +397,7 @@ export function renderInspector(host: HTMLElement): () => void {
     );
   }
 
-  replace(host, head, body, genLabHost, worldGraphHost, physicsHost, racingHost, economyHost, needsHost, dialogueHost, perceptionHost, ballPaddleHost, meleeHost, localPlayHost, stageScrollHost, timingHost);
+  replace(host, head, body, genLabHost, worldGraphHost, physicsHost, racingHost, economyHost, needsHost, dialogueHost, perceptionHost, ballPaddleHost, meleeHost, localPlayHost, stageScrollHost, timingHost, wave30Host);
   paint(getState());
   const unsubscribe = subscribe(paint);
   return () => {
@@ -408,6 +415,7 @@ export function renderInspector(host: HTMLElement): () => void {
     disposeLocalPlayLab?.();
     disposeStageScrollLab?.();
     disposeTimingLab?.();
+    disposeWave30Lab?.();
   };
 }
 

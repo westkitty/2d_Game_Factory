@@ -1,0 +1,80 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:sw2d:schema:content-pinball-catalog:v1",
+  "title": "PinballCatalog",
+  "description": "Mirrors @sw2d/contracts PinballCatalog (pinball.ts). Validated as a ContentBundle.data document (document name 'pinball'). Arcade table - not Matter and not ball-paddle.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "mode", "ball", "gravity", "bounce", "bounds", "bumpers", "drainY", "winScore"],
+  "properties": {
+    "schemaVersion": { "type": "integer", "minimum": 1 },
+    "mode": { "type": "string", "enum": ["table", "toy"] },
+    "ball": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y", "radius", "vx", "vy"],
+      "properties": {
+        "x": { "type": "number" },
+        "y": { "type": "number" },
+        "radius": { "type": "number", "exclusiveMinimum": 0 },
+        "vx": { "type": "number" },
+        "vy": { "type": "number" }
+      }
+    },
+    "gravity": { "type": "number" },
+    "bounce": { "type": "number", "minimum": 0 },
+    "bounds": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["minX", "maxX", "minY", "maxY"],
+      "properties": {
+        "minX": { "type": "number" },
+        "maxX": { "type": "number" },
+        "minY": { "type": "number" },
+        "maxY": { "type": "number" }
+      }
+    },
+    "bumpers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "x", "y", "radius", "score"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "x": { "type": "number" },
+          "y": { "type": "number" },
+          "radius": { "type": "number", "exclusiveMinimum": 0 },
+          "score": { "type": "number" }
+        }
+      }
+    },
+    "flippers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "x", "y", "halfWidth", "kick"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "x": { "type": "number" },
+          "y": { "type": "number" },
+          "halfWidth": { "type": "number", "exclusiveMinimum": 0 },
+          "kick": { "type": "number" }
+        }
+      }
+    },
+    "goal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y", "radius"],
+      "properties": {
+        "x": { "type": "number" },
+        "y": { "type": "number" },
+        "radius": { "type": "number", "exclusiveMinimum": 0 }
+      }
+    },
+    "drainY": { "type": "number" },
+    "winScore": { "type": "number", "minimum": 0 }
+  }
+}

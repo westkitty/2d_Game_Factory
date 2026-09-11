@@ -31,6 +31,12 @@ import meleeCatalogSchema from '../schemas/melee-catalog.schema.json' with { typ
 import localPlayCatalogSchema from '../schemas/local-play-catalog.schema.json' with { type: 'json' };
 import stageScrollCatalogSchema from '../schemas/stage-scroll-catalog.schema.json' with { type: 'json' };
 import timingCatalogSchema from '../schemas/timing-catalog.schema.json' with { type: 'json' };
+import wallCatalogSchema from '../schemas/wall-catalog.schema.json' with { type: 'json' };
+import territoryCatalogSchema from '../schemas/territory-catalog.schema.json' with { type: 'json' };
+import pinballCatalogSchema from '../schemas/pinball-catalog.schema.json' with { type: 'json' };
+import cameraCatalogSchema from '../schemas/camera-catalog.schema.json' with { type: 'json' };
+import codexCatalogSchema from '../schemas/codex-catalog.schema.json' with { type: 'json' };
+import targetingCatalogSchema from '../schemas/targeting-catalog.schema.json' with { type: 'json' };
 
 /**
  * Ajv-based validation for every schema this package owns.
@@ -71,7 +77,13 @@ export type SchemaName =
   | 'melee-catalog'
   | 'local-play-catalog'
   | 'stage-scroll-catalog'
-  | 'timing-catalog';
+  | 'timing-catalog'
+  | 'wall-catalog'
+  | 'territory-catalog'
+  | 'pinball-catalog'
+  | 'camera-catalog'
+  | 'codex-catalog'
+  | 'targeting-catalog';
 
 export const SCHEMA_NAMES: readonly SchemaName[] = [
   'action-bindings',
@@ -104,6 +116,12 @@ export const SCHEMA_NAMES: readonly SchemaName[] = [
   'local-play-catalog',
   'stage-scroll-catalog',
   'timing-catalog',
+  'wall-catalog',
+  'territory-catalog',
+  'pinball-catalog',
+  'camera-catalog',
+  'codex-catalog',
+  'targeting-catalog',
 ];
 
 /** One located problem: which document, where in it, and what is wrong. */
@@ -158,6 +176,12 @@ const SCHEMA_DOCUMENTS: Readonly<Record<SchemaName, SchemaDocument>> = {
   'local-play-catalog': localPlayCatalogSchema,
   'stage-scroll-catalog': stageScrollCatalogSchema,
   'timing-catalog': timingCatalogSchema,
+  'wall-catalog': wallCatalogSchema,
+  'territory-catalog': territoryCatalogSchema,
+  'pinball-catalog': pinballCatalogSchema,
+  'camera-catalog': cameraCatalogSchema,
+  'codex-catalog': codexCatalogSchema,
+  'targeting-catalog': targetingCatalogSchema,
 };
 
 // Registration order matters: a schema must be added before anything that
@@ -192,6 +216,12 @@ for (const name of [
   'local-play-catalog',
   'stage-scroll-catalog',
   'timing-catalog',
+  'wall-catalog',
+  'territory-catalog',
+  'pinball-catalog',
+  'camera-catalog',
+  'codex-catalog',
+  'targeting-catalog',
 ] as const) {
   const schema = SCHEMA_DOCUMENTS[name];
   ajv.addSchema(schema, schema.$id);

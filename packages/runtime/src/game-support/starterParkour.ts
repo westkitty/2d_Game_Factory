@@ -1,4 +1,5 @@
 import type Phaser from 'phaser';
+import type { WallCatalog } from '@sw2d/contracts';
 import { accentStyle, headingStyle, mutedStyle } from '../scenes/theme.ts';
 import type { SceneContext } from '../scenes/SceneContext.ts';
 
@@ -7,7 +8,7 @@ import type { SceneContext } from '../scenes/SceneContext.ts';
  * vertical climb (Category-C Wave 27).
  *
  * Inert unless packConfig names a precision or climb starter. Not auto-run
- * (Wave 22). Not wall-slide. Overlay platform kits stay local.
+ * (Wave 22). Wall-slide/jump contact is sw2d.wall; parkour still owns FLAG.
  */
 
 export type ParkourStarterMode = 'precision' | 'climb';
@@ -92,6 +93,15 @@ export function bindStarterParkour(
     addFloor(120, 500, 220, 40);
     addFloor(280, 440, 200, 24);
     addFloor(440, 380, 220, 24);
+  }
+  const wallCatalog = context.content.data['wall']?.value as WallCatalog | undefined;
+  if (hud && wallCatalog && wallCatalog.walls[0]?.id !== 'none') {
+    for (const wall of wallCatalog.walls) {
+      scene.add
+        .rectangle(wall.x, wall.y, wall.halfWidth * 2, wall.halfHeight * 2, 0x4f9ee0, 0.55)
+        .setStrokeStyle(2, 0xffffff, 0.7)
+        .setDepth(12);
+    }
   }
 
   const title = hud ? scene.add.text(width * 0.5, 28, '', headingStyle(20)).setOrigin(0.5).setScrollFactor(0).setDepth(50) : null;

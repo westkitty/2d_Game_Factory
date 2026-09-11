@@ -161,6 +161,42 @@ describe('all 74 presets generate valid, token-free, schema-valid source', () =>
       expect(() => validateContentBundleData({ timing: timingJson })).not.toThrow();
     });
 
+    it(`${preset.id}'s generated content/wall.json validates as a wall catalog`, () => {
+      const files = buildGameFiles('matrix-game', preset);
+      const wallJson: unknown = JSON.parse(files.get('content/wall.json')!);
+      expect(() => validateContentBundleData({ wall: wallJson })).not.toThrow();
+    });
+
+    it(`${preset.id}'s generated content/territory.json validates as a territory catalog`, () => {
+      const files = buildGameFiles('matrix-game', preset);
+      const territoryJson: unknown = JSON.parse(files.get('content/territory.json')!);
+      expect(() => validateContentBundleData({ territory: territoryJson })).not.toThrow();
+    });
+
+    it(`${preset.id}'s generated content/pinball.json validates as a pinball catalog`, () => {
+      const files = buildGameFiles('matrix-game', preset);
+      const pinballJson: unknown = JSON.parse(files.get('content/pinball.json')!);
+      expect(() => validateContentBundleData({ pinball: pinballJson })).not.toThrow();
+    });
+
+    it(`${preset.id}'s generated content/camera.json validates as a camera catalog`, () => {
+      const files = buildGameFiles('matrix-game', preset);
+      const cameraJson: unknown = JSON.parse(files.get('content/camera.json')!);
+      expect(() => validateContentBundleData({ camera: cameraJson })).not.toThrow();
+    });
+
+    it(`${preset.id}'s generated content/codex.json validates as a codex catalog`, () => {
+      const files = buildGameFiles('matrix-game', preset);
+      const codexJson: unknown = JSON.parse(files.get('content/codex.json')!);
+      expect(() => validateContentBundleData({ codex: codexJson })).not.toThrow();
+    });
+
+    it(`${preset.id}'s generated content/targeting.json validates as a targeting catalog`, () => {
+      const files = buildGameFiles('matrix-game', preset);
+      const targetingJson: unknown = JSON.parse(files.get('content/targeting.json')!);
+      expect(() => validateContentBundleData({ targeting: targetingJson })).not.toThrow();
+    });
+
     it(`${preset.id} selects a real, resolvable shell template for its primary controller family`, () => {
       const files = buildGameFiles('matrix-game', preset);
       expect(files.has('src/game-specific/shellPack.ts')).toBe(true);
@@ -419,7 +455,7 @@ describe('generated ball-paddle games consume sw2d.ball-paddle', () => {
     expect(shell).toContain('table.tick(');
     expect(buildGameFiles('ball-paddle-probe', breakout).get('src/content.ts')).toContain("'ball-paddle': ballPaddleData");
     expect(buildGameFiles('ball-paddle-probe', breakout).get('src/main.ts')).toContain(
-      'ballPaddlePack, meleePack, localPlayPack, stageScrollPack, timingPack, GAME_SPECIFIC_PACK',
+      'ballPaddlePack, meleePack, localPlayPack, stageScrollPack, timingPack, wallPack, territoryPack, pinballPack, cameraPack, codexPack, targetingPack, GAME_SPECIFIC_PACK',
     );
   });
 
@@ -445,7 +481,7 @@ describe('generated melee games consume sw2d.melee', () => {
     expect(shell).toContain('melee.strike(');
     expect(buildGameFiles('melee-probe', adventure).get('src/content.ts')).toContain('melee: meleeData');
     expect(buildGameFiles('melee-probe', adventure).get('src/main.ts')).toContain(
-      'ballPaddlePack, meleePack, localPlayPack, stageScrollPack, timingPack, GAME_SPECIFIC_PACK',
+      'ballPaddlePack, meleePack, localPlayPack, stageScrollPack, timingPack, wallPack, territoryPack, pinballPack, cameraPack, codexPack, targetingPack, GAME_SPECIFIC_PACK',
     );
   });
 
@@ -470,7 +506,7 @@ describe('generated local-play games consume sw2d.local-play', () => {
     expect(shell).toContain('seats.act()');
     expect(buildGameFiles('local-play-probe', party).get('src/content.ts')).toContain("'local-play': localPlayData");
     expect(buildGameFiles('local-play-probe', party).get('src/main.ts')).toContain(
-      'ballPaddlePack, meleePack, localPlayPack, stageScrollPack, timingPack, GAME_SPECIFIC_PACK',
+      'ballPaddlePack, meleePack, localPlayPack, stageScrollPack, timingPack, wallPack, territoryPack, pinballPack, cameraPack, codexPack, targetingPack, GAME_SPECIFIC_PACK',
     );
   });
 
@@ -529,7 +565,7 @@ describe('generated timing games consume sw2d.timing', () => {
     expect(shell).toContain('clock.hit()');
     expect(buildGameFiles('timing-probe', reaction).get('src/content.ts')).toContain('timing: timingData');
     expect(buildGameFiles('timing-probe', reaction).get('src/main.ts')).toContain(
-      'ballPaddlePack, meleePack, localPlayPack, stageScrollPack, timingPack, GAME_SPECIFIC_PACK',
+      'ballPaddlePack, meleePack, localPlayPack, stageScrollPack, timingPack, wallPack, territoryPack, pinballPack, cameraPack, codexPack, targetingPack, GAME_SPECIFIC_PACK',
     );
   });
 
@@ -563,7 +599,7 @@ describe('generated stage-scroll games consume sw2d.stage-scroll', () => {
     expect(shell).toContain('stage.tick(');
     expect(buildGameFiles('stage-scroll-probe', shmup).get('src/content.ts')).toContain("'stage-scroll': stageScrollData");
     expect(buildGameFiles('stage-scroll-probe', shmup).get('src/main.ts')).toContain(
-      'ballPaddlePack, meleePack, localPlayPack, stageScrollPack, timingPack, GAME_SPECIFIC_PACK',
+      'ballPaddlePack, meleePack, localPlayPack, stageScrollPack, timingPack, wallPack, territoryPack, pinballPack, cameraPack, codexPack, targetingPack, GAME_SPECIFIC_PACK',
     );
   });
 
@@ -1199,6 +1235,7 @@ describe('generated physics-toy and pinball consume Matter presentation', () => 
     expect(toyJson.physicsProfile).toBe('matter');
     expect(tableJson.physicsProfile).toBe('matter');
     expect(tableJson.systemPacks.map((s) => s.packId)).toContain('sw2d.arcade');
+    expect(tableJson.systemPacks.map((s) => s.packId)).toContain('sw2d.pinball');
     expect(toyFiles.get('src/game-specific/packConfig.ts')).toContain(
       "PHYSICS_STARTER: 'toy' | 'table' | null = 'toy'",
     );
@@ -1324,5 +1361,97 @@ describe('generated precision and climbing consume parkour presentation', () => 
     const climbTheme = JSON.parse(climbFiles.get('content/themes/default/theme.json')!) as { ui: { playHint: string } };
     expect(precisionTheme.ui.playHint).toContain('JUMP THE GAPS');
     expect(climbTheme.ui.playHint).toContain('JUMP UP');
+  });
+});
+
+describe('generated wall, territory, pinball, camera, codex and targeting consume Wave-30 packs', () => {
+  it('precision-platformer and climbing-game enable sw2d.wall and emit a non-empty catalog', () => {
+    for (const id of ['precision-platformer', 'climbing-game'] as const) {
+      const preset = PRESETS.find((candidate) => candidate.id === id)!;
+      const files = buildGameFiles('wave30-probe', preset);
+      const gameJson = JSON.parse(files.get('content/game.json')!) as { systemPacks: Array<{ packId: string }> };
+      expect(gameJson.systemPacks.map((s) => s.packId), id).toContain('sw2d.wall');
+      const doc = JSON.parse(files.get('content/wall.json')!) as { mode: string; walls: Array<{ id: string }> };
+      expect(doc.mode, id).toBe(id === 'climbing-game' ? 'slide' : 'leap');
+      expect(doc.walls[0]?.id, id).not.toBe('none');
+      expect(files.get('src/content.ts'), id).toContain('wall: wallData');
+      expect(files.get('src/main.ts'), id).toContain('wallPack');
+      expect(files.get('src/game-specific/shellPack.ts'), id).toContain('WALL_CAPABILITY_ID');
+    }
+  });
+
+  it('territory-control and simple-rts enable sw2d.territory with different modes', () => {
+    for (const id of ['territory-control', 'simple-rts'] as const) {
+      const preset = PRESETS.find((candidate) => candidate.id === id)!;
+      const files = buildGameFiles('wave30-probe', preset);
+      const gameJson = JSON.parse(files.get('content/game.json')!) as { systemPacks: Array<{ packId: string }> };
+      expect(gameJson.systemPacks.map((s) => s.packId), id).toContain('sw2d.territory');
+      const doc = JSON.parse(files.get('content/territory.json')!) as { mode: string; zones: unknown[] };
+      expect(doc.mode, id).toBe(id === 'simple-rts' ? 'occupy' : 'stand');
+      expect(doc.zones.length, id).toBeGreaterThan(1);
+      expect(files.get('src/content.ts'), id).toContain('territory: territoryData');
+    }
+  });
+
+  it('pinball-lite enables sw2d.pinball; physics-toy does not', () => {
+    const table = PRESETS.find((candidate) => candidate.id === 'pinball-lite')!;
+    const toy = PRESETS.find((candidate) => candidate.id === 'physics-toy')!;
+    const tableFiles = buildGameFiles('wave30-probe', table);
+    const toyFiles = buildGameFiles('wave30-probe', toy);
+    const tableJson = JSON.parse(tableFiles.get('content/game.json')!) as { systemPacks: Array<{ packId: string }> };
+    const toyJson = JSON.parse(toyFiles.get('content/game.json')!) as { systemPacks: Array<{ packId: string }> };
+    expect(tableJson.systemPacks.map((s) => s.packId)).toContain('sw2d.pinball');
+    expect(toyJson.systemPacks.map((s) => s.packId)).not.toContain('sw2d.pinball');
+    const doc = JSON.parse(tableFiles.get('content/pinball.json')!) as { mode: string; bumpers: unknown[] };
+    expect(doc.mode).toBe('table');
+    expect(doc.bumpers.length).toBeGreaterThan(0);
+    expect(tableFiles.get('src/content.ts')).toContain('pinball: pinballData');
+    expect(tableFiles.get('src/main.ts')).toContain('pinballPack');
+  });
+
+  it('rail-shooter and photography-game enable sw2d.camera with different modes', () => {
+    for (const id of ['rail-shooter', 'photography-game'] as const) {
+      const preset = PRESETS.find((candidate) => candidate.id === id)!;
+      const files = buildGameFiles('wave30-probe', preset);
+      const gameJson = JSON.parse(files.get('content/game.json')!) as { systemPacks: Array<{ packId: string }> };
+      expect(gameJson.systemPacks.map((s) => s.packId), id).toContain('sw2d.camera');
+      const doc = JSON.parse(files.get('content/camera.json')!) as { mode: string };
+      expect(doc.mode, id).toBe(id === 'photography-game' ? 'frame' : 'rail');
+      expect(files.get('src/content.ts'), id).toContain('camera: cameraData');
+    }
+  });
+
+  it('museum-exhibit and investigation-game enable sw2d.codex with different modes', () => {
+    for (const id of ['museum-exhibit', 'investigation-game'] as const) {
+      const preset = PRESETS.find((candidate) => candidate.id === id)!;
+      const files = buildGameFiles('wave30-probe', preset);
+      const gameJson = JSON.parse(files.get('content/game.json')!) as { systemPacks: Array<{ packId: string }> };
+      expect(gameJson.systemPacks.map((s) => s.packId), id).toContain('sw2d.codex');
+      const doc = JSON.parse(files.get('content/codex.json')!) as { mode: string; entries: unknown[] };
+      expect(doc.mode, id).toBe(id === 'investigation-game' ? 'case' : 'exhibit');
+      expect(doc.entries.length, id).toBeGreaterThan(1);
+      expect(files.get('src/content.ts'), id).toContain('codex: codexData');
+    }
+  });
+
+  it('tower-defense, auto-battler and turn-based-tactics enable sw2d.targeting with different modes', () => {
+    const cases = [
+      ['tower-defense', 'tower'],
+      ['auto-battler', 'auto'],
+      ['turn-based-tactics', 'range'],
+    ] as const;
+    for (const [id, mode] of cases) {
+      const preset = PRESETS.find((candidate) => candidate.id === id)!;
+      const files = buildGameFiles('wave30-probe', preset);
+      const gameJson = JSON.parse(files.get('content/game.json')!) as { systemPacks: Array<{ packId: string }> };
+      expect(gameJson.systemPacks.map((s) => s.packId), id).toContain('sw2d.targeting');
+      const doc = JSON.parse(files.get('content/targeting.json')!) as { mode: string; actors: Array<{ id: string }> };
+      expect(doc.mode, id).toBe(mode);
+      expect(doc.actors[0]?.id, id).not.toBe('none');
+      expect(files.get('src/content.ts'), id).toContain('targeting: targetingData');
+      expect(files.get('src/main.ts'), id).toContain('targetingPack');
+    }
+    const towerFiles = buildGameFiles('wave30-probe', PRESETS.find((candidate) => candidate.id === 'tower-defense')!);
+    expect(towerFiles.get('src/game-specific/shellPack.ts')).toContain('bindStarterTargeting(context)');
   });
 });

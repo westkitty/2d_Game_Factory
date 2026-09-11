@@ -22,11 +22,11 @@ pack/controller selections were actually exercised through, and
 | `traditional-platformer` | world, world-entities | arcade | platform | keyboard, touch | platform-recipe |
 | `chase-platformer` | world, world-entities | combat, arcade | platform | keyboard, touch | platform-recipe |
 | `endless-runner` | arcade, generation | world, world-entities | platform | keyboard, touch | platform-recipe |
-| `precision-platformer` | world, world-entities | arcade | platform | keyboard, touch | platform-recipe |
+| `precision-platformer` | world, world-entities, wall | arcade | platform | keyboard, touch | platform-recipe |
 | `metroidvania` | world, world-entities, progression, world-graph | combat, ai | platform | keyboard, touch | platform-recipe |
 | `puzzle-platformer` | puzzle-rules, world, world-entities | - | platform, grid | keyboard, touch | platform-recipe |
 | `auto-runner` | arcade, generation | world, world-entities | platform | keyboard, touch | platform-recipe |
-| `climbing-game` | world, world-entities | arcade | platform | keyboard, touch | platform-recipe |
+| `climbing-game` | world, world-entities, wall | arcade | platform | keyboard, touch | platform-recipe |
 | `grappling-platformer` | world, world-entities | arcade | platform | keyboard, touch | platform-recipe |
 | `collectathon-platformer` | world, world-entities, arcade, items | progression | platform | keyboard, touch | platform-recipe |
 ## Top-down action (Phase 7A)
@@ -53,7 +53,7 @@ pack/controller selections were actually exercised through, and
 | `asteroids-shooter` | combat, weapons | arcade | vehicle | keyboard, touch | shooter-recipe |
 | `gallery-shooter` | combat, weapons | arcade | pointer | keyboard, pointer, touch | shooter-recipe |
 | `run-and-gun` | combat, world, world-entities, weapons | arcade | platform | keyboard, touch | shooter-recipe |
-| `rail-shooter` | combat | arcade | pointer | keyboard, pointer, touch | shooter-recipe |
+| `rail-shooter` | combat, camera | arcade | pointer | keyboard, pointer, touch | shooter-recipe |
 ## Vehicle / movement (Phase 7B)
 
 | id | required packs | optional packs | controller(s) | input modes | validation profile |
@@ -76,18 +76,18 @@ pack/controller selections were actually exercised through, and
 | `maze-game` | world, world-entities, navigation | arcade | grid | keyboard, touch | puzzle-arcade-recipe |
 | `rhythm-action` | arcade, timing | - | ui-simulation | keyboard, touch | puzzle-arcade-recipe |
 | `reaction-timing` | arcade, timing | - | ui-simulation | keyboard, touch | puzzle-arcade-recipe |
-| `pinball-lite` | arcade | - | ui-simulation | keyboard, touch | puzzle-arcade-recipe |
+| `pinball-lite` | arcade, pinball | - | ui-simulation | keyboard, touch | puzzle-arcade-recipe |
 ## Strategy / defense (Phase 7B)
 
 | id | required packs | optional packs | controller(s) | input modes | validation profile |
 |---|---|---|---|---|---|
-| `tower-defense` | world, world-entities, progression, combat, navigation | ai | grid, pointer | keyboard, pointer, touch | strategy-defense-recipe |
+| `tower-defense` | world, world-entities, progression, combat, navigation, targeting | ai | grid, pointer | keyboard, pointer, touch | strategy-defense-recipe |
 | `lane-defense` | world, world-entities, progression, navigation | combat | grid, pointer | keyboard, pointer, touch | strategy-defense-recipe |
-| `auto-battler` | strategy, combat, ai | progression | ui-simulation | keyboard, touch | strategy-defense-recipe |
-| `simple-rts` | strategy, combat | ai, world, world-entities, navigation | top-down | keyboard, touch | strategy-defense-recipe |
-| `turn-based-tactics` | strategy, combat, navigation | ai, world, world-entities | grid, ui-simulation | keyboard, touch | strategy-defense-recipe |
+| `auto-battler` | strategy, combat, ai, targeting | progression | ui-simulation | keyboard, touch | strategy-defense-recipe |
+| `simple-rts` | strategy, combat, territory | ai, world, world-entities, navigation | top-down | keyboard, touch | strategy-defense-recipe |
+| `turn-based-tactics` | strategy, combat, navigation, targeting | ai, world, world-entities | grid, ui-simulation | keyboard, touch | strategy-defense-recipe |
 | `base-defense` | world, world-entities, combat | ai, progression, encounters | top-down | keyboard, touch | strategy-defense-recipe |
-| `territory-control` | world, world-entities, strategy, combat | ai | top-down | keyboard, touch | strategy-defense-recipe |
+| `territory-control` | world, world-entities, strategy, combat, territory | ai | top-down | keyboard, touch | strategy-defense-recipe |
 ## Simulation / management (Phase 7C)
 
 | id | required packs | optional packs | controller(s) | input modes | validation profile |
@@ -108,8 +108,8 @@ pack/controller selections were actually exercised through, and
 | `visual-novel` | narrative, dialogue | progression | ui-simulation | keyboard, touch | narrative-exploration-recipe |
 | `point-and-click` | narrative, world, world-entities, dialogue | puzzle | pointer, ui-simulation | keyboard, pointer, touch | narrative-exploration-recipe |
 | `interactive-fiction-hybrid` | narrative | world | ui-simulation | keyboard, touch | narrative-exploration-recipe |
-| `investigation-game` | narrative, world, world-entities | puzzle | top-down, pointer | keyboard, pointer, touch | narrative-exploration-recipe |
-| `museum-exhibit` | world, world-entities | narrative | top-down, pointer | keyboard, pointer, touch | narrative-exploration-recipe |
+| `investigation-game` | narrative, world, world-entities, codex | puzzle | top-down, pointer | keyboard, pointer, touch | narrative-exploration-recipe |
+| `museum-exhibit` | world, world-entities, codex | narrative | top-down, pointer | keyboard, pointer, touch | narrative-exploration-recipe |
 | `escape-room` | puzzle | narrative, world | pointer, ui-simulation | keyboard, pointer, touch | narrative-exploration-recipe |
 ## Party / toy / weird (Phase 7C)
 
@@ -124,7 +124,7 @@ pack/controller selections were actually exercised through, and
 | `drawing-game` | - | arcade | pointer | keyboard, pointer, touch | party-toy-weird-recipe |
 | `fishing-game` | arcade | progression | ui-simulation | keyboard, touch | party-toy-weird-recipe |
 | `cooking-game` | arcade | progression, simulation | ui-simulation | keyboard, touch | party-toy-weird-recipe |
-| `photography-game` | world, world-entities | arcade | top-down, pointer | keyboard, pointer, touch | party-toy-weird-recipe |
+| `photography-game` | world, world-entities, camera | arcade | top-down, pointer | keyboard, pointer, touch | party-toy-weird-recipe |
 ## Full pack-consumer coverage (all 74 recipes)
 
 | short id | real pack id | capability id | recipes requiring it | recipes referencing it (required or optional) |
@@ -157,8 +157,14 @@ pack/controller selections were actually exercised through, and
 | local-play | `sw2d.local-play` | `arcade.seats` | 2 | 2 |
 | stage-scroll | `sw2d.stage-scroll` | `world.scroll` | 2 | 2 |
 | timing | `sw2d.timing` | `arcade.timing` | 2 | 2 |
+| wall | `sw2d.wall` | `movement.wall` | 2 | 2 |
+| territory | `sw2d.territory` | `strategy.zones` | 2 | 2 |
+| pinball | `sw2d.pinball` | `arcade.table` | 1 | 1 |
+| camera | `sw2d.camera` | `world.camera` | 2 | 2 |
+| codex | `sw2d.codex` | `narrative.codex` | 2 | 2 |
+| targeting | `sw2d.targeting` | `combat.targeting` | 3 | 3 |
 
-**All twenty-eight current packs have at least one preset consumer.** `sw2d.items` (capability
+**All thirty-four current packs have at least one preset consumer.** `sw2d.items` (capability
 program Phase 2) is required by `collectathon-platformer`, whose generated starter consumes
 the reusable item/effect service through the shared platform shell. `sw2d.puzzle-rules`
 (capability program Phase 6 / Category-C Wave 9) is required by `sokoban`, `puzzle-platformer`,
@@ -176,7 +182,7 @@ intent into car/kart/boat/flight motion and runs an ordered-checkpoint race from
 `content/vehicles.json` + `content/races.json`. `sw2d.timing` (`arcade.timing`,
 Category-C Wave 10) is required by `reaction-timing` and `rhythm-action`, whose
 generated ui-simulation shells drive visual reaction cues and beat windows from
-`content/timing.json`.
+`content/timing.json`. Category-C Wave 30 adds `sw2d.wall` (`movement.wall`; `precision-platformer`, `climbing-game`), `sw2d.territory` (`strategy.zones`; `territory-control`, `simple-rts`), `sw2d.pinball` (`arcade.table`; `pinball-lite`), `sw2d.camera` (`world.camera`; `rail-shooter`, `photography-game`), `sw2d.codex` (`narrative.codex`; `museum-exhibit`, `investigation-game`) and `sw2d.targeting` (`combat.targeting`; `tower-defense`, `auto-battler`, `turn-based-tactics`).
 
 ## Validation profiles
 

@@ -87,7 +87,7 @@ async function tableRun(harness: Harness): Promise<SmokeOutcome> {
     done?.mode === 'table' &&
     done.outcome === 'complete' &&
     done.score >= 2 &&
-    done.lastResult === 'scored';
+    (done.lastResult === 'score' || done.lastResult === 'scored');
   return { passed, details: { initial: initial.physicsPlay, done } };
 }
 

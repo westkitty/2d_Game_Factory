@@ -60,3 +60,4 @@ One short record per decision that constrains later work. No ADR for trivia.
 | [0054](0054-consume-parkour-in-precision-and-climb-shells.md) | Consume player-controlled parkour vs climb | Category-C Wave 27 |
 | [0055](0055-consume-arcade-in-microgame-shell.md) | Consume arcade score as microgame tap-then-mash | Category-C Wave 28 |
 | [0056](0056-kart-item-fire-is-game-specific.md) | Kart on-demand item-fire is game-specific | Category-C Wave 29 |
+| [0057](0057-wave-30-leftover-packs.md) | Six leftover packs: wall, territory, pinball, camera, codex, targeting | Category-C Wave 30 |

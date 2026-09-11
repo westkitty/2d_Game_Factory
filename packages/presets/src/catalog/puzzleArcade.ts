@@ -144,14 +144,15 @@ export const PUZZLE_ARCADE_PRESETS: readonly PresetDefinition[] = [
     displayName: 'Pinball Lite',
     family: 'puzzle-arcade',
     controllerFamilies: ['ui-simulation'],
-    requiredSystemPacks: [pack(PACK_IDS.arcade)],
-    requiredContentRoles: ['tuning'],
+    requiredSystemPacks: [pack(PACK_IDS.arcade), pack(PACK_IDS.pinball)],
+    requiredContentRoles: ['tuning', 'pinball'],
     validationProfile: VALIDATION_PROFILES.puzzleArcade,
     // Phase 9 (ADR-0026): the Matter backend + reusable AdvancedPhysicsService
-    // give the ball real rigid-body motion and collision.
+    // give the ball real rigid-body motion and collision. Wave 30 pinball-lite
+    // consumes sw2d.pinball instead of the Matter table path.
     physicsProfile: 'matter',
     knownLimitations: [
-      'Generated flippers, bumpers and bumper-score are game-specific presentation of Matter + arcade.score; a reusable pinball pack is not.',
+      'Flippers, bumpers and bumper-score are reusable (sw2d.pinball); Matter presentation stays on physics-toy.',
     ],
   }),
 ];

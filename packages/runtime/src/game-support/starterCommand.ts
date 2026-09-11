@@ -1,3 +1,5 @@
+import type { TerritoryService } from '@sw2d/contracts';
+import { TERRITORY_CAPABILITY_ID } from '@sw2d/contracts';
 import { accentStyle, headingStyle, mutedStyle } from '../scenes/theme.ts';
 import type { SceneContext } from '../scenes/SceneContext.ts';
 
@@ -6,9 +8,9 @@ import type { SceneContext } from '../scenes/SceneContext.ts';
  * occupy (Category-C Wave 25).
  *
  * Inert unless packConfig names an rts or zone starter. This file is
- * game-specific presentation — not box-select, not a capture-zone pack.
- * Distinct from Wave 18 FLAG-seize (grid / strategy.turns). Overlay RTS /
- * territory kits stay local.
+ * Capture-zone occupancy is sw2d.territory. RTS FLAG stay; box-select is a
+ * one-unit presentation on the spatial pointer. Overlay RTS / territory kits
+ * stay local.
  */
 
 export type CommandStarterMode = 'rts' | 'zone';
@@ -85,6 +87,7 @@ export function bindStarterCommand(
   const hud = options?.hud !== false;
   const scene = context.scene;
   const { width, height } = context.definition.viewport;
+  const territory = context.capabilities.get<TerritoryService>(TERRITORY_CAPABILITY_ID);
   const start = mode === 'rts' ? UNIT_START : { x: 120, y: 270 };
 
   const title = hud ? scene.add.text(width * 0.5, 28, '', headingStyle(20)).setOrigin(0.5).setScrollFactor(0).setDepth(50) : null;
@@ -119,6 +122,11 @@ export function bindStarterCommand(
   let lastResult: string | null = null;
   let outcome: 'playing' | 'complete' = 'playing';
   let disposed = false;
+  let dragStart: { x: number; y: number } | null = null;
+  const boxSprite =
+    hud && mode === 'rts'
+      ? scene.add.rectangle(0, 0, 1, 1, 0xffffff, 0.12).setStrokeStyle(1, 0xffffff, 0.8).setDepth(30).setVisible(false)
+      : null;
 
   function snapshot(): StarterCommandSnapshot {
     return {
@@ -207,7 +215,36 @@ export function bindStarterCommand(
         unitY = Math.max(24, Math.min(height - 24, unitY + moveY * step));
         if (moveX !== 0 || moveY !== 0) lastResult = 'move';
       }
-      if (mode === 'zone') {
+      if (mode === 'rts') {
+        const ptr = context.spatialPointer.state;
+        if (ptr.justPressed) dragStart = { x: ptr.worldX, y: ptr.worldY };
+        if (dragStart && ptr.down) {
+          const w = Math.abs(ptr.worldX - dragStart.x);
+          const h = Math.abs(ptr.worldY - dragStart.y);
+          boxSprite?.setVisible(true).setPosition((dragStart.x + ptr.worldX) / 2, (dragStart.y + ptr.worldY) / 2);
+          boxSprite?.setSize(Math.max(1, w), Math.max(1, h));
+        }
+        if (ptr.justReleased && dragStart) {
+          const minX = Math.min(dragStart.x, ptr.worldX);
+          const maxX = Math.max(dragStart.x, ptr.worldX);
+          const minY = Math.min(dragStart.y, ptr.worldY);
+          const maxY = Math.max(dragStart.y, ptr.worldY);
+          if (unitX >= minX && unitX <= maxX && unitY >= minY && unitY <= maxY) {
+            selected = true;
+            lastResult = 'boxed';
+            context.audio.playCue('ui.confirm');
+          }
+          dragStart = null;
+          boxSprite?.setVisible(false);
+        }
+      }
+      if (mode === 'zone' && territory?.active()) {
+        territory.setOccupant(unitX, unitY);
+        territory.tick(deltaMs);
+        ownedA = territory.owned().includes('zone-a');
+        ownedB = territory.owned().includes('zone-b');
+        lastResult = territory.lastResult();
+      } else if (mode === 'zone') {
         const inA = dist(unitX, unitY, ZONE_A.x, ZONE_A.y) <= ZONE_R;
         const inB = dist(unitX, unitY, ZONE_B.x, ZONE_B.y) <= ZONE_R;
         if (inA && !ownedA) {

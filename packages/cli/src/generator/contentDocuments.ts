@@ -874,6 +874,240 @@ export function generateTimingCatalog(kind: 'reaction' | 'rhythm' | 'none'): Rec
 }
 
 /**
+ * content/wall.json - a WallCatalog (Category-C Wave 30). Always emitted;
+ * empty/inert unless the preset installs `sw2d.wall`. Two bounded starter
+ * modes match the two consumers: slide (climbing) and leap (precision).
+ */
+export function generateWallCatalog(kind: 'slide' | 'leap' | 'none'): Record<string, unknown> {
+  const empty = {
+    schemaVersion: 1,
+    mode: 'slide',
+    player: { x: 0, y: 0, radius: 1 },
+    walls: [{ id: 'none', x: 0, y: 0, halfWidth: 1, halfHeight: 1 }],
+    slideSpeed: 0,
+    jumpVx: 0,
+    jumpVy: 0,
+    goal: { x: 0, y: 0, radius: 1 },
+    failY: 0,
+  };
+  if (kind === 'none') return empty;
+  if (kind === 'slide') {
+    return {
+      schemaVersion: 1,
+      mode: 'slide',
+      player: { x: 100, y: 458, radius: 16 },
+      walls: [{ id: 'cliff', x: 280, y: 360, halfWidth: 18, halfHeight: 140 }],
+      slideSpeed: 80,
+      jumpVx: 140,
+      jumpVy: -420,
+      goal: { x: 420, y: 338, radius: 36 },
+      failY: 520,
+    };
+  }
+  return {
+    schemaVersion: 1,
+    mode: 'leap',
+    player: { x: 80, y: 458, radius: 16 },
+    walls: [{ id: 'face', x: 240, y: 430, halfWidth: 16, halfHeight: 80 }],
+    slideSpeed: 90,
+    jumpVx: 280,
+    jumpVy: -380,
+    goal: { x: 820, y: 458, radius: 36 },
+    failY: 520,
+  };
+}
+
+/**
+ * content/territory.json - a TerritoryCatalog (Category-C Wave 30). Always
+ * emitted; empty/inert unless the preset installs `sw2d.territory`.
+ */
+export function generateTerritoryCatalog(kind: 'stand' | 'occupy' | 'none'): Record<string, unknown> {
+  const empty = {
+    schemaVersion: 1,
+    mode: 'stand',
+    zones: [{ id: 'none', x: 0, y: 0, radius: 1, holdMs: 1 }],
+  };
+  if (kind === 'none') return empty;
+  return {
+    schemaVersion: 1,
+    mode: kind,
+    zones: [
+      { id: 'zone-a', x: 280, y: 270, radius: 72, holdMs: 400 },
+      { id: 'zone-b', x: 700, y: 270, radius: 72, holdMs: 400 },
+    ],
+  };
+}
+
+/**
+ * content/pinball.json - a PinballCatalog (Category-C Wave 30). Always
+ * emitted; empty/inert unless the preset installs `sw2d.pinball`.
+ */
+export function generatePinballCatalog(kind: 'table' | 'toy' | 'none'): Record<string, unknown> {
+  const empty = {
+    schemaVersion: 1,
+    mode: 'table',
+    ball: { x: 0, y: 0, radius: 1, vx: 0, vy: 0 },
+    gravity: 0,
+    bounce: 0,
+    bounds: { minX: 0, maxX: 1, minY: 0, maxY: 1 },
+    bumpers: [] as const,
+    drainY: 0,
+    winScore: 0,
+  };
+  if (kind === 'none') return empty;
+  if (kind === 'table') {
+    return {
+      schemaVersion: 1,
+      mode: 'table',
+      ball: { x: 480, y: 90, radius: 14, vx: 0, vy: 8 },
+      gravity: 18,
+      bounce: 0.7,
+      bounds: { minX: 24, maxX: 936, minY: 24, maxY: 520 },
+      bumpers: [
+        { id: 'bumper-a', x: 400, y: 220, radius: 40, score: 1 },
+        { id: 'bumper-b', x: 560, y: 220, radius: 40, score: 1 },
+        { id: 'bumper-c', x: 480, y: 320, radius: 40, score: 1 },
+      ],
+      flippers: [
+        { id: 'left', x: 300, y: 470, halfWidth: 50, kick: 10 },
+        { id: 'right', x: 660, y: 470, halfWidth: 50, kick: 10 },
+      ],
+      drainY: 530,
+      winScore: 2,
+    };
+  }
+  return {
+    schemaVersion: 1,
+    mode: 'toy',
+    ball: { x: 220, y: 400, radius: 14, vx: 0, vy: 0 },
+    gravity: 14,
+    bounce: 0.4,
+    bounds: { minX: 24, maxX: 936, minY: 24, maxY: 520 },
+    bumpers: [],
+    goal: { x: 800, y: 478, radius: 40 },
+    drainY: 530,
+    winScore: 1,
+  };
+}
+
+/**
+ * content/camera.json - a CameraCatalog (Category-C Wave 30). Always
+ * emitted; empty/inert unless the preset installs `sw2d.camera`.
+ */
+export function generateCameraCatalog(kind: 'rail' | 'frame' | 'none'): Record<string, unknown> {
+  const empty = {
+    schemaVersion: 1,
+    mode: 'rail',
+    points: [{ x: 0, y: 0 }],
+    speed: 0,
+    frame: { width: 1, height: 1 },
+    subjects: [] as const,
+    shotsToWin: 0,
+  };
+  if (kind === 'none') return empty;
+  if (kind === 'rail') {
+    return {
+      schemaVersion: 1,
+      mode: 'rail',
+      points: [
+        { x: 120, y: 270 },
+        { x: 480, y: 270 },
+        { x: 840, y: 270 },
+      ],
+      speed: 0.35,
+      frame: { width: 200, height: 140 },
+      subjects: [],
+      shotsToWin: 0,
+    };
+  }
+  return {
+    schemaVersion: 1,
+    mode: 'frame',
+    points: [{ x: 120, y: 270 }],
+    speed: 0,
+    frame: { width: 160, height: 120 },
+    subjects: [
+      { id: 'bird', x: 280, y: 270, radius: 64 },
+      { id: 'tree', x: 700, y: 270, radius: 64 },
+    ],
+    shotsToWin: 2,
+  };
+}
+
+/**
+ * content/codex.json - a CodexCatalog (Category-C Wave 30). Always
+ * emitted; empty/inert unless the preset installs `sw2d.codex`.
+ */
+export function generateCodexCatalog(kind: 'exhibit' | 'case' | 'none'): Record<string, unknown> {
+  const empty = {
+    schemaVersion: 1,
+    mode: 'exhibit',
+    entries: [{ id: 'none', title: 'None', body: 'None' }],
+  };
+  if (kind === 'none') return empty;
+  if (kind === 'exhibit') {
+    return {
+      schemaVersion: 1,
+      mode: 'exhibit',
+      entries: [
+        { id: 'plinth', title: 'Plinth', body: 'A stone plinth holds the first exhibit.' },
+        { id: 'bust', title: 'Bust', body: 'A carved bust watches the hall.' },
+      ],
+    };
+  }
+  return {
+    schemaVersion: 1,
+    mode: 'case',
+    entries: [
+      { id: 'print', title: 'Print', body: 'A boot print by the window.' },
+      { id: 'photo', title: 'Photo', body: 'A torn photograph of the hall.' },
+    ],
+  };
+}
+
+/**
+ * content/targeting.json - a TargetingCatalog (Category-C Wave 30). Always
+ * emitted; empty/inert unless the preset installs `sw2d.targeting`.
+ */
+export function generateTargetingCatalog(kind: 'tower' | 'auto' | 'range' | 'none'): Record<string, unknown> {
+  const empty = {
+    schemaVersion: 1,
+    mode: 'tower',
+    actors: [{ id: 'none', x: 0, y: 0, range: 1, damage: 1, cooldownMs: 0, team: 'player', health: 1 }],
+  };
+  if (kind === 'none') return empty;
+  if (kind === 'tower') {
+    return {
+      schemaVersion: 1,
+      mode: 'tower',
+      actors: [
+        { id: 'tower', x: 480, y: 270, range: 400, damage: 1, cooldownMs: 280, team: 'player', health: 3 },
+        { id: 'creep-a', x: 280, y: 180, range: 40, damage: 1, cooldownMs: 600, team: 'enemy', health: 2 },
+        { id: 'creep-b', x: 280, y: 360, range: 40, damage: 1, cooldownMs: 600, team: 'enemy', health: 2 },
+      ],
+    };
+  }
+  if (kind === 'auto') {
+    return {
+      schemaVersion: 1,
+      mode: 'auto',
+      actors: [
+        { id: 'fox', x: 260, y: 270, range: 520, damage: 1, cooldownMs: 280, team: 'player', health: 2 },
+        { id: 'cpu', x: 700, y: 270, range: 520, damage: 1, cooldownMs: 400, team: 'enemy', health: 2 },
+      ],
+    };
+  }
+  return {
+    schemaVersion: 1,
+    mode: 'range',
+    actors: [
+      { id: 'scout', x: 256, y: 256, range: 96, damage: 1, cooldownMs: 0, team: 'player', health: 2 },
+      { id: 'grunt', x: 640, y: 256, range: 48, damage: 1, cooldownMs: 400, team: 'enemy', health: 2 },
+    ],
+  };
+}
+
+/**
  * content/melee.json - a MeleeCatalog (Category-C Wave 6). Always
  * emitted; empty/inert unless the preset installs `sw2d.melee`. Two
  * bounded starter modes match the two consumers: skirmish (one elite
@@ -1061,7 +1295,7 @@ export function generateUiCopy(options: {
               : presetId === 'dress-up-character-toy'
                 ? 'DRAG HAT AND SHIRT ONTO THE FIGURE'
                 : presetId === 'sandbox-playground'
-                  ? 'CLICK STAMPS  -  ARROWS PICK BLOCK OR BALL'
+                  ? 'CLICK STAMPS  -  ARROWS PICK BLOCK BALL OR CRATE'
                 : presetId === 'physics-toy'
                   ? 'CLICK OR J LAUNCHES  -  LAND IN THE GOAL'
                   : presetId === 'rail-shooter'

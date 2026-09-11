@@ -14,8 +14,9 @@ import { LIMITATIONS, POINTER_INPUT_MODES, VALIDATION_PROFILES, definePreset, pa
  * Shmups, bullet-hell and run-and-gun already require `sw2d.weapons`.
  * Category-C Wave 11 also wires that existing pack into the vehicle
  * (asteroids heading-fire) and pointer (gallery cursor-fire) shells.
- * Rail-shooter keeps the weapons leftover: its identity gap is a rail
- * camera, not a second shooting adapter.
+ * Rail-shooter consumes sw2d.camera for the rail path; it still does not
+ * wire sw2d.weapons (look/damage owns the kill-win, not a second shooting
+ * adapter).
  */
 export const SHOOTER_PRESETS: readonly PresetDefinition[] = [
   definePreset({
@@ -120,16 +121,13 @@ export const SHOOTER_PRESETS: readonly PresetDefinition[] = [
     displayName: 'Rail Shooter',
     family: 'shooter',
     controllerFamilies: ['pointer'],
-    requiredSystemPacks: [pack(PACK_IDS.combat)],
+    requiredSystemPacks: [pack(PACK_IDS.combat), pack(PACK_IDS.camera)],
     optionalSystemPacks: [pack(PACK_IDS.arcade)],
-    requiredContentRoles: ['tuning'],
+    requiredContentRoles: ['tuning', 'camera'],
     supportedInputModes: POINTER_INPUT_MODES,
     validationProfile: VALIDATION_PROFILES.shooter,
     knownLimitations: [
-      LIMITATIONS.weaponsProjectiles,
-      // Spatial pointer/world-space targeting is implemented and consumed by the
-      // pointer shell (capability program Phase 1, ADR-0018).
-      'Fixed-path/rail camera movement is not yet a reusable capability.',
+      'Fixed-path/rail camera movement is reusable (sw2d.camera); this starter still does not wire sw2d.weapons.',
     ],
   }),
 ];

@@ -19,6 +19,12 @@ import {
   localPlayPack,
   stageScrollPack,
   timingPack,
+  wallPack,
+  territoryPack,
+  pinballPack,
+  cameraPack,
+  codexPack,
+  targetingPack,
   aiPack,
   arcadePack,
   combatPack,
@@ -71,6 +77,12 @@ const ALL_PACKS = [
   localPlayPack,
   stageScrollPack,
   timingPack,
+  wallPack,
+  territoryPack,
+  pinballPack,
+  cameraPack,
+  codexPack,
+  targetingPack,
 ];
 
 /** `<family>.<service>`: lowercase segments, at least two, dash-separated words allowed after the first. */

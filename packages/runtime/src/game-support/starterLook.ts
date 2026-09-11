@@ -1,3 +1,5 @@
+import type { CameraService, CodexService } from '@sw2d/contracts';
+import { CAMERA_CAPABILITY_ID, CODEX_CAPABILITY_ID } from '@sw2d/contracts';
 import { accentStyle, headingStyle, mutedStyle } from '../scenes/theme.ts';
 import type { SceneContext } from '../scenes/SceneContext.ts';
 
@@ -6,8 +8,8 @@ import type { SceneContext } from '../scenes/SceneContext.ts';
  * rail targets (Category-C Wave 26).
  *
  * Inert unless packConfig names a museum or rail starter. This file is
- * presentation — not an exhibit/codex framework and not a rail-path camera.
- * Rail damages through existing `combat.health`. Overlay kits stay local.
+ * Exhibit entries are sw2d.codex. Rail-path origin is sw2d.camera; look still
+ * owns the kill-win. Overlay kits stay local.
  */
 
 const COMBAT_CAPABILITY_ID = 'combat.health';
@@ -102,6 +104,8 @@ export function bindStarterLook(
     ? context.capabilities.require<CombatSlice>(COMBAT_CAPABILITY_ID)
     : null;
   if (mode === 'rail' && !combat) return INERT;
+  const cam = context.capabilities.get<CameraService>(CAMERA_CAPABILITY_ID);
+  const codex = context.capabilities.get<CodexService>(CODEX_CAPABILITY_ID);
 
   const hud = options?.hud !== false;
   const scene = context.scene;
@@ -246,6 +250,7 @@ export function bindStarterLook(
           return 'too-far';
         }
         seen.add(id);
+        if (codex?.active()) codex.inspect(id);
         lastResult = `inspected-${id}`;
         finish();
         context.audio.playCue('ui.confirm');
@@ -278,6 +283,10 @@ export function bindStarterLook(
       if (mode === 'rail') {
         const step = APPROACH * (deltaMs / 1000);
         for (const foe of living()) foe.x -= step;
+        if (cam?.active() && cam.mode() === 'rail') {
+          cam.tick(deltaMs);
+          scene.cameras.main.setScroll(cam.originX() - RAIL_GUN.x, cam.originY() - RAIL_GUN.y);
+        }
       }
       paint();
     },

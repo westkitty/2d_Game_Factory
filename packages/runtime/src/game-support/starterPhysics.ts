@@ -1,4 +1,5 @@
-import type { AdvancedPhysicsService, PhysicsBodyHandle } from '@sw2d/contracts';
+import type { AdvancedPhysicsService, PhysicsBodyHandle, PinballCatalog, PinballService } from '@sw2d/contracts';
+import { PINBALL_CAPABILITY_ID } from '@sw2d/contracts';
 import { createAdvancedPhysics } from './advancedPhysics.ts';
 import { accentStyle, headingStyle, mutedStyle } from '../scenes/theme.ts';
 import type { SceneContext } from '../scenes/SceneContext.ts';
@@ -7,10 +8,10 @@ import type { SceneContext } from '../scenes/SceneContext.ts';
  * Bind generated pointer / ui-simulation shells to a Matter toy vs table
  * (Category-C Wave 24).
  *
- * Inert unless packConfig names a toy or table starter and the game opted
- * into `physicsProfile: 'matter'`. This file is presentation of
- * AdvancedPhysicsService — not a pinball pack. Overlay physics kits stay
- * local. Frozen physics-toy proof is not regenerated.
+ * Inert unless packConfig names a toy or table starter. Table with
+ * `sw2d.pinball` active presents that pack (no Matter). Toy stays Matter
+ * and never ticks pinball. Overlay physics kits stay local. Frozen
+ * physics-toy proof is not regenerated.
  */
 
 const ARCADE_CAPABILITY_ID = 'arcade.score';
@@ -76,12 +77,110 @@ const GOAL_COLOR = 0xb98af0;
 const BUMPER_COLOR = 0xe05fa0;
 const FLIPPER_COLOR = 0x4f9ee0;
 
+
+function bindPinballTable(
+  context: SceneContext,
+  pinball: PinballService,
+  hud: boolean,
+): StarterPhysicsBinding {
+  const scene = context.scene;
+  const { width, height } = context.definition.viewport;
+  const catalog = context.content.data['pinball']?.value as PinballCatalog | undefined;
+  const title = hud ? scene.add.text(width * 0.5, 28, '', headingStyle(20)).setOrigin(0.5).setScrollFactor(0).setDepth(50) : null;
+  const status = hud ? scene.add.text(width * 0.5, 54, '', mutedStyle(14)).setOrigin(0.5).setScrollFactor(0).setDepth(50) : null;
+  const hint = hud ? scene.add.text(width * 0.5, height - 28, '', accentStyle(14)).setOrigin(0.5).setScrollFactor(0).setDepth(50) : null;
+  const ballSprite = hud ? scene.add.circle(pinball.ballX(), pinball.ballY(), 14, 0xf0c274, 0.95).setStrokeStyle(2, 0xffffff, 0.9).setDepth(20) : null;
+  const bumperSprites =
+    hud && catalog
+      ? catalog.bumpers.map((bumper) =>
+          scene.add.circle(bumper.x, bumper.y, bumper.radius, BUMPER_COLOR, 0.9).setStrokeStyle(2, 0xffffff, 0.8).setDepth(18),
+        )
+      : [];
+  const leftSprite =
+    hud ? scene.add.rectangle(300, 470, 90, 16, FLIPPER_COLOR, 0.95).setStrokeStyle(2, 0xffffff, 0.8).setDepth(19) : null;
+  const rightSprite =
+    hud ? scene.add.rectangle(660, 470, 90, 16, FLIPPER_COLOR, 0.95).setStrokeStyle(2, 0xffffff, 0.8).setDepth(19) : null;
+  let flips = 0;
+  let lastResult: string | null = null;
+  let outcome: 'playing' | 'complete' = 'playing';
+  let disposed = false;
+
+  function snapshot(): StarterPhysicsSnapshot {
+    return {
+      active: true,
+      mode: 'table',
+      ballX: Math.round(pinball.ballX()),
+      ballY: Math.round(pinball.ballY()),
+      score: pinball.score(),
+      nudges: 0,
+      flips,
+      lastResult: lastResult ?? pinball.lastResult(),
+      outcome: pinball.outcome() === 'complete' ? 'complete' : outcome,
+    };
+  }
+
+  function paint(): void {
+    const snap = snapshot();
+    ballSprite?.setPosition(pinball.ballX(), pinball.ballY());
+    if (!title || !status || !hint) return;
+    title.setText(snap.outcome === 'complete' ? 'TABLE' : 'PINBALL');
+    status.setText(`score ${snap.score}/${TABLE_SCORE}  ·  flips ${snap.flips}${snap.lastResult ? `  ·  ${snap.lastResult}` : ''}`);
+    hint.setText(snap.outcome === 'playing' ? 'J LEFT K RIGHT   HIT BUMPERS' : 'TABLE');
+  }
+
+  paint();
+
+  return {
+    active: true,
+    nudge: () => undefined,
+    flip(side: 'left' | 'right'): void {
+      if (disposed || pinball.outcome() !== 'playing') return;
+      pinball.flip(side);
+      flips += 1;
+      lastResult = side === 'left' ? 'flip-left' : 'flip-right';
+      context.audio.playCue('ui.confirm');
+      paint();
+    },
+    tick(deltaMs: number): void {
+      if (disposed || pinball.outcome() !== 'playing') return;
+      pinball.tick(deltaMs);
+      if (pinball.outcome() === 'complete') {
+        outcome = 'complete';
+        lastResult = pinball.lastResult() ?? 'scored';
+        context.audio.playCue('ui.confirm');
+      }
+      paint();
+    },
+    snapshot,
+    render: paint,
+    dispose(): void {
+      if (disposed) return;
+      disposed = true;
+      try {
+        title?.destroy();
+        status?.destroy();
+        hint?.destroy();
+        ballSprite?.destroy();
+        leftSprite?.destroy();
+        rightSprite?.destroy();
+        for (const sprite of bumperSprites) sprite.destroy();
+      } catch {
+        /* scene already tearing down */
+      }
+    },
+  };
+}
+
 export function bindStarterPhysics(
   context: SceneContext,
   options?: { readonly mode?: PhysicsStarterMode | null; readonly hud?: boolean },
 ): StarterPhysicsBinding {
   const mode = options?.mode ?? null;
   if (mode !== 'toy' && mode !== 'table') return INERT;
+  const pinball = context.capabilities.get<PinballService>(PINBALL_CAPABILITY_ID);
+  if (mode === 'table' && pinball?.active()) {
+    return bindPinballTable(context, pinball, options?.hud !== false);
+  }
   if (context.definition.physicsProfile !== 'matter') return INERT;
   const physics: AdvancedPhysicsService = createAdvancedPhysics(context.scene);
   if (!physics.enabled) {

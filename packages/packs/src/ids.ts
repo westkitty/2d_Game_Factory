@@ -43,6 +43,12 @@ export const PACK_IDS = {
   localPlay: 'sw2d.local-play',
   stageScroll: 'sw2d.stage-scroll',
   timing: 'sw2d.timing',
+  wall: 'sw2d.wall',
+  territory: 'sw2d.territory',
+  pinball: 'sw2d.pinball',
+  camera: 'sw2d.camera',
+  codex: 'sw2d.codex',
+  targeting: 'sw2d.targeting',
 } as const;
 
 export const CAPABILITY_IDS = {
@@ -93,4 +99,16 @@ export const CAPABILITY_IDS = {
   stageScroll: 'world.scroll',
   /** Category-C Wave 10: visual reaction cues and beat windows (not audio-sync). */
   timing: 'arcade.timing',
+  /** Category-C Wave 30: wall-slide / wall-jump contact. */
+  wall: 'movement.wall',
+  /** Category-C Wave 30: capture-zone occupancy. */
+  territory: 'strategy.zones',
+  /** Category-C Wave 30: arcade pinball table. */
+  pinball: 'arcade.table',
+  /** Category-C Wave 30: rail-path camera and framing. */
+  camera: 'world.camera',
+  /** Category-C Wave 30: exhibit / codex entries. */
+  codex: 'narrative.codex',
+  /** Category-C Wave 30: attack range, target select, autonomous strikes. */
+  targeting: 'combat.targeting',
 } as const;

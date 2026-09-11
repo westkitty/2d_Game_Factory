@@ -1,0 +1,53 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:sw2d:schema:content-wall-catalog:v1",
+  "title": "WallCatalog",
+  "description": "Mirrors @sw2d/contracts WallCatalog (wall.ts). Validated as a ContentBundle.data document (document name 'wall'). Wall-slide / wall-jump contact - not a full parkour grammar.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "mode", "player", "walls", "slideSpeed", "jumpVx", "jumpVy", "goal", "failY"],
+  "properties": {
+    "schemaVersion": { "type": "integer", "minimum": 1 },
+    "mode": { "type": "string", "enum": ["slide", "leap"] },
+    "player": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y", "radius"],
+      "properties": {
+        "x": { "type": "number" },
+        "y": { "type": "number" },
+        "radius": { "type": "number", "exclusiveMinimum": 0 }
+      }
+    },
+    "walls": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "x", "y", "halfWidth", "halfHeight"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "x": { "type": "number" },
+          "y": { "type": "number" },
+          "halfWidth": { "type": "number", "exclusiveMinimum": 0 },
+          "halfHeight": { "type": "number", "exclusiveMinimum": 0 }
+        }
+      }
+    },
+    "slideSpeed": { "type": "number", "minimum": 0 },
+    "jumpVx": { "type": "number" },
+    "jumpVy": { "type": "number" },
+    "goal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y", "radius"],
+      "properties": {
+        "x": { "type": "number" },
+        "y": { "type": "number" },
+        "radius": { "type": "number", "exclusiveMinimum": 0 }
+      }
+    },
+    "failY": { "type": "number" }
+  }
+}

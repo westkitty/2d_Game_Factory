@@ -55,6 +55,7 @@ import { inspectMelee } from './meleeLab.ts';
 import { inspectLocalPlay } from './localPlayLab.ts';
 import { inspectStageScroll } from './stageScrollLab.ts';
 import { inspectTiming } from './timingLab.ts';
+import { inspectWave30 } from './wave30Lab.ts';
 import { loadScene, listLevels, newObject, objectClassOptions, saveScene, SceneValidationError, type SceneDocument } from './sceneStore.ts';
 import { buildProject, createProject, packProject, validateProject } from './factoryService.ts';
 import { presetEvidenceFor } from './presetEvidence.ts';
@@ -769,6 +770,15 @@ const ROUTES: ReadonlyMap<string, Handler> = new Map<string, Handler>([
     (request) => {
       const body = bodyObject(request);
       return ok(inspectTiming(gameIdOf(request, body)));
+    },
+  ],
+
+  [
+    // Wave-30 leftover catalogs (ADR-0057). Live occupancy belongs in-game.
+    'POST /wave30/inspect',
+    (request) => {
+      const body = bodyObject(request);
+      return ok(inspectWave30(gameIdOf(request, body)));
     },
   ],
 

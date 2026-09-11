@@ -66,6 +66,19 @@ declare module '@sw2d/contracts' {
     'timing:hit': { readonly hits: number; readonly lastResult: string };
     'timing:miss': { readonly misses: number; readonly lastResult: string };
     'timing:completed': { readonly mode: string; readonly outcome: string };
+    'wall:jumped': { readonly mode: string; readonly wallId: string };
+    'wall:completed': { readonly mode: string; readonly outcome: string };
+    'territory:owned': { readonly zoneId: string; readonly owned: number };
+    'territory:completed': { readonly mode: string };
+    'pinball:bumper': { readonly bumperId: string; readonly score: number };
+    'pinball:flip': { readonly side: 'left' | 'right' };
+    'pinball:completed': { readonly mode: string; readonly outcome: string };
+    'camera:shot': { readonly subjectId: string; readonly shots: number };
+    'camera:completed': { readonly mode: string };
+    'codex:unlocked': { readonly entryId: string; readonly unlocked: number };
+    'codex:completed': { readonly mode: string };
+    'targeting:struck': { readonly attackerId: string; readonly targetId: string; readonly remaining: number };
+    'targeting:completed': { readonly mode: string; readonly outcome: string };
   }
 }
 
