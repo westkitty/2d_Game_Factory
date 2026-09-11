@@ -194,16 +194,6 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     // installed. When the encounter binding is active it owns the weapon and
     // its projectile runtime, so the plain starter weapon stays inert too.
     const weapon = battle.active ? null : bindStarterWeapon(context);
-    // Level objectives (Category-C convergence): on the plain walk path -
-    // no starter presentation owns the field - the universal level's
-    // Checkpoint / Hazard / Collectible / Exit objects become a real
-    // collect-then-exit loop through sw2d.world (see platformShellPack.ts).
-    const plainWalk =
-      !battle.active && !perception.active && !story.active && !meta.active && !toy.active && !fight.active &&
-      !ops.active && !look.active && !table.active && !melee.active && !stage.active && !worldGraph;
-    const objectives = plainWalk
-      ? bindLevelObjectives(context, player, level, { exitRequires: () => pickups.remaining() === 0 })
-      : bindLevelObjectives(context, player, undefined);
     // World graph / rooms / transitions / map (capability program Phase 8).
     // Inert unless sw2d.world-graph is installed.
     const worldGraph = context.capabilities.get<WorldGraphService>(WORLD_GRAPH_CAPABILITY_ID);
@@ -221,6 +211,16 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
           },
         })
       : null;
+    // Level objectives (Category-C convergence): on the plain walk path -
+    // no starter presentation owns the field - the universal level's
+    // Checkpoint / Hazard / Collectible / Exit objects become a real
+    // collect-then-exit loop through sw2d.world (see platformShellPack.ts).
+    const plainWalk =
+      !battle.active && !perception.active && !story.active && !meta.active && !toy.active && !fight.active &&
+      !ops.active && !look.active && !table.active && !melee.active && !stage.active && !worldGraph;
+    const objectives = plainWalk
+      ? bindLevelObjectives(context, player, level, { exitRequires: () => pickups.remaining() === 0 })
+      : bindLevelObjectives(context, player, undefined);
     let nowMs = 0;
     let facingX = 1;
     let facingY = 0;
