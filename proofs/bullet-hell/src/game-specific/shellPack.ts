@@ -80,7 +80,10 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     });
     encounter.start('storm');
 
-    context.events.on('combat:entityDied', ({ entityId }) => {
+    // Held so dispose() can release it: the Category-C convergence
+    // adversarial sweep found this subscription leaking one listener per
+    // restart (its closure kept the previous run's drone map alive).
+    const onDeath = context.events.on('combat:entityDied', ({ entityId }) => {
       const drone = drones.get(entityId);
       if (drone) {
         drone.alive = false;
@@ -133,6 +136,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         if (disposed) return;
         disposed = true;
         debugHandle.dispose();
+        onDeath.dispose();
         encounter.dispose();
         projectiles.dispose();
         combat.remove(PLAYER_ID);

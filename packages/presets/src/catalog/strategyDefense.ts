@@ -67,7 +67,7 @@ export const STRATEGY_DEFENSE_PRESETS: readonly PresetDefinition[] = [
     requiredContentRoles: ['tuning', 'targeting'],
     validationProfile: VALIDATION_PROFILES.strategyDefense,
     knownLimitations: [
-      'Teams, active turn, selection and turn advance are reusable (sw2d.strategy); autonomous strikes are reusable (sw2d.targeting); loadout drafting stays starter-specific.',
+      'Teams, active turn, selection and turn advance are reusable (sw2d.strategy); autonomous strikes are reusable (sw2d.targeting); the lineup pick is presentation (it does not change the fighting actor) and loadout drafting stays starter-specific.',
     ],
   }),
 

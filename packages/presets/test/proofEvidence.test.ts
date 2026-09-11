@@ -23,6 +23,12 @@ const proofPackageJsons = import.meta.glob('../../../proofs/*/package.json', {
   eager: true,
 }) as Record<string, { sw2d?: { presetId?: string } }>;
 
+// PROOF_MATRIX.md promises every proof row "a frozen PROOF_CONTRACT.md";
+// five pre-program proofs shipped without one until the Category-C
+// convergence program wrote them. Pin the promise from the directory itself.
+const proofContracts = import.meta.glob('../../../proofs/*/PROOF_CONTRACT.md', { eager: true, query: '?raw', import: 'default' }) as Record<string, string>;
+const contractDirs = new Set(Object.keys(proofContracts).map((globPath) => globPath.split('/').at(-2)!));
+
 // The capability-program proofs carry an explicit `sw2d.presetId`; the five
 // original Phase 10 proofs predate that key, so their directory name (which
 // has always equalled the preset id - PROOF_MATRIX.md's `proofs/<preset-id>/`
@@ -46,6 +52,13 @@ describe('proof evidence reconciliation (proofs/ directory vs catalog maturity)'
     // new proof game is committed - and then the promotion test below forces
     // the catalog to acknowledge it in the same change.
     expect(proofPresetIds.size).toBeGreaterThanOrEqual(74);
+  });
+
+  it('every committed proof game carries a frozen PROOF_CONTRACT.md naming its defining journey', () => {
+    for (const presetId of proofPresetIds) {
+      expect(contractDirs.has(presetId), `proofs/${presetId}/PROOF_CONTRACT.md is missing`).toBe(true);
+      expect(proofContracts[`../../../proofs/${presetId}/PROOF_CONTRACT.md`], presetId).toMatch(/## Defining journey/);
+    }
   });
 
   it('every proof-validated preset has a committed proof game under proofs/<id>/', () => {

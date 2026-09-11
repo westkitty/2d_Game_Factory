@@ -202,7 +202,7 @@ recipe's *first* stated limitation; see `knownLimitations` in
 | `pinball-lite` | Flippers, bumpers and bumper-score are reusable (sw2d.pinball); Matter presentation stays on physics-toy. |
 | `tower-defense` | Spatial hover placement via the pointer shell is available but this starter uses the keyboard grid cursor. |
 | `lane-defense` | Lane-spawn scheduling and combat resolution are still starter-specific. |
-| `auto-battler` | Teams, active turn, selection and turn advance are reusable (sw2d.strategy); autonomous strikes are reusable (sw2d.targeting); loadout drafting stays starter-specific. |
+| `auto-battler` | Teams, active turn, selection and turn advance are reusable (sw2d.strategy); autonomous strikes are reusable (sw2d.targeting); the lineup pick is presentation (it does not change the fighting actor) and loadout drafting stays starter-specific. |
 | `simple-rts` | Unit pathfinding is reusable (sw2d.navigation, optional); box-select for the generated starter is a two-unit presentation on the spatial pointer; a command-queue UI is not implemented. |
 | `turn-based-tactics` | Teams, active turn, selection and turn advance are reusable (sw2d.strategy); attack-range is reusable (sw2d.targeting); a full turn-action state machine is still starter-specific. |
 | `base-defense` | Base HP and incoming contact for the generated starter use sw2d.combat; wave spawning is optional (sw2d.encounters); target-priority and upgrade rules stay starter-specific. |
