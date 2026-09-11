@@ -61,10 +61,47 @@ const PROOF_SPEC_MODULES: Readonly<Record<string, string>> = {
   // Phase 10 - vehicle handling & racing (ADR-0027)
   'top-down-racer': 'topDownRacer',
   'time-trial-racer': 'timeTrialRacer',
+  // Category-C convergence - Wave 1 economy (ADR-0028)
+  shopkeeper: 'shopkeeper',
+  restaurant: 'restaurant',
+  'tycoon-lite': 'tycoonLite',
+  // Wave 2 needs (ADR-0029)
+  'pet-creature': 'petCreature',
+  'aquarium-terrarium': 'aquariumTerrarium',
+  'virtual-pet': 'virtualPet',
+  // Wave 3 dialogue (ADR-0030)
+  'visual-novel': 'visualNovel',
+  // Wave 7 local play (ADR-0034)
+  'local-party-game': 'localPartyGame',
+  // Wave 10 timing (ADR-0037)
+  'reaction-timing': 'reactionTiming',
+  'rhythm-action': 'rhythmAction',
+  // Wave 13 simulation ledger (ADR-0040)
+  'farming-lite': 'farmingLite',
+  'colony-lite': 'colonyLite',
+  // Wave 14 narrative store (ADR-0041)
+  'interactive-fiction-hybrid': 'interactiveFictionHybrid',
+  // Wave 15 / 28 arcade score (ADR-0042 / ADR-0055)
+  'fishing-game': 'fishingGame',
+  'cooking-game': 'cookingGame',
+  'microgame-collection': 'microgameCollection',
+  // Wave 18 / 30 strategy + targeting (ADR-0045 / ADR-0057)
+  'auto-battler': 'autoBattler',
+  // Wave 24 / 30 pinball table (ADR-0051 / ADR-0057)
+  'pinball-lite': 'pinballLite',
 };
 
-function proofTargets(): Target[] {
-  return Object.entries(PROOF_SPEC_MODULES).map(([id, specModule]) => ({
+/**
+ * Optional positional filters (`npm run qa:proof -- shopkeeper pong`) narrow
+ * the run to named proofs while iterating on one; an unknown id is an error,
+ * not a silent no-op. With no filter every committed proof runs, as before.
+ */
+function proofTargets(filter: readonly string[] = []): Target[] {
+  const unknown = filter.filter((id) => !(id in PROOF_SPEC_MODULES));
+  if (unknown.length > 0) throw new Error(`Unknown proof id(s): ${unknown.join(', ')}. Known: ${Object.keys(PROOF_SPEC_MODULES).join(', ')}`);
+  return Object.entries(PROOF_SPEC_MODULES)
+    .filter(([id]) => filter.length === 0 || filter.includes(id))
+    .map(([id, specModule]) => ({
     id,
     buildCwd: path.join(REPO_ROOT, 'proofs', id),
     buildDir: path.join(REPO_ROOT, 'proofs', id, 'dist'),
@@ -105,7 +142,7 @@ async function main(): Promise<number> {
     return 1;
   }
 
-  const targets = proofTargets();
+  const targets = proofTargets(process.argv.slice(2));
   const results: { id: string; ok: boolean; detail: string }[] = [];
   for (const target of targets) {
     process.stdout.write(`Running proof ${target.id}...\n`);
