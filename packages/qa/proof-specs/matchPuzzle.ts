@@ -1,5 +1,5 @@
 import type { Harness } from '../src/harness.ts';
-import { restartRun, shellReader, startPlay, waitUntil } from '../src/journey.ts';
+import { pointerAt, restartRun, shellReader, startPlay, waitUntil } from '../src/journey.ts';
 import { readSnapshot } from '../src/snapshot.ts';
 import type { SmokeOutcome } from '../src/smokeRunner.ts';
 
@@ -62,6 +62,21 @@ export async function run(harness: Harness): Promise<SmokeOutcome> {
   evidence.rejected = rejected;
   const rejectOk = rejected.moves === 0 && rejected.clears === 0 && !rejected.solved;
 
-  const passed = startedOk && cursorOk && swapOk && doneOk && restartOk && rejectOk;
-  return { passed, details: { ...evidence, startedOk, cursorOk, swapOk, doneOk, restartOk, rejectOk } };
+  // Spatial pointer drag-swap of the same adjacent pair the keyboard used.
+  const cell = 72;
+  const originX = 480 - cell;
+  const originY = 270 - cell + 12;
+  await pointerAt(harness, 'pointermove', originX + cell, originY);
+  await harness.stepFrames(2);
+  await pointerAt(harness, 'pointerdown', originX + cell, originY);
+  await harness.stepFrames(4);
+  await pointerAt(harness, 'pointermove', originX + cell, originY + cell);
+  await harness.stepFrames(4);
+  await pointerAt(harness, 'pointerup', originX + cell, originY + cell);
+  const dragged = (await waitUntil(harness, read, (s) => (s.puzzleBoard?.clears ?? 0) >= 1, 20, 4)).puzzleBoard!;
+  evidence.dragged = dragged;
+  const dragOk = dragged.moves >= 1 && dragged.clears >= 1;
+
+  const passed = startedOk && cursorOk && swapOk && doneOk && restartOk && rejectOk && dragOk;
+  return { passed, details: { ...evidence, startedOk, cursorOk, swapOk, doneOk, restartOk, rejectOk, dragOk } };
 }

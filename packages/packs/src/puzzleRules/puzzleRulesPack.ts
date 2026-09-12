@@ -197,7 +197,7 @@ const match: Engine<MatchState> = {
   },
 };
 
-// --- falling-block (simplified: no wall kicks) --------------------
+// --- falling-block (wall kicks on rotate) -------------------------
 interface FbState {
   readonly grid: readonly (readonly number[])[];
   readonly active: { readonly cells: readonly Cell[] } | null;
@@ -249,7 +249,12 @@ const fallingBlock: Engine<FbState> = {
     if (op.kind === 'rotate') {
       const [ox, oy] = state.active.cells[0]!;
       const rotated = state.active.cells.map(([x, y]) => [ox - (y - oy), oy + (x - ox)] as Cell);
-      return fbCollides(state.grid, rotated, r.width, r.height) ? state : { ...state, active: { cells: rotated } };
+      const kicks: readonly Cell[] = [[0, 0], [1, 0], [-1, 0], [2, 0], [-2, 0], [0, -1]];
+      for (const [dx, dy] of kicks) {
+        const kicked = rotated.map(([x, y]) => [x + dx, y + dy] as Cell);
+        if (!fbCollides(state.grid, kicked, r.width, r.height)) return { ...state, active: { cells: kicked } };
+      }
+      return state;
     }
     if (op.kind === 'hard-drop') {
       let cells = state.active.cells;

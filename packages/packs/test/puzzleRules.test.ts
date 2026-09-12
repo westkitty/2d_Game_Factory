@@ -241,6 +241,28 @@ describe('falling-block engine', () => {
     expect(snap.solved).toBe(true);
   });
 
+  it('rotate against the left wall kicks the piece back in bounds', () => {
+    const { svc } = makeService({
+      schemaVersion: 1,
+      puzzles: [{
+        id: 'fb',
+        kind: 'falling-block',
+        width: 4,
+        height: 6,
+        pieces: [{ cells: [[0, 0], [0, 1]], spawnCol: 0 }],
+        sequence: [0],
+        objectiveLines: 9,
+      }],
+    });
+    svc.load('fb');
+    const before = svc.snapshot() as unknown as { active: { cells: readonly (readonly [number, number])[] } | null };
+    expect(before.active?.cells.some(([x]) => x < 0)).toBe(false);
+    const snap = svc.apply({ kind: 'rotate' }) as unknown as { active: { cells: readonly (readonly [number, number])[] } | null };
+    expect(snap.active).not.toBeNull();
+    expect(snap.active!.cells.every(([x, y]) => x >= 0 && x < 4 && y < 6)).toBe(true);
+    expect(snap.active!.cells).not.toEqual(before.active!.cells);
+  });
+
   it('tick eventually locks a piece at the floor', () => {
     const { svc } = makeService({
       schemaVersion: 1,

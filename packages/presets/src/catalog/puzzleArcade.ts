@@ -49,10 +49,9 @@ export const PUZZLE_ARCADE_PRESETS: readonly PresetDefinition[] = [
     optionalSystemPacks: [pack(PACK_IDS.arcade)],
     requiredContentRoles: ['tuning', 'puzzles'],
     validationProfile: VALIDATION_PROFILES.puzzleArcade,
-    knownLimitations: [
-      LIMITATIONS.puzzleBoardRules,
-      'The reusable spatial pointer (world cursor, hover, drag - ADR-0018) exists; this grid-family recipe does not consume it, so tile drag/swap interaction is game-specific code.',
-    ],
+    // Final Product Completion Wave 4 (matrix L21/L22): pointer drag-swap via
+    // the spatial pointer; keyboard swap remains. Match cascade lives in sw2d.puzzle-rules.
+    knownLimitations: [],
   }),
 
   definePreset({
@@ -65,7 +64,9 @@ export const PUZZLE_ARCADE_PRESETS: readonly PresetDefinition[] = [
     optionalSystemPacks: [pack(PACK_IDS.arcade)],
     requiredContentRoles: ['tuning', 'puzzles'],
     validationProfile: VALIDATION_PROFILES.puzzleArcade,
-    knownLimitations: [LIMITATIONS.puzzleBoardRules],
+    // Final Product Completion Wave 4 (matrix L21): wall kicks + hard drop on
+    // the reusable falling-block engine.
+    knownLimitations: [],
   }),
 
   definePreset({

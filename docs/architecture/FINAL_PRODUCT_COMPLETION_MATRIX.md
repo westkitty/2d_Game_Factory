@@ -234,12 +234,16 @@ exceptions: physical hardware certification and the user-owned public-license ch
 - **Architecture:** `sw2d.puzzle-rules` falling-block wall kicks + hard drop + progression/loss; `bindStarterPuzzle` pointer swap via spatial pointer, objective, completion/failure, restart.
 - **Journey (match):** drag-swap two tiles → match → cascade → refill → objective reached → `complete`. **(falling):** rotate against wall → kicked → hard drop → line clear → level up → stack out → `failed` → restart.
 - **Checkpoint:** Wave 4.
+- **Closed by:** falling-block rotate tries kick offsets; match binder maps spatial-pointer drag to the existing `swap` op; keyboard paths kept. One board authority (`sw2d.puzzle-rules`). **Proof/test:** `puzzleRules.test.ts` wall-kick; proof specs `matchPuzzle` (keyboard + pointer drag) / `fallingBlockPuzzle`. **Browser:** `qa:completion -- match-puzzle falling-block-puzzle` PASS; `qa:proof` PASS.
+- **Status:** CLOSED (Wave 4).
 
 ### L22 - match puzzle does not consume spatial pointer
 - **Source text:** "The reusable spatial pointer (world cursor, hover, drag - ADR-0018) exists; this grid-family recipe does not consume it, so tile drag/swap interaction is game-specific code."
 - **Presets:** `match-puzzle`
 - **Architecture:** grid shell + `bindStarterPuzzle` use `context.spatialPointer` for hover/drag-swap (L21).
 - **Checkpoint:** Wave 4.
+- **Closed by:** L21 pointer drag-swap. **Browser:** PASS.
+- **Status:** CLOSED (Wave 4).
 
 ### L23 - ball/paddle vs pinball
 - **Source text:** "Ball, paddle, rebound, brick-clear and first-to-N scoring are reusable (sw2d.ball-paddle); a full pinball table is not."
@@ -481,8 +485,8 @@ exceptions: physical hardware certification and the user-owned public-license ch
 | L18 | kart-racer | 4 | CLOSED | wave 4 kart |
 | L19 | endless-driving | 4 | CLOSED | wave 4 kart |
 | L20 | boat-flight-racer | 4 | OPEN | |
-| L21 | match-puzzle, falling-block-puzzle | 4 | OPEN | |
-| L22 | match-puzzle | 4 | OPEN | |
+| L21 | match-puzzle, falling-block-puzzle | 4 | CLOSED | wave 4 puzzle |
+| L22 | match-puzzle | 4 | CLOSED | wave 4 puzzle |
 | L23 | breakout, pong | 4 | OPEN | |
 | L24 | pong, local-party-game | 9 | OPEN | |
 | L25 | physics-puzzle, escape-room | 4 | OPEN | |

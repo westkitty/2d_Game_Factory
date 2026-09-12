@@ -152,6 +152,13 @@ export function bindStarterPuzzle(context: SceneContext, options?: { readonly hu
     return puzzle.snapshot() as BoardSnap;
   }
 
+  function cellAt(worldX: number, worldY: number): { col: number; row: number } | null {
+    const col = Math.round((worldX - originX) / cell);
+    const row = Math.round((worldY - originY) / cell);
+    if (col < 0 || row < 0 || col >= cols || row >= rows) return null;
+    return { col, row };
+  }
+
   function snapshot(): StarterPuzzleSnapshot {
     const snap = live();
     const objective = kind === 'match' ? (snap.objectiveClears ?? 0) : (snap.objectiveLines ?? 0);
@@ -309,6 +316,23 @@ export function bindStarterPuzzle(context: SceneContext, options?: { readonly hu
     tick(deltaMs: number): void {
       if (disposed) return;
       warmMs += deltaMs;
+      if (kind === 'match') {
+        const pointer = context.spatialPointer.state;
+        const hover = cellAt(pointer.worldX, pointer.worldY);
+        if (hover && pointer.inside) {
+          cursorCol = hover.col;
+          cursorRow = hover.row;
+        }
+        if (pointer.justReleased && pointer.dragging) {
+          const from = cellAt(pointer.dragStartWorldX, pointer.dragStartWorldY);
+          const to = cellAt(pointer.worldX, pointer.worldY);
+          if (from && to && adjacent(from.col, from.row, to.col, to.row)) {
+            puzzle.apply({ kind: 'swap', a: [from.col, from.row], b: [to.col, to.row] });
+            selectedCol = null;
+            selectedRow = null;
+          }
+        }
+      }
       if (kind === 'falling-block') {
         const snap = live();
         if (!snap.solved && !snap.toppedOut) {

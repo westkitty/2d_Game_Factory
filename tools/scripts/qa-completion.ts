@@ -58,6 +58,8 @@ export const COMPLETION_SPEC_MODULES: Readonly<Record<string, string>> = {
   // Wave 4 - vehicles / puzzle / arcade
   'kart-racer': 'kartRacer',
   'endless-driving': 'endlessDriving',
+  'match-puzzle': 'matchPuzzle',
+  'falling-block-puzzle': 'fallingBlockPuzzle',
 };
 
 interface Target {

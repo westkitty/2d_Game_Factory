@@ -19,11 +19,11 @@ file is the cursor.
 | field | value |
 |---|---|
 | branch SHA | (see git log; this checkpoint is the Wave 1-3 independent sanity repair) |
-| waves completed | 3 + sanity repair + Wave 4 L18/L19 kart items |
-| limitations closed | 24 / 69 entries (L01-L19) |
-| remaining machine-executable | 45 |
+| waves completed | 3 + sanity repair + Wave 4 L18/L19/L21/L22 |
+| limitations closed | 27 / 69 entries |
+| remaining machine-executable | 42 |
 | blockers | none |
-| next exact action | Wave 4 remainder: L20 boat/flight, L21/L22 puzzles, L23/L28 pinball, L25/L46 physics/escape, L26 maze, L27 rhythm/reaction |
+| next exact action | Wave 4 remainder: L20 boat/flight, L23/L28 pinball, L25/L46 physics/escape, L26 maze, L27 rhythm/reaction |
 
 ## Checkpoint log
 
@@ -119,3 +119,8 @@ Known leftover (not a Wave 1-3 product hole, not repaired here): `bindStarterPro
 - Same held-item loop (`kart-boost` on the road). Traffic + off-road crash; best distance persisted through `context.saves`.
 - `qa:completion -- endless-driving` PASS; `qa:proof -- endless-driving kart-racer` PASS.
 - `npm run limitations:extract`: **45** remain.
+
+### Wave 4 L21/L22 - match pointer swap + falling-block wall kicks
+- `sw2d.puzzle-rules` rotate now wall-kicks. `bindStarterPuzzle` match mode hover/drag-swaps through `context.spatialPointer`.
+- `qa:completion -- match-puzzle falling-block-puzzle` PASS; `qa:proof` PASS.
+- `npm run limitations:extract`: **42** remain.

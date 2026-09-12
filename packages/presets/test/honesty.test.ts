@@ -217,6 +217,9 @@ describe('closed limitations stay closed (Final Product Completion program)', ()
     { id: 'rail-shooter', pattern: /does not wire sw2d\.weapons/, closedBy: 'L17 bindStarterGallery rail' },
     { id: 'kart-racer', pattern: /Holding and firing a kart item on demand/, closedBy: 'L18 sw2d.items held slot' },
     { id: 'endless-driving', pattern: /a reusable kart item-fire system is not/, closedBy: 'L19 held items + road traffic' },
+    { id: 'match-puzzle', pattern: /pointer drag-swap, wall-kicks and overlay-local boards are not/, closedBy: 'L21/L22 pointer swap + wall kicks' },
+    { id: 'match-puzzle', pattern: /this grid-family recipe does not consume it/, closedBy: 'L22 spatial pointer drag-swap' },
+    { id: 'falling-block-puzzle', pattern: /pointer drag-swap, wall-kicks and overlay-local boards are not/, closedBy: 'L21 wall kicks' },
   ];
 
   CLOSED.forEach(({ id, pattern, closedBy }) => {
