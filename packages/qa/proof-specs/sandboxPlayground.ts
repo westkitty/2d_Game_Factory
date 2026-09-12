@@ -12,6 +12,12 @@ interface Toy {
   readonly stamps: number;
   readonly held: string | null;
   readonly moved: number;
+  readonly duplicated: number;
+  readonly edited: number;
+  readonly undoDepth: number;
+  readonly redoDepth: number;
+  readonly persisted: boolean;
+  readonly crates: number;
   readonly lastResult: string | null;
   readonly outcome: string;
 }
@@ -48,21 +54,34 @@ export async function run(harness: Harness): Promise<SmokeOutcome> {
   evidence.removed = { last: removed.lastResult, blocks: removed.blocks, thenEmpty: empty.lastResult };
   const removeOk = removed.lastResult === 'remove-block' && removed.blocks === 0 && empty.lastResult === 'empty' && empty.blocks === 0;
 
-  // Re-stamp, switch to the ball stamp, stamp a ball: the authored set is complete.
+  // Re-stamp, move, duplicate, edit, undo/redo, then author all three object kinds.
   await clickAt(harness, 400, 280);
+  await clickAt(harness, 400, 280);
+  await clickAt(harness, 470, 320);
+  await harness.keyTap('KeyE'); await harness.stepFrames(3);
+  const duplicated = await t();
+  await harness.keyTap('Enter'); await harness.stepFrames(3);
+  const edited = await t();
+  await harness.keyTap('Backspace'); await harness.stepFrames(3);
+  const undone = await t();
+  await harness.keyTap('ShiftLeft'); await harness.stepFrames(3);
+  const redone = await t();
   await harness.keyTap('ArrowRight');
   await harness.stepFrames(2);
   const picked = await t();
   await clickAt(harness, 600, 280);
+  await harness.keyTap('ArrowRight'); await harness.stepFrames(2);
+  await clickAt(harness, 700, 300);
   const done = await t();
-  evidence.done = done;
-  const doneOk = picked.selected === 'ball' && done.lastResult === 'stamp-ball' && done.blocks === 1 && done.balls === 1 && done.outcome === 'complete';
+  evidence.done = { duplicated, edited, undone, redone, done };
+  const historyOk = duplicated.duplicated === 1 && edited.edited === 1 && undone.lastResult === 'undo' && undone.redoDepth === 1 && redone.lastResult === 'redo';
+  const doneOk = picked.selected === 'ball' && done.lastResult === 'stamp-crate' && done.blocks >= 1 && done.balls === 1 && done.crates === 1 && done.persisted && done.outcome === 'complete';
 
   const run = await restartRun(harness);
   const fresh = await t();
   evidence.restart = { ...run, blocks: fresh.blocks, balls: fresh.balls, outcome: fresh.outcome };
-  const restartOk = run.after === run.before + 1 && fresh.blocks === 0 && fresh.balls === 0 && fresh.outcome === 'playing';
+  const restartOk = run.after === run.before + 1 && fresh.blocks >= 1 && fresh.balls === 1 && fresh.crates === 1 && fresh.persisted;
 
-  const passed = startedOk && authorOk && removeOk && doneOk && restartOk;
-  return { passed, details: { ...evidence, startedOk, authorOk, removeOk, doneOk, restartOk } };
+  const passed = startedOk && authorOk && removeOk && historyOk && doneOk && restartOk;
+  return { passed, details: { ...evidence, startedOk, authorOk, removeOk, historyOk, doneOk, restartOk } };
 }

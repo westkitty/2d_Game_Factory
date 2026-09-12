@@ -8,6 +8,12 @@ interface PointerPlay {
   readonly mode: string | null;
   readonly strokes: number;
   readonly strokeLength: number;
+  readonly layers: number;
+  readonly activeLayer: number;
+  readonly undoDepth: number;
+  readonly redoDepth: number;
+  readonly pressureRange: readonly [number, number];
+  readonly exportBytes: number;
   readonly lastResult: string | null;
   readonly outcome: string;
 }
@@ -54,16 +60,26 @@ export async function run(harness: Harness): Promise<SmokeOutcome> {
   const first = await pp();
   evidence.first = first;
   const firstOk = first.lastResult === 'stroke' && first.strokes === 1 && first.strokeLength >= 300 && first.outcome === 'playing';
+  await harness.keyTap('KeyE');
+  await harness.stepFrames(2);
   await dragFromTo(harness, 200, 320, 520, 320);
   const done = await pp();
   evidence.done = done;
-  const doneOk = done.strokes === 2 && done.outcome === 'complete';
+  const doneOk = done.strokes === 2 && done.layers === 2 && done.activeLayer === 2 && done.pressureRange[1] > 0 && done.outcome === 'complete';
+  await harness.keyTap('KeyK'); await harness.stepFrames(3);
+  const undone = await pp();
+  await harness.keyTap('Backspace'); await harness.stepFrames(3);
+  const redone = await pp();
+  await harness.keyTap('Enter'); await harness.stepFrames(3);
+  const exported = await pp();
+  evidence.history = { undone, redone, exported };
+  const historyOk = undone.strokes === 1 && undone.redoDepth === 1 && undone.outcome === 'playing' && redone.strokes === 2 && redone.outcome === 'complete' && exported.lastResult === 'export-png' && exported.exportBytes > 100;
 
   const run = await restartRun(harness);
   const fresh = await pp();
   evidence.restart = { ...run, strokes: fresh.strokes, outcome: fresh.outcome };
   const restartOk = run.after === run.before + 1 && fresh.strokes === 0 && fresh.outcome === 'playing';
 
-  const passed = startedOk && tapOk && firstOk && doneOk && restartOk;
-  return { passed, details: { ...evidence, startedOk, tapOk, firstOk, doneOk, restartOk } };
+  const passed = startedOk && tapOk && firstOk && doneOk && historyOk && restartOk;
+  return { passed, details: { ...evidence, startedOk, tapOk, firstOk, doneOk, historyOk, restartOk } };
 }

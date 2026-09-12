@@ -1,0 +1,12 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#", "$id": "urn:sw2d:schema:content-fishing-catalog:v1",
+  "type": "object", "additionalProperties": false,
+  "required": ["schemaVersion", "castMs", "biteMs", "hookMs", "tensionMin", "tensionMax", "reelTarget", "catchTarget", "fish"],
+  "properties": {
+    "schemaVersion": { "type": "integer", "minimum": 1 }, "castMs": { "type": "number", "exclusiveMinimum": 0 },
+    "biteMs": { "type": "number", "exclusiveMinimum": 0 }, "hookMs": { "type": "number", "exclusiveMinimum": 0 },
+    "tensionMin": { "type": "number", "minimum": 0 }, "tensionMax": { "type": "number", "exclusiveMinimum": 0 },
+    "reelTarget": { "type": "integer", "minimum": 1 }, "catchTarget": { "type": "integer", "minimum": 1 },
+    "fish": { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": ["id", "name", "score", "pull"], "properties": { "id": { "type": "string", "minLength": 1 }, "name": { "type": "string", "minLength": 1 }, "score": { "type": "integer", "minimum": 1 }, "pull": { "type": "number", "minimum": 0 } } } }
+  }
+}

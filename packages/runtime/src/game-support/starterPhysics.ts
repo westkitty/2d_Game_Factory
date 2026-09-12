@@ -28,12 +28,15 @@ export interface StarterPhysicsSnapshot {
   readonly flips: number;
   readonly lastResult: string | null;
   readonly balls: number;
+  readonly props: number;
+  readonly resets: number;
   readonly outcome: 'playing' | 'complete' | 'failed';
 }
 
 export interface StarterPhysicsBinding {
   readonly active: boolean;
   nudge(): void;
+  reset(): void;
   flip(side: 'left' | 'right'): void;
   tick(_deltaMs: number): void;
   snapshot(): StarterPhysicsSnapshot;
@@ -44,6 +47,7 @@ export interface StarterPhysicsBinding {
 const INERT: StarterPhysicsBinding = {
   active: false,
   nudge: () => undefined,
+  reset: () => undefined,
   flip: () => undefined,
   tick: () => undefined,
   snapshot: () => ({
@@ -56,6 +60,8 @@ const INERT: StarterPhysicsBinding = {
     flips: 0,
     lastResult: null,
     balls: 0,
+    props: 0,
+    resets: 0,
     outcome: 'playing',
   }),
   render: () => undefined,
@@ -128,6 +134,8 @@ function bindPinballTable(
       flips,
       lastResult: lastResult ?? pinball.lastResult(),
       balls: pinball.ballsRemaining(),
+      props: 1,
+      resets: 0,
       outcome: pinball.outcome() === 'failed' ? 'failed' : pinball.outcome() === 'complete' ? 'complete' : outcome,
     };
   }
@@ -153,6 +161,10 @@ function bindPinballTable(
       lastResult = 'launch';
       context.audio.playCue('ui.confirm');
       paint();
+    },
+    reset(): void {
+      if (disposed) return;
+      pinball.reset(); flips = 0; outcome = 'playing'; lastResult = 'reset'; paint();
     },
     flip(side: 'left' | 'right'): void {
       if (disposed || pinball.outcome() !== 'playing') return;
@@ -274,6 +286,17 @@ export function bindStarterPhysics(
     category: 'prop',
   });
   if (mode === 'table') physics.setVelocity(ball, 2.4, 6);
+  const toyProps = mode === 'toy'
+    ? Array.from({ length: 6 }, (_, index) => physics.createBody({
+        id: `toy-prop-${index}`,
+        x: 360 + (index % 3) * 70,
+        y: 300 - Math.floor(index / 3) * 60,
+        shape: index % 2 === 0 ? { kind: 'circle' as const, radius: 16 } : { kind: 'rect' as const, width: 34, height: 34 },
+        restitution: 0.35,
+        friction: 0.05,
+        category: 'prop',
+      }))
+    : [];
 
   const leftFlipper =
     mode === 'table'
@@ -340,6 +363,7 @@ export function bindStarterPhysics(
   let bumperCool: Record<string, number> = { 'bumper-a': 0, 'bumper-b': 0, 'bumper-c': 0 };
   let nowMs = 0;
   let disposed = false;
+  let resets = 0;
 
   function ballState() {
     return physics.bodyState(ball);
@@ -357,6 +381,8 @@ export function bindStarterPhysics(
       flips,
       lastResult,
       balls: 0,
+      props: 1 + toyProps.length,
+      resets,
       outcome,
     };
   }
@@ -421,6 +447,14 @@ export function bindStarterPhysics(
       lastResult = 'nudge';
       context.audio.playCue('ui.confirm');
       paint();
+    },
+    reset(): void {
+      if (disposed || mode !== 'toy') return;
+      physics.setPosition(ball, ballStart.x, ballStart.y); physics.setVelocity(ball, 0, 0);
+      for (let index = 0; index < toyProps.length; index++) {
+        const prop = toyProps[index]!; physics.setPosition(prop, 360 + (index % 3) * 70, 300 - Math.floor(index / 3) * 60); physics.setVelocity(prop, 0, 0);
+      }
+      outcome = 'playing'; nudges = 0; resets += 1; lastResult = 'reset'; paint();
     },
     flip(side: 'left' | 'right'): void {
       if (disposed || outcome !== 'playing' || mode !== 'table') return;

@@ -16,6 +16,7 @@ export { resolveInstallOrder, SystemPackResolutionError } from './core/resolveIn
 
 export { ActionInputHost } from './input/ActionInputHost.ts';
 export { KeyboardAdapter } from './input/KeyboardAdapter.ts';
+export { GamepadAdapter } from './input/GamepadAdapter.ts';
 export { PointerAdapter } from './input/PointerAdapter.ts';
 export { SpatialPointerHost, DRAG_THRESHOLD_PX } from './input/SpatialPointerHost.ts';
 export type { WorldResolver, CanvasSpaceResolver } from './input/SpatialPointerHost.ts';

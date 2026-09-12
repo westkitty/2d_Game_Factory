@@ -36,6 +36,9 @@ import {
   generateTheme,
   generateTuning,
   generateUiCopy,
+  generateMicrogameCatalog,
+  generateFishingCatalog,
+  generateCookingCatalog,
 } from './contentDocuments.ts';
 import { generatePackConfig } from './packConfig.ts';
 import { generateReadme } from './readme.ts';
@@ -94,6 +97,9 @@ export function buildGameFiles(gameId: string, preset: PresetDefinition): Map<st
     ) + '\n',
   );
   files.set('content/tuning.json', JSON.stringify(generateTuning(), null, 2) + '\n');
+  files.set('content/microgames.json', JSON.stringify(generateMicrogameCatalog(preset.id === 'microgame-collection'), null, 2) + '\n');
+  files.set('content/fishing.json', JSON.stringify(generateFishingCatalog(preset.id === 'fishing-game'), null, 2) + '\n');
+  files.set('content/cooking.json', JSON.stringify(generateCookingCatalog(preset.id === 'cooking-game'), null, 2) + '\n');
   files.set(
     'content/themes/default/theme.json',
     JSON.stringify(
@@ -119,6 +125,8 @@ export function buildGameFiles(gameId: string, preset: PresetDefinition): Map<st
       generateItemCatalog(
         !preset.requiredContentRoles.includes('items')
           ? 'none'
+          : preset.id === 'dress-up-character-toy'
+            ? 'wardrobe'
           : preset.id === 'kart-racer' || preset.id === 'endless-driving'
             ? 'kart'
             : 'coin',

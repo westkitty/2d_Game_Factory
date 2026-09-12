@@ -89,6 +89,15 @@ export const COMPLETION_SPEC_MODULES: Readonly<Record<string, string>> = {
   'interactive-fiction-hybrid': 'interactiveFictionHybrid',
   'investigation-game': 'investigationGame',
   'museum-exhibit': 'museumExhibit',
+  'local-party-game': 'localPartyGame',
+  'microgame-collection': 'microgameCollection',
+  'fishing-game': 'fishingGame',
+  'cooking-game': 'cookingGame',
+  'physics-toy': 'physicsToy',
+  'dress-up-character-toy': 'dressUpCharacterToy',
+  'sandbox-playground': 'sandboxPlayground',
+  'drawing-game': 'drawingGame',
+  'photography-game': 'photographyGame',
 };
 
 interface Target {

@@ -12,6 +12,10 @@ interface Arcade {
   readonly missed: number;
   readonly lastResult: string | null;
   readonly outcome: string;
+  readonly tension: number;
+  readonly reel: number;
+  readonly fishId: string | null;
+  readonly inventory: readonly string[];
 }
 interface Shell {
   readonly arcade?: Arcade;
@@ -37,22 +41,32 @@ export async function run(harness: Harness): Promise<SmokeOutcome> {
   evidence.missed = { last: missed.lastResult, missed: missed.missed, score: missed.score };
   const missOk = bite.phase === 'bite' && missed.lastResult === 'missed' && missed.missed >= 1 && missed.score === 0;
 
-  // Cast again and strike during the bite window: a landed fish scores.
+  // Cast again: bite -> hook -> tension -> reel -> landed.
   await harness.keyTap('Enter');
   const recast = await phase('bite');
   await harness.keyTap('Enter');
+  const hooked = await a();
+  await harness.keyTap('Enter');
+  const tension = await a();
+  await harness.keyTap('Enter');
+  await harness.keyTap('Enter');
+  await harness.keyTap('Enter');
   const first = await a();
   evidence.first = { last: first.lastResult, caught: first.caught, score: first.score };
-  const landOk = recast.phase === 'bite' && first.lastResult === 'landed' && first.caught === 1 && first.score > 0;
+  const landOk = recast.phase === 'bite' && hooked.phase === 'hook' && tension.phase === 'tension' && first.lastResult === 'landed' && first.caught === 1 && first.score > 0 && first.inventory.length === 1;
 
   // Second fish completes the quota.
   await phase('idle');
   await harness.keyTap('Enter');
   await phase('bite');
   await harness.keyTap('Enter');
+  await harness.keyTap('Enter');
+  await harness.keyTap('Enter');
+  await harness.keyTap('Enter');
+  await harness.keyTap('Enter');
   const done = await a();
   evidence.done = { caught: done.caught, score: done.score, outcome: done.outcome };
-  const doneOk = done.caught === 2 && done.score === first.score * 2 && done.outcome === 'complete';
+  const doneOk = done.caught === 2 && done.score > first.score && done.inventory.length === 2 && done.outcome === 'complete';
 
   const run = await restartRun(harness);
   const fresh = await a();

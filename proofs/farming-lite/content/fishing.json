@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "castMs": 1,
+  "biteMs": 1,
+  "hookMs": 1,
+  "tensionMin": 0,
+  "tensionMax": 1,
+  "reelTarget": 1,
+  "catchTarget": 1,
+  "fish": []
+}

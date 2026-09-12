@@ -95,7 +95,7 @@ export class InteractionServiceImpl implements InteractionService {
   update(): void {
     if (this.#disposed) return;
     const state = this.#pointer.state;
-    const info: InteractionPointerInfo = { worldX: state.worldX, worldY: state.worldY, source: state.source };
+    const info: InteractionPointerInfo = { worldX: state.worldX, worldY: state.worldY, source: state.source, pressure: state.pressure };
     const topId = this.#topTargetAt(state.worldX, state.worldY);
 
     // Hover transitions only when nothing is being pressed/dragged.
@@ -147,6 +147,7 @@ export class InteractionServiceImpl implements InteractionService {
       worldX: state.worldX,
       worldY: state.worldY,
       source: state.source,
+      pressure: state.pressure,
       startWorldX: state.dragStartWorldX,
       startWorldY: state.dragStartWorldY,
       deltaWorldX: state.dragDeltaWorldX,

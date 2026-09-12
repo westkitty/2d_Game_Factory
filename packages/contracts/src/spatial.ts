@@ -47,6 +47,8 @@ export interface SpatialPointerState {
   readonly inside: boolean;
   /** The pointer has produced at least one real event since the host started. */
   readonly active: boolean;
+  /** Normalized contact pressure. Mouse/touch without pressure reports 0.5 while down, otherwise 0. */
+  readonly pressure: number;
   /** A drag is in progress (pressed and moved past the drag threshold). */
   readonly dragging: boolean;
   /** World-space point where the current (or most recent) drag began. */
@@ -75,6 +77,7 @@ export interface SpatialPointerSink {
   setPointerPosition(screenX: number, screenY: number, source: PointerSourceKind): void;
   setPointerButton(down: boolean, source: PointerSourceKind): void;
   setPointerInside(inside: boolean): void;
+  setPointerPressure(pressure: number): void;
 }
 
 // --- Hit shapes -------------------------------------------------------------
@@ -186,6 +189,7 @@ export interface InteractionPointerInfo {
   readonly worldX: number;
   readonly worldY: number;
   readonly source: PointerSourceKind | null;
+  readonly pressure: number;
 }
 
 export interface InteractionDragInfo extends InteractionPointerInfo {

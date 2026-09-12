@@ -162,9 +162,9 @@ describe('maturity honesty', () => {
 });
 
 describe('input-mode honesty', () => {
-  it('no preset claims gamepad support - adapter feasibility is still unknown (OPERATIONAL_STATE.md)', () => {
+  it('every preset exposes the runtime gamepad adapter (physical hardware certification remains human-only)', () => {
     for (const preset of PRESETS) {
-      expect(preset.supportedInputModes, preset.id).not.toContain('gamepad');
+      expect(preset.supportedInputModes, preset.id).toContain('gamepad');
     }
   });
 

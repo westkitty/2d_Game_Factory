@@ -1,6 +1,6 @@
 import type { PresetDefinition } from '@sw2d/contracts';
 import { PACK_IDS } from '@sw2d/packs/ids';
-import { LIMITATIONS, POINTER_INPUT_MODES, VALIDATION_PROFILES, definePreset, pack } from '../shared.ts';
+import { POINTER_INPUT_MODES, VALIDATION_PROFILES, definePreset, pack } from '../shared.ts';
 
 /**
  * Family E - Puzzle / arcade (recipes 33-42).
@@ -89,7 +89,7 @@ export const PUZZLE_ARCADE_PRESETS: readonly PresetDefinition[] = [
     requiredSystemPacks: [pack(PACK_IDS.arcade), pack(PACK_IDS.ballPaddle), pack(PACK_IDS.localPlay)],
     requiredContentRoles: ['tuning', 'ball-paddle', 'local-play'],
     validationProfile: VALIDATION_PROFILES.puzzleArcade,
-    knownLimitations: [LIMITATIONS.localPlaySeats],
+    knownLimitations: [],
   }),
 
   definePreset({

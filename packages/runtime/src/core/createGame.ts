@@ -17,6 +17,7 @@ import { AssetCatalogImpl } from '../content/AssetCatalogImpl.ts';
 import { DebugStateImpl } from '../debug/DebugStateImpl.ts';
 import { ActionInputHost } from '../input/ActionInputHost.ts';
 import { KeyboardAdapter } from '../input/KeyboardAdapter.ts';
+import { GamepadAdapter } from '../input/GamepadAdapter.ts';
 import { PointerAdapter } from '../input/PointerAdapter.ts';
 import { SpatialPointerHost } from '../input/SpatialPointerHost.ts';
 import { mergeBindings } from '../input/defaultBindings.ts';
@@ -246,6 +247,7 @@ export async function createGame(options: CreateGameOptions): Promise<GameRuntim
 
   input.addAdapter(new KeyboardAdapter(input));
   input.addAdapter(new PointerAdapter(input, options.controlsRoot ?? document.body));
+  input.addAdapter(new GamepadAdapter(input));
 
   // One input advance per game step, before any scene update. Two scenes reading
   // `justPressed` in the same frame therefore always agree. The spatial pointer

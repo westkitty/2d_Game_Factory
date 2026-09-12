@@ -258,7 +258,7 @@ exceptions: physical hardware certification and the user-owned public-license ch
 ### L24 - local-play seats / gamepads / netcode / split-screen
 - **Source text:** "Local hot-seat turns and simultaneous versus axes are reusable (sw2d.local-play); netcode, gamepads, split-screen cameras and more than two seats are not."
 - **Presets:** `pong`, `local-party-game`
-- **Architecture:** `GamepadAdapter` (runtime input, synthetic Gamepad API tests, connect/disconnect, multiple pads, per-seat routing), `sw2d.local-play` up to 4 seats with device assignment, split-screen cameras for local-party-game, optional `sw2d.netplay` (BroadcastChannel + WebRTC manual-signal transports, host-authoritative input relay, connect/disconnect, journey with two browser pages).
+- **Architecture:** `GamepadAdapter` (runtime input, synthetic Gamepad API tests, connect/disconnect, multiple pads, per-seat routing), `sw2d.local-play` up to 4 seats with device assignment, four local viewports for local-party-game, and an explicit URL-opt-in BroadcastChannel transport in `bindStarterLocalPlay` (host-authoritative input relay, connect/disconnect, no account/backend/runtime internet, journey with two browser pages).
 - **Journey:** 4 seats join (keyboard + 2 synthetic pads) → simultaneous input → pad disconnects → seat parked → reconnect; netplay: page A hosts, page B joins → inputs mirrored → B disconnects → A continues.
 - **Checkpoint:** Wave 9.
 
@@ -469,13 +469,13 @@ exceptions: physical hardware certification and the user-owned public-license ch
 ### L49 - wardrobe attachment system
 - **Source text:** "Wardrobe slots for the generated starter use interaction drag/drop (ADR-0018); a reusable attachment/skeleton wardrobe system is not."
 - **Presets:** `dress-up-character-toy`
-- **Architecture:** `sw2d.items` (required) equip slots with 2D anchor metadata (slot, layer, offset, scale, rotation) in `content/items.json`; `bindStarterPointer` wardrobe mode: swap/remove, persistence, starter wardrobe.
+- **Architecture:** `sw2d.items` (required) supplies the authored wardrobe definitions and held-item ownership; 2D anchor metadata (slot, layer, offset, scale, rotation) lives in `content/items.json`; `bindStarterPointer` owns the visible head/body slots, swap/remove, persistence, and starter wardrobe.
 - **Checkpoint:** Wave 9.
 
 ### L50 - sandbox authoring
 - **Source text:** "Block, ball and crate stamps, plus pick-up/move/delete, for the generated starter use interaction click (ADR-0018); a generalized authoring/editing sandbox pack is not."
 - **Presets:** `sandbox-playground`
-- **Architecture:** `bindStarterToy` sandbox mode: spawn, select, move, delete, duplicate, edit (colour/size), undo/redo, persistence.
+- **Architecture:** `bindStarterToy` sandbox mode: spawn, select, move, delete, duplicate, edit colour, undo/redo, and versioned game-local persistence.
 - **Checkpoint:** Wave 9.
 
 ### L51 - drawing canvas
@@ -536,7 +536,7 @@ exceptions: physical hardware certification and the user-owned public-license ch
 | L21 | match-puzzle, falling-block-puzzle | 4 | CLOSED | wave 4 puzzle |
 | L22 | match-puzzle | 4 | CLOSED | wave 4 puzzle |
 | L23 | breakout, pong | 4 | CLOSED | wave 4 pinball |
-| L24 | pong, local-party-game | 9 | OPEN | |
+| L24 | pong, local-party-game | 9 | CLOSED | wave 9 |
 | L25 | physics-puzzle, escape-room | 4 | CLOSED | wave 4 puzzle grammar |
 | L26 | maze-game | 4 | CLOSED | wave 4 maze |
 | L27 | rhythm-action, reaction-timing | 4 | CLOSED | wave 4 timing |
@@ -559,12 +559,12 @@ exceptions: physical hardware certification and the user-owned public-license ch
 | L44 | investigation-game | 8 | CLOSED | wave 8 |
 | L45 | museum-exhibit | 8 | CLOSED | wave 8 |
 | L46 | escape-room | 4 | CLOSED | wave 4 puzzle grammar |
-| L47 | microgame-collection | 9 | OPEN | |
-| L48 | physics-toy | 9 | OPEN | |
-| L49 | dress-up-character-toy | 9 | OPEN | |
-| L50 | sandbox-playground | 9 | OPEN | |
-| L51 | drawing-game | 9 | OPEN | |
-| L52 | fishing-game, cooking-game | 9 | OPEN | |
-| L53 | photography-game | 9 | OPEN | |
-| X01 | all (gamepad) | 9 | OPEN (software) / HUMAN-ONLY (hardware) | |
+| L47 | microgame-collection | 9 | CLOSED | wave 9 |
+| L48 | physics-toy | 9 | CLOSED | wave 9 |
+| L49 | dress-up-character-toy | 9 | CLOSED | wave 9 |
+| L50 | sandbox-playground | 9 | CLOSED | wave 9 |
+| L51 | drawing-game | 9 | CLOSED | wave 9 |
+| L52 | fishing-game, cooking-game | 9 | CLOSED | wave 9 |
+| L53 | photography-game | 9 | CLOSED | wave 9 |
+| X01 | all (gamepad) | 9 | CLOSED (software) / HUMAN-ONLY (hardware) | wave 9 |
 | X02 | license | - | HUMAN-ONLY | |

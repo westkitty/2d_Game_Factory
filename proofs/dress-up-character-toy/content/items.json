@@ -1,4 +1,62 @@
 {
   "schemaVersion": 1,
-  "items": []
+  "items": [
+    {
+      "id": "hat",
+      "displayName": "Violet Hat",
+      "category": "wardrobe",
+      "tags": [
+        "head"
+      ],
+      "stackable": false,
+      "consumable": false,
+      "metadata": {
+        "slot": "head",
+        "layer": 20,
+        "offsetX": 0,
+        "offsetY": -110,
+        "scale": 1,
+        "rotation": 0,
+        "color": 12159728
+      }
+    },
+    {
+      "id": "crown",
+      "displayName": "Gold Crown",
+      "category": "wardrobe",
+      "tags": [
+        "head"
+      ],
+      "stackable": false,
+      "consumable": false,
+      "metadata": {
+        "slot": "head",
+        "layer": 21,
+        "offsetX": 0,
+        "offsetY": -118,
+        "scale": 0.9,
+        "rotation": 0,
+        "color": 15778420
+      }
+    },
+    {
+      "id": "shirt",
+      "displayName": "Blue Shirt",
+      "category": "wardrobe",
+      "tags": [
+        "body"
+      ],
+      "stackable": false,
+      "consumable": false,
+      "metadata": {
+        "slot": "body",
+        "layer": 19,
+        "offsetX": 0,
+        "offsetY": 20,
+        "scale": 1,
+        "rotation": 0,
+        "color": 5218016
+      }
+    }
+  ]
 }

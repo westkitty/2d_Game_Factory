@@ -370,6 +370,11 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         }
 
         if (pointerPlay.active) {
+          if (context.input.justPressed('SECONDARY_ACTION')) pointerPlay.undo();
+          if (context.input.justPressed('CANCEL')) pointerPlay.redo();
+          if (context.input.justPressed('INTERACT')) { pointerPlay.newLayer(); pointerPlay.remove(); }
+          if (context.input.justPressed('CONFIRM')) pointerPlay.exportPng();
+          if (context.input.justPressed('DASH')) pointerPlay.clear();
           pointerPlay.render();
           return;
         }
@@ -378,6 +383,10 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
           if (context.input.justPressed('MOVE_LEFT')) toy.select(-1);
           if (context.input.justPressed('MOVE_RIGHT')) toy.select(1);
           if (context.input.justPressed('SECONDARY_ACTION')) toy.remove();
+          if (context.input.justPressed('INTERACT')) toy.duplicate();
+          if (context.input.justPressed('CONFIRM')) toy.edit();
+          if (context.input.justPressed('CANCEL')) toy.undo();
+          if (context.input.justPressed('DASH')) toy.redo();
           toy.render();
           return;
         }
@@ -386,6 +395,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
           const intent = pointerActionController.read(context.input);
           const ptr = context.spatialPointer.state;
           if (intent.primaryPressed || ptr.justPressed) physicsPlay.nudge();
+          if (intent.cancelPressed || intent.secondaryPressed) physicsPlay.reset();
           physicsPlay.tick(deltaMs);
           physicsPlay.render();
           return;

@@ -19,112 +19,112 @@ pack/controller selections were actually exercised through, and
 
 | id | required packs | optional packs | controller(s) | input modes | validation profile |
 |---|---|---|---|---|---|
-| `traditional-platformer` | world, world-entities | arcade | platform | keyboard, touch | platform-recipe |
-| `chase-platformer` | world, world-entities, pursuit | combat, arcade | platform | keyboard, touch | platform-recipe |
-| `endless-runner` | arcade, generation, pursuit | world, world-entities | platform | keyboard, touch | platform-recipe |
-| `precision-platformer` | world, world-entities, wall | arcade | platform | keyboard, touch | platform-recipe |
-| `metroidvania` | world, world-entities, progression, world-graph | combat, ai | platform | keyboard, touch | platform-recipe |
-| `puzzle-platformer` | puzzle-rules, world, world-entities | - | platform, grid | keyboard, touch | platform-recipe |
-| `auto-runner` | arcade, generation, pursuit | world, world-entities | platform | keyboard, touch | platform-recipe |
-| `climbing-game` | world, world-entities, wall | arcade | platform | keyboard, touch | platform-recipe |
-| `grappling-platformer` | world, world-entities | arcade | platform | keyboard, touch | platform-recipe |
-| `collectathon-platformer` | world, world-entities, arcade, items | progression | platform | keyboard, touch | platform-recipe |
+| `traditional-platformer` | world, world-entities | arcade | platform | keyboard, touch, gamepad | platform-recipe |
+| `chase-platformer` | world, world-entities, pursuit | combat, arcade | platform | keyboard, touch, gamepad | platform-recipe |
+| `endless-runner` | arcade, generation, pursuit | world, world-entities | platform | keyboard, touch, gamepad | platform-recipe |
+| `precision-platformer` | world, world-entities, wall | arcade | platform | keyboard, touch, gamepad | platform-recipe |
+| `metroidvania` | world, world-entities, progression, world-graph | combat, ai | platform | keyboard, touch, gamepad | platform-recipe |
+| `puzzle-platformer` | puzzle-rules, world, world-entities | - | platform, grid | keyboard, touch, gamepad | platform-recipe |
+| `auto-runner` | arcade, generation, pursuit | world, world-entities | platform | keyboard, touch, gamepad | platform-recipe |
+| `climbing-game` | world, world-entities, wall | arcade | platform | keyboard, touch, gamepad | platform-recipe |
+| `grappling-platformer` | world, world-entities | arcade | platform | keyboard, touch, gamepad | platform-recipe |
+| `collectathon-platformer` | world, world-entities, arcade, items | progression | platform | keyboard, touch, gamepad | platform-recipe |
 ## Top-down action (Phase 7A)
 
 | id | required packs | optional packs | controller(s) | input modes | validation profile |
 |---|---|---|---|---|---|
-| `top-down-adventure` | world, world-entities | narrative, progression | top-down | keyboard, touch | top-down-action-recipe |
-| `action-adventure` | world, world-entities, combat, melee | ai, progression, weapons | top-down | keyboard, touch | top-down-action-recipe |
-| `twin-stick-shooter` | combat, weapons, encounters | world, world-entities, arcade | top-down | keyboard, touch | top-down-action-recipe |
-| `survivor-like` | combat, ai, progression, weapons, encounters, runs | arcade, world | top-down | keyboard, touch | top-down-action-recipe |
-| `dungeon-crawler` | world, world-entities, combat, generation, ai | progression | top-down | keyboard, touch | top-down-action-recipe |
-| `action-roguelite` | combat, progression, generation, ai, runs | world, world-entities | top-down | keyboard, touch | top-down-action-recipe |
-| `stealth-game` | world, perception | world-entities, navigation, combat, ai | top-down | keyboard, touch | top-down-action-recipe |
-| `heist-game` | world, perception | world-entities, progression, navigation, combat, ai | top-down | keyboard, touch | top-down-action-recipe |
-| `arena-combat` | combat, melee | ai, arcade, weapons, encounters | top-down | keyboard, touch | top-down-action-recipe |
-| `boss-rush` | combat, ai, weapons, encounters | arcade | top-down | keyboard, touch | top-down-action-recipe |
+| `top-down-adventure` | world, world-entities | narrative, progression | top-down | keyboard, touch, gamepad | top-down-action-recipe |
+| `action-adventure` | world, world-entities, combat, melee | ai, progression, weapons | top-down | keyboard, touch, gamepad | top-down-action-recipe |
+| `twin-stick-shooter` | combat, weapons, encounters | world, world-entities, arcade | top-down | keyboard, touch, gamepad | top-down-action-recipe |
+| `survivor-like` | combat, ai, progression, weapons, encounters, runs | arcade, world | top-down | keyboard, touch, gamepad | top-down-action-recipe |
+| `dungeon-crawler` | world, world-entities, combat, generation, ai | progression | top-down | keyboard, touch, gamepad | top-down-action-recipe |
+| `action-roguelite` | combat, progression, generation, ai, runs | world, world-entities | top-down | keyboard, touch, gamepad | top-down-action-recipe |
+| `stealth-game` | world, perception | world-entities, navigation, combat, ai | top-down | keyboard, touch, gamepad | top-down-action-recipe |
+| `heist-game` | world, perception | world-entities, progression, navigation, combat, ai | top-down | keyboard, touch, gamepad | top-down-action-recipe |
+| `arena-combat` | combat, melee | ai, arcade, weapons, encounters | top-down | keyboard, touch, gamepad | top-down-action-recipe |
+| `boss-rush` | combat, ai, weapons, encounters | arcade | top-down | keyboard, touch, gamepad | top-down-action-recipe |
 ## Shooter (Phase 7A)
 
 | id | required packs | optional packs | controller(s) | input modes | validation profile |
 |---|---|---|---|---|---|
-| `horizontal-shmup` | combat, weapons, encounters, stage-scroll | arcade | top-down | keyboard, touch | shooter-recipe |
-| `vertical-shmup` | combat, weapons, encounters, stage-scroll | arcade | top-down | keyboard, touch | shooter-recipe |
-| `bullet-hell` | combat, weapons, encounters | arcade | top-down | keyboard, touch | shooter-recipe |
-| `asteroids-shooter` | combat, weapons, vehicles, arcade | - | vehicle | keyboard, touch | shooter-recipe |
-| `gallery-shooter` | combat, weapons, encounters, arcade | - | pointer | keyboard, pointer, touch | shooter-recipe |
-| `run-and-gun` | combat, world, world-entities, weapons, encounters | arcade | platform | keyboard, touch | shooter-recipe |
-| `rail-shooter` | combat, camera, weapons, encounters, arcade | - | pointer | keyboard, pointer, touch | shooter-recipe |
+| `horizontal-shmup` | combat, weapons, encounters, stage-scroll | arcade | top-down | keyboard, touch, gamepad | shooter-recipe |
+| `vertical-shmup` | combat, weapons, encounters, stage-scroll | arcade | top-down | keyboard, touch, gamepad | shooter-recipe |
+| `bullet-hell` | combat, weapons, encounters | arcade | top-down | keyboard, touch, gamepad | shooter-recipe |
+| `asteroids-shooter` | combat, weapons, vehicles, arcade | - | vehicle | keyboard, touch, gamepad | shooter-recipe |
+| `gallery-shooter` | combat, weapons, encounters, arcade | - | pointer | keyboard, pointer, touch, gamepad | shooter-recipe |
+| `run-and-gun` | combat, world, world-entities, weapons, encounters | arcade | platform | keyboard, touch, gamepad | shooter-recipe |
+| `rail-shooter` | combat, camera, weapons, encounters, arcade | - | pointer | keyboard, pointer, touch, gamepad | shooter-recipe |
 ## Vehicle / movement (Phase 7B)
 
 | id | required packs | optional packs | controller(s) | input modes | validation profile |
 |---|---|---|---|---|---|
-| `top-down-racer` | world, world-entities, vehicles, racing | arcade | vehicle | keyboard, touch | vehicle-movement-recipe |
-| `kart-racer` | world, world-entities, vehicles, racing, items | arcade | vehicle | keyboard, touch | vehicle-movement-recipe |
-| `time-trial-racer` | world, world-entities, arcade, vehicles, racing | - | vehicle | keyboard, touch | vehicle-movement-recipe |
-| `endless-driving` | arcade, generation, vehicles, items | world, world-entities | vehicle | keyboard, touch | vehicle-movement-recipe |
-| `boat-flight-racer` | world, world-entities, vehicles, racing | arcade | vehicle | keyboard, touch | vehicle-movement-recipe |
+| `top-down-racer` | world, world-entities, vehicles, racing | arcade | vehicle | keyboard, touch, gamepad | vehicle-movement-recipe |
+| `kart-racer` | world, world-entities, vehicles, racing, items | arcade | vehicle | keyboard, touch, gamepad | vehicle-movement-recipe |
+| `time-trial-racer` | world, world-entities, arcade, vehicles, racing | - | vehicle | keyboard, touch, gamepad | vehicle-movement-recipe |
+| `endless-driving` | arcade, generation, vehicles, items | world, world-entities | vehicle | keyboard, touch, gamepad | vehicle-movement-recipe |
+| `boat-flight-racer` | world, world-entities, vehicles, racing | arcade | vehicle | keyboard, touch, gamepad | vehicle-movement-recipe |
 ## Puzzle / arcade (Phase 7B)
 
 | id | required packs | optional packs | controller(s) | input modes | validation profile |
 |---|---|---|---|---|---|
-| `sokoban` | puzzle-rules | - | grid | keyboard, touch | puzzle-arcade-recipe |
-| `match-puzzle` | puzzle-rules | arcade | grid | keyboard, touch | puzzle-arcade-recipe |
-| `falling-block-puzzle` | puzzle-rules | arcade | grid, ui-simulation | keyboard, touch | puzzle-arcade-recipe |
-| `breakout` | arcade, ball-paddle | - | top-down | keyboard, touch | puzzle-arcade-recipe |
-| `pong` | arcade, ball-paddle, local-play | - | top-down | keyboard, touch | puzzle-arcade-recipe |
-| `physics-puzzle` | puzzle-rules | - | pointer | keyboard, pointer, touch | puzzle-arcade-recipe |
-| `maze-game` | world, world-entities, navigation, generation | arcade | grid | keyboard, touch | puzzle-arcade-recipe |
-| `rhythm-action` | arcade, timing | - | ui-simulation | keyboard, touch | puzzle-arcade-recipe |
-| `reaction-timing` | arcade, timing | - | ui-simulation | keyboard, touch | puzzle-arcade-recipe |
-| `pinball-lite` | arcade, pinball | - | ui-simulation | keyboard, touch | puzzle-arcade-recipe |
+| `sokoban` | puzzle-rules | - | grid | keyboard, touch, gamepad | puzzle-arcade-recipe |
+| `match-puzzle` | puzzle-rules | arcade | grid | keyboard, touch, gamepad | puzzle-arcade-recipe |
+| `falling-block-puzzle` | puzzle-rules | arcade | grid, ui-simulation | keyboard, touch, gamepad | puzzle-arcade-recipe |
+| `breakout` | arcade, ball-paddle | - | top-down | keyboard, touch, gamepad | puzzle-arcade-recipe |
+| `pong` | arcade, ball-paddle, local-play | - | top-down | keyboard, touch, gamepad | puzzle-arcade-recipe |
+| `physics-puzzle` | puzzle-rules | - | pointer | keyboard, pointer, touch, gamepad | puzzle-arcade-recipe |
+| `maze-game` | world, world-entities, navigation, generation | arcade | grid | keyboard, touch, gamepad | puzzle-arcade-recipe |
+| `rhythm-action` | arcade, timing | - | ui-simulation | keyboard, touch, gamepad | puzzle-arcade-recipe |
+| `reaction-timing` | arcade, timing | - | ui-simulation | keyboard, touch, gamepad | puzzle-arcade-recipe |
+| `pinball-lite` | arcade, pinball | - | ui-simulation | keyboard, touch, gamepad | puzzle-arcade-recipe |
 ## Strategy / defense (Phase 7B)
 
 | id | required packs | optional packs | controller(s) | input modes | validation profile |
 |---|---|---|---|---|---|
-| `tower-defense` | world, world-entities, progression, combat, navigation, targeting | ai | grid, pointer | keyboard, pointer, touch | strategy-defense-recipe |
-| `lane-defense` | world, world-entities, progression, navigation, encounters, combat | - | grid, pointer | keyboard, pointer, touch | strategy-defense-recipe |
-| `auto-battler` | strategy, combat, ai, targeting | progression | ui-simulation | keyboard, touch | strategy-defense-recipe |
-| `simple-rts` | strategy, combat, territory, navigation, world, world-entities | ai | top-down | keyboard, touch | strategy-defense-recipe |
-| `turn-based-tactics` | strategy, combat, navigation, targeting | ai, world, world-entities | grid, ui-simulation | keyboard, touch | strategy-defense-recipe |
-| `base-defense` | world, world-entities, combat, encounters, targeting, progression | ai | top-down | keyboard, touch | strategy-defense-recipe |
-| `territory-control` | world, world-entities, strategy, combat, territory | ai | top-down | keyboard, touch | strategy-defense-recipe |
+| `tower-defense` | world, world-entities, progression, combat, navigation, targeting | ai | grid, pointer | keyboard, pointer, touch, gamepad | strategy-defense-recipe |
+| `lane-defense` | world, world-entities, progression, navigation, encounters, combat | - | grid, pointer | keyboard, pointer, touch, gamepad | strategy-defense-recipe |
+| `auto-battler` | strategy, combat, ai, targeting | progression | ui-simulation | keyboard, touch, gamepad | strategy-defense-recipe |
+| `simple-rts` | strategy, combat, territory, navigation, world, world-entities | ai | top-down | keyboard, touch, gamepad | strategy-defense-recipe |
+| `turn-based-tactics` | strategy, combat, navigation, targeting | ai, world, world-entities | grid, ui-simulation | keyboard, touch, gamepad | strategy-defense-recipe |
+| `base-defense` | world, world-entities, combat, encounters, targeting, progression | ai | top-down | keyboard, touch, gamepad | strategy-defense-recipe |
+| `territory-control` | world, world-entities, strategy, combat, territory | ai | top-down | keyboard, touch, gamepad | strategy-defense-recipe |
 ## Simulation / management (Phase 7C)
 
 | id | required packs | optional packs | controller(s) | input modes | validation profile |
 |---|---|---|---|---|---|
-| `idle-incremental` | simulation, progression | arcade | ui-simulation | keyboard, touch | simulation-management-recipe |
-| `shopkeeper` | simulation, progression, economy | world | ui-simulation | keyboard, touch | simulation-management-recipe |
-| `tycoon-lite` | simulation, progression, economy | arcade | ui-simulation | keyboard, touch | simulation-management-recipe |
-| `farming-lite` | simulation, world | progression | ui-simulation | keyboard, touch | simulation-management-recipe |
-| `pet-creature` | simulation, progression, needs | world | ui-simulation | keyboard, touch | simulation-management-recipe |
-| `colony-lite` | simulation, world | progression, navigation | ui-simulation | keyboard, touch | simulation-management-recipe |
-| `restaurant` | simulation, progression, economy | arcade | ui-simulation | keyboard, touch | simulation-management-recipe |
-| `aquarium-terrarium` | simulation, needs | progression | ui-simulation | keyboard, touch | simulation-management-recipe |
+| `idle-incremental` | simulation, progression | arcade | ui-simulation | keyboard, touch, gamepad | simulation-management-recipe |
+| `shopkeeper` | simulation, progression, economy | world | ui-simulation | keyboard, touch, gamepad | simulation-management-recipe |
+| `tycoon-lite` | simulation, progression, economy | arcade | ui-simulation | keyboard, touch, gamepad | simulation-management-recipe |
+| `farming-lite` | simulation, world | progression | ui-simulation | keyboard, touch, gamepad | simulation-management-recipe |
+| `pet-creature` | simulation, progression, needs | world | ui-simulation | keyboard, touch, gamepad | simulation-management-recipe |
+| `colony-lite` | simulation, world, needs, navigation | progression | ui-simulation | keyboard, touch, gamepad | simulation-management-recipe |
+| `restaurant` | simulation, progression, economy | arcade | ui-simulation | keyboard, touch, gamepad | simulation-management-recipe |
+| `aquarium-terrarium` | simulation, needs | progression | ui-simulation | keyboard, touch, gamepad | simulation-management-recipe |
 ## Narrative / exploration (Phase 7C)
 
 | id | required packs | optional packs | controller(s) | input modes | validation profile |
 |---|---|---|---|---|---|
-| `exploration-game` | world, world-entities, world-graph | narrative | top-down | keyboard, touch | narrative-exploration-recipe |
-| `visual-novel` | narrative, dialogue | progression | ui-simulation | keyboard, touch | narrative-exploration-recipe |
-| `point-and-click` | narrative, world, world-entities, dialogue | puzzle | pointer, ui-simulation | keyboard, pointer, touch | narrative-exploration-recipe |
-| `interactive-fiction-hybrid` | narrative | world | ui-simulation | keyboard, touch | narrative-exploration-recipe |
-| `investigation-game` | narrative, world, world-entities, codex | puzzle | top-down, pointer | keyboard, pointer, touch | narrative-exploration-recipe |
-| `museum-exhibit` | world, world-entities, codex | narrative | top-down, pointer | keyboard, pointer, touch | narrative-exploration-recipe |
-| `escape-room` | puzzle-rules | narrative, world | pointer, ui-simulation | keyboard, pointer, touch | narrative-exploration-recipe |
+| `exploration-game` | world, world-entities, world-graph | narrative | top-down | keyboard, touch, gamepad | narrative-exploration-recipe |
+| `visual-novel` | narrative, dialogue | progression | ui-simulation | keyboard, touch, gamepad | narrative-exploration-recipe |
+| `point-and-click` | narrative, world, world-entities, dialogue | puzzle | pointer, ui-simulation | keyboard, pointer, touch, gamepad | narrative-exploration-recipe |
+| `interactive-fiction-hybrid` | narrative | world | ui-simulation | keyboard, touch, gamepad | narrative-exploration-recipe |
+| `investigation-game` | narrative, world, world-entities, codex | puzzle | top-down, pointer | keyboard, pointer, touch, gamepad | narrative-exploration-recipe |
+| `museum-exhibit` | world, world-entities, codex | narrative | top-down, pointer | keyboard, pointer, touch, gamepad | narrative-exploration-recipe |
+| `escape-room` | puzzle-rules | narrative, world | pointer, ui-simulation | keyboard, pointer, touch, gamepad | narrative-exploration-recipe |
 ## Party / toy / weird (Phase 7C)
 
 | id | required packs | optional packs | controller(s) | input modes | validation profile |
 |---|---|---|---|---|---|
-| `microgame-collection` | arcade | progression | ui-simulation | keyboard, touch | party-toy-weird-recipe |
-| `local-party-game` | arcade, local-play | combat | ui-simulation | keyboard, touch | party-toy-weird-recipe |
-| `physics-toy` | - | puzzle | pointer | keyboard, pointer, touch | party-toy-weird-recipe |
-| `virtual-pet` | simulation, progression, needs | world | ui-simulation | keyboard, touch | party-toy-weird-recipe |
-| `dress-up-character-toy` | - | progression | pointer, ui-simulation | keyboard, pointer, touch | party-toy-weird-recipe |
-| `sandbox-playground` | world, world-entities | puzzle | pointer, ui-simulation | keyboard, pointer, touch | party-toy-weird-recipe |
-| `drawing-game` | - | arcade | pointer | keyboard, pointer, touch | party-toy-weird-recipe |
-| `fishing-game` | arcade | progression | ui-simulation | keyboard, touch | party-toy-weird-recipe |
-| `cooking-game` | arcade | progression, simulation | ui-simulation | keyboard, touch | party-toy-weird-recipe |
-| `photography-game` | world, world-entities, camera | arcade | top-down, pointer | keyboard, pointer, touch | party-toy-weird-recipe |
+| `microgame-collection` | arcade | progression | ui-simulation | keyboard, touch, gamepad | party-toy-weird-recipe |
+| `local-party-game` | arcade, local-play | combat | ui-simulation | keyboard, touch, gamepad | party-toy-weird-recipe |
+| `physics-toy` | - | puzzle | pointer | keyboard, pointer, touch, gamepad | party-toy-weird-recipe |
+| `virtual-pet` | simulation, progression, needs | world | ui-simulation | keyboard, touch, gamepad | party-toy-weird-recipe |
+| `dress-up-character-toy` | items | progression | pointer, ui-simulation | keyboard, pointer, touch, gamepad | party-toy-weird-recipe |
+| `sandbox-playground` | world, world-entities | puzzle | pointer, ui-simulation | keyboard, pointer, touch, gamepad | party-toy-weird-recipe |
+| `drawing-game` | - | arcade | pointer | keyboard, pointer, touch, gamepad | party-toy-weird-recipe |
+| `fishing-game` | arcade | progression | ui-simulation | keyboard, touch, gamepad | party-toy-weird-recipe |
+| `cooking-game` | arcade | progression, simulation | ui-simulation | keyboard, touch, gamepad | party-toy-weird-recipe |
+| `photography-game` | world, world-entities, camera | arcade | top-down, pointer | keyboard, pointer, touch, gamepad | party-toy-weird-recipe |
 ## Full pack-consumer coverage (all 74 recipes)
 
 | short id | real pack id | capability id | recipes requiring it | recipes referencing it (required or optional) |
@@ -139,17 +139,17 @@ pack/controller selections were actually exercised through, and
 | simulation | `sw2d.simulation` | `simulation.resources` | 9 | 10 |
 | narrative | `sw2d.narrative` | `narrative.state` | 4 | 8 |
 | strategy | `sw2d.strategy` | `strategy.turns` | 4 | 4 |
-| items | `sw2d.items` | `items.state` | 3 | 3 |
+| items | `sw2d.items` | `items.state` | 4 | 4 |
 | weapons | `sw2d.weapons` | `combat.weapons` | 10 | 12 |
 | encounters | `sw2d.encounters` | `combat.encounters` | 11 | 12 |
-| navigation | `sw2d.navigation` | `world.navigation` | 5 | 8 |
+| navigation | `sw2d.navigation` | `world.navigation` | 6 | 8 |
 | puzzle-rules | `sw2d.puzzle-rules` | `puzzle.rules` | 6 | 6 |
 | generation | `sw2d.generation` | `world.generation` | 6 | 6 |
 | world-graph | `sw2d.world-graph` | `world.graph` | 2 | 2 |
 | vehicles | `sw2d.vehicles` | `vehicle.motion` | 6 | 6 |
 | racing | `sw2d.racing` | `race.state` | 4 | 4 |
 | economy | `sw2d.economy` | `simulation.economy` | 3 | 3 |
-| needs | `sw2d.needs` | `simulation.needs` | 3 | 3 |
+| needs | `sw2d.needs` | `simulation.needs` | 4 | 4 |
 | dialogue | `sw2d.dialogue` | `narrative.dialogue` | 2 | 2 |
 | perception | `sw2d.perception` | `ai.perception` | 2 | 2 |
 | ball-paddle | `sw2d.ball-paddle` | `arcade.ball` | 2 | 2 |

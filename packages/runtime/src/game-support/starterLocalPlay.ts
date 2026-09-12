@@ -22,6 +22,10 @@ export interface StarterLocalPlaySnapshot {
   readonly outcome: string;
   readonly axis0: number;
   readonly axis1: number;
+  readonly axes: readonly number[];
+  readonly gamepads: readonly { readonly seat: number; readonly index: number; readonly id: string; readonly connected: boolean }[];
+  readonly views: readonly { readonly seat: number; readonly x: number; readonly y: number; readonly width: number; readonly height: number }[];
+  readonly netplay: { readonly enabled: boolean; readonly role: 'host' | 'guest' | null; readonly room: string | null; readonly connected: boolean; readonly peerCount: number; readonly transport: 'broadcast-channel' | null; readonly authority: 'host' };
 }
 
 export interface StarterLocalPlayBinding {
@@ -51,6 +55,10 @@ const INERT: StarterLocalPlayBinding = {
     outcome: 'playing',
     axis0: 0,
     axis1: 0,
+    axes: [],
+    gamepads: [],
+    views: [],
+    netplay: { enabled: false, role: null, room: null, connected: false, peerCount: 0, transport: null, authority: 'host' },
   }),
   render: () => undefined,
   mode: () => null,
@@ -69,6 +77,10 @@ export function bindStarterLocalPlay(context: SceneContext, options?: { readonly
   const title = hud ? scene.add.text(width * 0.5, 28, '', headingStyle(20)).setOrigin(0.5).setScrollFactor(0).setDepth(50) : null;
   const status = hud ? scene.add.text(width * 0.5, 54, '', mutedStyle(14)).setOrigin(0.5).setScrollFactor(0).setDepth(50) : null;
   const hint = hud ? scene.add.text(width * 0.5, height - 28, '', accentStyle(14)).setOrigin(0.5).setScrollFactor(0).setDepth(50) : null;
+  const views = seats.mode() === 'hotseat'
+    ? seats.scores().map((_, seat) => ({ seat, x: (seat % 2) * width * 0.5, y: Math.floor(seat / 2) * height * 0.5, width: width * 0.5, height: height * 0.5 }))
+    : [];
+  const viewPanels = hud ? views.map((view) => scene.add.rectangle(view.x + view.width * 0.5, view.y + view.height * 0.5, view.width - 8, view.height - 8, 0x17233d, 0.16).setStrokeStyle(2, 0x8a93a6, 0.7).setDepth(5)) : [];
 
   const held = new Set<string>();
   const onDown = (event: Event): void => {
@@ -86,18 +98,51 @@ export function bindStarterLocalPlay(context: SceneContext, options?: { readonly
   window.addEventListener('keyup', onUp);
   window.addEventListener('blur', onBlur);
 
+  const query = new URLSearchParams(window.location.search);
+  const role = query.get('netplay') === 'host' ? 'host' : query.get('netplay') === 'guest' ? 'guest' : null;
+  const room = role ? (query.get('room') || 'local') : null;
+  const channel = role && room && typeof BroadcastChannel !== 'undefined' ? new BroadcastChannel(`sw2d-netplay:${context.definition.id}:${room}`) : null;
+  let connected = false;
+  let peerCount = 0;
+  let remote: { scores: readonly number[]; turns: number; winner: number | null; outcome: string; currentPlayer: number; lastResult: string | null } | null = null;
+  const publishState = (): void => {
+    if (role !== 'host' || !channel) return;
+    channel.postMessage({ type: 'state', scores: seats.scores(), turns: seats.turns(), winner: seats.winner(), outcome: seats.outcome(), currentPlayer: seats.currentPlayer(), lastResult: seats.lastResult() });
+  };
+  if (channel) {
+    channel.onmessage = (event: MessageEvent<Record<string, unknown>>) => {
+      const message = event.data;
+      if (role === 'host' && message.type === 'hello') { connected = true; peerCount = 1; channel.postMessage({ type: 'welcome' }); publishState(); }
+      else if (role === 'host' && message.type === 'act') { seats.act(); publishState(); render(); }
+      else if (role === 'host' && message.type === 'bye') { connected = false; peerCount = 0; }
+      else if (role === 'guest' && message.type === 'welcome') { connected = true; peerCount = 1; }
+      else if (role === 'guest' && message.type === 'state') {
+        connected = true; peerCount = 1;
+        remote = { scores: message.scores as readonly number[], turns: Number(message.turns), winner: message.winner as number | null, outcome: String(message.outcome), currentPlayer: Number(message.currentPlayer), lastResult: message.lastResult as string | null };
+        render();
+      }
+    };
+    if (role === 'guest') channel.postMessage({ type: 'hello' });
+  }
+
   function snapshot(): StarterLocalPlaySnapshot {
+    const axes = seats.scores().map((_, seat) => seats.axis(seat));
+    const networkState = role === 'guest' ? remote : null;
     return {
       active: true,
       mode: seats.mode(),
-      currentPlayer: seats.currentPlayer(),
-      scores: seats.scores(),
-      turns: seats.turns(),
-      winner: seats.winner(),
-      lastResult: seats.lastResult(),
-      outcome: seats.outcome(),
+      currentPlayer: networkState?.currentPlayer ?? seats.currentPlayer(),
+      scores: networkState?.scores ?? seats.scores(),
+      turns: networkState?.turns ?? seats.turns(),
+      winner: networkState?.winner ?? seats.winner(),
+      lastResult: networkState?.lastResult ?? seats.lastResult(),
+      outcome: networkState?.outcome ?? seats.outcome(),
       axis0: seats.axis(0),
       axis1: seats.axis(1),
+      axes,
+      gamepads: context.input.gamepadSeats?.().map(({ seat, index, id, connected }) => ({ seat, index, id, connected })) ?? [],
+      views,
+      netplay: { enabled: role !== null, role, room, connected, peerCount, transport: channel ? 'broadcast-channel' : null, authority: 'host' },
     };
   }
 
@@ -124,10 +169,12 @@ export function bindStarterLocalPlay(context: SceneContext, options?: { readonly
     active: true,
     pump(): void {
       seats.setHeld([...held]);
+      seats.setGamepadAxes(seats.scores().map((_, seat) => context.input.gamepadAxis?.(seat, 'vertical') ?? 0));
       render();
     },
     act(): void {
-      seats.act();
+      if (role === 'guest' && channel) channel.postMessage({ type: 'act' });
+      else { seats.act(); publishState(); }
       render();
     },
     axis(playerIndex: number): number {
@@ -142,10 +189,13 @@ export function bindStarterLocalPlay(context: SceneContext, options?: { readonly
       window.removeEventListener('keydown', onDown);
       window.removeEventListener('keyup', onUp);
       window.removeEventListener('blur', onBlur);
+      channel?.postMessage({ type: 'bye' });
+      channel?.close();
       try {
         title?.destroy();
         status?.destroy();
         hint?.destroy();
+        for (const panel of viewPanels) panel.destroy();
       } catch {
         /* scene already tearing down */
       }

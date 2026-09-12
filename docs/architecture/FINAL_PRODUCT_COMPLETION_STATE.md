@@ -18,12 +18,12 @@ file is the cursor.
 
 | field | value |
 |---|---|
-| branch SHA | (see git log; this checkpoint is Wave 6 complete) |
-| waves completed | 3 + sanity repair + Wave 4 + Wave 5 + Wave 6 + Wave 7 + Wave 8 |
-| limitations closed | 59 / 69 entries |
-| remaining machine-executable | 10 |
+| branch SHA | (see git log; Wave 9 is awaiting its checkpoint commit) |
+| waves completed | 3 + sanity repair + Wave 4 + Wave 5 + Wave 6 + Wave 7 + Wave 8 + Wave 9 implementation |
+| limitations closed | 69 / 69 entries |
+| remaining machine-executable | 0 |
 | blockers | none |
-| next exact action | Wave 9 party / toy / operational closeout (L24, L47-L51, X01-X04) |
+| next exact action | full certification, Wave 9 commit/push, pull request, normal merge commit, post-merge validation |
 
 ## Checkpoint log
 
@@ -193,3 +193,10 @@ Known leftover (not a Wave 1-3 product hole, not repaired here): `bindStarterPro
 - `npm run qa:completion -- visual-novel point-and-click interactive-fiction-hybrid investigation-game museum-exhibit` 5/5 PASS (fresh factory output, system Chrome).
 - Limitation entries removed only after the generated-browser journeys passed; Wave 8 proof refresh/check and committed-proof run are recorded in the Wave 8 evidence file.
 - `npm run limitations:extract`: **10** machine-executable entries remain (59/69 entries closed). Wave 8 matrix rows are closed.
+
+### Wave 9 L24/L47-L53/X01 - party, toy, input and zero gate
+- Runtime gamepad input now covers standard mappings, deadzones, multiple pads, stable seats, disconnect/reconnect, and multi-source aggregation. Local party output supports four seats/viewports; an explicit local-first BroadcastChannel transport provides host-authoritative two-page play without accounts, backend, or runtime internet.
+- Authored microgame, fishing and cooking documents drive complete round/loop state machines. Physics toy adds seven props and reset. Wardrobe consumes authored `sw2d.items` metadata with swap/remove/persistence. Sandbox adds duplicate/edit/history/persistence. Drawing adds pressure/layers/history/clear/local PNG export and cancel lifecycle. Photography adds focus/exposure/composition scoring and objectives.
+- `npm run typecheck` PASS; focused unit suites and all nine fresh canonical Wave 9 browser journeys PASS; canonical proof refresh/check and nine proof journeys PASS.
+- `npm run limitations:extract`: **ZERO-LIMITATIONS GATE PASS**; 0 machine-executable entries remain. Physical-controller certification and public-license choice retain their documented human-only boundaries.
+- Secondary sweep (`TODO`, `FIXME`, `placeholder`, `stub`, `not implemented`, `future work`, `unsupported`, `incomplete`, `temporary`) found no new normal-product gap. Matches are deliberate generated placeholder art, HTML placeholder attributes, bounded unsupported-input errors, browser-unavailable failure messages, historical comments, or unregistered scaffold templates; none is a shipped preset capability claim.

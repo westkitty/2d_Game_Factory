@@ -15,6 +15,31 @@ export interface GameManifestInput {
   readonly physicsProfile?: 'matter';
 }
 
+export function generateMicrogameCatalog(active: boolean): Record<string, unknown> {
+  return active ? { schemaVersion: 1, order: 'rotate', rounds: [
+    { id: 'signal', kind: 'react', countdownMs: 400, durationMs: 650, target: 1, score: 40 },
+    { id: 'scramble', kind: 'mash', countdownMs: 250, durationMs: 1200, target: 4, score: 60 },
+    { id: 'steady', kind: 'hold', countdownMs: 250, durationMs: 900, target: 500, score: 70 },
+    { id: 'switch', kind: 'alternate', countdownMs: 250, durationMs: 1400, target: 4, score: 80 },
+  ] } : { schemaVersion: 1, order: 'fixed', rounds: [] };
+}
+
+export function generateFishingCatalog(active: boolean): Record<string, unknown> {
+  return active ? { schemaVersion: 1, castMs: 360, biteMs: 650, hookMs: 500, tensionMin: 20, tensionMax: 80, reelTarget: 3, catchTarget: 2, fish: [
+    { id: 'sunfish', name: 'Sunfish', score: 50, pull: 7 }, { id: 'bass', name: 'River Bass', score: 80, pull: 11 },
+  ] } : { schemaVersion: 1, castMs: 1, biteMs: 1, hookMs: 1, tensionMin: 0, tensionMax: 1, reelTarget: 1, catchTarget: 1, fish: [] };
+}
+
+export function generateCookingCatalog(active: boolean): Record<string, unknown> {
+  return active ? { schemaVersion: 1, ingredients: [
+    { id: 'flour', label: 'FLOUR' }, { id: 'egg', label: 'EGG' }, { id: 'pan', label: 'PAN' },
+  ], recipes: [{ id: 'flatcake', dish: 'Golden Flatcake', score: 100, actions: [
+    { ingredientId: 'flour', action: 'measure', maxDelayMs: 2500 },
+    { ingredientId: 'egg', action: 'mix', maxDelayMs: 2500 },
+    { ingredientId: 'pan', action: 'cook', maxDelayMs: 2500 },
+  ] }] } : { schemaVersion: 1, ingredients: [], recipes: [] };
+}
+
 /** content/game.json - a GameDefinition. Only the recipe's *required* packs are enabled by default, plus the generated shell pack. */
 export function generateGameManifest(input: GameManifestInput): Record<string, unknown> {
   return {
@@ -44,7 +69,7 @@ export function generateGameManifest(input: GameManifestInput): Record<string, u
  * its effect through the reusable `sw2d.items` service. Other presets get an
  * empty catalog.
  */
-export function generateItemCatalog(kind: boolean | 'coin' | 'kart' | 'none' = 'none'): Record<string, unknown> {
+export function generateItemCatalog(kind: boolean | 'coin' | 'kart' | 'wardrobe' | 'none' = 'none'): Record<string, unknown> {
   const resolved = kind === true ? 'coin' : kind === false ? 'none' : kind;
   if (resolved === 'none') return { schemaVersion: 1, items: [] };
   if (resolved === 'kart') {
@@ -74,6 +99,19 @@ export function generateItemCatalog(kind: boolean | 'coin' | 'kart' | 'none' = '
           effects: [{ kind: 'vehicle.boost' }],
           metadata: { fire: 'boost' },
         },
+      ],
+    };
+  }
+  if (resolved === 'wardrobe') {
+    return {
+      schemaVersion: 1,
+      items: [
+        { id: 'hat', displayName: 'Violet Hat', category: 'wardrobe', tags: ['head'], stackable: false, consumable: false,
+          metadata: { slot: 'head', layer: 20, offsetX: 0, offsetY: -110, scale: 1, rotation: 0, color: 12159728 } },
+        { id: 'crown', displayName: 'Gold Crown', category: 'wardrobe', tags: ['head'], stackable: false, consumable: false,
+          metadata: { slot: 'head', layer: 21, offsetX: 0, offsetY: -118, scale: 0.9, rotation: 0, color: 15778420 } },
+        { id: 'shirt', displayName: 'Blue Shirt', category: 'wardrobe', tags: ['body'], stackable: false, consumable: false,
+          metadata: { slot: 'body', layer: 19, offsetX: 0, offsetY: 20, scale: 1, rotation: 0, color: 5218016 } },
       ],
     };
   }
@@ -1326,8 +1364,10 @@ export function generateLocalPlayCatalog(kind: 'hotseat' | 'versus' | 'none'): R
       players: [
         { id: 'p1', label: 'P1' },
         { id: 'p2', label: 'P2' },
+        { id: 'p3', label: 'P3' },
+        { id: 'p4', label: 'P4' },
       ],
-      hotseat: { turns: 6, pointsCycle: [1, 2, 3] },
+      hotseat: { turns: 8, pointsCycle: [1, 2, 3, 2] },
     };
   }
   return {

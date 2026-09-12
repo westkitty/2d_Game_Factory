@@ -9,14 +9,23 @@
     {
       "id": "p2",
       "label": "P2"
+    },
+    {
+      "id": "p3",
+      "label": "P3"
+    },
+    {
+      "id": "p4",
+      "label": "P4"
     }
   ],
   "hotseat": {
-    "turns": 6,
+    "turns": 8,
     "pointsCycle": [
       1,
       2,
-      3
+      3,
+      2
     ]
   }
 }

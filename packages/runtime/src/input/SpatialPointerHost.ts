@@ -34,6 +34,7 @@ const IDLE_STATE: SpatialPointerState = {
   source: null,
   inside: false,
   active: false,
+  pressure: 0,
   dragging: false,
   dragStartWorldX: 0,
   dragStartWorldY: 0,
@@ -65,6 +66,7 @@ export class SpatialPointerHost implements SpatialPointerInput, SpatialPointerSi
   #rawSource: PointerSourceKind | null = null;
   #everActive = false;
   #pressLatch = false;
+  #rawPressure = 0;
 
   // Frame state, produced by update().
   #screenX = 0;
@@ -88,6 +90,7 @@ export class SpatialPointerHost implements SpatialPointerInput, SpatialPointerSi
     this.#rawScreenX = x;
     this.#rawScreenY = y;
     this.#rawSource = pointerKind(pe);
+    this.#rawPressure = pointerPressure(pe, this.#rawDown);
     this.#everActive = true;
   };
 
@@ -98,6 +101,7 @@ export class SpatialPointerHost implements SpatialPointerInput, SpatialPointerSi
     this.#rawScreenX = x;
     this.#rawScreenY = y;
     this.#rawSource = pointerKind(pe);
+    this.#rawPressure = pointerPressure(pe, true);
     this.#rawInside = true;
     if (!this.#rawDown) this.#pressLatch = true;
     this.#rawDown = true;
@@ -112,6 +116,7 @@ export class SpatialPointerHost implements SpatialPointerInput, SpatialPointerSi
     this.#rawScreenY = y;
     this.#rawSource = pointerKind(pe);
     this.#rawDown = false;
+    this.#rawPressure = 0;
     this.#everActive = true;
   };
 
@@ -137,6 +142,11 @@ export class SpatialPointerHost implements SpatialPointerInput, SpatialPointerSi
     this.#rawInside = false;
   };
 
+  readonly #onPointerCancel = (event: Event): void => {
+    this.#rawInside = false;
+    this.#onPointerUp(event);
+  };
+
   constructor(root: HTMLElement, resolveWorld: WorldResolver, toCanvasSpace: CanvasSpaceResolver) {
     this.#root = root;
     this.#resolveWorld = resolveWorld;
@@ -144,7 +154,7 @@ export class SpatialPointerHost implements SpatialPointerInput, SpatialPointerSi
     root.addEventListener('pointermove', this.#onRootPointerMove);
     root.addEventListener('pointerdown', this.#onPointerDown);
     root.addEventListener('pointerup', this.#onPointerUp);
-    root.addEventListener('pointercancel', this.#onPointerUp);
+    root.addEventListener('pointercancel', this.#onPointerCancel);
     root.addEventListener('pointerenter', this.#onPointerEnter);
     root.addEventListener('pointerleave', this.#onPointerLeave);
     // A drag that leaves the canvas must keep tracking until the button is
@@ -171,6 +181,10 @@ export class SpatialPointerHost implements SpatialPointerInput, SpatialPointerSi
 
   setPointerInside(inside: boolean): void {
     this.#rawInside = inside;
+  }
+
+  setPointerPressure(pressure: number): void {
+    this.#rawPressure = Math.max(0, Math.min(1, pressure));
   }
 
   /** Advance one frame. Called once per game step, before scene updates. */
@@ -230,6 +244,7 @@ export class SpatialPointerHost implements SpatialPointerInput, SpatialPointerSi
   clear(): void {
     this.#rawDown = false;
     this.#pressLatch = false;
+    this.#rawPressure = 0;
   }
 
   get state(): SpatialPointerState {
@@ -245,6 +260,7 @@ export class SpatialPointerHost implements SpatialPointerInput, SpatialPointerSi
       source: this.#rawSource,
       inside: this.#rawInside,
       active: this.#everActive,
+      pressure: this.#down ? (this.#rawPressure || 0.5) : 0,
       dragging: this.#dragging,
       dragStartWorldX: this.#dragStartWorldX,
       dragStartWorldY: this.#dragStartWorldY,
@@ -263,7 +279,7 @@ export class SpatialPointerHost implements SpatialPointerInput, SpatialPointerSi
     this.#root.removeEventListener('pointermove', this.#onRootPointerMove);
     this.#root.removeEventListener('pointerdown', this.#onPointerDown);
     this.#root.removeEventListener('pointerup', this.#onPointerUp);
-    this.#root.removeEventListener('pointercancel', this.#onPointerUp);
+    this.#root.removeEventListener('pointercancel', this.#onPointerCancel);
     this.#root.removeEventListener('pointerenter', this.#onPointerEnter);
     this.#root.removeEventListener('pointerleave', this.#onPointerLeave);
     window.removeEventListener('pointermove', this.#onPointerMove);
@@ -276,4 +292,10 @@ function pointerKind(event: PointerEvent): PointerSourceKind {
   if (event.pointerType === 'touch') return 'touch';
   if (event.pointerType === 'pen') return 'pen';
   return 'mouse';
+}
+
+function pointerPressure(event: PointerEvent, down: boolean): number {
+  if (!down) return 0;
+  const pressure = Number.isFinite(event.pressure) ? event.pressure : 0;
+  return pressure > 0 ? Math.max(0, Math.min(1, pressure)) : 0.5;
 }

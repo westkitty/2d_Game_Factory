@@ -119,7 +119,7 @@ controller/input-mode breakdown and full pack-consumer coverage.
 | `tycoon-lite` | Tycoon Lite | ui-simulation | tuning, economy | proof-validated |
 | `farming-lite` | Farming Lite | ui-simulation | tuning | proof-validated |
 | `pet-creature` | Pet Creature | ui-simulation | tuning, needs | proof-validated |
-| `colony-lite` | Colony Lite | ui-simulation | tuning | proof-validated |
+| `colony-lite` | Colony Lite | ui-simulation | tuning, needs | proof-validated |
 | `restaurant` | Restaurant | ui-simulation | tuning, economy | proof-validated |
 | `aquarium-terrarium` | Aquarium / Terrarium | ui-simulation | tuning, needs | proof-validated |
 
@@ -143,7 +143,7 @@ controller/input-mode breakdown and full pack-consumer coverage.
 | `local-party-game` | Local Party Game | ui-simulation | tuning, local-play | proof-validated |
 | `physics-toy` | Physics Toy | pointer | tuning | proof-validated |
 | `virtual-pet` | Virtual Pet | ui-simulation | tuning, needs | proof-validated |
-| `dress-up-character-toy` | Dress-Up Character Toy | pointer, ui-simulation | tuning, characters | proof-validated |
+| `dress-up-character-toy` | Dress-Up Character Toy | pointer, ui-simulation | tuning, characters, items | proof-validated |
 | `sandbox-playground` | Sandbox Playground | pointer, ui-simulation | tuning, levels | proof-validated |
 | `drawing-game` | Drawing Game | pointer | tuning | proof-validated |
 | `fishing-game` | Fishing Game | ui-simulation | tuning | proof-validated |
@@ -195,7 +195,7 @@ recipe's *first* stated limitation; see `knownLimitations` in
 | `match-puzzle` | (none stated) |
 | `falling-block-puzzle` | (none stated) |
 | `breakout` | (none stated) |
-| `pong` | Local hot-seat turns and simultaneous versus axes are reusable (sw2d.local-play); netcode, gamepads, split-screen cameras and more than two seats are not. |
+| `pong` | (none stated) |
 | `physics-puzzle` | (none stated) |
 | `maze-game` | (none stated) |
 | `rhythm-action` | (none stated) |
@@ -212,24 +212,24 @@ recipe's *first* stated limitation; see `knownLimitations` in
 | `shopkeeper` | (none stated) |
 | `tycoon-lite` | (none stated) |
 | `farming-lite` | (none stated) |
-| `pet-creature` | Needs, decay, care actions, affinity and wellbeing hold/fail are reusable (sw2d.needs); full creature behaviour AI, relationship graphs and colony assignment are not. |
-| `colony-lite` | Resource ledger and timed jobs are reusable (sw2d.simulation); colonist pathfinding is reusable (sw2d.navigation, optional); needs, assignment AI and construction placement are not. |
+| `pet-creature` | (none stated) |
+| `colony-lite` | (none stated) |
 | `restaurant` | (none stated) |
-| `aquarium-terrarium` | Needs, decay, care actions, affinity and wellbeing hold/fail are reusable (sw2d.needs); full creature behaviour AI, relationship graphs and colony assignment are not. |
+| `aquarium-terrarium` | (none stated) |
 | `exploration-game` | (none stated) |
-| `visual-novel` | Branching dialogue graphs, choices, flags and endings are reusable (sw2d.dialogue); portraits, scene composition, parser IF and evidence-board deduction are not. |
-| `point-and-click` | Branching dialogue graphs, choices, flags and endings are reusable (sw2d.dialogue); portraits, scene composition, parser IF and evidence-board deduction are not. |
-| `interactive-fiction-hybrid` | Nodes, flags, choices and seen entries are reusable (sw2d.narrative); a dedicated parser/text-command system and an evidence-board/deduction/linking system are not. |
-| `investigation-game` | Nodes, flags, choices and seen entries are reusable (sw2d.narrative); a dedicated parser/text-command system and an evidence-board/deduction/linking system are not. |
-| `museum-exhibit` | Exhibit entries are reusable (sw2d.codex); portraits and a dedicated museum lighting/presentation overlay are not. |
+| `visual-novel` | (none stated) |
+| `point-and-click` | (none stated) |
+| `interactive-fiction-hybrid` | (none stated) |
+| `investigation-game` | (none stated) |
+| `museum-exhibit` | (none stated) |
 | `escape-room` | (none stated) |
-| `microgame-collection` | Wait/go then mash rounds are a generated starter scheduler on sw2d.arcade; a content-authored rotation/meta-framework is not. |
-| `local-party-game` | Local hot-seat turns and simultaneous versus axes are reusable (sw2d.local-play); netcode, gamepads, split-screen cameras and more than two seats are not. |
-| `physics-toy` | Toy launch/goal is game-specific presentation of Matter; pinball-lite consumes sw2d.pinball instead. |
-| `virtual-pet` | Needs, decay, care actions, affinity and wellbeing hold/fail are reusable (sw2d.needs); full creature behaviour AI, relationship graphs and colony assignment are not. |
-| `dress-up-character-toy` | Wardrobe slots for the generated starter use interaction drag/drop (ADR-0018); a reusable attachment/skeleton wardrobe system is not. |
-| `sandbox-playground` | Block, ball and crate stamps, plus pick-up/move/delete, for the generated starter use interaction click (ADR-0018); a generalized authoring/editing sandbox pack is not. |
-| `drawing-game` | Stroke polylines for the generated starter are captured through the spatial pointer (ADR-0018); pressure, layers, export and a reusable drawing-canvas system are not. |
-| `fishing-game` | Score, combo, lives and elapsed are reusable (sw2d.arcade); a reusable casting/line/tension/fish behavior system and an ingredient/recipe/action-sequence cooking system are not. |
-| `cooking-game` | Score, combo, lives and elapsed are reusable (sw2d.arcade); a reusable casting/line/tension/fish behavior system and an ingredient/recipe/action-sequence cooking system are not. |
-| `photography-game` | Subjects for the generated starter are captured through the spatial pointer (ADR-0018) when the player is in range; framing capture is reusable (sw2d.camera); pressure, exposure and a photography scoring overlay are not. |
+| `microgame-collection` | (none stated) |
+| `local-party-game` | (none stated) |
+| `physics-toy` | (none stated) |
+| `virtual-pet` | (none stated) |
+| `dress-up-character-toy` | (none stated) |
+| `sandbox-playground` | (none stated) |
+| `drawing-game` | (none stated) |
+| `fishing-game` | (none stated) |
+| `cooking-game` | (none stated) |
+| `photography-game` | (none stated) |

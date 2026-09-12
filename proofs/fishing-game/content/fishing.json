@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "castMs": 360,
+  "biteMs": 650,
+  "hookMs": 500,
+  "tensionMin": 20,
+  "tensionMax": 80,
+  "reelTarget": 3,
+  "catchTarget": 2,
+  "fish": [
+    {
+      "id": "sunfish",
+      "name": "Sunfish",
+      "score": 50,
+      "pull": 7
+    },
+    {
+      "id": "bass",
+      "name": "River Bass",
+      "score": 80,
+      "pull": 11
+    }
+  ]
+}

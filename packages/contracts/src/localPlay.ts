@@ -1,12 +1,11 @@
 /**
  * Local multiplayer seats (Category-C capability program, Wave 7).
  *
- * Renderer-neutral input ownership for one keyboard. Two bounded modes:
+ * Renderer-neutral input ownership for keyboard and assigned gamepads. Two bounded modes:
  *   - `hotseat` — pass-and-play turns and scores (local-party-game).
  *   - `versus`  — simultaneous disjoint axes (pong P1 arrows / P2 WASD).
  *
- * Not netcode, not gamepads, not split-screen cameras, not more than two
- * seats. Does not replace `sw2d.ball-paddle` scoring; versus only publishes
+ * Does not replace `sw2d.ball-paddle` scoring; versus only publishes
  * per-seat axes the table can consume.
  */
 
@@ -40,6 +39,7 @@ export interface LocalPlayService {
   /** False when the catalog has fewer than two seats. */
   active(): boolean;
   setHeld(codes: readonly string[]): void;
+  setGamepadAxes(axes: readonly number[]): void;
   axis(playerIndex: number): number;
   currentPlayer(): number;
   scores(): readonly number[];

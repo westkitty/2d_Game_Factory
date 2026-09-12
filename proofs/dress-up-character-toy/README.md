@@ -62,13 +62,13 @@ with a small working placeholder to replace. Every other pack is configured as J
 ## Composition
 
 - Controller family/families: pointer, ui-simulation
-- Required packs (enabled by default): (none)
+- Required packs (enabled by default): sw2d.items
 - Optional packs (available, not enabled by default - add to content/game.json's systemPacks to use): sw2d.progression
-- Content roles this preset expects: tuning, characters
+- Content roles this preset expects: tuning, characters, items
 
 ## Known preset limitations
 
-- Wardrobe slots for the generated starter use interaction drag/drop (ADR-0018); a reusable attachment/skeleton wardrobe system is not.
+- (none stated)
 
 ## How to add a level
 

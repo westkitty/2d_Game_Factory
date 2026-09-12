@@ -31,6 +31,9 @@ import targetingData from '../content/targeting.json' with { type: 'json' };
 import pursuitData from '../content/pursuit.json' with { type: 'json' };
 import runsData from '../content/runs.json' with { type: 'json' };
 import simulationData from '../content/simulation.json' with { type: 'json' };
+import microgamesData from '../content/microgames.json' with { type: 'json' };
+import fishingData from '../content/fishing.json' with { type: 'json' };
+import cookingData from '../content/cooking.json' with { type: 'json' };
 
 /**
  * The generated game's content source.
@@ -56,7 +59,7 @@ export const gameContent: ContentSource = {
   id: (gameData as { id: string }).id,
   load: async (): Promise<ContentBundle> => {
     const normalizedLevel = normalizeTiledMap('main', rawLevel);
-    const data = validateContentBundleData({ tuning: tuningData, 'levels/main': normalizedLevel, items: itemsData, weapons: weaponsData, encounters: encountersData, puzzles: puzzlesData, generation: generationData, 'world-graph': worldGraphData, vehicles: vehiclesData, races: racesData, economy: economyData, needs: needsData, dialogue: dialogueData, perception: perceptionData, 'ball-paddle': ballPaddleData, melee: meleeData, 'local-play': localPlayData, 'stage-scroll': stageScrollData, timing: timingData, wall: wallData, territory: territoryData, pinball: pinballData, camera: cameraData, codex: codexData, targeting: targetingData, pursuit: pursuitData, runs: runsData, simulation: simulationData });
+    const data = validateContentBundleData({ tuning: tuningData, 'levels/main': normalizedLevel, items: itemsData, weapons: weaponsData, encounters: encountersData, puzzles: puzzlesData, generation: generationData, 'world-graph': worldGraphData, vehicles: vehiclesData, races: racesData, economy: economyData, needs: needsData, dialogue: dialogueData, perception: perceptionData, 'ball-paddle': ballPaddleData, melee: meleeData, 'local-play': localPlayData, 'stage-scroll': stageScrollData, timing: timingData, wall: wallData, territory: territoryData, pinball: pinballData, camera: cameraData, codex: codexData, targeting: targetingData, pursuit: pursuitData, runs: runsData, simulation: simulationData, microgames: microgamesData, fishing: fishingData, cooking: cookingData });
 
     const assets: readonly AssetDescriptor[] = theme.assets;
     const ui: Partial<UiCopy> | undefined = theme.ui;

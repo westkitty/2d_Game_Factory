@@ -151,6 +151,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
           return;
         }
         if (seats.active) {
+          seats.pump();
           if (intent.confirmPressed || intent.primaryPressed) seats.act();
           seats.render();
           return;
@@ -183,6 +184,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
           if (intent.navigateLeftPressed || intent.navigateUpPressed) arcade.select(-1);
           else if (intent.navigateRightPressed || intent.navigateDownPressed) arcade.select(1);
           if (intent.confirmPressed || intent.primaryPressed) arcade.confirm();
+          if (context.input.justPressed('SECONDARY_ACTION')) arcade.secondary();
           arcade.render();
           return;
         }
