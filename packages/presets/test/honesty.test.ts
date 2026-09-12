@@ -220,6 +220,9 @@ describe('closed limitations stay closed (Final Product Completion program)', ()
     { id: 'match-puzzle', pattern: /pointer drag-swap, wall-kicks and overlay-local boards are not/, closedBy: 'L21/L22 pointer swap + wall kicks' },
     { id: 'match-puzzle', pattern: /this grid-family recipe does not consume it/, closedBy: 'L22 spatial pointer drag-swap' },
     { id: 'falling-block-puzzle', pattern: /pointer drag-swap, wall-kicks and overlay-local boards are not/, closedBy: 'L21 wall kicks' },
+    { id: 'breakout', pattern: /a full pinball table is not/, closedBy: 'L23/L28 pinball table complete' },
+    { id: 'pong', pattern: /a full pinball table is not/, closedBy: 'L23/L28 pinball table complete' },
+    { id: 'pinball-lite', pattern: /Matter presentation stays on physics-toy/, closedBy: 'L28 pinball balls/drain/game-over' },
   ];
 
   CLOSED.forEach(({ id, pattern, closedBy }) => {

@@ -60,6 +60,7 @@ export const COMPLETION_SPEC_MODULES: Readonly<Record<string, string>> = {
   'endless-driving': 'endlessDriving',
   'match-puzzle': 'matchPuzzle',
   'falling-block-puzzle': 'fallingBlockPuzzle',
+  'pinball-lite': 'pinballLite',
 };
 
 interface Target {

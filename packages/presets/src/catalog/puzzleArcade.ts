@@ -78,7 +78,7 @@ export const PUZZLE_ARCADE_PRESETS: readonly PresetDefinition[] = [
     requiredSystemPacks: [pack(PACK_IDS.arcade), pack(PACK_IDS.ballPaddle)],
     requiredContentRoles: ['tuning', 'ball-paddle'],
     validationProfile: VALIDATION_PROFILES.puzzleArcade,
-    knownLimitations: [LIMITATIONS.ballPaddleSystem],
+    knownLimitations: [],
   }),
 
   definePreset({
@@ -90,7 +90,7 @@ export const PUZZLE_ARCADE_PRESETS: readonly PresetDefinition[] = [
     requiredSystemPacks: [pack(PACK_IDS.arcade), pack(PACK_IDS.ballPaddle), pack(PACK_IDS.localPlay)],
     requiredContentRoles: ['tuning', 'ball-paddle', 'local-play'],
     validationProfile: VALIDATION_PROFILES.puzzleArcade,
-    knownLimitations: [LIMITATIONS.ballPaddleSystem, LIMITATIONS.localPlaySeats],
+    knownLimitations: [LIMITATIONS.localPlaySeats],
   }),
 
   definePreset({
@@ -161,8 +161,8 @@ export const PUZZLE_ARCADE_PRESETS: readonly PresetDefinition[] = [
     // give the ball real rigid-body motion and collision. Wave 30 pinball-lite
     // consumes sw2d.pinball instead of the Matter table path.
     physicsProfile: 'matter',
-    knownLimitations: [
-      'Flippers, bumpers and bumper-score are reusable (sw2d.pinball); Matter presentation stays on physics-toy.',
-    ],
+    // Final Product Completion Wave 4 (matrix L28): launch, drain, balls/lives,
+    // bumper score, game-over and restart on the reusable sw2d.pinball table.
+    knownLimitations: [],
   }),
 ];

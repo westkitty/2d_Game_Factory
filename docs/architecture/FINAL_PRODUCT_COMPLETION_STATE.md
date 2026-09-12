@@ -19,11 +19,11 @@ file is the cursor.
 | field | value |
 |---|---|
 | branch SHA | (see git log; this checkpoint is the Wave 1-3 independent sanity repair) |
-| waves completed | 3 + sanity repair + Wave 4 L18/L19/L21/L22 |
-| limitations closed | 27 / 69 entries |
-| remaining machine-executable | 42 |
+| waves completed | 3 + sanity repair + Wave 4 L18/L19/L21/L22/L23/L28 |
+| limitations closed | 30 / 69 entries |
+| remaining machine-executable | 39 |
 | blockers | none |
-| next exact action | Wave 4 remainder: L20 boat/flight, L23/L28 pinball, L25/L46 physics/escape, L26 maze, L27 rhythm/reaction |
+| next exact action | Wave 4 remainder: L20 boat/flight, L25/L46 physics/escape, L26 maze, L27 rhythm/reaction |
 
 ## Checkpoint log
 
@@ -124,3 +124,8 @@ Known leftover (not a Wave 1-3 product hole, not repaired here): `bindStarterPro
 - `sw2d.puzzle-rules` rotate now wall-kicks. `bindStarterPuzzle` match mode hover/drag-swaps through `context.spatialPointer`.
 - `qa:completion -- match-puzzle falling-block-puzzle` PASS; `qa:proof` PASS.
 - `npm run limitations:extract`: **42** remain.
+
+### Wave 4 L23/L28 - pinball table
+- Table drains consume balls (default 3); zero is `game-over`. Launch/plunger wired. Breakout/pong no longer claim a missing pinball table.
+- `qa:completion -- pinball-lite` PASS; `qa:proof -- pinball-lite` PASS.
+- `npm run limitations:extract`: **39** remain.

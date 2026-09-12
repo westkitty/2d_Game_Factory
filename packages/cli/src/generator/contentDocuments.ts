@@ -1420,6 +1420,7 @@ export function generatePinballCatalog(kind: 'table' | 'toy' | 'none'): Record<s
       ],
       drainY: 530,
       winScore: 3,
+      balls: 3,
     };
   }
   return {

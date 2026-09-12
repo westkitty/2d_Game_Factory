@@ -250,6 +250,8 @@ exceptions: physical hardware certification and the user-owned public-license ch
 - **Presets:** `breakout`, `pong`
 - **Gap:** the sentence records that breakout/pong do not ship a pinball table; the pinball table is `sw2d.pinball` (L28). Closed when `sw2d.pinball` is a complete table (launch, flippers, bumpers, drain, balls, game-over) so the statement is no longer a product gap.
 - **Checkpoint:** Wave 4.
+- **Closed by:** L28. Breakout/pong no longer declare a missing pinball table.
+- **Status:** CLOSED (Wave 4).
 
 ### L24 - local-play seats / gamepads / netcode / split-screen
 - **Source text:** "Local hot-seat turns and simultaneous versus axes are reusable (sw2d.local-play); netcode, gamepads, split-screen cameras and more than two seats are not."
@@ -285,6 +287,8 @@ exceptions: physical hardware certification and the user-owned public-license ch
 - **Architecture:** `sw2d.pinball` completed (launch/plunger, drain, balls/lives, multi-bumper score, game-over, reset) and `bindStarterPhysics` table mode presents it on Matter.
 - **Journey:** launch → bumper hits score → drain → ball 2 → … → balls 0 `game-over` → restart.
 - **Checkpoint:** Wave 4.
+- **Closed by:** `PinballCatalog.balls`, drain consumes a ball, 0 → `failed/game-over`, `launch()` plunger, HUD balls. **Proof/test:** `pinball.test.ts`, `pinballTable.test.ts`, proof spec `pinballLite` (hands-off drain consumes a life, flips still win). **Browser:** PASS.
+- **Status:** CLOSED (Wave 4).
 
 ## F. Strategy / defense
 
@@ -487,12 +491,12 @@ exceptions: physical hardware certification and the user-owned public-license ch
 | L20 | boat-flight-racer | 4 | OPEN | |
 | L21 | match-puzzle, falling-block-puzzle | 4 | CLOSED | wave 4 puzzle |
 | L22 | match-puzzle | 4 | CLOSED | wave 4 puzzle |
-| L23 | breakout, pong | 4 | OPEN | |
+| L23 | breakout, pong | 4 | CLOSED | wave 4 pinball |
 | L24 | pong, local-party-game | 9 | OPEN | |
 | L25 | physics-puzzle, escape-room | 4 | OPEN | |
 | L26 | maze-game | 4 | OPEN | |
 | L27 | rhythm-action, reaction-timing | 4 | OPEN | |
-| L28 | pinball-lite | 4 | OPEN | |
+| L28 | pinball-lite | 4 | CLOSED | wave 4 pinball |
 | L29 | tower-defense | 5 | OPEN | |
 | L30 | tower-defense | 5 | OPEN | |
 | L31 | lane-defense | 5 | OPEN | |
