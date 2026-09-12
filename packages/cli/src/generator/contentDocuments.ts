@@ -1202,7 +1202,7 @@ export function generateStageScrollCatalog(kind: 'horizontal' | 'vertical' | 'no
  * content/timing.json - a TimingCatalog (Category-C Wave 10). Always
  * emitted; empty/inert unless the preset installs `sw2d.timing`. Two
  * bounded starter modes match the two consumers: reaction (deterministic
- * delay, too-early miss) and rhythm (periodic visual beats). Not audio-sync.
+ * delay, too-early miss) and rhythm (audio-clock beats).
  */
 export function generateTimingCatalog(kind: 'reaction' | 'rhythm' | 'none'): Record<string, unknown> {
   const empty = {

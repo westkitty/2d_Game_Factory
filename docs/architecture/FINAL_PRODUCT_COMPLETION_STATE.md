@@ -18,12 +18,12 @@ file is the cursor.
 
 | field | value |
 |---|---|
-| branch SHA | (see git log; this checkpoint is Wave 4 L25/L46) |
-| waves completed | 3 + sanity repair + Wave 4 L18-L23/L25/L26/L28/L46 |
-| limitations closed | 35 / 69 entries |
-| remaining machine-executable | 34 |
+| branch SHA | (see git log; this checkpoint is Wave 4 complete) |
+| waves completed | 3 + sanity repair + Wave 4 |
+| limitations closed | 37 / 69 entries |
+| remaining machine-executable | 32 |
 | blockers | none |
-| next exact action | Wave 4 remainder: L27 rhythm/reaction — then Waves 5-9 |
+| next exact action | Wave 5 strategy (L29-L36), then Waves 6-9 |
 
 ## Checkpoint log
 
@@ -147,3 +147,9 @@ Known leftover (not a Wave 1-3 product hole, not repaired here): `bindStarterPro
 - `qa:completion -- physics-puzzle escape-room` PASS (fresh factory, system Chrome).
 - `qa:proof -- physics-puzzle escape-room drawing-game dress-up-character-toy sandbox-playground rail-shooter` 6/6 PASS.
 - `npm run limitations:extract`: **34** machine-executable remain (35/69 entries closed).
+
+### Wave 4 L27 - rhythm audio clock / reaction timing
+- `AudioBus.now()` is `AudioContext.currentTime` (pause/resume/visibility suspend, scheduled metronome tones). Rhythm mode samples that transport and grades early/perfect/late/miss. Reaction stays music-independent (false-start, timeout, rounds, pause freeze).
+- `npm run typecheck` PASS; `timing.test.ts` PASS.
+- `qa:completion -- rhythm-action reaction-timing` PASS; `qa:proof` 2/2 PASS.
+- `npm run limitations:extract`: **32** machine-executable remain (37/69 entries closed). Wave 4 matrix rows are closed.

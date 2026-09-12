@@ -105,7 +105,7 @@ export function bindStarterTiming(context: SceneContext, options?: { readonly hu
     cueLabel.setText(
       snap.outcome === 'complete' ? 'CLEAR' : snap.outcome === 'failed' ? 'OUT' : open ? 'GO' : 'WAIT',
     );
-    hint.setText(clock.mode() === 'rhythm' ? 'ENTER ON THE BEAT' : 'WAIT FOR THE GO   ENTER HITS');
+    hint.setText(clock.mode() === 'rhythm' ? 'ENTER ON THE BEAT  ·  EARLY / PERFECT / LATE' : 'WAIT FOR THE GO   ENTER HITS');
   }
 
   render();

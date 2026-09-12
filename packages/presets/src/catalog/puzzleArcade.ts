@@ -10,8 +10,8 @@ import { LIMITATIONS, POINTER_INPUT_MODES, VALIDATION_PROFILES, definePreset, pa
  * confirm-driven recipes get `ui-simulation`, ball-and-paddle recipes reuse
  * `top-down`'s continuous axis for paddle movement (ball motion is
  * `sw2d.ball-paddle`, see `LIMITATIONS.ballPaddleSystem`),
- * timing recipes consume `sw2d.timing` (visual reaction / beat windows,
- * ADR-0037), and the one recipe that is genuinely about pointer interaction
+ * timing recipes consume `sw2d.timing` (reaction delays / audio-clock beats,
+ * ADR-0037 / Wave 4 L27), and the one recipe that is genuinely about pointer interaction
  * (`physics-puzzle`) gets `pointer`, honestly limited to press-style actions.
  *
  * Standard puzzle kinds (sokoban, switch/sequence, match, falling-block,
@@ -132,7 +132,7 @@ export const PUZZLE_ARCADE_PRESETS: readonly PresetDefinition[] = [
     requiredSystemPacks: [pack(PACK_IDS.arcade), pack(PACK_IDS.timing)],
     requiredContentRoles: ['tuning', 'timing'],
     validationProfile: VALIDATION_PROFILES.puzzleArcade,
-    knownLimitations: [LIMITATIONS.visualTiming],
+    knownLimitations: [],
   }),
 
   definePreset({
@@ -144,7 +144,7 @@ export const PUZZLE_ARCADE_PRESETS: readonly PresetDefinition[] = [
     requiredSystemPacks: [pack(PACK_IDS.arcade), pack(PACK_IDS.timing)],
     requiredContentRoles: ['tuning', 'timing'],
     validationProfile: VALIDATION_PROFILES.puzzleArcade,
-    knownLimitations: [LIMITATIONS.visualTiming],
+    knownLimitations: [],
   }),
 
   definePreset({

@@ -283,9 +283,11 @@ exceptions: physical hardware certification and the user-owned public-license ch
 ### L27 - rhythm audio clock / reaction timing
 - **Source text:** "Visual reaction cues and beat windows are reusable (sw2d.timing); a deterministic music-beat/audio-synchronization system is not."
 - **Presets:** `rhythm-action`, `reaction-timing`
-- **Architecture:** `AudioBus` transport (Web Audio clock: `start/pause/resume/position`, latency offset, suspend/visibility handling), `sw2d.timing` beat clock driven by the transport (deterministic beat positions, latency-aware judgement, scoring windows, track restart, visual cue sync); reaction mode: cue timing, early-press handling, repeatable rounds.
+- **Architecture:** `AudioBus` transport (Web Audio clock: `now/pauseClock/resumeClock/scheduleTone`, latency offset, suspend/visibility handling), `sw2d.timing` rhythm mode samples that transport (early/perfect/late/miss); reaction mode stays a visual delay cue with false-start, timeout, rounds and pause freeze.
 - **Journey (rhythm):** track starts → beats scheduled on audio clock → hit on beat `perfect` → pause → resume → beat phase preserved → restart. **(reaction):** wait → early press `false-start` → cue → press → reaction ms scored → next round.
 - **Checkpoint:** Wave 4.
+- **Closed by:** `WebAudioBus.now()` is AudioContext.currentTime; pause/visibility suspend the clock; rhythm judges from audio time; reaction keeps deltaMs. **Proof/test:** `timing.test.ts` audio transport + pause; proof specs `rhythmAction` / `reactionTiming`. **Browser:** `qa:completion -- rhythm-action reaction-timing` PASS; `qa:proof` PASS.
+- **Status:** CLOSED (Wave 4).
 
 ### L28 - pinball table completeness
 - **Source text:** "Flippers, bumpers and bumper-score are reusable (sw2d.pinball); Matter presentation stays on physics-toy."
@@ -503,7 +505,7 @@ exceptions: physical hardware certification and the user-owned public-license ch
 | L24 | pong, local-party-game | 9 | OPEN | |
 | L25 | physics-puzzle, escape-room | 4 | CLOSED | wave 4 puzzle grammar |
 | L26 | maze-game | 4 | CLOSED | wave 4 maze |
-| L27 | rhythm-action, reaction-timing | 4 | OPEN | |
+| L27 | rhythm-action, reaction-timing | 4 | CLOSED | wave 4 timing |
 | L28 | pinball-lite | 4 | CLOSED | wave 4 pinball |
 | L29 | tower-defense | 5 | OPEN | |
 | L30 | tower-defense | 5 | OPEN | |

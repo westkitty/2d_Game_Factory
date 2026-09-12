@@ -198,8 +198,8 @@ recipe's *first* stated limitation; see `knownLimitations` in
 | `pong` | Local hot-seat turns and simultaneous versus axes are reusable (sw2d.local-play); netcode, gamepads, split-screen cameras and more than two seats are not. |
 | `physics-puzzle` | (none stated) |
 | `maze-game` | (none stated) |
-| `rhythm-action` | Visual reaction cues and beat windows are reusable (sw2d.timing); a deterministic music-beat/audio-synchronization system is not. |
-| `reaction-timing` | Visual reaction cues and beat windows are reusable (sw2d.timing); a deterministic music-beat/audio-synchronization system is not. |
+| `rhythm-action` | (none stated) |
+| `reaction-timing` | (none stated) |
 | `pinball-lite` | (none stated) |
 | `tower-defense` | Spatial hover placement via the pointer shell is available but this starter uses the keyboard grid cursor. |
 | `lane-defense` | Lane-spawn scheduling and combat resolution are still starter-specific. |

@@ -315,6 +315,12 @@ export async function createGame(options: CreateGameOptions): Promise<GameRuntim
   document.addEventListener('visibilitychange', onVisibilityChange);
   rootBag.addFn(() => document.removeEventListener('visibilitychange', onVisibilityChange));
 
+  const pauseClockHandle = events.on('pause:changed', (payload) => {
+    if (payload.paused) audio.pauseClock();
+    else audio.resumeClock();
+  });
+  rootBag.add(pauseClockHandle);
+
   for (const extension of options.extensions ?? []) extension.setup(context);
 
   // F is the one consistent way to take any generated game fullscreen. The

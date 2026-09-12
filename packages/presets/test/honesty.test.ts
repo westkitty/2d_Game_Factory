@@ -228,6 +228,8 @@ describe('closed limitations stay closed (Final Product Completion program)', ()
     { id: 'physics-puzzle', pattern: /this puzzle's own rules stay game-specific TypeScript/, closedBy: 'L25 physics-goal content' },
     { id: 'escape-room', pattern: /this puzzle's own rules stay game-specific TypeScript/, closedBy: 'L25/L46 escape content grammar' },
     { id: 'escape-room', pattern: /No content-authored escape-room puzzle grammar exists yet/, closedBy: 'L46 escape kind' },
+    { id: 'rhythm-action', pattern: /a deterministic music-beat\/audio-synchronization system is not/, closedBy: 'L27 audio transport' },
+    { id: 'reaction-timing', pattern: /a deterministic music-beat\/audio-synchronization system is not/, closedBy: 'L27 reaction rounds' },
   ];
 
   CLOSED.forEach(({ id, pattern, closedBy }) => {
