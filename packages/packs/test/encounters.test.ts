@@ -141,3 +141,52 @@ describe('sw2d.encounters', () => {
     expect(changes).toHaveLength(3); // start(b1), ->b2, ->b3
   });
 });
+
+describe('sw2d.encounters - escalation and boss sequence (Final Product Completion Wave 2/3)', () => {
+  const ESCALATING = {
+    schemaVersion: 1,
+    escalation: { countPerWave: 1, healthScalePerWave: 0.5, speedScalePerWave: 0.25, maxWaves: 3 },
+    encounters: [
+      { id: 'loop', phases: [{ id: 'w', spawns: [{ archetype: 'grunt', count: 2, at: { kind: 'point', x: 10, y: 10 }, health: 20 }], completeWhen: { kind: 'spawns-cleared' } }] },
+      { id: 'boss-a', phases: [{ id: 'p', spawns: [{ archetype: 'boss', count: 1, at: { kind: 'point', x: 5, y: 5 }, health: 50 }], completeWhen: { kind: 'spawns-cleared' } }] },
+      { id: 'boss-b', phases: [{ id: 'p', spawns: [{ archetype: 'boss', count: 1, at: { kind: 'point', x: 5, y: 5 }, health: 80 }], completeWhen: { kind: 'spawns-cleared' } }] },
+    ],
+    sequence: { encounterIds: ['boss-a', 'boss-b'], transitionMs: 900 },
+  } as const;
+
+  const ctxFor = (): EncounterUpdateContext => fakeCtx();
+
+  it('validates the escalation and sequence fields', () => {
+    expect(() => validateContentBundleData({ encounters: ESCALATING })).not.toThrow();
+    expect(() => validateContentBundleData({ encounters: { ...ESCALATING, escalation: { countPerWave: -1, healthScalePerWave: 0, speedScalePerWave: 0 } } })).toThrow();
+  });
+
+  it('wave N spawns more, tougher members, reports a speed scale, and clamps at maxWaves', () => {
+    const service = makeService(ESCALATING as unknown as EncounterCatalog).svc;
+    service.start('loop', { wave: 2 });
+    expect(service.state().wave).toBe(2);
+    expect(service.speedScale()).toBeCloseTo(1.5);
+    const tick = service.update(16, ctxFor());
+    expect(tick.spawns).toHaveLength(4);
+    expect(tick.spawns[0]!.health).toBe(40);
+    for (const s of tick.spawns) service.reportDeath(s.requestId);
+    expect(service.update(16, ctxFor()).completed).toBe(true);
+    service.start('loop', { wave: 9 });
+    expect(service.state().wave).toBe(3);
+    expect(service.update(16, ctxFor()).spawns).toHaveLength(5);
+    service.start('loop');
+    expect(service.state().wave).toBe(0);
+    expect(service.speedScale()).toBe(1);
+    expect(service.escalation()?.countPerWave).toBe(1);
+    expect(service.sequence()?.encounterIds).toEqual(['boss-a', 'boss-b']);
+  });
+
+  it('a catalog without escalation ignores the wave option', () => {
+    const service = makeService({ schemaVersion: 1, encounters: [ESCALATING.encounters[0]] } as unknown as EncounterCatalog).svc;
+    service.start('loop', { wave: 5 });
+    expect(service.state().wave).toBe(0);
+    expect(service.update(16, ctxFor()).spawns).toHaveLength(2);
+    expect(service.escalation()).toBeNull();
+    expect(service.sequence()).toBeNull();
+  });
+});

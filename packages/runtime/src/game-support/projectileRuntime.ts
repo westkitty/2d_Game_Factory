@@ -33,6 +33,8 @@ export interface ProjectileRuntimeOptions {
   readonly targetGroups: readonly Phaser.GameObjects.Group[];
   /** Map a hit sprite to its combat entity id and team, or null if not a target. */
   readonly resolveTarget: (sprite: Phaser.GameObjects.GameObject) => { entityId: string; team: string } | null;
+  /** Flat damage added to projectiles by owner (a run loadout's damage bonus). Default 0. */
+  readonly damageBonusFor?: (ownerId: string) => number;
 }
 
 interface LiveProjectile {
@@ -132,7 +134,7 @@ export function createProjectileRuntime(options: ProjectileRuntimeOptions): Proj
       sprite,
       team: s.team,
       ownerId: s.ownerId,
-      damage: s.damage,
+      damage: s.damage + (options.damageBonusFor?.(s.ownerId) ?? 0),
       pierceLeft: s.pierce,
       bounceLeft: s.bounce,
       remainingMs: s.lifetimeMs,

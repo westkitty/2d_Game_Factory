@@ -50,6 +50,7 @@ export const CONTENT_DOCUMENTS: Readonly<Record<string, ContentDocumentRegistryE
   codex: { schemaName: 'codex-catalog' },
   targeting: { schemaName: 'targeting-catalog' },
   pursuit: { schemaName: 'pursuit-catalog' },
+  runs: { schemaName: 'runs-catalog' },
 };
 
 export type ContentDocumentName = keyof typeof CONTENT_DOCUMENTS;

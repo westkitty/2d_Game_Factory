@@ -198,6 +198,14 @@ describe('closed limitations stay closed (Final Product Completion program)', ()
     { id: 'auto-runner', pattern: /climbing or chase-pressure system is not/, closedBy: 'L02 sw2d.pursuit chaser' },
     { id: 'precision-platformer', pattern: /ledge-grab and a full parkour grammar are not/, closedBy: 'L03 sw2d.wall ledges' },
     { id: 'climbing-game', pattern: /ledge-grab and a full parkour grammar are not/, closedBy: 'L03 sw2d.wall ledges' },
+    { id: 'action-adventure', pattern: /combo strings, directional attacks and targeting UI are not/, closedBy: 'L04 sw2d.melee combos' },
+    { id: 'arena-combat', pattern: /combo strings, directional attacks and targeting UI are not/, closedBy: 'L04 sw2d.melee combos' },
+    { id: 'twin-stick-shooter', pattern: /ships no enemy waves out of the box/, closedBy: 'L05 encounters required' },
+    { id: 'survivor-like', pattern: /repeats the authored encounter without escalating it/, closedBy: 'L06 escalation + sw2d.runs' },
+    { id: 'dungeon-crawler', pattern: /generated Enemy objects from the room graph and AI behaviour are not wired/, closedBy: 'L07 bindStarterDungeon' },
+    { id: 'action-roguelite', pattern: /permadeath and between-run loadouts are not a reusable capability/, closedBy: 'L08 sw2d.runs' },
+    { id: 'stealth-game', pattern: /patrol pathfinding, takedowns and full stealth AI are not/, closedBy: 'L09 sw2d.perception AI' },
+    { id: 'heist-game', pattern: /patrol pathfinding, takedowns and full stealth AI are not/, closedBy: 'L09 sw2d.perception AI' },
   ];
 
   CLOSED.forEach(({ id, pattern, closedBy }) => {

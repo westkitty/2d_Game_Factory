@@ -69,7 +69,8 @@ describe('generateUiCopy (generated games announce their genre honestly)', () =>
     expect(copyFor('vertical-shmup').playHint).toContain('FIRE J/X');
     expect(copyFor('vertical-shmup').playHint).not.toContain('SURVIVE');
     expect(copyFor('twin-stick-shooter').playHint).toContain('FIRE J/X');
-    expect(copyFor('twin-stick-shooter').playHint).not.toContain('SURVIVE');
+    // Final Product Completion Wave 2 (L05): the twin-stick starter fights real waves now.
+    expect(copyFor('twin-stick-shooter').playHint).toContain('SURVIVE THE WAVES');
     expect(copyFor('top-down-adventure').playHint).not.toContain('FIRE');
   });
 

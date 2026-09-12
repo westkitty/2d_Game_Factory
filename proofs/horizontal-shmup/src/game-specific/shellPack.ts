@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
-import type { InstalledSystemPack, WorldGraphService } from '@sw2d/contracts';
-import { WORLD_GRAPH_CAPABILITY_ID, aimFromPointer } from '@sw2d/contracts';
+import type { InstalledSystemPack, RunsService, WorldGraphService } from '@sw2d/contracts';
+import { RUNS_CAPABILITY_ID, WORLD_GRAPH_CAPABILITY_ID, aimFromPointer } from '@sw2d/contracts';
 import {
   bindCollectiblePickups,
   bindLevelObjectives,
@@ -15,6 +15,7 @@ import {
   bindStarterToy,
   bindStarterCombat,
   bindStarterCommand,
+  bindStarterDungeon,
   bindStarterLook,
   bindStarterWeapon,
   createRoomTransitionRuntime,
@@ -24,7 +25,7 @@ import {
   type SceneContext,
   type ScenePackDefinition,
 } from '@sw2d/runtime';
-import { COMBAT_STARTER, COMMAND_STARTER, LOOK_STARTER, NARRATIVE_STARTER, PROGRESSION_STARTER, TOY_STARTER } from './packConfig.ts';
+import { COMBAT_STARTER, COMMAND_STARTER, DUNGEON_STARTER, LOOK_STARTER, NARRATIVE_STARTER, PROGRESSION_STARTER, TOY_STARTER } from './packConfig.ts';
 
 /**
  * Generated starter shell: top-down controller family.
@@ -97,11 +98,17 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     // Data-driven item pickups (capability program Phase 2). Inert unless the
     // game installs sw2d.items - see platformShellPack.ts's note.
     const pickups = bindCollectiblePickups(context, player, level);
+    // Runs (Final Product Completion Wave 2): when sw2d.runs is installed with
+    // a live catalog, this scene is one *run* - the battle below gets the
+    // banked loadout and permadeath, and the survive/dungeon starters bank
+    // the result between runs.
+    const runsService = context.capabilities.get<RunsService>(RUNS_CAPABILITY_ID);
+    const runLoadout = runsService?.active() ? runsService.loadout() : null;
     // Encounters (capability program Phase 4): when sw2d.combat + sw2d.weapons
     // + sw2d.encounters are all installed, content/encounters.json drives real
     // enemy waves that chase and shoot; the player fights back with the
-    // catalog weapon and respawns on death. Inert otherwise.
-    const battle = bindStarterEncounters(context, player);
+    // catalog weapon and respawns on death (unless this is a run). Inert otherwise.
+    const battle = bindStarterEncounters(context, player, runLoadout ? { respawn: false, loadout: runLoadout } : {});
     // Perception (Category-C Wave 4). Inert unless sw2d.perception is
     // installed with a non-empty catalog. Then FOV cones, cover, loot and
     // exit replace the dummy wander.
@@ -119,12 +126,20 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     // Progression (Category-C Wave 17). Inert unless packConfig names a
     // survive/run starter and sw2d.progression is installed. Survive ticks
     // in-run XP while the encounter loop fights; run walks to relics.
-    const meta = bindStarterProgression(context, { mode: PROGRESSION_STARTER });
+    const meta = bindStarterProgression(context, { mode: PROGRESSION_STARTER, battle });
     const runMeta = meta.active && meta.snapshot().mode === 'run';
     if (runMeta) {
       player.setPosition(meta.startX(), meta.startY());
       walls.setVisible(false);
       wallCollider.destroy();
+    }
+    // Dungeon (Final Product Completion Wave 2). Inert unless packConfig names
+    // crawl/rogue. The generated room graph's walls stay solid, its Enemy
+    // objects become sw2d.ai agents, and the camera follows the player.
+    const dungeon = bindStarterDungeon(context, level, { mode: DUNGEON_STARTER });
+    if (dungeon.active) {
+      player.setPosition(dungeon.startX(), dungeon.startY());
+      dungeon.attach(player, walls);
     }
     // Toy (Category-C Wave 20). Inert unless packConfig names a photo/sandbox
     // starter. Photo walks the player to subjects and captures in range;
@@ -217,7 +232,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     // collect-then-exit loop through sw2d.world (see platformShellPack.ts).
     const plainWalk =
       !battle.active && !perception.active && !story.active && !meta.active && !toy.active && !fight.active &&
-      !ops.active && !look.active && !table.active && !melee.active && !stage.active && !worldGraph;
+      !ops.active && !look.active && !table.active && !melee.active && !stage.active && !worldGraph && !dungeon.active;
     const objectives = plainWalk
       ? bindLevelObjectives(context, player, level, { exitRequires: () => pickups.remaining() === 0 })
       : bindLevelObjectives(context, player, undefined);
@@ -240,6 +255,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       ...(meta.active ? { progression: meta.snapshot() } : {}),
       ...(toy.active ? { toy: toy.snapshot() } : {}),
       ...(fight.active ? { combat: fight.snapshot() } : {}),
+      ...(dungeon.active ? { dungeon: dungeon.snapshot() } : {}),
       ...(ops.active ? { command: ops.snapshot() } : {}),
       ...(look.active ? { look: look.snapshot() } : {}),
       ...(table.active ? { ballPaddle: table.snapshot() } : {}),
@@ -282,10 +298,26 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
           if (objectives.snapshot().cleared) player.setVelocity(0, 0);
         }
         if (melee.active) {
+          // Directional attacks: the strike arc follows the facing the
+          // digital aim, the pointer or the last movement set.
+          if (intent.aimMagnitude > 0) {
+            facingX = intent.aimX;
+            facingY = intent.aimY;
+          } else if (context.spatialPointer.state.inside) {
+            const aim = aimFromPointer(player.x, player.y, context.spatialPointer.state.worldX, context.spatialPointer.state.worldY);
+            if (aim.aimMagnitude > 0) {
+              facingX = aim.aimX;
+              facingY = aim.aimY;
+            }
+          } else if (intent.moveMagnitude > 0) {
+            facingX = intent.moveX;
+            facingY = intent.moveY;
+          }
           melee.setPlayer(player.x, player.y);
+          melee.setFacing(facingX, facingY);
           if (intent.primaryPressed) melee.strike(nowMs);
           melee.tick(deltaMs, nowMs);
-          if (melee.snapshot().outcome !== 'playing') player.setVelocity(0, 0);
+          if (melee.snapshot().outcome !== 'playing' || melee.snapshot().stunned) player.setVelocity(0, 0);
           return;
         }
         if (stage.active) {
@@ -330,7 +362,9 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         battle.update(deltaMs, nowMs);
         if (perception.active) {
           perception.setPlayer(player.x, player.y);
+          if (intent.primaryPressed) perception.act();
           perception.tick(deltaMs);
+          if (perception.snapshot().outcome !== 'playing') player.setVelocity(0, 0);
         }
         if (story.active) {
           story.setPlayer(player.x, player.y);
@@ -340,8 +374,17 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         if (meta.active) {
           meta.setPlayer(player.x, player.y);
           if (intent.primaryPressed && runMeta) meta.act();
+          if (context.input.consumePress('SECONDARY_ACTION')) meta.secondary();
           meta.tick(deltaMs);
           meta.render();
+          if (meta.snapshot().runOver) player.setVelocity(0, 0);
+        }
+        if (dungeon.active) {
+          dungeon.setPlayer(player.x, player.y);
+          if (intent.primaryPressed) dungeon.strike();
+          if (context.input.consumePress('SECONDARY_ACTION')) dungeon.secondary();
+          dungeon.tick(deltaMs);
+          if (dungeon.snapshot().outcome !== 'playing') player.setVelocity(0, 0);
         }
         if (toy.active) {
           toy.setPlayer(player.x, player.y);
@@ -375,7 +418,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
           if (look.snapshot().outcome !== 'playing') player.setVelocity(0, 0);
         }
         const firing = intent.primaryPressed || (battle.active && context.input.isDown('PRIMARY_ACTION'));
-        if (firing && !perception.active && !story.active && !runMeta && !toy.active && !fight.active && !ops.active && !look.active) {
+        if (firing && !perception.active && !story.active && !runMeta && !toy.active && !fight.active && !ops.active && !look.active && !dungeon.active) {
           (weapon ?? battle).fire(nowMs, facingX, facingY, { x: player.x, y: player.y });
         }
         if (worldGraph && rooms) {
@@ -401,6 +444,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         meta.dispose();
         toy.dispose();
         fight.dispose();
+        dungeon.dispose();
         ops.dispose();
         look.dispose();
         table.dispose();

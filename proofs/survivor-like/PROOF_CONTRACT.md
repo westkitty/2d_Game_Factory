@@ -20,14 +20,18 @@ Generated via `npm run sw2d -- new proof-survivor-like --preset survivor-like` (
 
 ## Defining journey (automated, real-browser, deterministic frame stepping)
 
-1. Start; `sw2d.progression` + `sw2d.encounters` installed; mode `survive`; `xp 0`; at least one enemy alive.
+Final Product Completion Wave 2 (matrix L06): the encounter loops as escalating waves (`content/encounters.json` `escalation`) and the scene is one permadeath run on `sw2d.runs` (`content/runs.json`).
+
+1. Start; `sw2d.progression` + `sw2d.encounters` + `sw2d.runs` installed; mode `survive`; `xp 0`; run index 1, `loadOutcome 'default'`, max health 100, wave 0; at least one enemy alive.
 2. 62 frames -> `1 <= xp < 6`, `playing`.
 3. Pause/resume -> `xp` unchanged.
-4. Hold AIM_UP (Numpad8) + PRIMARY until `progression.kills >= 1` -> `battle.kills >= 1`.
-5. Wait -> `complete`, `surge` unlocked, `surged`, `xp >= 6`.
-6. Restart: `xp 0`, `kills 0`, `playing`.
+4. Kite (pointer aim at the nearest grunt, PRIMARY held, back away from close ones) until `kills >= 1`; keep kiting -> `complete`, `surge` unlocked, `xp >= 6`.
+5. Keep kiting until `wavesCleared 1` -> `battle.wave 1`, `enemySpeed > 60` (escalated), `progression.wave 1`.
+6. Stop and wait -> the swarm closes in: `runOver`, `battle.outcome 'failed'`, `playerDeaths 1`, run phase `ended`, cause `death`, `metaEarned >= 4`, next unlock `sturdy`.
+7. SECONDARY (K) -> `bought sturdy`.
+8. Restart: run index 2, `loadOutcome 'loaded'`, loadout `maxHealthBonus 40`, max health 140, wave 0, `xp 0`, `kills 0`, `playing`.
 
 ## Acceptance
 
-- Endless difficulty scaling and between-run meta-progression are not reusable systems (catalog limitation).
+- Endless escalation (`sw2d.encounters` escalation), permadeath, banked meta currency, between-run unlocks and the loadout are reusable systems (`sw2d.runs`) - no catalog limitation remains.
 - Zero console errors, zero external requests.

@@ -19,13 +19,16 @@ Generated via `npm run sw2d -- new proof-action-roguelite --preset action-roguel
 
 ## Defining journey (automated, real-browser, deterministic frame stepping)
 
-1. Start; `sw2d.progression` + `sw2d.generation` installed; mode `run`; no items; x 120.
-2. PRIMARY -> `too-far`.
-3. Hold Right until `nearId 'core'`; PRIMARY -> `taken`, items [core], currency 1; PRIMARY -> unchanged.
-4. Hold Right until `nearId 'spark'`; PRIMARY -> `cleared`, currency 2, xp 10, `run-cleared`, `complete`.
-5. Restart: no items, currency 0, `playing`, x 120.
+Final Product Completion Wave 2 (matrix L08): the seeded room graph is one run on `sw2d.runs` (`bindStarterDungeon` in rogue mode).
+
+1. Start; `sw2d.runs` + `sw2d.ai` installed; mode `rogue`; run index 1, `loadOutcome 'default'`, max health 5; enemies from the room graph.
+2. Walk to the first enemy room and strike its foes down -> `roomsCleared 1`, `currency 1` (a cleared room drops coin), `kills >= 1`.
+3. Walk into the next room and stand among its foes without striking -> `failed`, run phase `ended`, cause `death`, `metaEarned >= 3`, next unlock `vigor`.
+4. SECONDARY (K) -> `bought vigor`.
+5. Restart: run index 2, `loadOutcome 'loaded'`, loadout `maxHealthBonus 2`, max health 7, all enemies back, `roomsCleared 0`.
+6. Clear every room, walk to the exit -> `complete`, cause `cleared`, `metaEarned >= 10`, phase `ended`.
 
 ## Acceptance
 
-- Permadeath / meta-progression between runs is not a reusable system (catalog limitation).
+- Permadeath, banked meta, between-run unlocks and the loadout are the reusable `sw2d.runs` capability; the dungeon's enemies are `sw2d.ai` agents - no catalog limitation remains.
 - Zero console errors, zero external requests.

@@ -62,13 +62,13 @@ with a small working placeholder to replace. Every other pack is configured as J
 ## Composition
 
 - Controller family/families: top-down
-- Required packs (enabled by default): sw2d.combat, sw2d.ai, sw2d.progression, sw2d.weapons, sw2d.encounters
+- Required packs (enabled by default): sw2d.combat, sw2d.ai, sw2d.progression, sw2d.weapons, sw2d.encounters, sw2d.runs
 - Optional packs (available, not enabled by default - add to content/game.json's systemPacks to use): sw2d.arcade, sw2d.world
-- Content roles this preset expects: tuning
+- Content roles this preset expects: tuning, encounters, runs
 
 ## Known preset limitations
 
-- In-run XP and unlock flags for the generated starter use sw2d.progression; endless difficulty scaling / meta-progression between runs is not a reusable system; the starter survival loop repeats the authored encounter without escalating it.
+- (none stated)
 
 ## How to add a level
 

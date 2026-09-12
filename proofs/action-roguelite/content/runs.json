@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "mode": "roguelite",
+  "metaPerXp": 0,
+  "metaPerKill": 1,
+  "metaPerWave": 0,
+  "metaPerCurrency": 3,
+  "metaPerClear": 10,
+  "unlocks": [
+    {
+      "id": "vigor",
+      "label": "Vigor (+2 max health)",
+      "cost": 3,
+      "effect": {
+        "kind": "max-health",
+        "value": 2
+      }
+    },
+    {
+      "id": "edge",
+      "label": "Edge (+1 damage)",
+      "cost": 8,
+      "effect": {
+        "kind": "damage",
+        "value": 1
+      }
+    },
+    {
+      "id": "purse",
+      "label": "Purse (start with 2 coin)",
+      "cost": 12,
+      "effect": {
+        "kind": "start-currency",
+        "value": 2
+      }
+    }
+  ]
+}

@@ -35,10 +35,10 @@ pack/controller selections were actually exercised through, and
 |---|---|---|---|---|---|
 | `top-down-adventure` | world, world-entities | narrative, progression | top-down | keyboard, touch | top-down-action-recipe |
 | `action-adventure` | world, world-entities, combat, weapons, melee | ai, progression | top-down | keyboard, touch | top-down-action-recipe |
-| `twin-stick-shooter` | combat, weapons | world, world-entities, arcade, encounters | top-down | keyboard, touch | top-down-action-recipe |
-| `survivor-like` | combat, ai, progression, weapons, encounters | arcade, world | top-down | keyboard, touch | top-down-action-recipe |
-| `dungeon-crawler` | world, world-entities, combat, generation | ai, progression | top-down | keyboard, touch | top-down-action-recipe |
-| `action-roguelite` | combat, progression, generation | ai, world, world-entities | top-down | keyboard, touch | top-down-action-recipe |
+| `twin-stick-shooter` | combat, weapons, encounters | world, world-entities, arcade | top-down | keyboard, touch | top-down-action-recipe |
+| `survivor-like` | combat, ai, progression, weapons, encounters, runs | arcade, world | top-down | keyboard, touch | top-down-action-recipe |
+| `dungeon-crawler` | world, world-entities, combat, generation, ai | progression | top-down | keyboard, touch | top-down-action-recipe |
+| `action-roguelite` | combat, progression, generation, ai, runs | world, world-entities | top-down | keyboard, touch | top-down-action-recipe |
 | `stealth-game` | ai, combat, world, perception | world-entities, navigation | top-down | keyboard, touch | top-down-action-recipe |
 | `heist-game` | ai, combat, world, perception | world-entities, progression, navigation | top-down | keyboard, touch | top-down-action-recipe |
 | `arena-combat` | combat, weapons, encounters, melee | ai, arcade | top-down | keyboard, touch | top-down-action-recipe |
@@ -130,7 +130,7 @@ pack/controller selections were actually exercised through, and
 | short id | real pack id | capability id | recipes requiring it | recipes referencing it (required or optional) |
 |---|---|---|---|---|
 | combat | `sw2d.combat` | `combat.health` | 22 | 26 |
-| ai | `sw2d.ai` | `ai.state` | 5 | 15 |
+| ai | `sw2d.ai` | `ai.state` | 7 | 15 |
 | world | `sw2d.world` | `world.state` | 31 | 44 |
 | world-entities | `sw2d.world-entities` | `world.entities` | 27 | 36 |
 | progression | `sw2d.progression` | `progression.state` | 11 | 26 |
@@ -141,7 +141,7 @@ pack/controller selections were actually exercised through, and
 | strategy | `sw2d.strategy` | `strategy.turns` | 4 | 4 |
 | items | `sw2d.items` | `items.state` | 1 | 2 |
 | weapons | `sw2d.weapons` | `combat.weapons` | 11 | 11 |
-| encounters | `sw2d.encounters` | `combat.encounters` | 6 | 8 |
+| encounters | `sw2d.encounters` | `combat.encounters` | 7 | 8 |
 | navigation | `sw2d.navigation` | `world.navigation` | 4 | 8 |
 | puzzle-rules | `sw2d.puzzle-rules` | `puzzle.rules` | 4 | 4 |
 | generation | `sw2d.generation` | `world.generation` | 5 | 5 |
@@ -164,6 +164,7 @@ pack/controller selections were actually exercised through, and
 | codex | `sw2d.codex` | `narrative.codex` | 2 | 2 |
 | targeting | `sw2d.targeting` | `combat.targeting` | 3 | 3 |
 | pursuit | `sw2d.pursuit` | `movement.pursuit` | 3 | 3 |
+| runs | `sw2d.runs` | `progression.runs` | 2 | 2 |
 
 **All thirty-four current packs have at least one preset consumer.** `sw2d.items` (capability
 program Phase 2) is required by `collectathon-platformer`, whose generated starter consumes

@@ -22,6 +22,14 @@
       "config": {}
     },
     {
+      "packId": "sw2d.ai",
+      "config": {}
+    },
+    {
+      "packId": "sw2d.runs",
+      "config": {}
+    },
+    {
       "packId": "game.top-down-shell",
       "config": {}
     }

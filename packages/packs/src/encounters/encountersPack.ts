@@ -3,7 +3,10 @@ import type {
   EncounterCatalog,
   EncounterCondition,
   EncounterDefinition,
+  EncounterEscalation,
   EncounterFireRequest,
+  EncounterSequence,
+  EncounterStartOptions,
   EncounterPhaseDefinition,
   EncounterService,
   EncounterSpawnRequest,
@@ -62,8 +65,11 @@ interface EmitterRun {
 class EncounterServiceImpl implements EncounterService {
   readonly #defs = new Map<string, EncounterDefinition>();
   readonly #events: EventBus;
+  readonly #escalation: EncounterEscalation | null;
+  readonly #sequence: EncounterSequence | null;
 
   #def: EncounterDefinition | null = null;
+  #wave = 0;
   #phaseIndex = 0;
   #elapsedInPhaseMs = 0;
   #completed = false;
@@ -76,6 +82,8 @@ class EncounterServiceImpl implements EncounterService {
 
   constructor(events: EventBus, catalog: EncounterCatalog | undefined) {
     this.#events = events;
+    this.#escalation = catalog?.escalation ?? null;
+    this.#sequence = catalog?.sequence ?? null;
     for (const def of catalog?.encounters ?? []) {
       if (this.#defs.has(def.id)) throw new Error(`Duplicate encounter id "${def.id}".`);
       this.#defs.set(def.id, def);
@@ -90,10 +98,24 @@ class EncounterServiceImpl implements EncounterService {
     return [...this.#defs.keys()].sort();
   }
 
-  start(encounterId: string): void {
+  escalation(): EncounterEscalation | null {
+    return this.#escalation;
+  }
+
+  sequence(): EncounterSequence | null {
+    return this.#sequence;
+  }
+
+  speedScale(): number {
+    return this.#escalation ? 1 + this.#escalation.speedScalePerWave * this.#wave : 1;
+  }
+
+  start(encounterId: string, options?: EncounterStartOptions): void {
     const def = this.#defs.get(encounterId);
     if (!def) throw new UnknownEncounterError(encounterId);
     this.#def = def;
+    const requested = Math.max(0, Math.trunc(options?.wave ?? 0));
+    this.#wave = this.#escalation ? Math.min(requested, this.#escalation.maxWaves ?? requested) : 0;
     this.#phaseIndex = 0;
     this.#elapsedInPhaseMs = 0;
     this.#completed = false;
@@ -123,6 +145,7 @@ class EncounterServiceImpl implements EncounterService {
       elapsedInPhaseMs: this.#elapsedInPhaseMs,
       liveSpawnCount: this.#liveSpawns.size,
       completed: this.#completed,
+      wave: this.#wave,
     };
   }
 
@@ -164,21 +187,24 @@ class EncounterServiceImpl implements EncounterService {
   #dueSpawns(phase: EncounterPhaseDefinition, view: { width: number; height: number }): EncounterSpawnRequest[] {
     const out: EncounterSpawnRequest[] = [];
     const groups = phase.spawns ?? [];
+    const esc = this.#escalation;
     for (let gi = 0; gi < groups.length; gi++) {
       const g = groups[gi]!;
-      for (let mi = 0; mi < g.count; mi++) {
+      const count = esc ? g.count + Math.floor(esc.countPerWave * this.#wave) : g.count;
+      const healthScale = esc ? 1 + esc.healthScalePerWave * this.#wave : 1;
+      for (let mi = 0; mi < count; mi++) {
         const due = (g.startDelayMs ?? 0) + mi * (g.intervalMs ?? 0);
         const key = `${this.#def!.id}:${phase.id}:${gi}:${mi}`;
         if (this.#elapsedInPhaseMs < due || this.#spawnedKeys.has(key)) continue;
         this.#spawnedKeys.add(key);
         this.#liveSpawns.add(key);
-        const pos = spawnPointAt(g.at, mi, g.count, view);
+        const pos = spawnPointAt(g.at, mi, count, view);
         out.push({
           requestId: key,
           archetype: g.archetype,
           x: pos.x,
           y: pos.y,
-          health: g.health ?? DEFAULT_HEALTH,
+          health: Math.round((g.health ?? DEFAULT_HEALTH) * healthScale),
           emitterIds: g.emitterIds ?? [],
           phaseId: phase.id,
         });
@@ -260,7 +286,8 @@ class EncounterServiceImpl implements EncounterService {
       case 'elapsed':
         return this.#elapsedInPhaseMs >= c.ms;
       case 'spawns-cleared': {
-        const totalMembers = (phase.spawns ?? []).reduce((n, g) => n + g.count, 0);
+        const esc = this.#escalation;
+        const totalMembers = (phase.spawns ?? []).reduce((n, g) => n + (esc ? g.count + Math.floor(esc.countPerWave * this.#wave) : g.count), 0);
         return this.#spawnedKeys.size >= totalMembers && this.#liveSpawns.size === 0;
       }
       case 'entity-health-below':

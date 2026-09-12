@@ -19,13 +19,16 @@ Generated via `npm run sw2d -- new proof-stealth-game --preset stealth-game` (th
 
 ## Defining journey (automated, real-browser, deterministic frame stepping)
 
-1. Start; `sw2d.perception` installed; mode `infiltrate`; not seen.
-2. Hold Right into the cone -> `seen`, `failed`, suspicion > 0.
-3. Restart: `runIndex` +1, `playing`, not seen, objective not collected.
-4. Up to y <= 120; Right until `objectiveCollected` with `alarm false`.
-5. Up to y <= 100; Left until `complete`, `alarm false`.
+Final Product Completion Wave 2 (matrix L09): the guard patrols a route and runs the reusable observer state machine (`content/perception.json`).
+
+1. Start; `sw2d.perception` installed; mode `infiltrate`; not seen; guard `patrol`, `patrolling true`.
+2. Wait -> the guard has walked east (x > 560) facing 0.
+3. Hold Right to x >= 330 and stand -> guard `chase`, `seen`; wait -> `failed`, `caught`.
+4. Restart: `playing`, guard `patrol`, `transitions 0`. Right to x >= 330 until `chase`; hold Left to x <= 70 -> guard `investigate`, then `return` / `patrol`, `alarm false`, at least four transitions, still `playing`.
+5. Wait until the guard walks east again (facing 0, x > 540); hold Right until 30 px behind it; PRIMARY (J) -> guard `downed`, `takedowns 1`, `takedown`.
+6. Up to y <= 150; Right until `objectiveCollected`; Up to y <= 100; Left until `complete`, `escaped`.
 
 ## Acceptance
 
-- Vision cones / suspicion / hiding are the reusable service; patrol pathfinding and takedowns are not (catalog limitation).
+- Patrol routes, chase / catch, investigation, return-to-patrol, noise reaction and takedowns are the reusable `sw2d.perception` stealth AI - no catalog limitation remains.
 - Zero console errors, zero external requests.

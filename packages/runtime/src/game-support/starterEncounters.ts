@@ -55,6 +55,16 @@ export interface StarterEncounterOptions {
   readonly contactInvulnMs?: number;
   /** Invulnerability window after respawning, ms. Default 1500. */
   readonly respawnInvulnMs?: number;
+  /**
+   * When false, the player's death ends the battle instead of respawning
+   * (permadeath - Final Product Completion Wave 2, survivor-like / roguelite
+   * runs). Default true.
+   */
+  readonly respawn?: boolean;
+  /** Run loadout applied at bind time (Final Product Completion Wave 2). */
+  readonly loadout?: { readonly maxHealthBonus?: number; readonly damageBonus?: number; readonly speedBonus?: number };
+  /** Extra enemy archetype -> texture role resolution (the boss archetype gets the hazard role by default). */
+  readonly enemyTextureRole?: (archetype: string) => 'enemy' | 'hazard' | 'pickup' | 'player';
 }
 
 export interface StarterEncounterSnapshot {
@@ -68,7 +78,21 @@ export interface StarterEncounterSnapshot {
   readonly wavesCleared: number;
   readonly encounterPhase: string | null;
   readonly encounterComplete: boolean;
+  /** Escalation wave of the running encounter (0-based). */
+  readonly wave: number;
+  /** Current enemy pursuit speed after escalation and loadout. */
+  readonly enemySpeed: number;
+  /** True once a permadeath battle has ended (player died with respawn off) or the sequence finished. */
+  readonly over: boolean;
+  readonly outcome: 'playing' | 'failed' | 'complete';
+  /** Boss sequence progress (Final Product Completion Wave 3): index of the running encounter and the total. */
+  readonly sequenceIndex: number;
+  readonly sequenceLength: number;
+  readonly bossesDefeated: number;
+  readonly transitionMsLeft: number;
   readonly playerHealth: { readonly current: number; readonly max: number } | null;
+  /** Live enemy positions (rounded) - for HUD/QA aiming, never gameplay logic. */
+  readonly enemies: readonly { readonly id: string; readonly x: number; readonly y: number }[];
 }
 
 export interface StarterEncounterBinding {
@@ -107,12 +131,18 @@ export function bindStarterEncounters(
   const weapons = context.capabilities.require<WeaponsService>(WEAPONS_CAPABILITY_ID);
   const encounters = context.capabilities.require<EncounterService>(ENCOUNTERS_CAPABILITY_ID);
 
-  const encounterId = encounters.definitionIds()[0];
+  const sequence = encounters.sequence();
+  const sequenceIds = sequence ? sequence.encounterIds.filter((id) => encounters.lookup(id)) : [];
+  const encounterId = sequenceIds[0] ?? encounters.definitionIds()[0];
   if (!encounterId) return INERT;
 
   const playerId = options.playerCombatId ?? 'player';
-  const playerMaxHealth = options.playerMaxHealth ?? 100;
-  const enemySpeed = options.enemySpeed ?? 60;
+  const loadout = options.loadout ?? {};
+  const playerMaxHealth = (options.playerMaxHealth ?? 100) + (loadout.maxHealthBonus ?? 0);
+  const baseEnemySpeed = options.enemySpeed ?? 60;
+  const playerDamageBonus = loadout.damageBonus ?? 0;
+  const respawn = options.respawn !== false;
+  const escalation = encounters.escalation();
   const contactDamage = options.contactDamage ?? 8;
   const contactInvulnMs = options.contactInvulnMs ?? 700;
   const respawnInvulnMs = options.respawnInvulnMs ?? 1500;
@@ -141,6 +171,13 @@ export function bindStarterEncounters(
   let playerDeaths = 0;
   let wavesCleared = 0;
   let nowMsLatest = 0;
+  let over = false;
+  let outcome: 'playing' | 'failed' | 'complete' = 'playing';
+  let sequenceIndex = 0;
+  let bossesDefeated = 0;
+  let transitionMsLeft = 0;
+  let currentEncounterId = encounterId;
+  const enemySpeed = (): number => baseEnemySpeed * encounters.speedScale();
 
   const projectiles: ProjectileRuntime = createProjectileRuntime({
     scene,
@@ -155,6 +192,7 @@ export function bindStarterEncounters(
       const id = spriteToEnemy.get(obj);
       return id && enemies.get(id)?.alive ? { entityId: id, team: 'enemy' } : null;
     },
+    damageBonusFor: (ownerId) => (ownerId === playerId ? playerDamageBonus : 0),
   });
 
   const encounter: EncounterRuntime = createEncounterRuntime({
@@ -170,7 +208,9 @@ export function bindStarterEncounters(
     setInvulnerable: (id, ms, at) => combat.setInvulnerableFor(id, ms, at),
     bossOrigin: () => [width * 0.5, 48],
     spawnEnemy: (request: EncounterSpawnRequest) => {
-      const sprite = scene.physics.add.sprite(request.x, request.y, context.assets.resolve('enemy'));
+      const role: 'enemy' | 'hazard' | 'pickup' | 'player' = options.enemyTextureRole?.(request.archetype) ?? (request.archetype === 'boss' ? 'hazard' : 'enemy');
+      const sprite = scene.physics.add.sprite(request.x, request.y, context.assets.resolve(role));
+      if (request.archetype === 'boss') sprite.setDisplaySize(56, 56);
       sprite.body.setAllowGravity(false);
       enemyGroup.add(sprite);
       combat.register(request.requestId, request.health);
@@ -195,6 +235,14 @@ export function bindStarterEncounters(
   const onDeath = context.events.on('combat:entityDied', ({ entityId }) => {
     if (entityId === playerId) {
       playerDeaths += 1;
+      if (!respawn) {
+        // Permadeath: the battle is over. Enemies freeze, nothing respawns.
+        over = true;
+        outcome = 'failed';
+        for (const enemy of enemies.values()) enemy.sprite.setVelocity(0, 0);
+        context.events.emit('encounters:battleOver', { outcome: 'failed', kills, wavesCleared });
+        return;
+      }
       combat.remove(playerId);
       combat.register(playerId, playerMaxHealth);
       combat.setInvulnerableFor(playerId, respawnInvulnMs, nowMsLatest);
@@ -228,15 +276,42 @@ export function bindStarterEncounters(
       if (disposed) return;
       nowMsLatest = nowMs;
       projectiles.update(deltaMs, nowMs);
+      if (over) return;
+      if (transitionMsLeft > 0) {
+        // Boss sequence: readable gap between one boss falling and the next.
+        transitionMsLeft = Math.max(0, transitionMsLeft - deltaMs);
+        if (transitionMsLeft === 0) {
+          currentEncounterId = sequenceIds[sequenceIndex]!;
+          encounter.start(currentEncounterId);
+          context.events.emit('encounters:bossStarted', { encounterId: currentEncounterId, index: sequenceIndex, of: sequenceIds.length });
+        }
+        return;
+      }
       encounter.update(deltaMs, nowMs);
       // Simple deterministic pressure: every live enemy closes on the player.
+      const speed = enemySpeed();
       for (const enemy of enemies.values()) {
         if (!enemy.alive) continue;
         const dx = player.x - enemy.sprite.x;
         const dy = player.y - enemy.sprite.y;
         const dist = Math.hypot(dx, dy);
-        if (dist > 1) enemy.sprite.setVelocity((dx / dist) * enemySpeed, (dy / dist) * enemySpeed);
+        if (dist > 1) enemy.sprite.setVelocity((dx / dist) * speed, (dy / dist) * speed);
         else enemy.sprite.setVelocity(0, 0);
+      }
+      if (sequenceIds.length > 0 && encounter.completed && enemies.size === 0) {
+        // One boss down. Next one after the transition, or the rush is complete.
+        bossesDefeated += 1;
+        if (sequenceIndex + 1 < sequenceIds.length) {
+          sequenceIndex += 1;
+          transitionMsLeft = Math.max(1, sequence?.transitionMs ?? 0);
+          context.events.emit('encounters:bossDefeated', { encounterId: currentEncounterId, index: sequenceIndex - 1, of: sequenceIds.length });
+        } else {
+          over = true;
+          outcome = 'complete';
+          context.events.emit('encounters:bossDefeated', { encounterId: currentEncounterId, index: sequenceIndex, of: sequenceIds.length });
+          context.events.emit('encounters:battleOver', { outcome: 'complete', kills, wavesCleared });
+        }
+        return;
       }
       // Survival loop: when the wave content is exhausted and the field is
       // clear of enemies, run the same content again as the next wave. Only
@@ -246,9 +321,12 @@ export function bindStarterEncounters(
       // the generated arena-combat starter. In-flight shots crossing a wave
       // boundary are fine: combat entries are removed on death, so the fresh
       // wave's re-registered ids resolve cleanly.
-      if (encounter.completed && enemies.size === 0) {
+      if (sequenceIds.length === 0 && encounter.completed && enemies.size === 0) {
         wavesCleared += 1;
-        encounter.start(encounterId);
+        // Escalation (Final Product Completion Wave 2): the same content as a
+        // bigger, tougher, faster wave when the catalog authors it.
+        encounter.start(encounterId, escalation ? { wave: wavesCleared } : undefined);
+        context.events.emit('encounters:waveCleared', { wavesCleared, wave: encounters.state().wave });
       }
     },
 
@@ -263,7 +341,16 @@ export function bindStarterEncounters(
       wavesCleared,
       encounterPhase: encounters.state().phaseId,
       encounterComplete: encounter.completed,
+      wave: encounters.state().wave,
+      enemySpeed: Math.round(enemySpeed()),
+      over,
+      outcome,
+      sequenceIndex,
+      sequenceLength: sequenceIds.length,
+      bossesDefeated,
+      transitionMsLeft: Math.round(transitionMsLeft),
       playerHealth: combat.has(playerId) ? { current: combat.get(playerId).current, max: combat.get(playerId).max } : null,
+      enemies: [...enemies.entries()].filter(([, e]) => e.alive).map(([id, e]) => ({ id, x: Math.round(e.sprite.x), y: Math.round(e.sprite.y) })),
     }),
 
     dispose() {

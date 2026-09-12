@@ -4,12 +4,16 @@ import type { SceneContext } from '../scenes/SceneContext.ts';
 
 /**
  * Bind the generated top-down shell to `sw2d.perception`
- * (Category-C Wave 4).
+ * (Category-C Wave 4; patrol routes, observer states and takedowns drawn
+ * since the Final Product Completion program, Wave 2 - matrix L09).
  *
  * Inert unless the game installed the pack and the catalog has observers.
- * Presentation is a high-contrast HUD so a cone / cover / loot loop is
- * readable in the first short play session. `{ hud: false }` lets expanded
- * kits keep their own presentation.
+ * Presentation is a high-contrast HUD so a patrol / cone / cover / loot loop
+ * is readable in the first short play session: observers move with the
+ * service, their cone colour follows their state (patrol, suspicious,
+ * chase, investigate, return, downed), routes are dotted, and J takes a
+ * guard down from behind. `{ hud: false }` lets expanded kits keep their own
+ * presentation.
  */
 
 export interface StarterPerceptionSnapshot {
@@ -24,6 +28,8 @@ export interface StarterPerceptionSnapshot {
   readonly objectiveCollected: boolean;
   readonly outcome: string;
   readonly lastResult: string | null;
+  readonly takedowns: number;
+  readonly transitions: number;
   readonly observers: readonly {
     id: string;
     x: number;
@@ -34,12 +40,16 @@ export interface StarterPerceptionSnapshot {
     seesPlayer: boolean;
     suspicion: number;
     alert: boolean;
+    state: string;
+    patrolling: boolean;
   }[];
 }
 
 export interface StarterPerceptionBinding {
   readonly active: boolean;
   setPlayer(x: number, y: number): void;
+  /** J: silent takedown of a guard that cannot see the player. */
+  act(): void;
   tick(deltaMs: number): void;
   snapshot(): StarterPerceptionSnapshot;
   render(): void;
@@ -51,6 +61,7 @@ export interface StarterPerceptionBinding {
 const INERT: StarterPerceptionBinding = {
   active: false,
   setPlayer: () => undefined,
+  act: () => undefined,
   tick: () => undefined,
   snapshot: () => ({
     active: false,
@@ -64,6 +75,8 @@ const INERT: StarterPerceptionBinding = {
     objectiveCollected: false,
     outcome: 'playing',
     lastResult: null,
+    takedowns: 0,
+    transitions: 0,
     observers: [],
   }),
   render: () => undefined,
@@ -88,13 +101,16 @@ export function bindStarterPerception(context: SceneContext, options?: { readonl
 
   const sprites: { destroy(): void }[] = [];
   const lootSprites: { id: string; sprite: { setVisible(v: boolean): unknown; destroy(): void } }[] = [];
+  const observerSprites: { id: string; sprite: { setPosition(x: number, y: number): unknown; setAlpha(a: number): unknown; setTint(t: number): unknown; destroy(): void } }[] = [];
   if (hud) {
     const enemyKey = context.assets.resolve('enemy');
     const pickupKey = context.assets.resolve('pickup');
     const exitKey = context.assets.resolve('exit');
     const hazardKey = context.assets.resolve('hazard');
     for (const observer of perception.observers()) {
-      sprites.push(scene.add.image(observer.x, observer.y, enemyKey).setDisplaySize(34, 34).setDepth(4));
+      const sprite = scene.add.image(observer.x, observer.y, enemyKey).setDisplaySize(34, 34).setDepth(4);
+      sprites.push(sprite);
+      observerSprites.push({ id: observer.id, sprite });
     }
     for (const cover of perception.cover()) {
       sprites.push(scene.add.image(cover.x, cover.y, hazardKey).setDisplaySize(cover.radius * 2, cover.radius * 2).setAlpha(0.35).setDepth(1));
@@ -107,6 +123,15 @@ export function bindStarterPerception(context: SceneContext, options?: { readonl
       sprites.push(scene.add.image(exit.x, exit.y, exitKey).setDisplaySize(34, 60).setDepth(3));
     }
   }
+
+  const STATE_COLORS: Record<string, number> = {
+    patrol: 0xffe14d,
+    suspicious: 0xf0a35a,
+    chase: 0xff5a5a,
+    investigate: 0xe08cff,
+    return: 0x7dd3fc,
+    downed: 0x6b7280,
+  };
 
   function snapshot(): StarterPerceptionSnapshot {
     const player = perception.player();
@@ -122,7 +147,21 @@ export function bindStarterPerception(context: SceneContext, options?: { readonl
       objectiveCollected: perception.objectiveCollected(),
       outcome: perception.outcome(),
       lastResult: perception.lastResult(),
-      observers: perception.observers(),
+      takedowns: perception.takedowns(),
+      transitions: perception.transitions().length,
+      observers: perception.observers().map((o) => ({
+        id: o.id,
+        x: Math.round(o.x),
+        y: Math.round(o.y),
+        facingDeg: Math.round(o.facingDeg),
+        fovDeg: o.fovDeg,
+        range: o.range,
+        seesPlayer: o.seesPlayer,
+        suspicion: o.suspicion,
+        alert: o.alert,
+        state: o.state,
+        patrolling: o.patrolling,
+      })),
     };
   }
 
@@ -133,10 +172,16 @@ export function bindStarterPerception(context: SceneContext, options?: { readonl
     }
     if (graphics) {
       graphics.clear();
+      // Patrol routes, dotted.
       for (const observer of perception.observers()) {
+        const live = observerSprites.find((o) => o.id === observer.id);
+        live?.sprite.setPosition(observer.x, observer.y);
+        live?.sprite.setAlpha(observer.state === 'downed' ? 0.35 : 1);
+        live?.sprite.setTint(STATE_COLORS[observer.state] ?? 0xffffff);
+        if (observer.state === 'downed') continue;
         const facingRad = (observer.facingDeg * Math.PI) / 180;
         const half = ((observer.fovDeg / 2) * Math.PI) / 180;
-        graphics.fillStyle(observer.seesPlayer ? 0xff5a5a : 0xffe14d, observer.seesPlayer ? 0.28 : 0.14);
+        graphics.fillStyle(STATE_COLORS[observer.state] ?? 0xffe14d, observer.seesPlayer ? 0.3 : 0.14);
         graphics.beginPath();
         graphics.moveTo(observer.x, observer.y);
         graphics.lineTo(
@@ -154,15 +199,17 @@ export function bindStarterPerception(context: SceneContext, options?: { readonl
     if (!title || !status || !hint) return;
     const modeLabel = perception.mode() === 'heist' ? 'HEIST' : 'INFILTRATE';
     title.setText(modeLabel);
+    const guards = perception.observers().map((o) => `${o.id} ${o.state}`).join(', ');
     const flags = [
       perception.hidden() ? 'HIDDEN' : null,
       perception.seen() ? 'SEEN' : null,
       perception.alarm() ? 'ALARM' : null,
       perception.objectiveCollected() ? 'LOOT ✓' : null,
-      perception.outcome() !== 'playing' ? perception.outcome().toUpperCase() : null,
+      perception.takedowns() > 0 ? `TAKEDOWNS ${perception.takedowns()}` : null,
+      perception.outcome() !== 'playing' ? `${perception.outcome().toUpperCase()}${perception.lastResult() === 'caught' ? ' (CAUGHT)' : ''}` : null,
     ].filter(Boolean);
-    status.setText(`suspicion ${Math.round(perception.maxSuspicion() * 100)}%${flags.length ? `  ·  ${flags.join('  ·  ')}` : ''}`);
-    hint.setText('MOVE AROUND THE CONE   HIDE IN COVER   REACH THE EXIT');
+    status.setText(`suspicion ${Math.round(perception.maxSuspicion() * 100)}%  ·  ${guards}${flags.length ? `  ·  ${flags.join('  ·  ')}` : ''}`);
+    hint.setText('SLIP PAST THE PATROL   HIDE IN COVER TO LOSE A CHASE   J TAKES A GUARD DOWN FROM BEHIND   LOOT THEN EXIT');
   }
 
   render();
@@ -172,6 +219,11 @@ export function bindStarterPerception(context: SceneContext, options?: { readonl
     active: true,
     setPlayer(x: number, y: number): void {
       perception.setPlayer(x, y);
+    },
+    act(): void {
+      const result = perception.takedown();
+      if (result.ok) context.audio.playCue('ui.confirm');
+      render();
     },
     tick(deltaMs: number): void {
       perception.tick(deltaMs);

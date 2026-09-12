@@ -34,6 +34,10 @@ declare module '@sw2d/contracts' {
     'weapons:ammoChanged': { readonly ownerId: string; readonly ammo: number };
     'encounters:phaseChanged': { readonly encounterId: string; readonly phaseId: string | null; readonly phaseIndex: number };
     'encounters:completed': { readonly encounterId: string };
+    'encounters:waveCleared': { readonly wavesCleared: number; readonly wave: number };
+    'encounters:battleOver': { readonly outcome: 'failed' | 'complete'; readonly kills: number; readonly wavesCleared: number };
+    'encounters:bossStarted': { readonly encounterId: string; readonly index: number; readonly of: number };
+    'encounters:bossDefeated': { readonly encounterId: string; readonly index: number; readonly of: number };
     'economy:served': { readonly customerId: string; readonly goodId: string; readonly cash: number; readonly stock: number };
     'economy:customerArrived': { readonly customerId: string; readonly goodId: string; readonly queueLength: number };
     'economy:customerLeft': { readonly customerId: string; readonly reason: 'impatient' };
@@ -46,6 +50,9 @@ declare module '@sw2d/contracts' {
     'perception:spotted': { readonly hidden: boolean };
     'perception:alerted': { readonly mode: string };
     'perception:escaped': { readonly mode: string; readonly alarm: boolean };
+    'perception:stateChanged': { readonly observerId: string; readonly from: string; readonly to: string };
+    'perception:caught': { readonly observerId: string; readonly mode: string };
+    'perception:takedown': { readonly observerId: string; readonly takedowns: number };
     'ballPaddle:returned': { readonly mode: string };
     'ballPaddle:brick': { readonly brickId: string; readonly score: number };
     'ballPaddle:miss': { readonly lives: number };
@@ -58,6 +65,8 @@ declare module '@sw2d/contracts' {
     'melee:contact': { readonly foeId: string; readonly health: number };
     'melee:cleared': { readonly mode: string };
     'melee:downed': Record<string, never>;
+    'melee:combo': { readonly step: number; readonly of: number; readonly foeId: string };
+    'melee:comboReset': { readonly reason: 'window' | 'whiff' | 'hit' };
     'localPlay:acted': { readonly playerIndex: number; readonly turns: number };
     'localPlay:turnChanged': { readonly playerIndex: number; readonly turns: number };
     'localPlay:completed': { readonly winner: number };
@@ -72,6 +81,9 @@ declare module '@sw2d/contracts' {
     'pursuit:stumbled': { readonly stumbles: number; readonly gap: number };
     'pursuit:caught': { readonly mode: string; readonly reason: string };
     'pursuit:escaped': { readonly mode: string };
+    'runs:started': { readonly runIndex: number; readonly mode: string };
+    'runs:ended': { readonly runIndex: number; readonly cause: string; readonly metaEarned: number; readonly metaCurrency: number };
+    'runs:unlocked': { readonly unlockId: string; readonly metaCurrency: number };
     'territory:owned': { readonly zoneId: string; readonly owned: number };
     'territory:completed': { readonly mode: string };
     'pinball:bumper': { readonly bumperId: string; readonly score: number };

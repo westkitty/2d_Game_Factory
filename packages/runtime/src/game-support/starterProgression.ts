@@ -1,13 +1,21 @@
+import { RUNS_CAPABILITY_ID, type RunLoadout, type RunSummary, type RunsService } from '@sw2d/contracts';
 import { accentStyle, headingStyle, mutedStyle } from '../scenes/theme.ts';
 import type { SceneContext } from '../scenes/SceneContext.ts';
+import type { StarterEncounterBinding } from './starterEncounters.ts';
 
 /**
- * Bind generated shells to `sw2d.progression` (Category-C Wave 17).
+ * Bind generated shells to `sw2d.progression` (Category-C Wave 17; the run
+ * lifecycle added by the Final Product Completion program, Wave 2 - matrix
+ * L06).
  *
  * Inert unless the game installed the pack *and* the generated packConfig
  * names a survive or run starter. The pack stays currency / XP / unlocks /
- * item counts — this file is presentation, not difficulty scaling or
- * permadeath. Overlay survivor / roguelite kits stay local (P3-C).
+ * item counts. In survive mode, when `sw2d.runs` is installed with a live
+ * catalog and the shell hands over its encounter binding, the scene is one
+ * run: the escalating waves are the encounter catalog's escalation, the
+ * player's death ends the run (permadeath), the result is banked as meta
+ * currency, and K buys the next unlock between runs - the next run starts
+ * with that loadout. Overlay survivor kits stay local (P3-C).
  */
 
 const PROGRESSION_CAPABILITY_ID = 'progression.state';
@@ -26,6 +34,21 @@ export interface StarterProgressionSnapshot {
   readonly nearId: string | null;
   readonly lastResult: string | null;
   readonly outcome: 'playing' | 'complete';
+  /** Survive + sw2d.runs: the current wave (escalation) and run lifecycle. */
+  readonly wave: number;
+  readonly runOver: boolean;
+  readonly run: {
+    readonly index: number;
+    readonly phase: string;
+    readonly cause: string | null;
+    readonly metaEarned: number;
+    readonly metaCurrency: number;
+    readonly unlocked: readonly string[];
+    readonly nextUnlock: string | null;
+    readonly loadout: RunLoadout;
+    readonly loadOutcome: string;
+    readonly bestWave: number;
+  } | null;
 }
 
 export interface StarterProgressionBinding {
@@ -34,6 +57,8 @@ export interface StarterProgressionBinding {
   startY(): number;
   setPlayer(x: number, y: number): void;
   act(): void;
+  /** Between runs: buy the next affordable unlock (survive + sw2d.runs). */
+  secondary(): void;
   tick(deltaMs: number): void;
   snapshot(): StarterProgressionSnapshot;
   render(): void;
@@ -46,6 +71,7 @@ const INERT: StarterProgressionBinding = {
   startY: () => 0,
   setPlayer: () => undefined,
   act: () => undefined,
+  secondary: () => undefined,
   tick: () => undefined,
   snapshot: () => ({
     active: false,
@@ -58,6 +84,9 @@ const INERT: StarterProgressionBinding = {
     nearId: null,
     lastResult: null,
     outcome: 'playing',
+    wave: 0,
+    runOver: false,
+    run: null,
   }),
   render: () => undefined,
   dispose: () => undefined,
@@ -101,17 +130,25 @@ function dist(ax: number, ay: number, bx: number, by: number): number {
 
 export function bindStarterProgression(
   context: SceneContext,
-  options?: { readonly mode?: ProgressionStarterMode | null; readonly hud?: boolean },
+  options?: { readonly mode?: ProgressionStarterMode | null; readonly hud?: boolean; readonly battle?: StarterEncounterBinding },
 ): StarterProgressionBinding {
   const mode = options?.mode ?? null;
   if (mode !== 'survive' && mode !== 'run') return INERT;
   if (!context.capabilities.has(PROGRESSION_CAPABILITY_ID)) return INERT;
   const progression = context.capabilities.require<ProgressionStore>(PROGRESSION_CAPABILITY_ID);
+  const battle = options?.battle?.active ? options.battle : null;
+  const runsService = mode === 'survive' ? context.capabilities.get<RunsService>(RUNS_CAPABILITY_ID) ?? null : null;
+  const runs = runsService?.active() ? runsService : null;
+  const loadout: RunLoadout = runs?.loadout() ?? { maxHealthBonus: 0, damageBonus: 0, speedBonus: 0, startCurrency: 0, startXp: 0 };
+  let runIndex = 0;
+  let runSummary: RunSummary | null = null;
+  let runElapsedMs = 0;
+  if (runs) runIndex = runs.beginRun();
 
   const existingXp = progression.xp();
-  if (existingXp !== 0) progression.addXp(-existingXp);
+  if (existingXp !== loadout.startXp) progression.addXp(loadout.startXp - existingXp);
   const existingCurrency = progression.currency();
-  if (existingCurrency !== 0) progression.addCurrency(-existingCurrency);
+  if (existingCurrency !== loadout.startCurrency) progression.addCurrency(loadout.startCurrency - existingCurrency);
 
   const hud = options?.hud !== false;
   const scene = context.scene;
@@ -151,11 +188,11 @@ export function bindStarterProgression(
   const onDeath =
     mode === 'survive'
       ? context.events.on('combat:entityDied', ({ entityId }) => {
-          if (disposed || outcome !== 'playing' || entityId === PLAYER_COMBAT_ID) return;
+          if (disposed || entityId === PLAYER_COMBAT_ID || runOver()) return;
           kills += 1;
           progression.addXp(XP_PER_KILL);
           lastResult = 'kill';
-          finishSurvive();
+          if (outcome === 'playing') finishSurvive();
           paint();
         })
       : null;
@@ -172,7 +209,26 @@ export function bindStarterProgression(
     return RELICS.filter((relic) => progression.itemCount(relic.id) > 0).map((relic) => relic.id);
   }
 
+  function runOver(): boolean {
+    return battle?.snapshot()?.over ?? false;
+  }
+
+  function endRun(): void {
+    if (!runs || runSummary) return;
+    const b = battle?.snapshot();
+    runSummary = runs.endRun({
+      cause: b?.outcome === 'complete' ? 'cleared' : 'death',
+      xp: progression.xp(),
+      kills,
+      wave: b?.wavesCleared ?? 0,
+      currency: progression.currency(),
+      durationMs: Math.round(runElapsedMs),
+    });
+    lastResult = `run over +${runSummary.metaEarned}`;
+  }
+
   function snapshot(): StarterProgressionSnapshot {
+    const meta = runs?.meta();
     return {
       active: true,
       mode,
@@ -184,6 +240,23 @@ export function bindStarterProgression(
       nearId: nearId(),
       lastResult,
       outcome,
+      wave: battle?.snapshot()?.wave ?? 0,
+      runOver: runOver(),
+      run:
+        runs && meta
+          ? {
+              index: runIndex,
+              phase: runs.phase(),
+              cause: runSummary?.cause ?? null,
+              metaEarned: runSummary?.metaEarned ?? 0,
+              metaCurrency: meta.metaCurrency,
+              unlocked: meta.unlocked,
+              nextUnlock: runs.nextAffordable()?.id ?? null,
+              loadout,
+              loadOutcome: runs.loadOutcome(),
+              bestWave: meta.bestWave,
+            }
+          : null,
     };
   }
 
@@ -203,13 +276,25 @@ export function bindStarterProgression(
     }
     if (!title || !status || !hint) return;
     if (mode === 'survive') {
-      title.setText(snap.outcome === 'complete' ? 'SURGED' : 'SURVIVE');
+      const over = snap.runOver;
+      title.setText(over ? 'RUN OVER' : snap.outcome === 'complete' ? 'SURGED' : snap.run ? `RUN ${snap.run.index}` : 'SURVIVE');
+      const waveText = battle ? `  ·  wave ${snap.wave + 1}` : '';
+      const metaText = snap.run ? `  ·  meta ${snap.run.metaCurrency}${snap.run.unlocked.length ? ` [${snap.run.unlocked.join(' ')}]` : ''}` : '';
       status.setText(
-        `xp ${snap.xp}/${XP_TARGET}${snap.lastResult ? `  ·  ${snap.lastResult}` : ''}${
-          snap.outcome === 'complete' ? '  ·  complete' : ''
+        `xp ${snap.xp}/${XP_TARGET}${waveText}${metaText}${snap.lastResult ? `  ·  ${snap.lastResult}` : ''}${
+          snap.outcome === 'complete' && !over ? '  ·  surged' : ''
         }`,
       );
-      hint.setText(snap.outcome === 'complete' ? 'SURGE UNLOCKED  -  KEEP FIGHTING' : 'STAY ALIVE  -  KILLS BUILD XP  -  FIRE J/X');
+      if (over && runs) {
+        const next = runs.nextAffordable();
+        hint.setText(
+          `BANKED +${snap.run?.metaEarned ?? 0}${next ? `   K BUYS ${next.label.toUpperCase()} (${next.cost})` : '   NO UNLOCK AFFORDABLE'}   P THEN K STARTS A NEW RUN`,
+        );
+      } else if (over) {
+        hint.setText('DOWN   P THEN K RESTARTS');
+      } else {
+        hint.setText(snap.outcome === 'complete' ? 'SURGE UNLOCKED  -  WAVES KEEP ESCALATING' : 'STAY ALIVE  -  KILLS BUILD XP  -  FIRE J/X  -  WAVES ESCALATE');
+      }
     } else {
       title.setText(snap.outcome === 'complete' ? 'CLEARED' : 'RUN');
       status.setText(
@@ -266,8 +351,31 @@ export function bindStarterProgression(
       context.audio.playCue('ui.confirm');
       paint();
     },
+    secondary(): void {
+      if (disposed || !runs || !runOver()) return;
+      const next = runs.nextAffordable();
+      if (!next) {
+        lastResult = 'no-unlock';
+        paint();
+        return;
+      }
+      const result = runs.buy(next.id);
+      lastResult = result === 'bought' ? `bought ${next.id}` : result;
+      if (result === 'bought') context.audio.playCue('ui.confirm');
+      paint();
+    },
     tick(deltaMs: number): void {
-      if (disposed || mode !== 'survive' || outcome !== 'playing') return;
+      if (disposed || mode !== 'survive') return;
+      if (runOver()) {
+        endRun();
+        paint();
+        return;
+      }
+      runElapsedMs += deltaMs;
+      if (outcome !== 'playing') {
+        paint();
+        return;
+      }
       tickAcc += deltaMs;
       while (tickAcc >= XP_TICK_MS && outcome === 'playing') {
         tickAcc -= XP_TICK_MS;

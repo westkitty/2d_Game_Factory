@@ -33,6 +33,7 @@ import stageScrollCatalogSchema from '../schemas/stage-scroll-catalog.schema.jso
 import timingCatalogSchema from '../schemas/timing-catalog.schema.json' with { type: 'json' };
 import wallCatalogSchema from '../schemas/wall-catalog.schema.json' with { type: 'json' };
 import pursuitCatalogSchema from '../schemas/pursuit-catalog.schema.json' with { type: 'json' };
+import runsCatalogSchema from '../schemas/runs-catalog.schema.json' with { type: 'json' };
 import territoryCatalogSchema from '../schemas/territory-catalog.schema.json' with { type: 'json' };
 import pinballCatalogSchema from '../schemas/pinball-catalog.schema.json' with { type: 'json' };
 import cameraCatalogSchema from '../schemas/camera-catalog.schema.json' with { type: 'json' };
@@ -85,7 +86,8 @@ export type SchemaName =
   | 'camera-catalog'
   | 'codex-catalog'
   | 'targeting-catalog'
-  | 'pursuit-catalog';
+  | 'pursuit-catalog'
+  | 'runs-catalog';
 
 export const SCHEMA_NAMES: readonly SchemaName[] = [
   'action-bindings',
@@ -125,6 +127,7 @@ export const SCHEMA_NAMES: readonly SchemaName[] = [
   'codex-catalog',
   'targeting-catalog',
   'pursuit-catalog',
+  'runs-catalog',
 ];
 
 /** One located problem: which document, where in it, and what is wrong. */
@@ -186,6 +189,7 @@ const SCHEMA_DOCUMENTS: Readonly<Record<SchemaName, SchemaDocument>> = {
   'codex-catalog': codexCatalogSchema,
   'targeting-catalog': targetingCatalogSchema,
   'pursuit-catalog': pursuitCatalogSchema,
+  'runs-catalog': runsCatalogSchema,
 };
 
 // Registration order matters: a schema must be added before anything that
@@ -227,6 +231,7 @@ for (const name of [
   'codex-catalog',
   'targeting-catalog',
   'pursuit-catalog',
+  'runs-catalog',
 ] as const) {
   const schema = SCHEMA_DOCUMENTS[name];
   ajv.addSchema(schema, schema.$id);

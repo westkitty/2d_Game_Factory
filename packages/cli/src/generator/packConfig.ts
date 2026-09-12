@@ -159,15 +159,15 @@ export function generatePackConfig(preset: PresetDefinition): string {
           : 'null';
   const pointerStarter =
     preset.id === 'drawing-game' ? "'draw'" : preset.id === 'dress-up-character-toy' ? "'wardrobe'" : 'null';
-  const progressionStarter =
-    preset.id === 'survivor-like' ? "'survive'" : preset.id === 'action-roguelite' ? "'run'" : 'null';
+  const progressionStarter = preset.id === 'survivor-like' ? "'survive'" : 'null';
   const strategyStarter =
     preset.id === 'turn-based-tactics' ? "'tactics'" : preset.id === 'auto-battler' ? "'battler'" : 'null';
   const navStarter = preset.id === 'maze-game' ? "'maze'" : preset.id === 'lane-defense' ? "'lane'" : 'null';
   const toyStarter =
     preset.id === 'photography-game' ? "'photo'" : preset.id === 'sandbox-playground' ? "'sandbox'" : 'null';
-  const combatStarter =
-    preset.id === 'dungeon-crawler' ? "'room'" : preset.id === 'base-defense' ? "'hold'" : 'null';
+  const combatStarter = preset.id === 'base-defense' ? "'hold'" : 'null';
+  const dungeonStarter =
+    preset.id === 'dungeon-crawler' ? "'crawl'" : preset.id === 'action-roguelite' ? "'rogue'" : 'null';
   const runStarter =
     preset.id === 'auto-runner' ? "'course'" : preset.id === 'endless-runner' ? "'endless'" : 'null';
   const vehicleStarter =
@@ -246,6 +246,9 @@ export function generatePackConfig(preset: PresetDefinition): string {
     '',
     '/** Category-C Wave 31: closing-wall pursuit. Null otherwise. */',
     `export const CHASE_STARTER: 'pursuit' | null = ${chaseStarter};`,
+    '',
+    '/** Final Product Completion Wave 2: room-graph dungeon (crawl) vs roguelite run (rogue). Null otherwise. */',
+    `export const DUNGEON_STARTER: 'crawl' | 'rogue' | null = ${dungeonStarter};`,
     '',
   ]
     .filter((line, index, all) => !(line === '' && all[index - 1] === ''))

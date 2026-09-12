@@ -51,6 +51,7 @@ export const PACK_IDS = {
   targeting: 'sw2d.targeting',
   /** Final Product Completion Wave 1: pursuit pressure (closing wall / trailing chaser). */
   pursuit: 'sw2d.pursuit',
+  runs: 'sw2d.runs',
 } as const;
 
 export const CAPABILITY_IDS = {
@@ -115,4 +116,5 @@ export const CAPABILITY_IDS = {
   targeting: 'combat.targeting',
   /** Final Product Completion Wave 1: pursuit pressure along the run axis. */
   pursuit: 'movement.pursuit',
+  runs: 'progression.runs',
 } as const;

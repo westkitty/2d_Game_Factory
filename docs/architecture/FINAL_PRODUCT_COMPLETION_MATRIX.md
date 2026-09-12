@@ -77,6 +77,8 @@ exceptions: physical hardware certification and the user-owned public-license ch
 - **Required:** 3-hit combo with windows; direction from facing; hit-stun interrupts; nearest-target reticle; instructions on HUD.
 - **Journey:** strike ×3 inside window → `combo 3`; wait → combo resets; strike facing away → miss; face target → hit + knockback; clear arena → `complete`.
 - **Checkpoint:** Wave 2.
+- **Closed by:** `sw2d.melee` combo chain (`content/melee.json` `combo.steps` / `windowMs`), facing arc (`arcDeg`, `setFacing`), foe pursuit (`speed`), player hit-stun (`contact.stunMs`), `target()`; `bindStarterMelee` draws the arc, the reticle and the combo counter; the top-down shell feeds facing. **Proof/test:** `melee.test.ts` (Wave 2 block), generate tests, proof specs `actionAdventure` / `arenaCombat` (canonical proofs refreshed, contracts updated). **Browser:** `qa:completion` + `qa:proof` PASS.
+- **Status:** CLOSED (Wave 2).
 
 ### L05 - twin-stick ships no opposition
 - **Source text:** "The generated starter ships no enemy waves out of the box: sw2d.encounters is optional for this recipe, so opposition is added by enabling that pack or authoring game-specific spawns (the committed proof game demonstrates the latter)."
@@ -84,6 +86,8 @@ exceptions: physical hardware certification and the user-owned public-license ch
 - **Architecture:** catalog (encounters required), generator (encounter catalog), top-down shell already binds `bindStarterEncounters`.
 - **Journey:** start → enemies spawn and chase → fire → kill → wave clear → `complete`; die → respawn.
 - **Checkpoint:** Wave 2.
+- **Closed by:** `sw2d.encounters` required for twin-stick-shooter; the canonical starter fights `content/encounters.json` waves through `bindStarterEncounters`. **Proof/test:** generate/uiCopy tests; completion spec `twinStickShooter` (pointer-aim kiting: kills, wave 1 → wave 2, restart). **Browser:** `qa:completion -- twin-stick-shooter` PASS; hand-authored proof still PASS.
+- **Status:** CLOSED (Wave 2).
 
 ### L06 - survivor escalation / meta progression
 - **Source text:** "In-run XP and unlock flags for the generated starter use sw2d.progression; endless difficulty scaling / meta-progression between runs is not a reusable system; the starter survival loop repeats the authored encounter without escalating it."
@@ -91,6 +95,8 @@ exceptions: physical hardware certification and the user-owned public-license ch
 - **Architecture:** `sw2d.encounters` escalation rules (per-wave scaling of count/health/speed), new `sw2d.runs` pack (`progression.runs`: run lifecycle, permadeath, persistent meta unlocks, between-run loadout), `bindStarterProgression` survive mode.
 - **Journey:** wave 1 → wave 2 larger → die → run ends, meta XP saved → reload → new run starts with unlock applied.
 - **Checkpoint:** Wave 2.
+- **Closed by:** `sw2d.encounters` escalation (`escalation.countPerWave/healthScalePerWave/speedScalePerWave/maxWaves`, `start(id, { wave })`, `speedScale()`), new reusable `sw2d.runs` pack (`progression.runs`: run lifecycle, permadeath, banked meta via `context.saves`, unlocks, loadout, corrupt/old-record fallback), `bindStarterEncounters` (`respawn: false`, loadout, escalation waves), `bindStarterProgression` survive mode run lifecycle + K buys. **Proof/test:** `runs.test.ts`, `encounters.test.ts` escalation block, proof spec `survivorLike` (escalated wave 1 with faster enemies → death → bank → buy → run 2 with 140 max health). **Browser:** PASS.
+- **Status:** CLOSED (Wave 2).
 
 ### L07 - dungeon enemies from room graph + AI
 - **Source text:** "Contact damage and strike for the generated starter use sw2d.combat; generated Enemy objects from the room graph and AI behaviour are not wired."
@@ -98,6 +104,8 @@ exceptions: physical hardware certification and the user-owned public-license ch
 - **Architecture:** `bindStarterCombat` room mode consumes `sw2d.generation` room graph + `sw2d.ai` state agents (idle/chase/attack/return), room transitions, room-clear, reset.
 - **Journey:** enter room → enemies chase → strike → room cleared → move to next room → new enemies → all rooms cleared → `complete`; die → restart resets.
 - **Checkpoint:** Wave 2.
+- **Closed by:** `bindStarterDungeon` (`packages/runtime/src/game-support/starterDungeon.ts`): room-graph `Enemy` objects become `sw2d.ai` agents (idle → chase → patrol/return → idle), `sw2d.combat` health, strikes with knockback/stun, room tracking and clearing, exit gate, camera follow, world bounds; `sw2d.ai` required; `DUNGEON_STARTER 'crawl'`. **Proof/test:** generate tests; completion spec `dungeonCrawler` with the shared `dungeonJourney` navigation (chase → leash return → clear every room → exit → restart). **Browser:** PASS.
+- **Status:** CLOSED (Wave 2).
 
 ### L08 - roguelite permadeath / between-run loadouts
 - **Source text:** "In-run currency, XP, items and unlock flags for the generated starter use sw2d.progression; run-based permadeath and between-run loadouts are not a reusable capability."
@@ -105,6 +113,8 @@ exceptions: physical hardware certification and the user-owned public-license ch
 - **Architecture:** `sw2d.runs` (shared with L06), `content/runs.json`, `bindStarterProgression` run mode.
 - **Journey:** run → collect relic/currency → die → run ends, currency banked, unlock bought → new run starts with loadout.
 - **Checkpoint:** Wave 2.
+- **Closed by:** `sw2d.runs` (see L06) consumed by `bindStarterDungeon` rogue mode: cleared rooms drop coin, exit clears the run (+clear bonus), death ends it, K buys, run 2 starts with the loadout. **Proof/test:** proof spec `actionRoguelite` (canonical proof refreshed, contract updated). **Browser:** PASS.
+- **Status:** CLOSED (Wave 2).
 
 ### L09 - stealth AI: patrol, investigate, chase, takedown
 - **Source text:** "Vision cones, occlusion, suspicion, noise and hiding are reusable (sw2d.perception); patrol pathfinding, takedowns and full stealth AI are not."
@@ -112,6 +122,8 @@ exceptions: physical hardware certification and the user-owned public-license ch
 - **Architecture:** `sw2d.perception` extended: patrol waypoints, observer state machine (`patrol/suspicious/investigate/chase/return`), noise reaction, takedown from behind, optional `sw2d.navigation` grid routing; `content/perception.json`; `bindStarterPerception`.
 - **Journey:** guard patrols → sees player → `chase` → player hides → guard `investigate` → loses target → `return` → `patrol`; sneak behind → takedown; loot → exit.
 - **Checkpoint:** Wave 2.
+- **Closed by:** `sw2d.perception` observer state machine (`patrol / suspicious / chase / investigate / return / downed`), authored patrol routes (`observers[].patrol`), chase/catch, memory, investigation of last known position and of loot noise, return to route, `takedown()`; `bindStarterPerception` draws moving observers with state colours and J takes down; heist alarm sticky, infiltrate alarm live. Consumers: stealth-game, heist-game. **Proof/test:** `perception.test.ts` (Wave 2 block), generate tests, proof specs `stealthGame` (patrol → chase → caught; restart; chase → lost → investigate → return → patrol; takedown; loot; exit) / `heistGame`. **Browser:** PASS.
+- **Status:** CLOSED (Wave 2).
 
 ### L10 - boss sequencing
 - **Source text:** "Sequencing multiple bosses across a run is starter-specific; sw2d.encounters drives one boss encounter at a time."
@@ -432,12 +444,12 @@ exceptions: physical hardware certification and the user-owned public-license ch
 | L01 | chase-platformer | 1 | CLOSED | wave 1 |
 | L02 | endless-runner, auto-runner | 1 | CLOSED | wave 1 |
 | L03 | precision-platformer, climbing-game | 1 | CLOSED | wave 1 |
-| L04 | action-adventure, arena-combat | 2 | OPEN | |
-| L05 | twin-stick-shooter | 2 | OPEN | |
-| L06 | survivor-like | 2 | OPEN | |
-| L07 | dungeon-crawler | 2 | OPEN | |
-| L08 | action-roguelite | 2 | OPEN | |
-| L09 | stealth-game, heist-game | 2 | OPEN | |
+| L04 | action-adventure, arena-combat | 2 | CLOSED | wave 2 |
+| L05 | twin-stick-shooter | 2 | CLOSED | wave 2 |
+| L06 | survivor-like | 2 | CLOSED | wave 2 |
+| L07 | dungeon-crawler | 2 | CLOSED | wave 2 |
+| L08 | action-roguelite | 2 | CLOSED | wave 2 |
+| L09 | stealth-game, heist-game | 2 | CLOSED | wave 2 |
 | L10 | boss-rush | 3 | OPEN | |
 | L11 | horizontal-shmup, vertical-shmup | 3 | OPEN | |
 | L12 | bullet-hell | 3/11 | OPEN | |

@@ -37,6 +37,15 @@ export const COMPLETION_SPEC_MODULES: Readonly<Record<string, string>> = {
   'auto-runner': 'autoRunner',
   'precision-platformer': 'precisionPlatformer',
   'climbing-game': 'climbingGame',
+  // Wave 2 - combat / top-down (L04 melee grammar, L05 twin-stick opposition)
+  'action-adventure': 'actionAdventure',
+  'arena-combat': 'arenaCombat',
+  'twin-stick-shooter': 'twinStickShooter',
+  'dungeon-crawler': 'dungeonCrawler',
+  'action-roguelite': 'actionRoguelite',
+  'survivor-like': 'survivorLike',
+  'stealth-game': 'stealthGame',
+  'heist-game': 'heistGame',
 };
 
 interface Target {

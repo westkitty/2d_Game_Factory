@@ -19,11 +19,11 @@ file is the cursor.
 | field | value |
 |---|---|
 | branch SHA | (see git log; updated per checkpoint below) |
-| waves completed | 1 (inventory, platforming movement) |
-| limitations closed | 5 / 69 entries (L01-L03; 3 / 52 distinct) |
-| remaining machine-executable | 64 |
+| waves completed | 2 (inventory, platforming movement, combat / top-down) |
+| limitations closed | 14 / 69 entries (L01-L09; 9 / 52 distinct) |
+| remaining machine-executable | 55 |
 | blockers | none |
-| next exact action | Wave 2: melee combos (L04), twin-stick opposition (L05), survivor escalation + `sw2d.runs` (L06/L08), dungeon room enemies (L07), stealth AI (L09) |
+| next exact action | Wave 3: boss sequencing (L10), shmup parallax/rail/formations (L11), bullet pooling + budget (L12), asteroids (L13/L14), gallery targets (L15), run-and-gun opposition (L16), rail-shooter weapons (L17) |
 
 ## Checkpoint log
 
@@ -43,6 +43,15 @@ file is the cursor.
 - New program tooling: `npm run qa:completion` (fresh generate → tsc → vite build → real-Chrome journey, `packages/qa/completion-specs/`), `npm run proofs:refresh` / `proofs:check` (canonical proofs regenerated from the factory; 51 canonical, 23 hand-authored), `npm run docs:presets` (mechanical preset-doc tables).
 - Honesty test inverted into a closed-limitations regression guard (`packages/presets/test/honesty.test.ts`).
 
+### Wave 2 - combat / top-down (L04-L09)
+- `sw2d.melee`: combo chains, facing-arc directional strikes, foe pursuit, player hit-stun, `target()`; HUD reticle/arc/combo.
+- `sw2d.encounters`: wave escalation (`escalation`), boss `sequence` (consumed in Wave 3), `start(id, { wave })`; binding gains permadeath, loadout, boss sequencing, enemy positions in the snapshot.
+- New reusable pack `sw2d.runs` (`progression.runs`, `content/runs.json`): run lifecycle, permadeath, banked meta via saves, unlocks, loadout. Consumers: survivor-like, action-roguelite.
+- New `bindStarterDungeon`: room-graph enemies as `sw2d.ai` agents, rooms, exit gate, camera follow; crawl (dungeon-crawler) and rogue (action-roguelite) modes; `DUNGEON_STARTER` in packConfig (replaces COMBAT_STARTER 'room' and PROGRESSION_STARTER 'run').
+- `sw2d.perception`: patrol routes, observer state machine, chase/catch, investigation, return, noise investigation, takedowns.
+- twin-stick-shooter requires `sw2d.encounters`; dungeon-crawler requires `sw2d.ai`.
+- New QA helper `packages/qa/src/dungeonJourney.ts` (room-graph navigation from the manifest); tools helper `tools/scripts/register-content-document.py`.
+
 ## Validation evidence
 
 ### Wave 1
@@ -50,3 +59,9 @@ file is the cursor.
 - `npm run qa:completion` 5/5 PASS (chase-platformer, endless-runner, auto-runner, precision-platformer, climbing-game) - fresh factory output, system Chrome.
 - `npm run qa:proof -- chase-platformer endless-runner auto-runner precision-platformer climbing-game traditional-platformer` 6/6 PASS.
 - `npm run limitations:extract`: 64 machine-executable remain (was 69).
+
+### Wave 2
+- `npm run typecheck` PASS; `npx vitest run` 209 files / 4195+ tests PASS.
+- `npm run qa:completion` PASS for action-adventure, arena-combat, twin-stick-shooter, dungeon-crawler, action-roguelite, survivor-like, stealth-game, heist-game (fresh factory output, system Chrome).
+- `npm run qa:proof` 14/14 PASS for every wave-2-affected proof (incl. hand-authored twin-stick, dungeon-crawler, bullet-hell, boss-rush, run-and-gun, base-defense).
+- `npm run limitations:extract`: 55 machine-executable remain.

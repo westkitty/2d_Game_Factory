@@ -113,6 +113,12 @@ export {
   type ToyStarterMode,
 } from './game-support/starterToy.ts';
 export {
+  bindStarterDungeon,
+  type StarterDungeonBinding,
+  type StarterDungeonSnapshot,
+  type DungeonStarterMode,
+} from './game-support/starterDungeon.ts';
+export {
   bindStarterCombat,
   type StarterCombatBinding,
   type StarterCombatSnapshot,

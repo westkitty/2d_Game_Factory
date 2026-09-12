@@ -203,3 +203,147 @@ describe('sw2d.melee - lifecycle', () => {
     expect(table.playerHealth()).toBe(5);
   });
 });
+
+describe('sw2d.melee - combos, facing arc, pursuit, hit-stun (Final Product Completion Wave 2)', () => {
+  const { combo: _unusedCombo, ...SKIRMISH_NO_COMBO } = { ...SKIRMISH, combo: undefined };
+  void _unusedCombo;
+  const NO_COMBO: MeleeCatalog = { ...SKIRMISH_NO_COMBO, arcDeg: 120, contact: { range: 34, damage: 1, cooldownMs: 650, stunMs: 240 } };
+  const COMBO: MeleeCatalog = {
+    ...SKIRMISH,
+    foes: [{ id: 'foe-0', x: 200, y: 270, radius: 17, health: 9, speed: 55 }],
+    strike: { range: 145, damage: 1, cooldownMs: 0, knockback: 0, stunMs: 0 },
+    contact: { range: 34, damage: 1, cooldownMs: 650, stunMs: 240 },
+    combo: {
+      steps: [
+        { damage: 1, knockback: 0, stunMs: 0 },
+        { damage: 1, knockback: 0, stunMs: 0 },
+        { damage: 3, knockback: 0, stunMs: 0 },
+      ],
+      windowMs: 700,
+    },
+    arcDeg: 120,
+  };
+
+  it('validates the combo / arc / speed / stun fields and rejects an out-of-range arc', () => {
+    expect(() => validateContentBundleData({ melee: COMBO })).not.toThrow();
+    expect(() => validateContentBundleData({ melee: { ...COMBO, arcDeg: 400 } })).toThrow();
+    expect(() => validateContentBundleData({ melee: { ...COMBO, combo: { steps: [], windowMs: 1 } } })).toThrow();
+  });
+
+  it('chains three hits inside the window with per-step damage, then wraps to the opener', () => {
+    const { table, events } = install(COMBO);
+    const steps: number[] = [];
+    events.on('melee:combo', (p) => steps.push(p.step));
+    table.setFacing(1, 0);
+    expect(table.comboStep()).toBe(0);
+    expect(table.strike(0)).toBe('hit');
+    expect(table.comboStep()).toBe(1);
+    expect(table.lastResult()).toBe('hit-1');
+    expect(table.foes()[0]!.health).toBe(8);
+    expect(table.strike(300)).toBe('hit');
+    expect(table.comboStep()).toBe(2);
+    expect(table.comboWindowLeftMs(400)).toBe(600);
+    expect(table.strike(600)).toBe('hit');
+    expect(table.comboStep()).toBe(3);
+    expect(table.foes()[0]!.health).toBe(4);
+    expect(table.bestCombo()).toBe(3);
+    expect(table.strike(900)).toBe('hit');
+    expect(table.comboStep()).toBe(1);
+    expect(steps).toEqual([1, 2, 3, 1]);
+  });
+
+  it('the window closing resets the chain (on tick and on the next strike)', () => {
+    const { table, events } = install(COMBO);
+    const resets: string[] = [];
+    events.on('melee:comboReset', (p) => resets.push(p.reason));
+    table.setFacing(1, 0);
+    table.strike(0);
+    table.tick(16, 800);
+    expect(table.comboStep()).toBe(0);
+    expect(resets).toEqual(['window']);
+    table.strike(1000);
+    expect(table.comboStep()).toBe(1);
+    table.strike(2000);
+    expect(table.comboStep()).toBe(1);
+    expect(resets).toEqual(['window', 'window']);
+  });
+
+  it('a whiff resets the chain', () => {
+    const { table, events } = install(COMBO);
+    const resets: string[] = [];
+    events.on('melee:comboReset', (p) => resets.push(p.reason));
+    table.setFacing(1, 0);
+    table.strike(0);
+    table.setFacing(-1, 0);
+    expect(table.strike(100)).toBe('miss');
+    expect(table.comboStep()).toBe(0);
+    expect(resets).toEqual(['whiff']);
+  });
+
+  it('directional attacks: a foe outside the facing arc is not a target', () => {
+    const { table } = install(COMBO);
+    table.setFacing(1, 0);
+    expect(table.target()?.id).toBe('foe-0');
+    table.setFacing(0, 1);
+    expect(table.target()).toBeNull();
+    expect(table.strike(0)).toBe('miss');
+    table.setFacing(-1, 0);
+    expect(table.target()).toBeNull();
+    // facing within 60 degrees of the foe still reaches it
+    table.setFacing(1, 0.9);
+    expect(table.target()?.id).toBe('foe-0');
+    expect(table.arcDeg()).toBe(120);
+  });
+
+  it('foes with a speed pursue the player and stop at contact range; stunned foes do not move', () => {
+    const { table } = install({ ...COMBO, foes: [{ id: 'foe-0', x: 400, y: 270, radius: 17, health: 9, speed: 100 }] });
+    table.tick(1000, 1000);
+    expect(table.foes()[0]!.x).toBeCloseTo(300, 5);
+    table.tick(5000, 6000);
+    expect(table.foes()[0]!.x).toBeCloseTo(120 + 34 * 0.8, 5);
+    const stunned = install({ ...NO_COMBO, foes: [{ id: 'foe-0', x: 200, y: 270, radius: 17, health: 9, speed: 100 }], strike: { ...COMBO.strike, stunMs: 500 } }).table;
+    stunned.setFacing(1, 0);
+    stunned.strike(0);
+    const afterHit = stunned.foes()[0]!.x;
+    stunned.tick(200, 200);
+    expect(stunned.foes()[0]!.x).toBeCloseTo(afterHit, 5);
+    stunned.tick(400, 600);
+    expect(stunned.foes()[0]!.x).toBeLessThan(afterHit);
+  });
+
+  it('a contact hit stuns the player (no strikes) and resets the chain; a stunned foe cannot deal contact', () => {
+    const { table, events } = install({ ...COMBO, foes: [{ id: 'foe-0', x: 140, y: 270, radius: 17, health: 9 }] });
+    const resets: string[] = [];
+    events.on('melee:comboReset', (p) => resets.push(p.reason));
+    table.setFacing(1, 0);
+    table.strike(0);
+    expect(table.comboStep()).toBe(1);
+    table.tick(16, 16);
+    expect(table.playerHealth()).toBe(4);
+    expect(table.playerStunned(100)).toBe(true);
+    expect(table.strike(100)).toBe('stunned');
+    expect(table.comboStep()).toBe(0);
+    expect(resets).toEqual(['hit']);
+    expect(table.playerStunned(300)).toBe(false);
+    // Stun the foe: contact is suspended while it is stunned.
+    const guarded = install({ ...NO_COMBO, foes: [{ id: 'foe-0', x: 140, y: 270, radius: 17, health: 9 }], strike: { ...COMBO.strike, stunMs: 1000 } }).table;
+    guarded.setFacing(1, 0);
+    guarded.strike(0);
+    guarded.tick(16, 16);
+    expect(guarded.playerHealth()).toBe(5);
+    guarded.tick(16, 1100);
+    expect(guarded.playerHealth()).toBe(4);
+  });
+
+  it('reset() clears facing, chain, best combo and player stun', () => {
+    const { table } = install(COMBO);
+    table.setFacing(0, 1);
+    table.setFacing(1, 0);
+    table.strike(0);
+    table.reset();
+    expect(table.comboStep()).toBe(0);
+    expect(table.bestCombo()).toBe(0);
+    expect(table.facing()).toEqual({ x: 1, y: 0 });
+    expect(table.playerStunned(0)).toBe(false);
+  });
+});

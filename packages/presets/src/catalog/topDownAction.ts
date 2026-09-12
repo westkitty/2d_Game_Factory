@@ -1,6 +1,6 @@
 import type { PresetDefinition } from '@sw2d/contracts';
 import { PACK_IDS } from '@sw2d/packs/ids';
-import { LIMITATIONS, VALIDATION_PROFILES, definePreset, pack } from '../shared.ts';
+import { VALIDATION_PROFILES, definePreset, pack } from '../shared.ts';
 
 /**
  * Family B - Top-down action (recipes 11-20).
@@ -42,7 +42,11 @@ export const TOP_DOWN_ACTION_PRESETS: readonly PresetDefinition[] = [
     optionalSystemPacks: [pack(PACK_IDS.ai), pack(PACK_IDS.progression)],
     requiredContentRoles: ['tuning', 'levels', 'melee'],
     validationProfile: VALIDATION_PROFILES.topDown,
-    knownLimitations: [LIMITATIONS.meleeCombat],
+    // Final Product Completion Wave 2 (matrix L04): combo chains, directional
+    // (facing-arc) strikes, foe pursuit, hit-stun interruption and the
+    // targeting reticle are the reusable sw2d.melee grammar from
+    // content/melee.json.
+    knownLimitations: [],
   }),
 
   definePreset({
@@ -51,16 +55,18 @@ export const TOP_DOWN_ACTION_PRESETS: readonly PresetDefinition[] = [
     displayName: 'Twin-Stick Shooter',
     family: 'top-down-action',
     controllerFamilies: ['top-down'],
-    requiredSystemPacks: [pack(PACK_IDS.combat), pack(PACK_IDS.weapons)],
-    optionalSystemPacks: [pack(PACK_IDS.world), pack(PACK_IDS.worldEntities), pack(PACK_IDS.arcade), pack(PACK_IDS.encounters)],
-    requiredContentRoles: ['tuning', 'levels'],
+    // Final Product Completion Wave 2 (matrix L05): sw2d.encounters is
+    // required - a freshly generated twin-stick shooter fights real waves
+    // from content/encounters.json through the shared top-down shell
+    // (bindStarterEncounters), never an empty arena.
+    requiredSystemPacks: [pack(PACK_IDS.combat), pack(PACK_IDS.weapons), pack(PACK_IDS.encounters)],
+    optionalSystemPacks: [pack(PACK_IDS.world), pack(PACK_IDS.worldEntities), pack(PACK_IDS.arcade)],
+    requiredContentRoles: ['tuning', 'levels', 'encounters'],
     validationProfile: VALIDATION_PROFILES.topDown,
     // Spatial pointer aim is consumed by the generated top-down shell as of
     // the Arena finish program's Wave 2 (aimFromPointer fallback when no
     // digital AIM_* is held - the contract proofs/twin-stick-shooter proves).
-    knownLimitations: [
-      'The generated starter ships no enemy waves out of the box: sw2d.encounters is optional for this recipe, so opposition is added by enabling that pack or authoring game-specific spawns (the committed proof game demonstrates the latter).',
-    ],
+    knownLimitations: [],
   }),
 
   definePreset({
@@ -69,16 +75,18 @@ export const TOP_DOWN_ACTION_PRESETS: readonly PresetDefinition[] = [
     displayName: 'Survivor-Like',
     family: 'top-down-action',
     controllerFamilies: ['top-down'],
-    requiredSystemPacks: [pack(PACK_IDS.combat), pack(PACK_IDS.ai), pack(PACK_IDS.progression), pack(PACK_IDS.weapons), pack(PACK_IDS.encounters)],
+    requiredSystemPacks: [pack(PACK_IDS.combat), pack(PACK_IDS.ai), pack(PACK_IDS.progression), pack(PACK_IDS.weapons), pack(PACK_IDS.encounters), pack(PACK_IDS.runs)],
     optionalSystemPacks: [pack(PACK_IDS.arcade), pack(PACK_IDS.world)],
-    requiredContentRoles: ['tuning'],
+    requiredContentRoles: ['tuning', 'encounters', 'runs'],
     validationProfile: VALIDATION_PROFILES.topDown,
     // The generated shell loops content/encounters.json as survival waves
-    // (bindStarterEncounters) and now banks in-run XP on sw2d.progression
-    // (Category-C Wave 17). What is still missing is escalation between loops.
-    knownLimitations: [
-      'In-run XP and unlock flags for the generated starter use sw2d.progression; endless difficulty scaling / meta-progression between runs is not a reusable system; the starter survival loop repeats the authored encounter without escalating it.',
-    ],
+    // (bindStarterEncounters) and banks in-run XP on sw2d.progression
+    // (Category-C Wave 17). Final Product Completion Wave 2 (matrix L06):
+    // waves escalate through the encounter catalog's `escalation` (more,
+    // tougher, faster enemies per loop) and the scene is one permadeath run
+    // on the reusable sw2d.runs capability - death banks meta currency, K
+    // buys an unlock between runs, the next run starts with that loadout.
+    knownLimitations: [],
   }),
 
   definePreset({
@@ -87,16 +95,17 @@ export const TOP_DOWN_ACTION_PRESETS: readonly PresetDefinition[] = [
     displayName: 'Dungeon Crawler',
     family: 'top-down-action',
     controllerFamilies: ['top-down'],
-    requiredSystemPacks: [pack(PACK_IDS.world), pack(PACK_IDS.worldEntities), pack(PACK_IDS.combat), pack(PACK_IDS.generation)],
-    optionalSystemPacks: [pack(PACK_IDS.ai), pack(PACK_IDS.progression)],
+    requiredSystemPacks: [pack(PACK_IDS.world), pack(PACK_IDS.worldEntities), pack(PACK_IDS.combat), pack(PACK_IDS.generation), pack(PACK_IDS.ai)],
+    optionalSystemPacks: [pack(PACK_IDS.progression)],
     requiredContentRoles: ['tuning', 'levels', 'generation'],
     validationProfile: VALIDATION_PROFILES.topDown,
     // Phase 7 (ADR-0024): the dungeon is a deterministic seeded room graph from
     // content/generation.json, driven by the reusable sw2d.generation capability.
-    // Category-C Wave 21: contact/strike for the generated starter use sw2d.combat.
-    knownLimitations: [
-      'Contact damage and strike for the generated starter use sw2d.combat; generated Enemy objects from the room graph and AI behaviour are not wired.',
-    ],
+    // Final Product Completion Wave 2 (matrix L07): the room graph's Enemy
+    // objects are live sw2d.ai agents (idle -> chase -> return) with sw2d.combat
+    // health, rooms clear as their foes fall, the camera follows through the
+    // doorways, and the exit opens when every room is cleared (bindStarterDungeon).
+    knownLimitations: [],
   }),
 
   definePreset({
@@ -105,16 +114,17 @@ export const TOP_DOWN_ACTION_PRESETS: readonly PresetDefinition[] = [
     displayName: 'Action Roguelite',
     family: 'top-down-action',
     controllerFamilies: ['top-down'],
-    requiredSystemPacks: [pack(PACK_IDS.combat), pack(PACK_IDS.progression), pack(PACK_IDS.generation)],
-    optionalSystemPacks: [pack(PACK_IDS.ai), pack(PACK_IDS.world), pack(PACK_IDS.worldEntities)],
-    requiredContentRoles: ['tuning', 'levels', 'generation'],
+    requiredSystemPacks: [pack(PACK_IDS.combat), pack(PACK_IDS.progression), pack(PACK_IDS.generation), pack(PACK_IDS.ai), pack(PACK_IDS.runs)],
+    optionalSystemPacks: [pack(PACK_IDS.world), pack(PACK_IDS.worldEntities)],
+    requiredContentRoles: ['tuning', 'levels', 'generation', 'runs'],
     validationProfile: VALIDATION_PROFILES.topDown,
     // Phase 7 (ADR-0024): deterministic seeded room graph via sw2d.generation.
-    // Category-C Wave 17 banks in-run relics on sw2d.progression; permadeath
-    // and between-run loadouts stay leftover.
-    knownLimitations: [
-      'In-run currency, XP, items and unlock flags for the generated starter use sw2d.progression; run-based permadeath and between-run loadouts are not a reusable capability.',
-    ],
+    // Final Product Completion Wave 2 (matrix L08): the dungeon is one run on
+    // the reusable sw2d.runs capability - cleared rooms drop coin (sw2d.progression),
+    // the exit clears the run, death ends it (permadeath), the result is banked
+    // as meta currency, K buys an unlock between runs and the next run starts
+    // with that loadout (bindStarterDungeon in rogue mode).
+    knownLimitations: [],
   }),
 
   definePreset({
@@ -127,7 +137,11 @@ export const TOP_DOWN_ACTION_PRESETS: readonly PresetDefinition[] = [
     optionalSystemPacks: [pack(PACK_IDS.worldEntities), pack(PACK_IDS.navigation)],
     requiredContentRoles: ['tuning', 'levels', 'perception'],
     validationProfile: VALIDATION_PROFILES.topDown,
-    knownLimitations: [LIMITATIONS.stealthAi],
+    // Final Product Completion Wave 2 (matrix L09): patrol routes, the observer
+    // state machine (patrol / suspicious / chase / investigate / return),
+    // catch, noise investigation and takedowns are the reusable sw2d.perception
+    // stealth AI from content/perception.json.
+    knownLimitations: [],
   }),
 
   definePreset({
@@ -140,7 +154,11 @@ export const TOP_DOWN_ACTION_PRESETS: readonly PresetDefinition[] = [
     optionalSystemPacks: [pack(PACK_IDS.worldEntities), pack(PACK_IDS.progression), pack(PACK_IDS.navigation)],
     requiredContentRoles: ['tuning', 'levels', 'perception'],
     validationProfile: VALIDATION_PROFILES.topDown,
-    knownLimitations: [LIMITATIONS.stealthAi],
+    // Final Product Completion Wave 2 (matrix L09): patrol routes, the observer
+    // state machine (patrol / suspicious / chase / investigate / return),
+    // catch, noise investigation and takedowns are the reusable sw2d.perception
+    // stealth AI from content/perception.json.
+    knownLimitations: [],
   }),
 
   definePreset({
@@ -157,7 +175,8 @@ export const TOP_DOWN_ACTION_PRESETS: readonly PresetDefinition[] = [
     optionalSystemPacks: [pack(PACK_IDS.ai), pack(PACK_IDS.arcade)],
     requiredContentRoles: ['tuning', 'levels', 'melee'],
     validationProfile: VALIDATION_PROFILES.topDown,
-    knownLimitations: [LIMITATIONS.meleeCombat],
+    // Final Product Completion Wave 2 (matrix L04): see action-adventure.
+    knownLimitations: [],
   }),
 
   definePreset({

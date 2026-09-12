@@ -1,11 +1,17 @@
 {
   "schemaVersion": 1,
+  "escalation": {
+    "countPerWave": 1,
+    "healthScalePerWave": 0.25,
+    "speedScalePerWave": 0.15,
+    "maxWaves": 12
+  },
   "encounters": [
     {
-      "id": "starter-skirmish",
+      "id": "starter-swarm",
       "phases": [
         {
-          "id": "wave-1",
+          "id": "swarm",
           "spawns": [
             {
               "archetype": "grunt",
@@ -14,50 +20,8 @@
                 "kind": "edge",
                 "edge": "top"
               },
-              "intervalMs": 500,
+              "intervalMs": 400,
               "health": 20
-            }
-          ],
-          "completeWhen": {
-            "kind": "spawns-cleared"
-          }
-        },
-        {
-          "id": "wave-2",
-          "spawns": [
-            {
-              "archetype": "grunt",
-              "count": 2,
-              "at": {
-                "kind": "edge",
-                "edge": "left"
-              },
-              "intervalMs": 600,
-              "health": 20
-            },
-            {
-              "archetype": "shooter",
-              "count": 2,
-              "at": {
-                "kind": "edge",
-                "edge": "top"
-              },
-              "intervalMs": 900,
-              "health": 30,
-              "emitterIds": [
-                "aimed-shot"
-              ]
-            }
-          ],
-          "emitters": [
-            {
-              "id": "aimed-shot",
-              "weaponId": "enemy-blaster",
-              "pattern": {
-                "kind": "aimed"
-              },
-              "everyMs": 1400,
-              "startDelayMs": 800
             }
           ],
           "completeWhen": {

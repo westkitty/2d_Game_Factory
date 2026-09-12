@@ -19,6 +19,8 @@ Generated via `npm run sw2d -- new proof-heist-game --preset heist-game` (the ca
 
 ## Defining journey (automated, real-browser, deterministic frame stepping)
 
+Final Product Completion Wave 2 (matrix L09): the same patrolling guard; looting raises the sticky heist alarm and sends the guard to investigate the loot.
+
 1. Start; mode `heist`; no alarm.
 2. Up to the exit -> `objectiveCollected false`, `playing`.
 3. Right to x >= 760, Down until `objectiveCollected` -> `alarm true`, still `playing`.
@@ -27,4 +29,5 @@ Generated via `npm run sw2d -- new proof-heist-game --preset heist-game` (the ca
 
 ## Acceptance
 
+- The heist consumes the reusable `sw2d.perception` stealth AI (patrol, investigate-the-noise, chase / catch) - no catalog limitation remains.
 - Zero console errors, zero external requests.

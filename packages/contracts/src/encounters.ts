@@ -77,9 +77,36 @@ export interface EncounterDefinition {
   readonly bossEntityId?: string;
 }
 
+/**
+ * Wave escalation (Final Product Completion Wave 2 - matrix L06). When a
+ * consumer restarts the same encounter as wave N (0-based; `start(id,
+ * { wave })`), every spawn group's count grows by `countPerWave * N`
+ * (floored), spawn health scales by `1 + healthScalePerWave * N`, and the
+ * runtime reads `speedScalePerWave` to speed up enemy pursuit. `maxWaves`
+ * bounds the scaling (not the loop).
+ */
+export interface EncounterEscalation {
+  readonly countPerWave: number;
+  readonly healthScalePerWave: number;
+  readonly speedScalePerWave: number;
+  readonly maxWaves?: number;
+}
+
+/**
+ * Boss sequencing (Final Product Completion Wave 3 - matrix L10). An ordered
+ * list of encounter ids the consumer runs back to back; `transitionMs` is
+ * the readable gap between one boss falling and the next starting.
+ */
+export interface EncounterSequence {
+  readonly encounterIds: readonly string[];
+  readonly transitionMs: number;
+}
+
 export interface EncounterCatalog {
   readonly schemaVersion: number;
   readonly encounters: readonly EncounterDefinition[];
+  readonly escalation?: EncounterEscalation;
+  readonly sequence?: EncounterSequence;
 }
 
 // --- Runtime output --------------------------------------------------
@@ -120,6 +147,13 @@ export interface EncounterState {
   readonly elapsedInPhaseMs: number;
   readonly liveSpawnCount: number;
   readonly completed: boolean;
+  /** Escalation wave the running encounter was started as (0 = base). */
+  readonly wave: number;
+}
+
+export interface EncounterStartOptions {
+  /** Escalation wave (0-based). Ignored when the catalog has no escalation. */
+  readonly wave?: number;
 }
 
 /** State the service reads back from the game each `update()`. */
@@ -141,8 +175,12 @@ export interface EncounterUpdateContext {
 export interface EncounterService {
   lookup(id: string): EncounterDefinition | undefined;
   definitionIds(): readonly string[];
-  start(encounterId: string): void;
+  start(encounterId: string, options?: EncounterStartOptions): void;
   stop(): void;
+  escalation(): EncounterEscalation | null;
+  sequence(): EncounterSequence | null;
+  /** Enemy speed multiplier for the running wave (1 with no escalation). */
+  speedScale(): number;
   update(deltaMs: number, context: EncounterUpdateContext): EncounterTick;
   /** Report that a spawned entity died. Drives `spawns-cleared`. */
   reportDeath(requestId: string): void;

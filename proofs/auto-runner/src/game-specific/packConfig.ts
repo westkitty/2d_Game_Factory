@@ -60,3 +60,6 @@ export const KART_STARTER: 'item' | null = null;
 
 /** Category-C Wave 31: closing-wall pursuit. Null otherwise. */
 export const CHASE_STARTER: 'pursuit' | null = null;
+
+/** Final Product Completion Wave 2: room-graph dungeon (crawl) vs roguelite run (rogue). Null otherwise. */
+export const DUNGEON_STARTER: 'crawl' | 'rogue' | null = null;

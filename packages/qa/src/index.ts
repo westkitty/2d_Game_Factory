@@ -12,3 +12,4 @@ export { serveStatic, type StaticServerHandle } from './staticServer.ts';
 export { runSmoke, type SmokeOutcome, type SmokeResult, type SmokeSpec } from './smokeRunner.ts';
 export { readSnapshot, readShellState, type DebugSnapshotLike } from './snapshot.ts';
 export { startPlay, waitUntil, holdUntil, pauseResume, restartRun, pointerAt, clickAt, shellReader } from './journey.ts';
+export { buildRoomMap, routeRooms, readDungeon, walkTo, walkToRoom, fightNearestInRoom, type DungeonShell, type DungeonSnap, type DungeonEnemy, type RoomMap } from './dungeonJourney.ts';

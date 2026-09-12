@@ -455,7 +455,7 @@ describe('generated ball-paddle games consume sw2d.ball-paddle', () => {
     expect(shell).toContain('table.tick(');
     expect(buildGameFiles('ball-paddle-probe', breakout).get('src/content.ts')).toContain("'ball-paddle': ballPaddleData");
     expect(buildGameFiles('ball-paddle-probe', breakout).get('src/main.ts')).toContain(
-      'ballPaddlePack, meleePack, localPlayPack, stageScrollPack, timingPack, wallPack, territoryPack, pinballPack, cameraPack, codexPack, targetingPack, pursuitPack, GAME_SPECIFIC_PACK',
+      'ballPaddlePack, meleePack, localPlayPack, stageScrollPack, timingPack, wallPack, territoryPack, pinballPack, cameraPack, codexPack, targetingPack, pursuitPack, runsPack, GAME_SPECIFIC_PACK',
     );
   });
 
@@ -481,7 +481,7 @@ describe('generated melee games consume sw2d.melee', () => {
     expect(shell).toContain('melee.strike(');
     expect(buildGameFiles('melee-probe', adventure).get('src/content.ts')).toContain('melee: meleeData');
     expect(buildGameFiles('melee-probe', adventure).get('src/main.ts')).toContain(
-      'ballPaddlePack, meleePack, localPlayPack, stageScrollPack, timingPack, wallPack, territoryPack, pinballPack, cameraPack, codexPack, targetingPack, pursuitPack, GAME_SPECIFIC_PACK',
+      'ballPaddlePack, meleePack, localPlayPack, stageScrollPack, timingPack, wallPack, territoryPack, pinballPack, cameraPack, codexPack, targetingPack, pursuitPack, runsPack, GAME_SPECIFIC_PACK',
     );
   });
 
@@ -506,7 +506,7 @@ describe('generated local-play games consume sw2d.local-play', () => {
     expect(shell).toContain('seats.act()');
     expect(buildGameFiles('local-play-probe', party).get('src/content.ts')).toContain("'local-play': localPlayData");
     expect(buildGameFiles('local-play-probe', party).get('src/main.ts')).toContain(
-      'ballPaddlePack, meleePack, localPlayPack, stageScrollPack, timingPack, wallPack, territoryPack, pinballPack, cameraPack, codexPack, targetingPack, pursuitPack, GAME_SPECIFIC_PACK',
+      'ballPaddlePack, meleePack, localPlayPack, stageScrollPack, timingPack, wallPack, territoryPack, pinballPack, cameraPack, codexPack, targetingPack, pursuitPack, runsPack, GAME_SPECIFIC_PACK',
     );
   });
 
@@ -565,7 +565,7 @@ describe('generated timing games consume sw2d.timing', () => {
     expect(shell).toContain('clock.hit()');
     expect(buildGameFiles('timing-probe', reaction).get('src/content.ts')).toContain('timing: timingData');
     expect(buildGameFiles('timing-probe', reaction).get('src/main.ts')).toContain(
-      'ballPaddlePack, meleePack, localPlayPack, stageScrollPack, timingPack, wallPack, territoryPack, pinballPack, cameraPack, codexPack, targetingPack, pursuitPack, GAME_SPECIFIC_PACK',
+      'ballPaddlePack, meleePack, localPlayPack, stageScrollPack, timingPack, wallPack, territoryPack, pinballPack, cameraPack, codexPack, targetingPack, pursuitPack, runsPack, GAME_SPECIFIC_PACK',
     );
   });
 
@@ -599,7 +599,7 @@ describe('generated stage-scroll games consume sw2d.stage-scroll', () => {
     expect(shell).toContain('stage.tick(');
     expect(buildGameFiles('stage-scroll-probe', shmup).get('src/content.ts')).toContain("'stage-scroll': stageScrollData");
     expect(buildGameFiles('stage-scroll-probe', shmup).get('src/main.ts')).toContain(
-      'ballPaddlePack, meleePack, localPlayPack, stageScrollPack, timingPack, wallPack, territoryPack, pinballPack, cameraPack, codexPack, targetingPack, pursuitPack, GAME_SPECIFIC_PACK',
+      'ballPaddlePack, meleePack, localPlayPack, stageScrollPack, timingPack, wallPack, territoryPack, pinballPack, cameraPack, codexPack, targetingPack, pursuitPack, runsPack, GAME_SPECIFIC_PACK',
     );
   });
 
@@ -849,7 +849,7 @@ describe('generated top-down survivor and roguelite consume sw2d.progression', (
   it('the generated top-down shell binds bindStarterProgression', () => {
     const survivor = PRESETS.find((candidate) => candidate.id === 'survivor-like')!;
     const shell = buildGameFiles('progression-probe', survivor).get('src/game-specific/shellPack.ts')!;
-    expect(shell).toContain('bindStarterProgression(context, { mode: PROGRESSION_STARTER })');
+    expect(shell).toContain('bindStarterProgression(context, { mode: PROGRESSION_STARTER, battle })');
     expect(shell).toContain('meta.tick(');
     expect(shell).toContain('meta.act()');
     expect(shell).toContain("from './packConfig.ts'");
@@ -872,15 +872,19 @@ describe('generated top-down survivor and roguelite consume sw2d.progression', (
     expect(survivorFiles.get('src/game-specific/packConfig.ts')).toContain(
       "PROGRESSION_STARTER: 'survive' | 'run' | null = 'survive'",
     );
+    // Final Product Completion Wave 2: the roguelite is a dungeon run (DUNGEON_STARTER 'rogue').
     expect(runFiles.get('src/game-specific/packConfig.ts')).toContain(
-      "PROGRESSION_STARTER: 'survive' | 'run' | null = 'run'",
+      "PROGRESSION_STARTER: 'survive' | 'run' | null = null",
     );
+    expect(runFiles.get('src/game-specific/packConfig.ts')).toContain("DUNGEON_STARTER: 'crawl' | 'rogue' | null = 'rogue'");
     expect(dungeonFiles.get('src/game-specific/packConfig.ts')).toContain(
       "PROGRESSION_STARTER: 'survive' | 'run' | null = null",
     );
+    expect(dungeonFiles.get('src/game-specific/packConfig.ts')).toContain("DUNGEON_STARTER: 'crawl' | 'rogue' | null = 'crawl'");
     expect(twinFiles.get('src/game-specific/packConfig.ts')).toContain(
       "PROGRESSION_STARTER: 'survive' | 'run' | null = null",
     );
+    expect(twinFiles.get('src/game-specific/packConfig.ts')).toContain("DUNGEON_STARTER: 'crawl' | 'rogue' | null = null");
     const survivorTheme = JSON.parse(survivorFiles.get('content/themes/default/theme.json')!) as { ui: { playHint: string } };
     const runTheme = JSON.parse(runFiles.get('content/themes/default/theme.json')!) as { ui: { playHint: string } };
     expect(survivorTheme.ui.playHint).toContain('SURVIVE THE WAVES');
@@ -1056,9 +1060,9 @@ describe('generated dungeon and base-defense consume sw2d.combat', () => {
     const baseJson = JSON.parse(baseFiles.get('content/game.json')!) as { systemPacks: Array<{ packId: string }> };
     expect(dungeonJson.systemPacks.map((s) => s.packId)).toContain('sw2d.combat');
     expect(baseJson.systemPacks.map((s) => s.packId)).toContain('sw2d.combat');
-    expect(dungeonFiles.get('src/game-specific/packConfig.ts')).toContain(
-      "COMBAT_STARTER: 'room' | 'hold' | null = 'room'",
-    );
+    // Final Product Completion Wave 2: the dungeon is DUNGEON_STARTER 'crawl'; COMBAT_STARTER keeps hold only.
+    expect(dungeonFiles.get('src/game-specific/packConfig.ts')).toContain("COMBAT_STARTER: 'room' | 'hold' | null = null");
+    expect(dungeonFiles.get('src/game-specific/packConfig.ts')).toContain("DUNGEON_STARTER: 'crawl' | 'rogue' | null = 'crawl'");
     expect(baseFiles.get('src/game-specific/packConfig.ts')).toContain(
       "COMBAT_STARTER: 'room' | 'hold' | null = 'hold'",
     );
@@ -1529,5 +1533,50 @@ describe('Final Product Completion Wave 1 - generated platforming consumes sw2d.
       expect(files.get('src/game-specific/shellPack.ts'), id).toContain('wallsCap.climb()');
       expect(files.get('src/game-specific/shellPack.ts'), id).toContain('wallsCap.drop()');
     }
+  });
+});
+
+describe('Final Product Completion Wave 2 - generated combat games consume runs, escalation, dungeon and stealth AI', () => {
+  it('every preset emits a schema-valid content/runs.json; survivor-like and action-roguelite require sw2d.runs with real unlocks', () => {
+    for (const preset of PRESETS) {
+      const files = buildGameFiles('fpc-probe', preset);
+      const runsJson = JSON.parse(files.get('content/runs.json')!) as { mode: string; unlocks: unknown[] };
+      expect(() => validateContentBundleData({ runs: runsJson })).not.toThrow();
+      expect(files.get('src/content.ts'), preset.id).toContain('runs: runsData');
+      const required = preset.requiredSystemPacks.some((s) => s.packId === 'sw2d.runs');
+      expect(runsJson.unlocks.length > 0, preset.id).toBe(required);
+      if (preset.id === 'action-roguelite') expect(runsJson.mode).toBe('roguelite');
+      if (preset.id === 'survivor-like') expect(runsJson.mode).toBe('survive');
+    }
+  });
+
+  it('survivor-like authors wave escalation; other encounter presets do not', () => {
+    const survivor = PRESETS.find((p) => p.id === 'survivor-like')!;
+    const doc = JSON.parse(buildGameFiles('fpc-probe', survivor).get('content/encounters.json')!) as { escalation?: { countPerWave: number } };
+    expect(doc.escalation?.countPerWave).toBeGreaterThan(0);
+    const twin = PRESETS.find((p) => p.id === 'twin-stick-shooter')!;
+    const twinDoc = JSON.parse(buildGameFiles('fpc-probe', twin).get('content/encounters.json')!) as { escalation?: unknown; encounters: unknown[] };
+    expect(twinDoc.escalation).toBeUndefined();
+    expect(twinDoc.encounters.length).toBeGreaterThan(0);
+  });
+
+  it('dungeon-crawler and action-roguelite require sw2d.ai and bind the dungeon starter; stealth presets author a patrol route', () => {
+    for (const id of ['dungeon-crawler', 'action-roguelite'] as const) {
+      const preset = PRESETS.find((p) => p.id === id)!;
+      expect(preset.requiredSystemPacks.map((s) => s.packId), id).toContain('sw2d.ai');
+      const shell = buildGameFiles('fpc-probe', preset).get('src/game-specific/shellPack.ts')!;
+      expect(shell, id).toContain('bindStarterDungeon(context, level, { mode: DUNGEON_STARTER })');
+      expect(shell, id).toContain('dungeon.strike()');
+    }
+    for (const id of ['stealth-game', 'heist-game'] as const) {
+      const preset = PRESETS.find((p) => p.id === id)!;
+      const doc = JSON.parse(buildGameFiles('fpc-probe', preset).get('content/perception.json')!) as { observers: Array<{ patrol?: { waypoints: unknown[] }; takedownRadius?: number }> };
+      expect(doc.observers[0]?.patrol?.waypoints.length ?? 0, id).toBeGreaterThan(1);
+      expect(doc.observers[0]?.takedownRadius ?? 0, id).toBeGreaterThan(0);
+    }
+    const melee = PRESETS.find((p) => p.id === 'action-adventure')!;
+    const meleeDoc = JSON.parse(buildGameFiles('fpc-probe', melee).get('content/melee.json')!) as { combo?: { steps: unknown[] }; arcDeg?: number };
+    expect(meleeDoc.combo?.steps.length).toBe(3);
+    expect(meleeDoc.arcDeg).toBe(120);
   });
 });

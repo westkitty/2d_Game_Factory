@@ -42,6 +42,7 @@ export * from './presets.ts';
 export * from './racing.ts';
 export * from './puzzles.ts';
 export * from './pursuit.ts';
+export * from './runs.ts';
 export * from './resources.ts';
 export * from './scenes.ts';
 export * from './spatial.ts';

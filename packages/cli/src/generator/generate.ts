@@ -29,6 +29,7 @@ import {
   generateCodexCatalog,
   generateTargetingCatalog,
   generatePursuitCatalog,
+  generateRunsCatalog,
   generateResourceManifest,
   generateTiledLevel,
   generateTheme,
@@ -125,7 +126,7 @@ export function buildGameFiles(gameId: string, preset: PresetDefinition): Map<st
   );
   files.set(
     'content/encounters.json',
-    JSON.stringify(generateEncounterCatalog(requiredPackIds.includes('sw2d.encounters')), null, 2) + '\n',
+    JSON.stringify(generateEncounterCatalog(requiredPackIds.includes('sw2d.encounters'), { escalate: preset.id === 'survivor-like' }), null, 2) + '\n',
   );
   files.set(
     'content/puzzles.json',
@@ -375,6 +376,14 @@ export function buildGameFiles(gameId: string, preset: PresetDefinition): Map<st
               : 'chaser'
           : 'none',
       ),
+      null,
+      2,
+    ) + '\n',
+  );
+  files.set(
+    'content/runs.json',
+    JSON.stringify(
+      generateRunsCatalog(requiredPackIds.includes('sw2d.runs') ? (preset.id === 'action-roguelite' ? 'roguelite' : 'survive') : 'none'),
       null,
       2,
     ) + '\n',

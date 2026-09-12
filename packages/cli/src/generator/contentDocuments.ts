@@ -104,8 +104,29 @@ export function generateWeaponCatalog(hasWeaponsPack: boolean, hasEncountersPack
  * content/encounters.json - an EncounterCatalog (capability program Phase 4).
  * Always emitted; empty unless the preset installs `sw2d.encounters`.
  */
-export function generateEncounterCatalog(hasEncountersPack: boolean): Record<string, unknown> {
+export function generateEncounterCatalog(hasEncountersPack: boolean, options: { readonly escalate?: boolean } = {}): Record<string, unknown> {
   if (!hasEncountersPack) return { schemaVersion: 1, encounters: [] };
+  // Survivor-like (Final Product Completion Wave 2): every loop of the same
+  // content is a bigger, tougher, faster wave - the reusable escalation the
+  // encounters pack applies from this document.
+  if (options.escalate) {
+    return {
+      schemaVersion: 1,
+      escalation: { countPerWave: 1, healthScalePerWave: 0.25, speedScalePerWave: 0.15, maxWaves: 12 },
+      encounters: [
+        {
+          id: 'starter-swarm',
+          phases: [
+            {
+              id: 'swarm',
+              spawns: [{ archetype: 'grunt', count: 3, at: { kind: 'edge', edge: 'top' }, intervalMs: 400, health: 20 }],
+              completeWhen: { kind: 'spawns-cleared' },
+            },
+          ],
+        },
+      ],
+    };
+  }
   // A real two-phase starter fight, not a placeholder: wave 1 is three
   // chasing grunts, wave 2 adds shooters carrying the enemy-blaster emitter
   // (generateWeaponCatalog ships that weapon whenever encounters are on).
@@ -654,6 +675,9 @@ export function generatePerceptionCatalog(kind: 'infiltrate' | 'heist' | 'none')
     start: { x: 120, y: 270 },
     playerRadius: 14,
     hiddenMultiplier: 0.15,
+    // Final Product Completion Wave 2 (matrix L09): the guard walks a route
+    // (patrol), chases on a clear sighting, investigates where it lost the
+    // player, returns to the route, and can be taken down from behind.
     observers: [
       {
         id: 'guard',
@@ -664,6 +688,12 @@ export function generatePerceptionCatalog(kind: 'infiltrate' | 'heist' | 'none')
         range: 220,
         suspicionRisePerSecond: 2,
         suspicionDecayPerSecond: 0.5,
+        patrol: { waypoints: [{ x: 520, y: 270 }, { x: 700, y: 270 }], speed: 60, waitMs: 700 },
+        chaseSpeed: 90,
+        catchRadius: 24,
+        memoryMs: 1200,
+        investigateMs: 1500,
+        takedownRadius: 40,
       },
     ],
     cover: [{ id: 'crate', x: 400, y: 180, radius: 36 }],
@@ -993,6 +1023,49 @@ export function generatePursuitCatalog(kind: 'wall' | 'chaser' | 'chaser-course'
 }
 
 /**
+ * content/runs.json - a RunsCatalog (Final Product Completion Wave 2). Always
+ * emitted; inert (no unlocks, zero rates) unless the preset requires
+ * sw2d.runs. `survive` banks meta from XP / kills / waves; `roguelite` banks
+ * from currency and clearing the dungeon. Both offer a small between-run
+ * loadout the next run starts with.
+ */
+export function generateRunsCatalog(kind: 'survive' | 'roguelite' | 'none'): Record<string, unknown> {
+  if (kind === 'none') {
+    return { schemaVersion: 1, mode: 'survive', metaPerXp: 0, metaPerKill: 0, metaPerWave: 0, metaPerCurrency: 0, metaPerClear: 0, unlocks: [] };
+  }
+  if (kind === 'survive') {
+    return {
+      schemaVersion: 1,
+      mode: 'survive',
+      metaPerXp: 1,
+      metaPerKill: 2,
+      metaPerWave: 5,
+      metaPerCurrency: 0,
+      metaPerClear: 0,
+      unlocks: [
+        { id: 'sturdy', label: 'Sturdy (+40 max health)', cost: 4, effect: { kind: 'max-health', value: 40 } },
+        { id: 'keen', label: 'Keen (+5 damage)', cost: 10, effect: { kind: 'damage', value: 5 } },
+        { id: 'fleet', label: 'Fleet (+40 speed)', cost: 16, effect: { kind: 'speed', value: 40 } },
+      ],
+    };
+  }
+  return {
+    schemaVersion: 1,
+    mode: 'roguelite',
+    metaPerXp: 0,
+    metaPerKill: 1,
+    metaPerWave: 0,
+    metaPerCurrency: 3,
+    metaPerClear: 10,
+    unlocks: [
+      { id: 'vigor', label: 'Vigor (+2 max health)', cost: 3, effect: { kind: 'max-health', value: 2 } },
+      { id: 'edge', label: 'Edge (+1 damage)', cost: 8, effect: { kind: 'damage', value: 1 } },
+      { id: 'purse', label: 'Purse (start with 2 coin)', cost: 12, effect: { kind: 'start-currency', value: 2 } },
+    ],
+  };
+}
+
+/**
  * content/territory.json - a TerritoryCatalog (Category-C Wave 30). Always
  * emitted; empty/inert unless the preset installs `sw2d.territory`.
  */
@@ -1209,9 +1282,21 @@ export function generateMeleeCatalog(kind: 'skirmish' | 'arena' | 'none'): Recor
       schemaVersion: 1,
       mode: 'skirmish',
       player: { id: 'player', x: 120, y: 270, radius: 16, health: 5 },
-      foes: [{ id: 'foe-0', x: 470, y: 270, radius: 17, health: 3 }],
-      strike: { range: 145, damage: 1, cooldownMs: 0, knockback: 8, stunMs: 80 },
-      contact: { range: 34, damage: 1, cooldownMs: 650 },
+      // One elite foe that closes on the player; a three-hit chain
+      // (opener, follow-up, finisher) lands inside the combo window, and
+      // strikes only reach foes inside the 120-degree facing arc.
+      foes: [{ id: 'foe-0', x: 470, y: 270, radius: 17, health: 5, speed: 55 }],
+      strike: { range: 145, damage: 1, cooldownMs: 120, knockback: 8, stunMs: 80 },
+      contact: { range: 34, damage: 1, cooldownMs: 650, stunMs: 240 },
+      combo: {
+        steps: [
+          { damage: 1, knockback: 8, stunMs: 90 },
+          { damage: 1, knockback: 10, stunMs: 110 },
+          { damage: 3, knockback: 36, stunMs: 320 },
+        ],
+        windowMs: 700,
+      },
+      arcDeg: 120,
     };
   }
   return {
@@ -1219,12 +1304,21 @@ export function generateMeleeCatalog(kind: 'skirmish' | 'arena' | 'none'): Recor
     mode: 'arena',
     player: { id: 'player', x: 120, y: 270, radius: 16, health: 5 },
     foes: [
-      { id: 'foe-0', x: 420, y: 160, radius: 17, health: 2 },
-      { id: 'foe-1', x: 560, y: 270, radius: 17, health: 2 },
-      { id: 'foe-2', x: 420, y: 380, radius: 17, health: 2 },
+      { id: 'foe-0', x: 420, y: 160, radius: 17, health: 3, speed: 45 },
+      { id: 'foe-1', x: 560, y: 270, radius: 17, health: 3, speed: 40 },
+      { id: 'foe-2', x: 420, y: 380, radius: 17, health: 3, speed: 45 },
     ],
-    strike: { range: 145, damage: 1, cooldownMs: 0, knockback: 8, stunMs: 80 },
-    contact: { range: 34, damage: 1, cooldownMs: 650 },
+    strike: { range: 145, damage: 1, cooldownMs: 120, knockback: 8, stunMs: 80 },
+    contact: { range: 34, damage: 1, cooldownMs: 650, stunMs: 240 },
+    combo: {
+      steps: [
+        { damage: 1, knockback: 8, stunMs: 90 },
+        { damage: 1, knockback: 10, stunMs: 110 },
+        { damage: 2, knockback: 30, stunMs: 300 },
+      ],
+      windowMs: 700,
+    },
+    arcDeg: 120,
   };
 }
 

@@ -23,7 +23,7 @@ export const ARCADE_STARTER: 'fishing' | 'cooking' | 'micro' | null = null;
 export const POINTER_STARTER: 'draw' | 'wardrobe' | null = null;
 
 /** Category-C Wave 17: survive vs run presentation of sw2d.progression. Null otherwise. */
-export const PROGRESSION_STARTER: 'survive' | 'run' | null = 'run';
+export const PROGRESSION_STARTER: 'survive' | 'run' | null = null;
 
 /** Category-C Wave 18: tactics vs battler presentation of sw2d.strategy. Null otherwise. */
 export const STRATEGY_STARTER: 'tactics' | 'battler' | null = null;
@@ -60,3 +60,6 @@ export const KART_STARTER: 'item' | null = null;
 
 /** Category-C Wave 31: closing-wall pursuit. Null otherwise. */
 export const CHASE_STARTER: 'pursuit' | null = null;
+
+/** Final Product Completion Wave 2: room-graph dungeon (crawl) vs roguelite run (rogue). Null otherwise. */
+export const DUNGEON_STARTER: 'crawl' | 'rogue' | null = 'rogue';

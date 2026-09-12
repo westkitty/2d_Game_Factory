@@ -52,10 +52,10 @@ controller/input-mode breakdown and full pack-consumer coverage.
 |---|---|---|---|---|
 | `top-down-adventure` | Top-Down Adventure | top-down | tuning, levels | proof-validated |
 | `action-adventure` | Action Adventure | top-down | tuning, levels, melee | proof-validated |
-| `twin-stick-shooter` | Twin-Stick Shooter | top-down | tuning, levels | proof-validated |
-| `survivor-like` | Survivor-Like | top-down | tuning | proof-validated |
+| `twin-stick-shooter` | Twin-Stick Shooter | top-down | tuning, levels, encounters | proof-validated |
+| `survivor-like` | Survivor-Like | top-down | tuning, encounters, runs | proof-validated |
 | `dungeon-crawler` | Dungeon Crawler | top-down | tuning, levels, generation | proof-validated |
-| `action-roguelite` | Action Roguelite | top-down | tuning, levels, generation | proof-validated |
+| `action-roguelite` | Action Roguelite | top-down | tuning, levels, generation, runs | proof-validated |
 | `stealth-game` | Stealth Game | top-down | tuning, levels, perception | proof-validated |
 | `heist-game` | Heist Game | top-down | tuning, levels, perception | proof-validated |
 | `arena-combat` | Arena Combat | top-down | tuning, levels, melee | proof-validated |
@@ -170,14 +170,14 @@ recipe's *first* stated limitation; see `knownLimitations` in
 | `grappling-platformer` | (none stated) |
 | `collectathon-platformer` | (none stated) |
 | `top-down-adventure` | (none stated) |
-| `action-adventure` | Melee strike, knockback, hit-stun and contact damage are reusable (sw2d.melee); combo strings, directional attacks and targeting UI are not. |
-| `twin-stick-shooter` | The generated starter ships no enemy waves out of the box: sw2d.encounters is optional for this recipe, so opposition is added by enabling that pack or authoring game-specific spawns (the committed proof game demonstrates the latter). |
-| `survivor-like` | In-run XP and unlock flags for the generated starter use sw2d.progression; endless difficulty scaling / meta-progression between runs is not a reusable system; the starter survival loop repeats the authored encounter without escalating it. |
-| `dungeon-crawler` | Contact damage and strike for the generated starter use sw2d.combat; generated Enemy objects from the room graph and AI behaviour are not wired. |
-| `action-roguelite` | In-run currency, XP, items and unlock flags for the generated starter use sw2d.progression; run-based permadeath and between-run loadouts are not a reusable capability. |
-| `stealth-game` | Vision cones, occlusion, suspicion, noise and hiding are reusable (sw2d.perception); patrol pathfinding, takedowns and full stealth AI are not. |
-| `heist-game` | Vision cones, occlusion, suspicion, noise and hiding are reusable (sw2d.perception); patrol pathfinding, takedowns and full stealth AI are not. |
-| `arena-combat` | Melee strike, knockback, hit-stun and contact damage are reusable (sw2d.melee); combo strings, directional attacks and targeting UI are not. |
+| `action-adventure` | (none stated) |
+| `twin-stick-shooter` | (none stated) |
+| `survivor-like` | (none stated) |
+| `dungeon-crawler` | (none stated) |
+| `action-roguelite` | (none stated) |
+| `stealth-game` | (none stated) |
+| `heist-game` | (none stated) |
+| `arena-combat` | (none stated) |
 | `boss-rush` | Sequencing multiple bosses across a run is starter-specific; sw2d.encounters drives one boss encounter at a time. |
 | `horizontal-shmup` | Horizontal and vertical scrolling-stage camera movement, player band clamp, streaming hazards and stage-clear are reusable (sw2d.stage-scroll); rail-path cameras, parallax authoring and bullet-hell pooling are not. |
 | `vertical-shmup` | Horizontal and vertical scrolling-stage camera movement, player band clamp, streaming hazards and stage-clear are reusable (sw2d.stage-scroll); rail-path cameras, parallax authoring and bullet-hell pooling are not. |

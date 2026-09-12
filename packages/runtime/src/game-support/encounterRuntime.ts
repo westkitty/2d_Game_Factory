@@ -1,6 +1,7 @@
 import type {
   EncounterDefinition,
   EncounterService,
+  EncounterStartOptions,
   EncounterSpawnRequest,
   EncounterUpdateContext,
   EventBus,
@@ -47,7 +48,7 @@ export interface EncounterRuntimeOptions {
 }
 
 export interface EncounterRuntime {
-  start(encounterId: string): void;
+  start(encounterId: string, options?: EncounterStartOptions): void;
   update(deltaMs: number, nowMs: number): void;
   readonly completed: boolean;
   readonly liveEnemyCount: number;
@@ -90,9 +91,9 @@ export function createEncounterRuntime(options: EncounterRuntimeOptions): Encoun
   };
 
   return {
-    start(encounterId: string): void {
+    start(encounterId: string, startOptions?: EncounterStartOptions): void {
       def = options.encounters.lookup(encounterId);
-      options.encounters.start(encounterId);
+      options.encounters.start(encounterId, startOptions);
     },
 
     update(deltaMs: number, nowMs: number): void {
