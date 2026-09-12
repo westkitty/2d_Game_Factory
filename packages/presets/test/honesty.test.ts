@@ -230,6 +230,8 @@ describe('closed limitations stay closed (Final Product Completion program)', ()
     { id: 'escape-room', pattern: /No content-authored escape-room puzzle grammar exists yet/, closedBy: 'L46 escape kind' },
     { id: 'rhythm-action', pattern: /a deterministic music-beat\/audio-synchronization system is not/, closedBy: 'L27 audio transport' },
     { id: 'reaction-timing', pattern: /a deterministic music-beat\/audio-synchronization system is not/, closedBy: 'L27 reaction rounds' },
+    { id: 'tower-defense', pattern: /this starter uses the keyboard grid cursor/, closedBy: 'L29 pointer placement' },
+    { id: 'tower-defense', pattern: /upgrade rules stay starter-specific/, closedBy: 'L30 targeting upgrades' },
   ];
 
   CLOSED.forEach(({ id, pattern, closedBy }) => {

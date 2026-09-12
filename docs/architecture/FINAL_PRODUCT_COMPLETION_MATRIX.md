@@ -306,12 +306,16 @@ exceptions: physical hardware certification and the user-owned public-license ch
 - **Architecture:** `bindStarterTargeting` tower mode: spatial pointer hover preview, click placement, validation, cost, keyboard cursor kept.
 - **Journey:** hover cell → preview → click → tower placed, cost paid → invalid cell refused → waves → victory.
 - **Checkpoint:** Wave 5.
+- **Closed by:** `sw2d.targeting` slots/placeCost; pointer click + keyboard confirm place; miss-click rejected. **Proof/test:** `targeting.test.ts` place; completion spec `towerDefense`. **Browser:** `qa:completion -- tower-defense` PASS; frozen `qa:proof -- tower-defense` PASS.
+- **Status:** CLOSED (Wave 5).
 
 ### L30 - tower upgrade rules
 - **Source text:** "Deterministic route-following pathfinding is reusable (sw2d.navigation); tower target-selection is reusable (sw2d.targeting); upgrade rules stay starter-specific."
 - **Presets:** `tower-defense`
 - **Architecture:** `content/targeting.json` upgrade tiers (cost, range, damage) consumed by `sw2d.targeting`; click an owned tower to upgrade.
 - **Checkpoint:** Wave 5.
+- **Closed by:** authored `upgrades` tiers; click/K upgrades owned pad. **Browser:** PASS.
+- **Status:** CLOSED (Wave 5).
 
 ### L31 - lane-defense scheduling / combat
 - **Source text:** "Lane-spawn scheduling and combat resolution are still starter-specific."
@@ -507,8 +511,8 @@ exceptions: physical hardware certification and the user-owned public-license ch
 | L26 | maze-game | 4 | CLOSED | wave 4 maze |
 | L27 | rhythm-action, reaction-timing | 4 | CLOSED | wave 4 timing |
 | L28 | pinball-lite | 4 | CLOSED | wave 4 pinball |
-| L29 | tower-defense | 5 | OPEN | |
-| L30 | tower-defense | 5 | OPEN | |
+| L29 | tower-defense | 5 | CLOSED | wave 5 targeting |
+| L30 | tower-defense | 5 | CLOSED | wave 5 targeting |
 | L31 | lane-defense | 5 | OPEN | |
 | L32 | auto-battler | 5 | OPEN | |
 | L33 | simple-rts | 5 | OPEN | |

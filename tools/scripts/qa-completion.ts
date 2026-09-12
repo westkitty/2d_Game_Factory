@@ -67,6 +67,7 @@ export const COMPLETION_SPEC_MODULES: Readonly<Record<string, string>> = {
   'escape-room': 'escapeRoom',
   'rhythm-action': 'rhythmAction',
   'reaction-timing': 'reactionTiming',
+  'tower-defense': 'towerDefense',
 };
 
 interface Target {

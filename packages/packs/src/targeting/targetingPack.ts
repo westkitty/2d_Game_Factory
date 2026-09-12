@@ -18,6 +18,7 @@ import type {
   TargetingMode,
   TargetingOutcome,
   TargetingService,
+  TargetingSlotDef,
 } from '@sw2d/contracts';
 import { CAPABILITY_IDS, PACK_IDS } from '../ids.ts';
 
@@ -28,17 +29,23 @@ const EMPTY_CATALOG: TargetingCatalog = {
 };
 
 interface LiveActor {
-  readonly def: TargetingActorDef;
+  def: TargetingActorDef;
   x: number;
   y: number;
   hp: number;
   readyAt: number;
+  tier: number;
 }
 
 class TargetingServiceImpl implements TargetingService {
   private actors = new Map<string, LiveActor>();
   private last: string | null = null;
   private current: TargetingOutcome = 'playing';
+  private coins = 0;
+  private nextTower = 1;
+  private occupants = new Map<string, string>();
+  private placeRejects = 0;
+  private upgradeRejects = 0;
 
   constructor(
     private readonly events: EventBus,
@@ -113,10 +120,116 @@ class TargetingServiceImpl implements TargetingService {
     this.current = 'playing';
   }
 
+  gold(): number {
+    return this.coins;
+  }
+
+  slots(): readonly TargetingSlotDef[] {
+    return this.catalog.slots ?? [];
+  }
+
+  occupant(slotId: string): string | null {
+    return this.occupants.get(slotId) ?? null;
+  }
+
+  previewSlot(x: number, y: number): string | null {
+    let best: TargetingSlotDef | null = null;
+    let bestD = Infinity;
+    for (const slot of this.slots()) {
+      const d = Math.hypot(slot.x - x, slot.y - y);
+      if (d <= slot.radius && d < bestD) {
+        bestD = d;
+        best = slot;
+      }
+    }
+    return best?.id ?? null;
+  }
+
+  placeAt(x: number, y: number): boolean {
+    if (!this.active() || this.current !== 'playing') return false;
+    const slotId = this.previewSlot(x, y);
+    const cost = this.catalog.placeCost ?? 0;
+    if (!slotId || this.occupants.has(slotId) || this.coins < cost) {
+      this.placeRejects += 1;
+      this.last = 'place-rejected';
+      return false;
+    }
+    const slot = this.slots().find((entry) => entry.id === slotId);
+    const tier0 = this.catalog.upgrades?.[0];
+    if (!slot) {
+      this.placeRejects += 1;
+      this.last = 'place-rejected';
+      return false;
+    }
+    const id = `tower-${this.nextTower}`;
+    this.nextTower += 1;
+    const def: TargetingActorDef = {
+      id,
+      x: slot.x,
+      y: slot.y,
+      range: tier0?.range ?? 180,
+      damage: tier0?.damage ?? 1,
+      cooldownMs: 280,
+      team: 'player',
+      health: 3,
+    };
+    this.actors.set(id, { def, x: slot.x, y: slot.y, hp: def.health, readyAt: 0, tier: 0 });
+    this.occupants.set(slotId, id);
+    this.coins -= cost;
+    this.last = `placed-${id}`;
+    return true;
+  }
+
+  upgrade(towerId: string): boolean {
+    if (!this.active() || this.current !== 'playing') return false;
+    const live = this.actors.get(towerId);
+    const next = this.catalog.upgrades?.[live ? live.tier + 1 : -1];
+    if (!live || live.def.team !== 'player' || !next || this.coins < next.cost) {
+      this.upgradeRejects += 1;
+      this.last = 'upgrade-rejected';
+      return false;
+    }
+    this.coins -= next.cost;
+    live.tier += 1;
+    live.def = { ...live.def, range: next.range, damage: next.damage };
+    this.last = `upgraded-${towerId}`;
+    return true;
+  }
+
+  towerDamage(towerId: string): number {
+    return this.actors.get(towerId)?.def.damage ?? 0;
+  }
+
+  towerTier(towerId: string): number {
+    return this.actors.get(towerId)?.tier ?? 0;
+  }
+
+  placedCount(): number {
+    return this.occupants.size;
+  }
+
+  placementRejections(): number {
+    return this.placeRejects;
+  }
+
+  upgradeRejections(): number {
+    return this.upgradeRejects;
+  }
+
   private rebuild(): void {
     this.actors = new Map(
-      this.catalog.actors.map((def) => [def.id, { def, x: def.x, y: def.y, hp: def.health, readyAt: 0 }]),
+      this.catalog.actors.map((def) => [def.id, { def, x: def.x, y: def.y, hp: def.health, readyAt: 0, tier: 0 }]),
     );
+    this.coins = this.catalog.startingGold ?? 0;
+    this.nextTower = 1;
+    this.occupants = new Map();
+    this.placeRejects = 0;
+    this.upgradeRejects = 0;
+    for (const def of this.catalog.actors) {
+      if (def.team !== 'player' || def.id === 'none') continue;
+      const slot = this.slots().find((entry) => Math.hypot(entry.x - def.x, entry.y - def.y) <= entry.radius);
+      if (slot) this.occupants.set(slot.id, def.id);
+    }
   }
 
   private inRange(attacker: LiveActor, target: LiveActor): boolean {

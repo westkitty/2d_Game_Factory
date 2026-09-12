@@ -127,6 +127,9 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         }
 
         if (towers.active) {
+          if (intent.step) towers.step(intent.step);
+          if (intent.confirmPressed) towers.confirm();
+          if (context.input.consumePress('SECONDARY_ACTION')) towers.upgradeSelected();
           towers.tick(deltaMs);
           return;
         }
@@ -145,6 +148,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         board.dispose();
         turns.dispose();
         route.dispose();
+        towers.dispose();
         try {
           actor.destroy();
         } catch {

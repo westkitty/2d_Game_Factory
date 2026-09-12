@@ -201,7 +201,7 @@ recipe's *first* stated limitation; see `knownLimitations` in
 | `rhythm-action` | (none stated) |
 | `reaction-timing` | (none stated) |
 | `pinball-lite` | (none stated) |
-| `tower-defense` | Spatial hover placement via the pointer shell is available but this starter uses the keyboard grid cursor. |
+| `tower-defense` | (none stated) |
 | `lane-defense` | Lane-spawn scheduling and combat resolution are still starter-specific. |
 | `auto-battler` | Teams, active turn, selection and turn advance are reusable (sw2d.strategy); autonomous strikes are reusable (sw2d.targeting); the lineup pick is presentation (it does not change the fighting actor) and loadout drafting stays starter-specific. |
 | `simple-rts` | Unit pathfinding is reusable (sw2d.navigation, optional); box-select for the generated starter is a two-unit presentation on the spatial pointer; a command-queue UI is not implemented. |

@@ -25,10 +25,27 @@ export interface TargetingActorDef {
   readonly health: number;
 }
 
+export interface TargetingSlotDef {
+  readonly id: string;
+  readonly x: number;
+  readonly y: number;
+  readonly radius: number;
+}
+
+export interface TargetingUpgradeTier {
+  readonly cost: number;
+  readonly range: number;
+  readonly damage: number;
+}
+
 export interface TargetingCatalog {
   readonly schemaVersion: number;
   readonly mode: TargetingMode;
   readonly actors: readonly TargetingActorDef[];
+  readonly startingGold?: number;
+  readonly placeCost?: number;
+  readonly slots?: readonly TargetingSlotDef[];
+  readonly upgrades?: readonly TargetingUpgradeTier[];
 }
 
 export interface TargetingService {
@@ -45,4 +62,15 @@ export interface TargetingService {
   lastResult(): string | null;
   outcome(): TargetingOutcome;
   reset(): void;
+  gold(): number;
+  slots(): readonly TargetingSlotDef[];
+  occupant(slotId: string): string | null;
+  previewSlot(x: number, y: number): string | null;
+  placeAt(x: number, y: number): boolean;
+  upgrade(towerId: string): boolean;
+  towerDamage(towerId: string): number;
+  towerTier(towerId: string): number;
+  placedCount(): number;
+  placementRejections(): number;
+  upgradeRejections(): number;
 }

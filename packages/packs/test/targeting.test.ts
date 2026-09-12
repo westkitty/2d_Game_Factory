@@ -114,6 +114,46 @@ describe('sw2d.targeting - range', () => {
   });
 });
 
+describe('sw2d.targeting - place and upgrade', () => {
+  const PLACE: TargetingCatalog = {
+    schemaVersion: 1,
+    mode: 'tower',
+    startingGold: 100,
+    placeCost: 40,
+    slots: [{ id: 'pad', x: 480, y: 200, radius: 36 }],
+    upgrades: [
+      { cost: 0, range: 400, damage: 10 },
+      { cost: 30, range: 480, damage: 20 },
+    ],
+    actors: [{ id: 'creep-a', x: 200, y: 180, range: 40, damage: 1, cooldownMs: 600, team: 'enemy', health: 2 }],
+  };
+
+  it('places on a valid pad, spends gold, and rejects a second place on the same pad', () => {
+    const { aim } = install(PLACE);
+    expect(aim.placeAt(10, 10)).toBe(false);
+    expect(aim.placementRejections()).toBe(1);
+    expect(aim.placeAt(480, 200)).toBe(true);
+    expect(aim.placedCount()).toBe(1);
+    expect(aim.gold()).toBe(60);
+    expect(aim.placeAt(480, 200)).toBe(false);
+    expect(aim.towerDamage(aim.occupant('pad')!)).toBe(10);
+  });
+
+  it('upgrades an owned tower from authored tiers', () => {
+    const { aim } = install(PLACE);
+    aim.placeAt(480, 200);
+    const id = aim.occupant('pad')!;
+    expect(aim.upgrade(id)).toBe(true);
+    expect(aim.towerDamage(id)).toBe(20);
+    expect(aim.gold()).toBe(30);
+    expect(aim.upgrade(id)).toBe(false);
+    expect(aim.upgradeRejections()).toBe(1);
+    aim.reset();
+    expect(aim.gold()).toBe(100);
+    expect(aim.placedCount()).toBe(0);
+  });
+});
+
 describe('sw2d.targeting - lifecycle', () => {
   it('an empty catalog is inert', () => {
     const { aim } = install();

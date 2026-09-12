@@ -18,12 +18,12 @@ file is the cursor.
 
 | field | value |
 |---|---|
-| branch SHA | (see git log; this checkpoint is Wave 4 complete) |
-| waves completed | 3 + sanity repair + Wave 4 |
-| limitations closed | 37 / 69 entries |
-| remaining machine-executable | 32 |
+| branch SHA | (see git log; this checkpoint is Wave 5 L29/L30) |
+| waves completed | 3 + sanity repair + Wave 4 + Wave 5 L29/L30 |
+| limitations closed | 39 / 69 entries |
+| remaining machine-executable | 30 |
 | blockers | none |
-| next exact action | Wave 5 strategy (L29-L36), then Waves 6-9 |
+| next exact action | Wave 5 remainder: L31-L36 lane/battler/RTS/tactics/base/territory |
 
 ## Checkpoint log
 
@@ -153,3 +153,8 @@ Known leftover (not a Wave 1-3 product hole, not repaired here): `bindStarterPro
 - `npm run typecheck` PASS; `timing.test.ts` PASS.
 - `qa:completion -- rhythm-action reaction-timing` PASS; `qa:proof` 2/2 PASS.
 - `npm run limitations:extract`: **32** machine-executable remain (37/69 entries closed). Wave 4 matrix rows are closed.
+
+### Wave 5 L29/L30 - tower-defense pointer placement and upgrades
+- `sw2d.targeting` slots, placeCost, upgrade tiers. Pointer hover/click places or upgrades; keyboard cursor kept; miss-clicks rejected. Gold is targeting-owned from `startingGold`.
+- `qa:completion -- tower-defense` PASS (fresh factory). `qa:proof -- tower-defense match-puzzle maze-game falling-block-puzzle` 4/4 PASS.
+- `npm run limitations:extract`: **30** machine-executable remain (39/69 entries closed).

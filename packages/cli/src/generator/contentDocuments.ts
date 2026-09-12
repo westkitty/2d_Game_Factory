@@ -1565,8 +1565,17 @@ export function generateTargetingCatalog(kind: 'tower' | 'auto' | 'range' | 'non
     return {
       schemaVersion: 1,
       mode: 'tower',
+      startingGold: 100,
+      placeCost: 40,
+      slots: [
+        { id: 'pad-a', x: 480, y: 200, radius: 36 },
+        { id: 'pad-b', x: 640, y: 270, radius: 36 },
+      ],
+      upgrades: [
+        { cost: 0, range: 400, damage: 10 },
+        { cost: 30, range: 480, damage: 20 },
+      ],
       actors: [
-        { id: 'tower', x: 480, y: 270, range: 400, damage: 1, cooldownMs: 280, team: 'player', health: 3 },
         { id: 'creep-a', x: 280, y: 180, range: 40, damage: 1, cooldownMs: 600, team: 'enemy', health: 2 },
         { id: 'creep-b', x: 280, y: 360, range: 40, damage: 1, cooldownMs: 600, team: 'enemy', health: 2 },
       ],
@@ -1785,6 +1794,8 @@ export function generateUiCopy(options: {
             ? 'ARROWS WALK  -  REACH THE EXIT'
             : presetId === 'lane-defense'
               ? 'ARROWS AIM  -  J BLOCKS  -  THE RUNNER REPATHS'
+          : presetId === 'tower-defense'
+            ? 'CLICK OR ENTER PLACES  -  ARROWS PICK A PAD  -  K UPGRADES'
           : has('sw2d.puzzle-rules')
             ? 'MOVE / PUSH WASD/ARROWS  -  UNDO BACKSPACE  -  RESET K'
             : 'MOVE WASD/ARROWS  -  PAUSE TO STOP';

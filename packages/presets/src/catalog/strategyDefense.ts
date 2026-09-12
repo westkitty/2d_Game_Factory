@@ -34,10 +34,7 @@ export const STRATEGY_DEFENSE_PRESETS: readonly PresetDefinition[] = [
     // Route-following pathfinding is reusable now (sw2d.navigation, ADR-0022;
     // proof: proofs/tower-defense/). Spatial placement uses sw2d.interaction
     // (Phase 1) via the pointer shell, but this proof keeps the grid cursor.
-    knownLimitations: [
-      'Spatial hover placement via the pointer shell is available but this starter uses the keyboard grid cursor.',
-      'Deterministic route-following pathfinding is reusable (sw2d.navigation); tower target-selection is reusable (sw2d.targeting); upgrade rules stay starter-specific.',
-    ],
+    knownLimitations: [],
   }),
 
   definePreset({
