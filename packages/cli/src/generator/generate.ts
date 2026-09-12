@@ -30,6 +30,7 @@ import {
   generateTargetingCatalog,
   generatePursuitCatalog,
   generateRunsCatalog,
+  generateSimulationCatalog,
   generateResourceManifest,
   generateTiledLevel,
   generateTheme,
@@ -427,6 +428,22 @@ export function buildGameFiles(gameId: string, preset: PresetDefinition): Map<st
     'content/runs.json',
     JSON.stringify(
       generateRunsCatalog(requiredPackIds.includes('sw2d.runs') ? (preset.id === 'action-roguelite' ? 'roguelite' : 'survive') : 'none'),
+      null,
+      2,
+    ) + '\n',
+  );
+  files.set(
+    'content/simulation.json',
+    JSON.stringify(
+      generateSimulationCatalog(
+        preset.id === 'idle-incremental'
+          ? 'idle'
+          : preset.id === 'farming-lite'
+            ? 'farm'
+            : preset.id === 'shopkeeper' || preset.id === 'tycoon-lite' || preset.id === 'restaurant'
+              ? 'meta'
+              : 'none',
+      ),
       null,
       2,
     ) + '\n',

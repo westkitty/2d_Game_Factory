@@ -18,12 +18,12 @@ file is the cursor.
 
 | field | value |
 |---|---|
-| branch SHA | (see git log; this checkpoint is Wave 5 complete) |
-| waves completed | 3 + sanity repair + Wave 4 + Wave 5 |
-| limitations closed | 45 / 69 entries |
-| remaining machine-executable | 24 |
+| branch SHA | (see git log; this checkpoint is Wave 6 complete) |
+| waves completed | 3 + sanity repair + Wave 4 + Wave 5 + Wave 6 |
+| limitations closed | 50 / 69 entries |
+| remaining machine-executable | 19 |
 | blockers | none |
-| next exact action | Wave 6 simulation/economy (L37-L39), then creatures/colony (L40-L41) |
+| next exact action | Wave 7 creatures/colony (L40-L41), then narrative (L42-L45) |
 
 ## Checkpoint log
 
@@ -168,3 +168,11 @@ Known leftover (not a Wave 1-3 product hole, not repaired here): `bindStarterPro
 - Territory: player/red factions, contested decay, score, victoryScore.
 - `qa:completion` 6/6 PASS (base-defense needed a second-wave combat loop). `qa:proof` 6/6 PASS.
 - `npm run limitations:extract`: **24** machine-executable remain (45/69 entries closed). Wave 5 matrix rows are closed.
+
+### Wave 6 L37-L39 - idle / economy walking / farm plots
+- `sw2d.simulation` catalog: persist, bounded offline catch-up with discontinuity defence, prestige, `formatAmount`, plot plant/water/grow/harvest/seasons.
+- Generated idle uses `SIMULATION_STARTER: 'idle'`; gather/upgrade/prestige; reload catch-up.
+- `sw2d.economy` layout + walking customers + seats; prestige multiplier from simulation.
+- Farming plots live in the simulation pack (`content/simulation.json`), not binder-only presentation.
+- `qa:completion` 5/5 PASS (idle, shopkeeper, tycoon-lite, restaurant, farming-lite). `qa:proof` 5/5 PASS.
+- `npm run limitations:extract`: **19** machine-executable remain (50/69 entries closed). Wave 6 matrix rows are closed.

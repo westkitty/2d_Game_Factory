@@ -94,7 +94,13 @@ export function generatePackConfig(preset: PresetDefinition): string {
   const preamble = variant === 'fallback' ? FALLBACK_PREAMBLE : '';
   const entry = variant === 'fallback' ? FALLBACK_ENTRY : '  // This preset selects no code-configured pack.';
   const simulationStarter =
-    preset.id === 'farming-lite' ? "'farm'" : preset.id === 'colony-lite' ? "'colony'" : 'null';
+    preset.id === 'idle-incremental'
+      ? "'idle'"
+      : preset.id === 'farming-lite'
+        ? "'farm'"
+        : preset.id === 'colony-lite'
+          ? "'colony'"
+          : 'null';
   const narrativeStarter =
     preset.id === 'interactive-fiction-hybrid' ? "'fiction'" : preset.id === 'investigation-game' ? "'case'" : 'null';
   const arcadeStarter =
@@ -146,7 +152,7 @@ export function generatePackConfig(preset: PresetDefinition): string {
     '};',
     '',
     '/** Category-C Wave 13: farm vs colony presentation of sw2d.simulation. Null otherwise. */',
-    `export const SIMULATION_STARTER: 'farm' | 'colony' | null = ${simulationStarter};`,
+    `export const SIMULATION_STARTER: 'idle' | 'farm' | 'colony' | null = ${simulationStarter};`,
     '',
     '/** Category-C Wave 14: fiction vs case presentation of sw2d.narrative. Null otherwise. */',
     `export const NARRATIVE_STARTER: 'fiction' | 'case' | null = ${narrativeStarter};`,

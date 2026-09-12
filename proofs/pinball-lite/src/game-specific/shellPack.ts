@@ -121,6 +121,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
           else if (intent.navigateRightPressed || intent.navigateDownPressed) economy.select(1);
           if (intent.confirmPressed) economy.serve();
           if (context.input.justPressed('SECONDARY_ACTION')) economy.secondary();
+          if (intent.cancelPressed) economy.prestige();
           economy.render();
           return;
         }
@@ -163,6 +164,8 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
           if (intent.navigateLeftPressed || intent.navigateUpPressed) jobs.select(-1);
           else if (intent.navigateRightPressed || intent.navigateDownPressed) jobs.select(1);
           if (intent.confirmPressed || intent.primaryPressed) jobs.confirm();
+          if (context.input.justPressed('SECONDARY_ACTION')) jobs.secondary();
+          if (intent.cancelPressed) jobs.prestige();
           jobs.render();
           return;
         }

@@ -68,7 +68,7 @@ with a small working placeholder to replace. Every other pack is configured as J
 
 ## Known preset limitations
 
-- Resource ledger and timed jobs are reusable (sw2d.simulation); crop growth and season rotation for the generated starter are presentation of those jobs; a plot-framework pack is not.
+- (none stated)
 
 ## How to add a level
 

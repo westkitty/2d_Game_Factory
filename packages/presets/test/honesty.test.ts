@@ -238,6 +238,11 @@ describe('closed limitations stay closed (Final Product Completion program)', ()
     { id: 'turn-based-tactics', pattern: /a full turn-action state machine is still starter-specific/, closedBy: 'L34 tactics actions' },
     { id: 'base-defense', pattern: /target-priority and upgrade rules stay starter-specific/, closedBy: 'L35 hold waves + upgrades' },
     { id: 'territory-control', pattern: /contested multi-faction capture stay starter-specific/, closedBy: 'L36 contested territory' },
+    { id: 'idle-incremental', pattern: /offline-progress\/catch-up, prestige, and large economy balancing are not/, closedBy: 'L37 simulation persist/prestige' },
+    { id: 'shopkeeper', pattern: /shop layout, walking customers, prestige and offline catch-up are not/, closedBy: 'L38 economy layout + walking' },
+    { id: 'tycoon-lite', pattern: /shop layout, walking customers, prestige and offline catch-up are not/, closedBy: 'L38 economy layout + walking' },
+    { id: 'restaurant', pattern: /shop layout, walking customers, prestige and offline catch-up are not/, closedBy: 'L38 economy layout + walking' },
+    { id: 'farming-lite', pattern: /a plot-framework pack is not/, closedBy: 'L39 simulation plots' },
   ];
 
   CLOSED.forEach(({ id, pattern, closedBy }) => {

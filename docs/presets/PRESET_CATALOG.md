@@ -208,13 +208,13 @@ recipe's *first* stated limitation; see `knownLimitations` in
 | `turn-based-tactics` | (none stated) |
 | `base-defense` | (none stated) |
 | `territory-control` | (none stated) |
-| `idle-incremental` | The simulation/resource core exists, but full offline-progress/catch-up, prestige, and large economy balancing are not production systems. |
-| `shopkeeper` | Customer demand, queue, stock, transactions and production jobs are reusable (sw2d.economy); shop layout, walking customers, prestige and offline catch-up are not. |
-| `tycoon-lite` | Customer demand, queue, stock, transactions and production jobs are reusable (sw2d.economy); shop layout, walking customers, prestige and offline catch-up are not. |
-| `farming-lite` | Resource ledger and timed jobs are reusable (sw2d.simulation); crop growth and season rotation for the generated starter are presentation of those jobs; a plot-framework pack is not. |
+| `idle-incremental` | (none stated) |
+| `shopkeeper` | (none stated) |
+| `tycoon-lite` | (none stated) |
+| `farming-lite` | (none stated) |
 | `pet-creature` | Needs, decay, care actions, affinity and wellbeing hold/fail are reusable (sw2d.needs); full creature behaviour AI, relationship graphs and colony assignment are not. |
 | `colony-lite` | Resource ledger and timed jobs are reusable (sw2d.simulation); colonist pathfinding is reusable (sw2d.navigation, optional); needs, assignment AI and construction placement are not. |
-| `restaurant` | Customer demand, queue, stock, transactions and production jobs are reusable (sw2d.economy); shop layout, walking customers, prestige and offline catch-up are not. |
+| `restaurant` | (none stated) |
 | `aquarium-terrarium` | Needs, decay, care actions, affinity and wellbeing hold/fail are reusable (sw2d.needs); full creature behaviour AI, relationship graphs and colony assignment are not. |
 | `exploration-game` | (none stated) |
 | `visual-novel` | Branching dialogue graphs, choices, flags and endings are reusable (sw2d.dialogue); portraits, scene composition, parser IF and evidence-board deduction are not. |

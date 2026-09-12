@@ -11,7 +11,7 @@ export const PACK_CONFIG: Readonly<Record<string, unknown>> = {
 };
 
 /** Category-C Wave 13: farm vs colony presentation of sw2d.simulation. Null otherwise. */
-export const SIMULATION_STARTER: 'farm' | 'colony' | null = null;
+export const SIMULATION_STARTER: 'idle' | 'farm' | 'colony' | null = null;
 
 /** Category-C Wave 14: fiction vs case presentation of sw2d.narrative. Null otherwise. */
 export const NARRATIVE_STARTER: 'fiction' | 'case' | null = 'case';

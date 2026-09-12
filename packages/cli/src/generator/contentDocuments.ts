@@ -815,6 +815,16 @@ export function generateEconomyCatalog(kind: 'shop' | 'kitchen' | 'factory' | 'n
     spawn: { firstDelayMs: 0, intervalMs: 1000, maxQueue: 0 },
   };
   if (kind === 'none') return empty;
+  const shopLayout = {
+    entrance: { x: 80, y: 420 },
+    counter: { x: 520, y: 220 },
+    exit: { x: 880, y: 420 },
+    queueSlots: [
+      { x: 400, y: 300 },
+      { x: 320, y: 300 },
+    ],
+    walkSpeed: 620,
+  };
   if (kind === 'shop') {
     return {
       schemaVersion: 1,
@@ -829,6 +839,7 @@ export function generateEconomyCatalog(kind: 'shop' | 'kitchen' | 'factory' | 'n
         { id: 'sam', displayName: 'Sam', goodId: 'bread', patienceMs: 12000 },
       ],
       spawn: { firstDelayMs: 250, intervalMs: 2200, maxQueue: 2 },
+      layout: shopLayout,
     };
   }
   if (kind === 'kitchen') {
@@ -849,6 +860,13 @@ export function generateEconomyCatalog(kind: 'shop' | 'kitchen' | 'factory' | 'n
         { id: 'diner-b', displayName: 'Guest', goodId: 'salad', patienceMs: 14000 },
       ],
       spawn: { firstDelayMs: 250, intervalMs: 2400, maxQueue: 2 },
+      layout: {
+        ...shopLayout,
+        seats: [
+          { x: 200, y: 180 },
+          { x: 280, y: 180 },
+        ],
+      },
     };
   }
   return {
@@ -863,7 +881,52 @@ export function generateEconomyCatalog(kind: 'shop' | 'kitchen' | 'factory' | 'n
       { id: 'buyer-b', displayName: 'Client', goodId: 'widget', patienceMs: 16000 },
     ],
     spawn: { firstDelayMs: 400, intervalMs: 1800, maxQueue: 3 },
+    layout: shopLayout,
   };
+}
+
+/**
+ * content/simulation.json - a SimulationCatalog (Final Product Completion Wave 6).
+ * Always emitted; empty unless the preset actually consumes idle/farm/shop-meta fields.
+ */
+export function generateSimulationCatalog(kind: 'idle' | 'farm' | 'meta' | 'none'): Record<string, unknown> {
+  if (kind === 'idle') {
+    return {
+      schemaVersion: 1,
+      persist: true,
+      resources: [
+        { id: 'gold', amount: 0, ratePerSecond: 8 },
+        { id: 'currency', amount: 0 },
+      ],
+      offline: { maxMs: 8000, discontinuityMs: 86_400_000 },
+      prestige: { resourceId: 'gold', cost: 16, multiplier: 2 },
+    };
+  }
+  if (kind === 'farm') {
+    return {
+      schemaVersion: 1,
+      resources: [{ id: 'crops', amount: 0 }],
+      plots: [{ id: 'plot-0' }, { id: 'plot-1' }, { id: 'plot-2' }],
+      crops: [{ id: 'wheat', growMs: 480, waterRequired: true, yield: 1, resourceId: 'crops' }],
+      seasons: [
+        { id: 'spring', durationMs: 2000, growScale: 1 },
+        { id: 'summer', durationMs: 2000, growScale: 1.2 },
+        { id: 'autumn', durationMs: 2000, growScale: 0.9 },
+        { id: 'winter', durationMs: 2000, growScale: 0.7 },
+      ],
+      harvestTarget: 3,
+    };
+  }
+  if (kind === 'meta') {
+    return {
+      schemaVersion: 1,
+      persist: true,
+      resources: [{ id: 'gold', amount: 0, ratePerSecond: 8 }],
+      offline: { maxMs: 6000, discontinuityMs: 86_400_000 },
+      prestige: { resourceId: 'gold', cost: 16, multiplier: 2 },
+    };
+  }
+  return { schemaVersion: 1 };
 }
 
 /**
@@ -1888,8 +1951,10 @@ export function generateUiCopy(options: {
                 ? presetId === 'rhythm-action'
                   ? 'ENTER ON THE BEAT'
                   : 'WAIT FOR THE GO  -  ENTER HITS'
+                : presetId === 'idle-incremental'
+                  ? 'J GATHERS  -  K UPGRADES  -  BACKSPACE PRESTIGES'
                 : presetId === 'farming-lite'
-                  ? 'ARROWS PICK A PLOT  -  ENTER PLANTS OR HARVESTS'
+                  ? 'ARROWS PICK A PLOT  -  ENTER PLANTS, WATERS, OR HARVESTS'
                   : presetId === 'colony-lite'
                     ? 'ARROWS PICK A JOB  -  ENTER ASSIGNS OR BUILDS'
                     : presetId === 'interactive-fiction-hybrid'

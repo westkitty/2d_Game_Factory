@@ -63,6 +63,8 @@ export {
   simulationPack,
   DuplicateSimulationJobError,
   UnknownSimulationJobError,
+  SIMULATION_SAVE_SLOT,
+  formatSimulationAmount,
   type SimulationJob,
   type SimulationService,
 } from './simulation/simulationPack.ts';

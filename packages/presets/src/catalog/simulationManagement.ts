@@ -39,9 +39,7 @@ export const SIMULATION_MANAGEMENT_PRESETS: readonly PresetDefinition[] = [
     optionalSystemPacks: [pack(PACK_IDS.arcade)],
     requiredContentRoles: ['tuning'],
     validationProfile: VALIDATION_PROFILES.simulationManagement,
-    knownLimitations: [
-      'The simulation/resource core exists, but full offline-progress/catch-up, prestige, and large economy balancing are not production systems.',
-    ],
+    knownLimitations: [],
   }),
 
   definePreset({
@@ -54,7 +52,7 @@ export const SIMULATION_MANAGEMENT_PRESETS: readonly PresetDefinition[] = [
     optionalSystemPacks: [pack(PACK_IDS.world)],
     requiredContentRoles: ['tuning', 'economy'],
     validationProfile: VALIDATION_PROFILES.simulationManagement,
-    knownLimitations: [LIMITATIONS.customerEconomy],
+    knownLimitations: [],
   }),
 
   definePreset({
@@ -67,7 +65,7 @@ export const SIMULATION_MANAGEMENT_PRESETS: readonly PresetDefinition[] = [
     optionalSystemPacks: [pack(PACK_IDS.arcade)],
     requiredContentRoles: ['tuning', 'economy'],
     validationProfile: VALIDATION_PROFILES.simulationManagement,
-    knownLimitations: [LIMITATIONS.customerEconomy],
+    knownLimitations: [],
   }),
 
   definePreset({
@@ -80,9 +78,7 @@ export const SIMULATION_MANAGEMENT_PRESETS: readonly PresetDefinition[] = [
     optionalSystemPacks: [pack(PACK_IDS.progression)],
     requiredContentRoles: ['tuning'],
     validationProfile: VALIDATION_PROFILES.simulationManagement,
-    knownLimitations: [
-      'Resource ledger and timed jobs are reusable (sw2d.simulation); crop growth and season rotation for the generated starter are presentation of those jobs; a plot-framework pack is not.',
-    ],
+    knownLimitations: [],
   }),
 
   definePreset({
@@ -123,7 +119,7 @@ export const SIMULATION_MANAGEMENT_PRESETS: readonly PresetDefinition[] = [
     optionalSystemPacks: [pack(PACK_IDS.arcade)],
     requiredContentRoles: ['tuning', 'economy'],
     validationProfile: VALIDATION_PROFILES.simulationManagement,
-    knownLimitations: [LIMITATIONS.customerEconomy],
+    knownLimitations: [],
   }),
 
   definePreset({

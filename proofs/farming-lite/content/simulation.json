@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "resources": [
+    {
+      "id": "crops",
+      "amount": 0
+    }
+  ],
+  "plots": [
+    {
+      "id": "plot-0"
+    },
+    {
+      "id": "plot-1"
+    },
+    {
+      "id": "plot-2"
+    }
+  ],
+  "crops": [
+    {
+      "id": "wheat",
+      "growMs": 480,
+      "waterRequired": true,
+      "yield": 1,
+      "resourceId": "crops"
+    }
+  ],
+  "seasons": [
+    {
+      "id": "spring",
+      "durationMs": 2000,
+      "growScale": 1
+    },
+    {
+      "id": "summer",
+      "durationMs": 2000,
+      "growScale": 1.2
+    },
+    {
+      "id": "autumn",
+      "durationMs": 2000,
+      "growScale": 0.9
+    },
+    {
+      "id": "winter",
+      "durationMs": 2000,
+      "growScale": 0.7
+    }
+  ],
+  "harvestTarget": 3
+}

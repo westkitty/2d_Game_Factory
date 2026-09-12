@@ -51,6 +51,7 @@ export const CONTENT_DOCUMENTS: Readonly<Record<string, ContentDocumentRegistryE
   targeting: { schemaName: 'targeting-catalog' },
   pursuit: { schemaName: 'pursuit-catalog' },
   runs: { schemaName: 'runs-catalog' },
+  simulation: { schemaName: 'simulation-catalog' },
 };
 
 export type ContentDocumentName = keyof typeof CONTENT_DOCUMENTS;

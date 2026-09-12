@@ -74,6 +74,11 @@ export const COMPLETION_SPEC_MODULES: Readonly<Record<string, string>> = {
   'turn-based-tactics': 'turnBasedTactics',
   'base-defense': 'baseDefense',
   'territory-control': 'territoryControl',
+  'idle-incremental': 'idleIncremental',
+  shopkeeper: 'shopkeeper',
+  'tycoon-lite': 'tycoonLite',
+  restaurant: 'restaurant',
+  'farming-lite': 'farmingLite',
 };
 
 interface Target {

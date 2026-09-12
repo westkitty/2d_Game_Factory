@@ -376,18 +376,24 @@ exceptions: physical hardware certification and the user-owned public-license ch
 - **Architecture:** `sw2d.simulation` persistence, bounded offline catch-up, wall-clock reconciliation with discontinuity defence, big-number formatting, prestige; reused by shopkeeper/tycoon/restaurant (L38).
 - **Journey:** earn → reload → offline gain (capped) → prestige → reset with multiplier.
 - **Checkpoint:** Wave 6.
+- **Closed by:** catalog production, gather/upgrade, prestige, bounded catch-up, `formatAmount`. **Browser:** PASS.
+- **Status:** CLOSED (Wave 6).
 
 ### L38 - economy layout / walking customers / prestige / offline
 - **Source text:** "Customer demand, queue, stock, transactions and production jobs are reusable (sw2d.economy); shop layout, walking customers, prestige and offline catch-up are not."
 - **Presets:** `shopkeeper`, `tycoon-lite`, `restaurant`
 - **Architecture:** `sw2d.economy` layout (counter, queue slots, seats) + walking customer agents; prestige/offline via `sw2d.simulation`; tycoon investments/unlocks; restaurant seating/serving/leaving.
 - **Checkpoint:** Wave 6.
+- **Closed by:** authored layout, walking customers, seats, simulation prestige multiplier. **Browser:** PASS.
+- **Status:** CLOSED (Wave 6).
 
 ### L39 - farming plots
 - **Source text:** "Resource ledger and timed jobs are reusable (sw2d.simulation); crop growth and season rotation for the generated starter are presentation of those jobs; a plot-framework pack is not."
 - **Presets:** `farming-lite`
 - **Architecture:** `bindStarterSimulation` farm mode finished on content-authored crops (`content/simulation.json`): plots, plant, water, growth, seasons, harvest, inventory, regrow, persistence.
 - **Checkpoint:** Wave 6.
+- **Closed by:** catalog plots, water, seasons, harvest target. **Browser:** PASS.
+- **Status:** CLOSED (Wave 6).
 
 ### L40 - creature behaviour AI / relationships / colony assignment
 - **Source text:** "Needs, decay, care actions, affinity and wellbeing hold/fail are reusable (sw2d.needs); full creature behaviour AI, relationship graphs and colony assignment are not."
@@ -531,9 +537,9 @@ exceptions: physical hardware certification and the user-owned public-license ch
 | L34 | turn-based-tactics | 5 | CLOSED | wave 5 strategy |
 | L35 | base-defense | 5 | CLOSED | wave 5 strategy |
 | L36 | territory-control | 5 | CLOSED | wave 5 strategy |
-| L37 | idle-incremental | 6 | OPEN | |
-| L38 | shopkeeper, tycoon-lite, restaurant | 6 | OPEN | |
-| L39 | farming-lite | 6 | OPEN | |
+| L37 | idle-incremental | 6 | CLOSED | wave 6 simulation |
+| L38 | shopkeeper, tycoon-lite, restaurant | 6 | CLOSED | wave 6 economy layout |
+| L39 | farming-lite | 6 | CLOSED | wave 6 plots |
 | L40 | pet-creature, aquarium-terrarium, virtual-pet | 7 | OPEN | |
 | L41 | colony-lite | 7 | OPEN | |
 | L42 | visual-novel, point-and-click | 8 | OPEN | |

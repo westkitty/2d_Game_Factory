@@ -1,0 +1,94 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:sw2d:schema:content-simulation-catalog:v1",
+  "title": "SimulationCatalog",
+  "description": "Mirrors @sw2d/contracts SimulationCatalog (simulation.ts). Validated as a ContentBundle.data document (document name 'simulation'). Bounded ledger/jobs/offline/prestige/plots - no scripting.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion"],
+  "properties": {
+    "schemaVersion": { "type": "integer", "minimum": 1 },
+    "persist": { "type": "boolean" },
+    "resources": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/resource" }
+    },
+    "offline": { "$ref": "#/definitions/offline" },
+    "prestige": { "$ref": "#/definitions/prestige" },
+    "plots": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/plot" }
+    },
+    "crops": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/crop" }
+    },
+    "seasons": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/season" }
+    },
+    "harvestTarget": { "type": "integer", "minimum": 1 }
+  },
+  "definitions": {
+    "resource": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "amount": { "type": "number", "minimum": 0 },
+        "ratePerSecond": { "type": "number", "minimum": 0 }
+      }
+    },
+    "offline": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["maxMs"],
+      "properties": {
+        "maxMs": { "type": "number", "minimum": 0 },
+        "discontinuityMs": { "type": "number", "minimum": 0 }
+      }
+    },
+    "prestige": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["resourceId", "cost", "multiplier"],
+      "properties": {
+        "resourceId": { "type": "string", "minLength": 1 },
+        "cost": { "type": "number", "minimum": 0 },
+        "multiplier": { "type": "number", "exclusiveMinimum": 0 }
+      }
+    },
+    "plot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 }
+      }
+    },
+    "crop": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "growMs"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "growMs": { "type": "number", "minimum": 0 },
+        "waterRequired": { "type": "boolean" },
+        "yield": { "type": "integer", "minimum": 1 },
+        "regrow": { "type": "boolean" },
+        "resourceId": { "type": "string", "minLength": 1 }
+      }
+    },
+    "season": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "durationMs"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "durationMs": { "type": "number", "exclusiveMinimum": 0 },
+        "growScale": { "type": "number", "minimum": 0 }
+      }
+    }
+  }
+}

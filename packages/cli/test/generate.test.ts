@@ -695,12 +695,12 @@ describe('generated ui-simulation farm and colony consume sw2d.simulation', () =
     const colonyJson = JSON.parse(colonyFiles.get('content/game.json')!) as { systemPacks: Array<{ packId: string }> };
     expect(farmJson.systemPacks.map((s) => s.packId)).toContain('sw2d.simulation');
     expect(colonyJson.systemPacks.map((s) => s.packId)).toContain('sw2d.simulation');
-    expect(farmFiles.get('src/game-specific/packConfig.ts')).toContain("SIMULATION_STARTER: 'farm' | 'colony' | null = 'farm'");
-    expect(colonyFiles.get('src/game-specific/packConfig.ts')).toContain("SIMULATION_STARTER: 'farm' | 'colony' | null = 'colony'");
-    expect(shopFiles.get('src/game-specific/packConfig.ts')).toContain("SIMULATION_STARTER: 'farm' | 'colony' | null = null");
+    expect(farmFiles.get('src/game-specific/packConfig.ts')).toContain("SIMULATION_STARTER: 'idle' | 'farm' | 'colony' | null = 'farm'");
+    expect(colonyFiles.get('src/game-specific/packConfig.ts')).toContain("SIMULATION_STARTER: 'idle' | 'farm' | 'colony' | null = 'colony'");
+    expect(shopFiles.get('src/game-specific/packConfig.ts')).toContain("SIMULATION_STARTER: 'idle' | 'farm' | 'colony' | null = null");
     const farmTheme = JSON.parse(farmFiles.get('content/themes/default/theme.json')!) as { ui: { playHint: string } };
     const colonyTheme = JSON.parse(colonyFiles.get('content/themes/default/theme.json')!) as { ui: { playHint: string } };
-    expect(farmTheme.ui.playHint).toContain('ENTER PLANTS OR HARVESTS');
+    expect(farmTheme.ui.playHint).toContain('ENTER PLANTS, WATERS, OR HARVESTS');
     expect(colonyTheme.ui.playHint).toContain('ENTER ASSIGNS OR BUILDS');
   });
 });
@@ -1556,6 +1556,9 @@ describe('Final Product Completion Wave 2 - generated combat games consume runs,
       const runsJson = JSON.parse(files.get('content/runs.json')!) as { mode: string; unlocks: unknown[] };
       expect(() => validateContentBundleData({ runs: runsJson })).not.toThrow();
       expect(files.get('src/content.ts'), preset.id).toContain('runs: runsData');
+      expect(files.get('src/content.ts'), preset.id).toContain('simulation: simulationData');
+      const simJson = JSON.parse(files.get('content/simulation.json')!) as { schemaVersion: number };
+      expect(() => validateContentBundleData({ simulation: simJson })).not.toThrow();
       const required = preset.requiredSystemPacks.some((s) => s.packId === 'sw2d.runs');
       expect(runsJson.unlocks.length > 0, preset.id).toBe(required);
       if (preset.id === 'action-roguelite') expect(runsJson.mode).toBe('roguelite');
