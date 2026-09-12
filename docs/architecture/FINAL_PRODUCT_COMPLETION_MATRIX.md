@@ -216,6 +216,8 @@ exceptions: physical hardware certification and the user-owned public-license ch
 - **Architecture:** held-item capability (L18) + `bindStarterVehicle` road mode: traffic hazards, item boxes, boost use, crash → `failed`, best distance persisted.
 - **Journey:** drive → pick boost → use → distance climbs faster → hit traffic → `failed` → restart → best distance kept.
 - **Checkpoint:** Wave 4.
+- **Closed by:** endless-driving requires `sw2d.items`; same `hold`/`useHeld` loop with `kart-boost`; road binder adds a traffic hazard, off-road crash, and persisted best distance. **Proof/test:** proof spec `endlessDriving` (pickup, boost, distance, persist best, crash). **Browser:** `qa:completion -- endless-driving` PASS; `qa:proof -- endless-driving` PASS.
+- **Status:** CLOSED (Wave 4).
 
 ### L20 - boat/flight arcade scope
 - **Source text:** "The boat and flight profiles are bounded arcade handling (momentum, drag, lateral grip, and for flight a 2D altitude band) - not fluid or aerodynamic simulation."
@@ -477,7 +479,7 @@ exceptions: physical hardware certification and the user-owned public-license ch
 | L16 | run-and-gun | 3 | CLOSED | wave 3 |
 | L17 | rail-shooter | 3 | CLOSED | wave 3 |
 | L18 | kart-racer | 4 | CLOSED | wave 4 kart |
-| L19 | endless-driving | 4 | OPEN | |
+| L19 | endless-driving | 4 | CLOSED | wave 4 kart |
 | L20 | boat-flight-racer | 4 | OPEN | |
 | L21 | match-puzzle, falling-block-puzzle | 4 | OPEN | |
 | L22 | match-puzzle | 4 | OPEN | |

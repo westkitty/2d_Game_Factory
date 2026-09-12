@@ -216,6 +216,7 @@ describe('closed limitations stay closed (Final Product Completion program)', ()
     { id: 'run-and-gun', pattern: /this recipe does not install it/, closedBy: 'L16 encounters required on the platform shell' },
     { id: 'rail-shooter', pattern: /does not wire sw2d\.weapons/, closedBy: 'L17 bindStarterGallery rail' },
     { id: 'kart-racer', pattern: /Holding and firing a kart item on demand/, closedBy: 'L18 sw2d.items held slot' },
+    { id: 'endless-driving', pattern: /a reusable kart item-fire system is not/, closedBy: 'L19 held items + road traffic' },
   ];
 
   CLOSED.forEach(({ id, pattern, closedBy }) => {

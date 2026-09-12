@@ -56,7 +56,7 @@ export const LOOK_STARTER: 'museum' | 'rail' | null = null;
 export const PARKOUR_STARTER: 'precision' | 'climb' | null = null;
 
 /** Category-C Wave 29: kart on-demand item-fire. Null otherwise. */
-export const KART_STARTER: 'item' | null = null;
+export const KART_STARTER: 'item' | null = 'item';
 
 /** Category-C Wave 31: closing-wall pursuit. Null otherwise. */
 export const CHASE_STARTER: 'pursuit' | null = null;

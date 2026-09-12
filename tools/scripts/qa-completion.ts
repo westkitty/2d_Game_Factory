@@ -57,6 +57,7 @@ export const COMPLETION_SPEC_MODULES: Readonly<Record<string, string>> = {
   'bullet-hell': 'bulletHell',
   // Wave 4 - vehicles / puzzle / arcade
   'kart-racer': 'kartRacer',
+  'endless-driving': 'endlessDriving',
 };
 
 interface Target {

@@ -61,7 +61,7 @@ pack/controller selections were actually exercised through, and
 | `top-down-racer` | world, world-entities, vehicles, racing | arcade | vehicle | keyboard, touch | vehicle-movement-recipe |
 | `kart-racer` | world, world-entities, vehicles, racing, items | arcade | vehicle | keyboard, touch | vehicle-movement-recipe |
 | `time-trial-racer` | world, world-entities, arcade, vehicles, racing | - | vehicle | keyboard, touch | vehicle-movement-recipe |
-| `endless-driving` | arcade, generation, vehicles | world, world-entities | vehicle | keyboard, touch | vehicle-movement-recipe |
+| `endless-driving` | arcade, generation, vehicles, items | world, world-entities | vehicle | keyboard, touch | vehicle-movement-recipe |
 | `boat-flight-racer` | world, world-entities, vehicles | arcade, racing | vehicle | keyboard, touch | vehicle-movement-recipe |
 ## Puzzle / arcade (Phase 7B)
 
@@ -139,7 +139,7 @@ pack/controller selections were actually exercised through, and
 | simulation | `sw2d.simulation` | `simulation.resources` | 9 | 10 |
 | narrative | `sw2d.narrative` | `narrative.state` | 4 | 8 |
 | strategy | `sw2d.strategy` | `strategy.turns` | 4 | 4 |
-| items | `sw2d.items` | `items.state` | 2 | 2 |
+| items | `sw2d.items` | `items.state` | 3 | 3 |
 | weapons | `sw2d.weapons` | `combat.weapons` | 10 | 12 |
 | encounters | `sw2d.encounters` | `combat.encounters` | 9 | 11 |
 | navigation | `sw2d.navigation` | `world.navigation` | 4 | 8 |

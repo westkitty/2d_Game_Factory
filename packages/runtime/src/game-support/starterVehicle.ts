@@ -27,7 +27,8 @@ export interface StarterVehicleSnapshot {
   readonly altitude: number;
   readonly score: number;
   readonly lastResult: string | null;
-  readonly outcome: 'playing' | 'complete';
+  readonly best: number;
+  readonly outcome: 'playing' | 'complete' | 'failed';
 }
 
 export interface StarterVehicleBinding {
@@ -59,6 +60,7 @@ const INERT: StarterVehicleBinding = {
     altitude: 0,
     score: 0,
     lastResult: null,
+    best: 0,
     outcome: 'playing',
   }),
   render: () => undefined,
@@ -76,6 +78,8 @@ const ROAD_SCORE = 80;
 const ALTITUDE_WIN = 80;
 const FLAG_COLOR = 0xb98af0;
 const CLEAR_COLOR = 0x65d0a8;
+const HAZARD = { x: 520, y: 168, radius: 34 };
+const DRIVE_BEST_SLOT = 'drive-best';
 
 export function bindStarterVehicle(
   context: SceneContext,
@@ -106,6 +110,10 @@ export function bindStarterVehicle(
     hud && mode === 'craft'
       ? scene.add.rectangle(width * 0.5, 96, 48, 12, FLAG_COLOR, 0.95).setStrokeStyle(2, 0xffffff, 0.9).setDepth(20)
       : null;
+  const hazard =
+    hud && mode === 'road'
+      ? scene.add.circle(HAZARD.x, HAZARD.y, HAZARD.radius, 0xe0574f, 0.9).setStrokeStyle(2, 0xffffff, 0.8).setDepth(18)
+      : null;
 
   let x = START.x;
   let y = START.y;
@@ -114,7 +122,15 @@ export function bindStarterVehicle(
   let profile: string | null = mode === 'craft' ? 'boat' : 'car';
   let scoredX = START.x;
   let lastResult: string | null = null;
-  let outcome: 'playing' | 'complete' = 'playing';
+  let outcome: 'playing' | 'complete' | 'failed' = 'playing';
+  let best = 0;
+  if (mode === 'road') {
+    const loaded = context.saves.load<{ schemaVersion: number; best: number }>(DRIVE_BEST_SLOT, {
+      currentVersion: 1,
+      createDefault: () => ({ schemaVersion: 1, best: 0 }),
+    });
+    best = loaded.value.best;
+  }
   let disposed = false;
 
   function snapshot(): StarterVehicleSnapshot {
@@ -128,6 +144,7 @@ export function bindStarterVehicle(
       altitude: Math.round(altitude),
       score: arcade ? arcade.score() : 0,
       lastResult,
+      best,
       outcome,
     };
   }
@@ -140,13 +157,15 @@ export function bindStarterVehicle(
     }
     if (!title || !status || !hint) return;
     if (mode === 'road') {
-      title.setText(snap.outcome === 'complete' ? 'DISTANCE' : 'ROAD');
+      title.setText(snap.outcome === 'failed' ? 'CRASHED' : snap.outcome === 'complete' ? 'DISTANCE' : 'ROAD');
       status.setText(
-        `score ${snap.score}/${ROAD_SCORE}  ·  x ${snap.x}  ·  spd ${snap.speed}${
+        `score ${snap.score}/${ROAD_SCORE}  ·  best ${snap.best}  ·  x ${snap.x}  ·  spd ${snap.speed}${
           snap.lastResult ? `  ·  ${snap.lastResult}` : ''
         }${snap.outcome !== 'playing' ? `  ·  ${snap.outcome}` : ''}`,
       );
-      hint.setText(snap.outcome === 'playing' ? 'HOLD UP TO DRIVE   BANK DISTANCE' : 'DISTANCE');
+      hint.setText(
+        snap.outcome === 'playing' ? 'HOLD UP TO DRIVE   J BOOSTS   AVOID TRAFFIC' : snap.outcome === 'failed' ? 'CRASH' : 'DISTANCE',
+      );
     } else {
       title.setText(snap.outcome === 'complete' ? 'AIRBORNE' : snap.profile === 'flight' ? 'FLIGHT' : 'BOAT');
       status.setText(
@@ -169,6 +188,10 @@ export function bindStarterVehicle(
     if (mode === 'road' && arcade && arcade.score() >= ROAD_SCORE) {
       outcome = 'complete';
       lastResult = 'distance';
+      if (arcade.score() > best) {
+        best = arcade.score();
+        context.saves.save(DRIVE_BEST_SLOT, { schemaVersion: 1, best });
+      }
       context.audio.playCue('ui.confirm');
       return;
     }
@@ -220,6 +243,17 @@ export function bindStarterVehicle(
           scoredX += gained * SCORE_UNIT;
           lastResult = 'drive';
         }
+        const hitTraffic = Math.hypot(x - HAZARD.x, y - HAZARD.y) <= HAZARD.radius + 16;
+        const offRoad = y < 200 || y > 340 || x < 40;
+        if (hitTraffic || offRoad) {
+          outcome = 'failed';
+          lastResult = 'crash';
+          if (arcade.score() > best) {
+            best = arcade.score();
+            context.saves.save(DRIVE_BEST_SLOT, { schemaVersion: 1, best });
+          }
+          context.audio.playCue('ui.cancel');
+        }
       }
       finish();
       paint();
@@ -234,6 +268,7 @@ export function bindStarterVehicle(
         status?.destroy();
         hint?.destroy();
         marker?.destroy();
+        hazard?.destroy();
       } catch {
         /* scene already tearing down */
       }

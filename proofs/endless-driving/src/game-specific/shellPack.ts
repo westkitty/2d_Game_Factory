@@ -62,7 +62,12 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     const drive = bindStarterVehicle(context, { mode: VEHICLE_STARTER });
     // Kart on-demand item (Category-C Wave 29). Inert unless packConfig
     // names the item starter. Pickup/fire stay game-specific.
-    const kartItem = bindStarterKartItem(context, { mode: KART_STARTER });
+    const kartItem = bindStarterKartItem(
+      context,
+      VEHICLE_STARTER === 'road'
+        ? { mode: KART_STARTER, hud: false, itemId: 'kart-boost', boxes: [{ x: 380, y: 270, radius: 48 }] }
+        : { mode: KART_STARTER },
+    );
     const openSpace = (Boolean(weapon?.snapshot()) && !vehicleSvc) || drive.active || rocks.active;
 
     const spawnX = drive.active ? drive.startX() : kartItem.active ? 160 : openSpace ? width * 0.5 : (spawn?.x ?? width * 0.5);

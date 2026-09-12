@@ -1175,7 +1175,8 @@ describe('generated endless-driving and boat-flight consume vehicle presentation
     expect(shell).toContain('bindStarterVehicle(context, { mode: VEHICLE_STARTER })');
     expect(shell).toContain('drive.setVehicle(');
     expect(shell).toContain('drive.switchCraft(');
-    expect(shell).toContain('bindStarterKartItem(context, { mode: KART_STARTER })');
+    expect(shell).toContain('bindStarterKartItem(context, {');
+    expect(shell).toContain('mode: KART_STARTER');
     expect(shell).toContain('kartItem.fire(');
     expect(shell).toContain("from './packConfig.ts'");
   });
@@ -1202,7 +1203,8 @@ describe('generated endless-driving and boat-flight consume vehicle presentation
       "VEHICLE_STARTER: 'road' | 'craft' | null = null",
     );
     expect(kartFiles.get('src/game-specific/packConfig.ts')).toContain("KART_STARTER: 'item' | null = 'item'");
-    expect(roadFiles.get('src/game-specific/packConfig.ts')).toContain("KART_STARTER: 'item' | null = null");
+    expect(roadFiles.get('src/game-specific/packConfig.ts')).toContain("KART_STARTER: 'item' | null = 'item'");
+    expect(roadJson.systemPacks.map((s) => s.packId)).toContain('sw2d.items');
     expect(kart.requiredSystemPacks.map((s) => s.packId)).toContain('sw2d.items');
     const kartItems = JSON.parse(kartFiles.get('content/items.json')!) as { items: Array<{ id: string; metadata?: { fire?: string } }> };
     expect(kartItems.items.map((item) => item.id)).toEqual(expect.arrayContaining(['kart-shell', 'kart-boost']));

@@ -181,7 +181,7 @@ export function generatePackConfig(preset: PresetDefinition): string {
   const asteroidsStarter = preset.id === 'asteroids-shooter' ? "'field'" : 'null';
   const parkourStarter =
     preset.id === 'precision-platformer' ? "'precision'" : preset.id === 'climbing-game' ? "'climb'" : 'null';
-  const kartStarter = preset.id === 'kart-racer' ? "'item'" : 'null';
+  const kartStarter = preset.id === 'kart-racer' || preset.id === 'endless-driving' ? "'item'" : 'null';
   const chaseStarter = preset.id === 'chase-platformer' ? "'pursuit'" : 'null';
   return [
     '/**',

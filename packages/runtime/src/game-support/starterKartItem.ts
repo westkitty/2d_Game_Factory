@@ -63,7 +63,12 @@ const BOX_RESPAWN_MS = 1800;
 
 export function bindStarterKartItem(
   context: SceneContext,
-  options?: { readonly mode?: 'item' | null; readonly hud?: boolean; readonly itemId?: string },
+  options?: {
+    readonly mode?: 'item' | null;
+    readonly hud?: boolean;
+    readonly itemId?: string;
+    readonly boxes?: readonly { readonly x: number; readonly y: number; readonly radius: number }[];
+  },
 ): StarterKartItemBinding {
   if (options?.mode !== 'item') return INERT;
   if (!context.capabilities.has(ITEMS_CAPABILITY_ID)) return INERT;
@@ -80,15 +85,16 @@ export function bindStarterKartItem(
   const hud = options?.hud !== false;
   const scene = context.scene;
   const { width, height } = context.definition.viewport;
+  const boxes = options.boxes && options.boxes.length > 0 ? options.boxes : BOXES;
 
   const title = hud ? scene.add.text(width * 0.5, 28, '', headingStyle(20)).setOrigin(0.5).setScrollFactor(0).setDepth(50) : null;
   const status = hud ? scene.add.text(width * 0.5, 54, '', mutedStyle(14)).setOrigin(0.5).setScrollFactor(0).setDepth(50) : null;
   const hint = hud ? scene.add.text(width * 0.5, height - 28, '', accentStyle(14)).setOrigin(0.5).setScrollFactor(0).setDepth(50) : null;
   const boxSprites = hud
-    ? BOXES.map((box) => scene.add.rectangle(box.x, box.y, 36, 36, BOX_COLOR, 0.95).setStrokeStyle(2, 0xffffff, 0.9).setDepth(18))
+    ? boxes.map((box) => scene.add.rectangle(box.x, box.y, 36, 36, BOX_COLOR, 0.95).setStrokeStyle(2, 0xffffff, 0.9).setDepth(18))
     : [];
   const shellSprite = hud
-    ? scene.add.circle(BOXES[0].x, BOXES[0].y, 10, SHELL_COLOR, 0.95).setStrokeStyle(2, 0xffffff, 0.8).setDepth(21).setVisible(false)
+    ? scene.add.circle(boxes[0]!.x, boxes[0]!.y, 10, SHELL_COLOR, 0.95).setStrokeStyle(2, 0xffffff, 0.8).setDepth(21).setVisible(false)
     : null;
 
   let fired = 0;
@@ -101,13 +107,13 @@ export function bindStarterKartItem(
   let shellVx = 0;
   let shellVy = 0;
   let shellLive = false;
-  const boxReady = BOXES.map(() => true);
-  const boxCooldownMs = BOXES.map(() => 0);
+  const boxReady = boxes.map(() => true);
+  const boxCooldownMs = boxes.map(() => 0);
   let disposed = false;
 
   function snapshot(): StarterKartItemSnapshot {
     const readyIndex = boxReady.findIndex((ready) => ready);
-    const shown = BOXES[readyIndex] ?? BOXES[0];
+    const shown = boxes[readyIndex] ?? boxes[0]!;
     return {
       active: true,
       held: items.held() === itemId,
@@ -146,12 +152,12 @@ export function bindStarterKartItem(
       kartX = x;
       kartY = y;
       kartHeading = heading;
-      for (let i = 0; i < BOXES.length; i++) {
+      for (let i = 0; i < boxes.length; i++) {
         if (boxCooldownMs[i]! > 0) {
           boxCooldownMs[i] = Math.max(0, boxCooldownMs[i]! - 16);
           if (boxCooldownMs[i] === 0) boxReady[i] = true;
         }
-        const box = BOXES[i]!;
+        const box = boxes[i]!;
         if (boxReady[i] && items.held() === null && Math.hypot(x - box.x, y - box.y) <= box.radius) {
           items.grant(itemId, 1);
           if (items.hold(itemId)) {

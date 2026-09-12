@@ -64,16 +64,14 @@ export const VEHICLE_MOVEMENT_PRESETS: readonly PresetDefinition[] = [
     displayName: 'Endless Driving',
     family: 'vehicle-movement',
     controllerFamilies: ['vehicle'],
-    requiredSystemPacks: [pack(PACK_IDS.arcade), pack(PACK_IDS.generation), pack(PACK_IDS.vehicles)],
+    requiredSystemPacks: [pack(PACK_IDS.arcade), pack(PACK_IDS.generation), pack(PACK_IDS.vehicles), pack(PACK_IDS.items)],
     optionalSystemPacks: [pack(PACK_IDS.world), pack(PACK_IDS.worldEntities)],
-    requiredContentRoles: ['tuning', 'generation', 'vehicles'],
+    requiredContentRoles: ['tuning', 'generation', 'vehicles', 'items'],
     validationProfile: VALIDATION_PROFILES.vehicleMovement,
     vehicleProfile: 'car',
-    // Phase 7 (ADR-0024) road generation + Phase 10 (ADR-0027) vehicle handling.
-    // Category-C Wave 23: generated starter banks arcade distance.
-    knownLimitations: [
-      'Arcade distance for the generated starter is game-specific presentation of sw2d.vehicles + sw2d.arcade; a reusable kart item-fire system is not.',
-    ],
+    // Final Product Completion Wave 4 (matrix L19): same held-item loop as
+    // kart-racer (boost), plus traffic crash / best-distance persistence.
+    knownLimitations: [],
   }),
 
   definePreset({

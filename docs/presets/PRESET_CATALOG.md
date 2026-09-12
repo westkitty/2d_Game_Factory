@@ -80,7 +80,7 @@ controller/input-mode breakdown and full pack-consumer coverage.
 | `top-down-racer` | Top-Down Racer | vehicle | tuning, levels, vehicles, races | proof-validated |
 | `kart-racer` | Kart Racer | vehicle | tuning, levels, vehicles, races, items | proof-validated |
 | `time-trial-racer` | Time Trial Racer | vehicle | tuning, levels, vehicles, races | proof-validated |
-| `endless-driving` | Endless Driving | vehicle | tuning, generation, vehicles | proof-validated |
+| `endless-driving` | Endless Driving | vehicle | tuning, generation, vehicles, items | proof-validated |
 | `boat-flight-racer` | Boat / Flight Racer | vehicle | tuning, levels, vehicles | proof-validated |
 
 ## Puzzle / arcade (Phase 7B)
@@ -189,7 +189,7 @@ recipe's *first* stated limitation; see `knownLimitations` in
 | `top-down-racer` | (none stated) |
 | `kart-racer` | (none stated) |
 | `time-trial-racer` | (none stated) |
-| `endless-driving` | Arcade distance for the generated starter is game-specific presentation of sw2d.vehicles + sw2d.arcade; a reusable kart item-fire system is not. |
+| `endless-driving` | (none stated) |
 | `boat-flight-racer` | The boat and flight profiles are bounded arcade handling (momentum, drag, lateral grip, and for flight a 2D altitude band) - not fluid or aerodynamic simulation. |
 | `sokoban` | (none stated) |
 | `match-puzzle` | Match-detection/cascade and falling-piece/line-clear are reusable (sw2d.puzzle-rules); pointer drag-swap, wall-kicks and overlay-local boards are not. |

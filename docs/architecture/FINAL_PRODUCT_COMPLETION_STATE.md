@@ -19,11 +19,11 @@ file is the cursor.
 | field | value |
 |---|---|
 | branch SHA | (see git log; this checkpoint is the Wave 1-3 independent sanity repair) |
-| waves completed | 3 + Wave 1-3 sanity repair + Wave 4 L18 kart held items |
-| limitations closed | 23 / 69 entries (L01-L18) |
-| remaining machine-executable | 46 (35→34 distinct; L18 closed) |
+| waves completed | 3 + sanity repair + Wave 4 L18/L19 kart items |
+| limitations closed | 24 / 69 entries (L01-L19) |
+| remaining machine-executable | 45 |
 | blockers | none |
-| next exact action | Wave 4 remainder: L19 endless-driving items, L20 boat/flight, L21/L22 puzzles, L23/L28 pinball, L25/L46 physics/escape, L26 maze, L27 rhythm/reaction |
+| next exact action | Wave 4 remainder: L20 boat/flight, L21/L22 puzzles, L23/L28 pinball, L25/L46 physics/escape, L26 maze, L27 rhythm/reaction |
 
 ## Checkpoint log
 
@@ -114,3 +114,8 @@ Known leftover (not a Wave 1-3 product hole, not repaired here): `bindStarterPro
 - `npm run typecheck` PASS; items/vehicles/generate/honesty tests PASS.
 - `npm run qa:proof -- kart-racer` PASS; `npm run qa:completion -- kart-racer` PASS (fresh factory, system Chrome).
 - `npm run limitations:extract`: **46** machine-executable remain.
+
+### Wave 4 L19 - endless-driving items / traffic
+- Same held-item loop (`kart-boost` on the road). Traffic + off-road crash; best distance persisted through `context.saves`.
+- `qa:completion -- endless-driving` PASS; `qa:proof -- endless-driving kart-racer` PASS.
+- `npm run limitations:extract`: **45** remain.
