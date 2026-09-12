@@ -272,6 +272,7 @@ requests), then promote. A wave counts as reconciled only when its consumers' pr
 | 5 | traditional-platformer (and every plain platform / top-down generation) | no checkpoint, hazard, quota or exit in a fresh game; "(none stated)" limitation | plain shells never consumed the entity registry | `bindLevelObjectives` in `packages/runtime/src/game-support/levelObjectives.ts`, wired into both plain shell paths | `proofs/traditional-platformer` (checkpoint, hazard reset, quota, exit, frozen input after clear) |
 | 6 | endless-driving, boat-flight-racer, kart-racer | `drive` / `kartItem` HUD binders leaked across restart | vehicle shell `dispose()` omitted them | dispose both | the three proofs' `restartRun` steps |
 | 7 | five frozen proofs (metroidvania, puzzle-platformer, grappling-platformer, exploration-game, physics-toy) | `PROOF_MATRIX.md` promised a frozen `PROOF_CONTRACT.md` that did not exist | pre-program omission | contracts written from the committed specs (proof games untouched) | `proofEvidence.test.ts` now requires a contract with a defining journey for every `proofs/<id>` |
+| 10 | Workbench Fast Preview (found by dispatching the repository's own GitHub Actions workflow; the Category-C tip fails identically, so this predates the program) | on GitHub Actions the image-first journey ended on "Your game is ready to run" - the live preview never started; the QA runner then hung 40 min | `CI=true` makes picocolors colour Vite's output with no TTY, so the announcement carried `\x1b[1m` inside the port digits and `parseViteUrl` never matched (30 s timeout); an untracked dev-server child kept the runner alive; the pane's iframe swap on Fast→Production raced `gameFrame()` | ANSI stripped before parsing (`workbench/test/previewUrl.test.ts` pins both shapes); the preview spawns the repo's vite bin directly in its own process group and stop/timeout kill the group; the runner exits on an unref'd timer; `gameFrame()` returns only a stable, attached iframe and the journeys wait for the `BUILD · RUNNING` pane state | `qa:workbench` 16/16 under `CI=true` and normally; GitHub Actions run recorded in the PR |
 | 9 | the QA harness itself (found by one flaky `qa:starter-kits` run of the run-and-gun kit in the certification ladder: 1 of 4) | Phaser's ten-frame delta smoothing carried the real rAF deltas from before `loop.stop()`, so the first ~8 stepped frames ran at ~13.4 ms (measured) instead of 16.67 - a real-time-dependent physics prologue behind a "deterministic" clock; a `jumpPressed && blocked.down` edge could land one frame off | harness did not seed `deltaHistory` / `lastTime` / the virtual clock | `stopRequestAnimationFrameLoop()` seeds all three; frame 1 is exactly 16.67 ms (measured) | `qa:adversarial` asserts the first stepped delta on every proof |
 | 8 | every top-down generation (found by the clean-checkout ladder, not by the proofs) | `tsc` TS2448: the new objectives block read the `worldGraph` const before its declaration; Vite bundled it and 74 real-browser proofs passed | template ordering | block moved after the declaration; the 16 top-down proofs refreshed from the fixed template (verbatim copy) | `packages/cli/test/shellTemplatesTypecheck.test.ts` typechecks one generated game per controller family in `npm test` (verified load-bearing against the old template) |
 
@@ -346,8 +347,11 @@ development path, `npm ci` the clean-checkout path.
 
 CI: the repository's two workflows trigger only on `starter-kits/implement-all`, `feature/**`,
 `qa/full-workbench-revalidation` and `workflow_dispatch` — nothing runs on a pull request or on a
-`claude/**` branch by itself. The "Full Workbench Revalidation" workflow was dispatched by hand
-against the final head; its outcome is recorded in the pull request.
+`claude/**` branch by itself. The "Full Workbench Revalidation" workflow was dispatched by hand:
+on `2ee2a4c` it failed `WB-IMAGE-001` and hung to the job timeout; a control dispatch on the
+Category-C tip `81fcb51` failed identically (the last green run of this workflow was 2026-08-27,
+before the Arena and Category-C programs), so the failure predated this program. Root cause and
+fix are repair #10; the run on the final head is recorded in the pull request.
 
 ## Final state
 

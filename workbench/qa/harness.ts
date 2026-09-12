@@ -176,7 +176,16 @@ export async function startWorkbenchSession(): Promise<WorkbenchSession> {
       const frame = element ? await element.contentFrame().catch(() => null) : null;
       if (frame) {
         const ready = await frame.evaluate(() => Boolean((window as unknown as { __SW2D__?: unknown }).__SW2D__)).catch(() => false);
-        if (ready && !frame.isDetached()) return frame;
+        if (ready && !frame.isDetached()) {
+          // Stability: the same element must still be the pane's iframe a
+          // moment later, or a re-render is mid-swap and this frame is about
+          // to detach.
+          await page.waitForTimeout(400);
+          const again = await page.$('iframe.preview__frame').catch(() => null);
+          const sameFrame = again ? await again.contentFrame().catch(() => null) : null;
+          if (sameFrame === frame && !frame.isDetached()) return frame;
+          continue;
+        }
       }
       if (Date.now() > deadline) throw new Error('The preview frame never reported a running SW2D runtime.');
       await page.waitForTimeout(500);

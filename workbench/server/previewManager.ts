@@ -38,9 +38,18 @@ export function nextGeneration(): number {
   return ++generationCounter;
 }
 
-/** Reads the dev server's own "Local: http://..." announcement rather than guessing a port. */
-function parseViteUrl(text: string): string | null {
-  const match = /(https?:\/\/(?:127\.0\.0\.1|localhost):\d+\/?)/.exec(text);
+/**
+ * Reads the dev server's own "Local: http://..." announcement rather than
+ * guessing a port. ANSI escapes are stripped first: Vite colours its output
+ * whenever `CI` is set even with no TTY attached (picocolors treats `CI` as
+ * colour support), which puts `\x1b[1m` inside the port digits and made the
+ * Fast Preview time out on every GitHub Actions run of the workbench QA
+ * while passing on developer machines (Category-C convergence).
+ */
+export function parseViteUrl(text: string): string | null {
+  // eslint-disable-next-line no-control-regex
+  const plain = text.replace(/\x1b\[[0-9;]*[A-Za-z]/g, '');
+  const match = /(https?:\/\/(?:127\.0\.0\.1|localhost):\d+\/?)/.exec(plain);
   return match ? match[1]!.replace(/\/$/, '') : null;
 }
 

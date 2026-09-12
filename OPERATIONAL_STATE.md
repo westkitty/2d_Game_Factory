@@ -41,6 +41,10 @@ What is now **verified** (real system Chrome, this machine, exact commands in th
   clean-checkout ladder's `tsc`, now guarded by a per-family template typecheck in `npm test`).
   The QA harness itself was found not to own the first ~8 stepped frames (Phaser's delta
   smoothing carried real rAF deltas; ~13.4 ms measured) - fixed and asserted by `qa:adversarial`.
+  Dispatching the repository's GitHub Actions workflow found the Workbench Fast Preview had
+  never started under `CI=true` (Vite colours its URL announcement; the parser missed it) and
+  the QA runner hung afterwards - both predate this program (the Category-C tip fails the same
+  way); fixed and pinned (`workbench/test/previewUrl.test.ts`, `qa:workbench` 16/16 under `CI=true`).
 - `npm run qa:adversarial` (new) 74/74 after that fix; `npm run qa:performance` (new): eight
   workloads at 60 fps, 0 frames > 50 ms, heap flat across five restarts (desktop only).
 - Workbench exercised manually in a real browser on the convergence head: preset catalogue
