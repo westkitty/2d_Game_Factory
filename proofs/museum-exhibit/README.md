@@ -68,7 +68,7 @@ with a small working placeholder to replace. Every other pack is configured as J
 
 ## Known preset limitations
 
-- Exhibit entries are reusable (sw2d.codex); portraits and a dedicated museum lighting/presentation overlay are not.
+- (none stated)
 
 ## How to add a level
 

@@ -4,13 +4,23 @@
   "entries": [
     {
       "id": "plinth",
-      "title": "Plinth",
-      "body": "A stone plinth holds the first exhibit."
+      "title": "Moon Vessel",
+      "body": "A stone vessel recovered from the north gallery.",
+      "x": 280,
+      "y": 270,
+      "image": "moon-vessel",
+      "portrait": "vessel-profile",
+      "spotlightColor": "#7aa2f7"
     },
     {
       "id": "bust",
-      "title": "Bust",
-      "body": "A carved bust watches the hall."
+      "title": "Keeper Bust",
+      "body": "A carved keeper watches the hall.",
+      "x": 700,
+      "y": 270,
+      "image": "keeper-bust",
+      "portrait": "keeper-profile",
+      "spotlightColor": "#f0c274"
     }
   ]
 }

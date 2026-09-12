@@ -14,6 +14,8 @@ interface Dialogue {
   readonly outcome: string;
   readonly flags: readonly string[];
   readonly lastResult: string | null;
+  readonly scene: { readonly id: string; readonly background: string; readonly backgroundImage?: string } | null;
+  readonly speakerPresentation: { readonly id: string; readonly portrait: string; readonly position: string } | null;
 }
 interface Shell {
   readonly dialogue?: Dialogue;
@@ -27,7 +29,7 @@ export async function run(harness: Harness): Promise<SmokeOutcome> {
   const booted = await readSnapshot(harness);
   const initial = await d();
   evidence.initial = initial;
-  const startedOk = booted.installedPacks.includes('sw2d.dialogue') && initial.active && initial.mode === 'novel' && initial.step === 0;
+  const startedOk = booted.installedPacks.includes('sw2d.dialogue') && initial.active && initial.mode === 'novel' && initial.step === 0 && initial.scene?.backgroundImage === 'station-night' && initial.speakerPresentation?.portrait === 'narrator-silhouette';
 
   // Advance two lines; the third node is a choice with two options.
   await harness.keyTap('Space');
@@ -45,8 +47,8 @@ export async function run(harness: Harness): Promise<SmokeOutcome> {
   const midnight = await d();
   evidence.branched = branched;
   evidence.midnight = { ending: midnight.ending, outcome: midnight.outcome, flags: midnight.flags };
-  const branchOk = moved.selectedIndex === 1 && branched.branch === 'keep-the-secret';
-  const endingOk = midnight.ending === 'midnight-ending' && midnight.outcome === 'complete';
+  const branchOk = moved.selectedIndex === 1 && choice.speakerPresentation?.position === 'right' && branched.branch === 'keep-the-secret';
+  const endingOk = midnight.ending === 'midnight-ending' && midnight.outcome === 'complete' && midnight.scene?.id === 'platform';
 
   // Advancing past the ending is inert.
   await harness.keyTap('Space');
@@ -65,7 +67,7 @@ export async function run(harness: Harness): Promise<SmokeOutcome> {
   await harness.keyTap('Space');
   const dawn = await d();
   evidence.dawn = { branch: dawn.branch, ending: dawn.ending, outcome: dawn.outcome };
-  const otherBranchOk = dawn.ending === 'dawn-ending' && dawn.outcome === 'complete' && dawn.branch !== branched.branch;
+  const otherBranchOk = dawn.ending === 'dawn-ending' && dawn.outcome === 'complete' && dawn.branch !== branched.branch && dawn.scene?.id === 'dawn' && dawn.scene.backgroundImage === 'station-dawn';
 
   const passed = startedOk && choiceOk && branchOk && endingOk && inertOk && restartOk && otherBranchOk;
   return { passed, details: { ...evidence, startedOk, choiceOk, branchOk, endingOk, inertOk, restartOk, otherBranchOk } };

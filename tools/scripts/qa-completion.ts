@@ -83,6 +83,12 @@ export const COMPLETION_SPEC_MODULES: Readonly<Record<string, string>> = {
   'aquarium-terrarium': 'aquariumTerrarium',
   'virtual-pet': 'virtualPet',
   'colony-lite': 'colonyLite',
+  // Wave 8 - authored narrative presentation, parser grammar and evidence/exhibit boards
+  'visual-novel': 'visualNovel',
+  'point-and-click': 'pointAndClick',
+  'interactive-fiction-hybrid': 'interactiveFictionHybrid',
+  'investigation-game': 'investigationGame',
+  'museum-exhibit': 'museumExhibit',
 };
 
 interface Target {

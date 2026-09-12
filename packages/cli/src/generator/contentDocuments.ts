@@ -1074,7 +1074,7 @@ export function generateNeedsCatalog(kind: 'creature' | 'habitat' | 'companion' 
  * bounded starter modes match the two consumers: novel (auto-start, choice,
  * two endings) and adventure (hotspot start, gated exit).
  */
-export function generateDialogueCatalog(kind: 'novel' | 'adventure' | 'none'): Record<string, unknown> {
+export function generateDialogueCatalog(kind: 'novel' | 'adventure' | 'fiction' | 'none'): Record<string, unknown> {
   const empty = {
     schemaVersion: 1,
     mode: 'novel',
@@ -1086,48 +1086,84 @@ export function generateDialogueCatalog(kind: 'novel' | 'adventure' | 'none'): R
       schemaVersion: 1,
       mode: 'novel',
       startConversationId: 'station',
+      scenes: [
+        { id: 'platform', title: 'Old Station', background: '#17233d', backgroundImage: 'station-night' },
+        { id: 'dawn', title: 'Dawn Platform', background: '#6b4f63', backgroundImage: 'station-dawn' },
+      ],
+      speakers: [
+        { id: 'narrator', displayName: 'Narrator', portrait: 'narrator-silhouette', position: 'center', color: '#8a93a6' },
+        { id: 'stranger', displayName: 'Stranger', portrait: 'stranger-coat', position: 'right', color: '#b98af0' },
+      ],
       conversations: [
         {
           id: 'station',
           startNodeId: 'n0',
           nodes: [
-            { id: 'n0', kind: 'line', speaker: 'Narrator', text: 'A stranger arrives at the old station.', next: 'n1' },
-            { id: 'n1', kind: 'line', speaker: 'Stranger', text: 'They ask you to choose what happens next.', next: 'n2' },
+            { id: 'n0', kind: 'line', speaker: 'Narrator', speakerId: 'narrator', sceneId: 'platform', text: 'A stranger arrives at the old station.', next: 'n1' },
+            { id: 'n1', kind: 'line', speaker: 'Stranger', speakerId: 'stranger', sceneId: 'platform', text: 'They ask you to choose what happens next.', next: 'n2' },
             {
               id: 'n2',
               kind: 'choice',
               speaker: 'Stranger',
+              speakerId: 'stranger',
+              sceneId: 'platform',
               text: 'What do you do?',
               choices: [
                 { id: 'help', text: 'Help the stranger', next: 'n3', branchId: 'help-the-stranger', setFlag: 'helped' },
                 { id: 'secret', text: 'Keep the secret', next: 'n4', branchId: 'keep-the-secret', setFlag: 'secret' },
               ],
             },
-            { id: 'n3', kind: 'end', speaker: 'Narrator', text: 'Your choice changes the final scene.', ending: 'dawn-ending' },
-            { id: 'n4', kind: 'end', speaker: 'Narrator', text: 'Your choice changes the final scene.', ending: 'midnight-ending' },
+            { id: 'n3', kind: 'end', speaker: 'Narrator', speakerId: 'narrator', sceneId: 'dawn', text: 'Your choice changes the final scene.', ending: 'dawn-ending' },
+            { id: 'n4', kind: 'end', speaker: 'Narrator', speakerId: 'narrator', sceneId: 'platform', text: 'Your choice changes the final scene.', ending: 'midnight-ending' },
           ],
         },
       ],
     };
   }
+  if (kind === 'fiction') {
+    return {
+      schemaVersion: 1,
+      mode: 'novel',
+      conversations: [],
+      parser: {
+        startNodeId: 'cabin',
+        prompt: 'What now?',
+        objects: [
+          { id: 'note', nouns: ['note'], aliases: ['crumpled note', 'paper'] },
+          { id: 'key', nouns: ['key'], aliases: ['brass key'] },
+          { id: 'door', nouns: ['door'], aliases: ['locked door'] },
+        ],
+        commands: [
+          { id: 'look-note', verb: 'look', aliases: ['examine', 'inspect'], objectId: 'note', setFlags: ['saw-note'], nodeId: 'note-seen', text: 'The note says: the brass key is beneath the lamp.' },
+          { id: 'take-key', verb: 'take', aliases: ['get'], objectId: 'key', requireFlags: ['saw-note'], setFlags: ['has-key'], nodeId: 'key-taken', text: 'You take the brass key.' },
+          { id: 'unlock-door', verb: 'unlock', aliases: ['open'], objectId: 'door', indirectObjectId: 'key', requireFlags: ['has-key'], nodeId: 'escaped', text: 'The key turns. You step outside.', ending: 'escaped' },
+        ],
+        unknownVerb: 'Try LOOK, TAKE, or UNLOCK.',
+        unknownObject: 'You cannot identify that object here.',
+        blocked: 'That is not possible yet.',
+      },
+    };
+  }
   return {
     schemaVersion: 1,
     mode: 'adventure',
+    scenes: [{ id: 'study', title: 'Clockwork Study', background: '#241b2f', backgroundImage: 'study' }],
+    speakers: [{ id: 'you', displayName: 'You', portrait: 'detective-profile', position: 'left', color: '#65d0a8' }],
     conversations: [
       {
         id: 'note',
         startNodeId: 'n',
-        nodes: [{ id: 'n', kind: 'end', speaker: 'You', text: 'A crumpled note: the clock is lying.', setFlag: 'saw-note' }],
+        nodes: [{ id: 'n', kind: 'end', speaker: 'You', speakerId: 'you', sceneId: 'study', text: 'A crumpled note: the clock is lying.', setFlag: 'saw-note' }],
       },
       {
         id: 'clock',
         startNodeId: 'c',
-        nodes: [{ id: 'c', kind: 'end', speaker: 'You', text: 'The clock hides a small brass key.', setFlag: 'saw-clock' }],
+        nodes: [{ id: 'c', kind: 'end', speaker: 'You', speakerId: 'you', sceneId: 'study', text: 'The clock hides a small brass key.', setFlag: 'saw-clock' }],
       },
       {
         id: 'door',
         startNodeId: 'd',
-        nodes: [{ id: 'd', kind: 'end', speaker: 'You', text: 'The door swings open.', ending: 'escaped' }],
+        nodes: [{ id: 'd', kind: 'end', speaker: 'You', speakerId: 'you', sceneId: 'study', text: 'The door swings open.', ending: 'escaped' }],
       },
     ],
     hotspots: [
@@ -1713,8 +1749,8 @@ export function generateCodexCatalog(kind: 'exhibit' | 'case' | 'none'): Record<
       schemaVersion: 1,
       mode: 'exhibit',
       entries: [
-        { id: 'plinth', title: 'Plinth', body: 'A stone plinth holds the first exhibit.' },
-        { id: 'bust', title: 'Bust', body: 'A carved bust watches the hall.' },
+        { id: 'plinth', title: 'Moon Vessel', body: 'A stone vessel recovered from the north gallery.', x: 280, y: 270, image: 'moon-vessel', portrait: 'vessel-profile', spotlightColor: '#7aa2f7' },
+        { id: 'bust', title: 'Keeper Bust', body: 'A carved keeper watches the hall.', x: 700, y: 270, image: 'keeper-bust', portrait: 'keeper-profile', spotlightColor: '#f0c274' },
       ],
     };
   }
@@ -1724,6 +1760,10 @@ export function generateCodexCatalog(kind: 'exhibit' | 'case' | 'none'): Record<
     entries: [
       { id: 'print', title: 'Print', body: 'A boot print by the window.' },
       { id: 'photo', title: 'Photo', body: 'A torn photograph of the hall.' },
+    ],
+    deductions: [
+      { id: 'false-lead', requireEntries: ['print', 'photo'], links: [['print', 'photo']], conclusion: 'The groundskeeper acted alone.', valid: false },
+      { id: 'window-route', requireEntries: ['print', 'photo'], links: [['print', 'photo']], conclusion: 'The print and torn photo place the visitor at the window.', valid: true },
     ],
   };
 }

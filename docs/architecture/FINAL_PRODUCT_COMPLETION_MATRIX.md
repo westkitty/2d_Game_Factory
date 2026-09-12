@@ -418,23 +418,31 @@ exceptions: physical hardware certification and the user-owned public-license ch
 - **Presets:** `visual-novel`, `point-and-click`
 - **Architecture:** `sw2d.dialogue` speakers with portraits + scene backgrounds/composition (`content/dialogue.json`), `bindStarterDialogue` renders them; parser (L43) and evidence board (L44) are the other presets' rows.
 - **Checkpoint:** Wave 8.
+- **Closed by:** scene and speaker presentation fields in the validated dialogue catalog, `DialogueService.presentation()`, and the generated dialogue binder's backdrop/portrait composition. Visual novel proves two distinct scenes and portrait placement across both branches; point-and-click proves authored hotspot conversations, flag-gated door, scene, portrait, ending, and restart. **Browser:** fresh completion and committed proof journeys PASS.
+- **Status:** CLOSED (Wave 8).
 
 ### L43 - parser IF
 - **Source text:** "Nodes, flags, choices and seen entries are reusable (sw2d.narrative); a dedicated parser/text-command system and an evidence-board/deduction/linking system are not."
 - **Presets:** `interactive-fiction-hybrid`, `investigation-game`
-- **Architecture:** `sw2d.narrative` parser (verbs, nouns, aliases, object resolution, invalid-command feedback, state changes) authored in `content/narrative.json`; DOM text input in `bindStarterNarrative` fiction mode.
+- **Architecture:** `sw2d.narrative` parser (verbs, nouns, aliases, object resolution, invalid-command feedback, state changes) authored in `content/dialogue.json`; Document Object Model (DOM) text input in `bindStarterNarrative` fiction mode.
 - **Checkpoint:** Wave 8.
+- **Closed by:** catalog parser objects/commands with verb aliases, direct and indirect objects, required flags, transcript, explicit feedback, and ending; the generated fiction binder provides a real text input. **Browser:** unknown verb → blocked take → inspect note → take key → unlock door with key → escaped → restart PASS.
+- **Status:** CLOSED (Wave 8).
 
 ### L44 - evidence board (same source text as L43, investigation half)
 - **Presets:** `investigation-game`
 - **Architecture:** `sw2d.codex` evidence + links (valid/invalid deductions, unlocked conclusions, case completion) authored in `content/codex.json`; `bindStarterNarrative` case mode board overlay.
 - **Checkpoint:** Wave 8.
+- **Closed by:** authored deductions in `sw2d.codex`, including required evidence, invalid-theory rejection, valid links/conclusion, and reset state; the case binder renders cards, link, rejection, and conclusion. **Browser:** collect two clues → reject false lead → solve window route → linked conclusion → restart PASS.
+- **Status:** CLOSED (Wave 8).
 
 ### L45 - museum presentation
 - **Source text:** "Exhibit entries are reusable (sw2d.codex); portraits and a dedicated museum lighting/presentation overlay are not."
 - **Presets:** `museum-exhibit`
 - **Architecture:** `bindStarterLook` museum mode: exhibit portraits, lighting vignette/spotlight layer, inspection panel, tour completion.
 - **Checkpoint:** Wave 8.
+- **Closed by:** codex entry position/image/portrait/spotlight metadata consumed by the museum binder's authored markers, vignette, spotlight, inspection panel, and dynamic tour counter. **Browser:** inspect both authored exhibits → overlay metadata visible → tour complete → restart PASS.
+- **Status:** CLOSED (Wave 8).
 
 ### L46 - escape-room grammar
 - **Source text:** "No content-authored escape-room puzzle grammar exists yet."
@@ -546,10 +554,10 @@ exceptions: physical hardware certification and the user-owned public-license ch
 | L39 | farming-lite | 6 | CLOSED | wave 6 plots |
 | L40 | pet-creature, aquarium-terrarium, virtual-pet | 7 | CLOSED | wave 7 |
 | L41 | colony-lite | 7 | CLOSED | wave 7 |
-| L42 | visual-novel, point-and-click | 8 | OPEN | |
-| L43 | interactive-fiction-hybrid | 8 | OPEN | |
-| L44 | investigation-game | 8 | OPEN | |
-| L45 | museum-exhibit | 8 | OPEN | |
+| L42 | visual-novel, point-and-click | 8 | CLOSED | wave 8 |
+| L43 | interactive-fiction-hybrid | 8 | CLOSED | wave 8 |
+| L44 | investigation-game | 8 | CLOSED | wave 8 |
+| L45 | museum-exhibit | 8 | CLOSED | wave 8 |
 | L46 | escape-room | 4 | CLOSED | wave 4 puzzle grammar |
 | L47 | microgame-collection | 9 | OPEN | |
 | L48 | physics-toy | 9 | OPEN | |

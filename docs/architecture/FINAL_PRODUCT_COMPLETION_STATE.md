@@ -19,11 +19,11 @@ file is the cursor.
 | field | value |
 |---|---|
 | branch SHA | (see git log; this checkpoint is Wave 6 complete) |
-| waves completed | 3 + sanity repair + Wave 4 + Wave 5 + Wave 6 + Wave 7 |
-| limitations closed | 54 / 69 entries |
-| remaining machine-executable | 15 |
+| waves completed | 3 + sanity repair + Wave 4 + Wave 5 + Wave 6 + Wave 7 + Wave 8 |
+| limitations closed | 59 / 69 entries |
+| remaining machine-executable | 10 |
 | blockers | none |
-| next exact action | Wave 8 narrative (L42-L45) |
+| next exact action | Wave 9 party / toy / operational closeout (L24, L47-L51, X01-X04) |
 
 ## Checkpoint log
 
@@ -185,3 +185,11 @@ Known leftover (not a Wave 1-3 product hole, not repaired here): `bindStarterPro
 - `npm run qa:completion -- pet-creature aquarium-terrarium virtual-pet colony-lite` 4/4 PASS (fresh factory output, system Chrome).
 - `npm run qa:proof -- pet-creature aquarium-terrarium virtual-pet colony-lite` 4/4 PASS.
 - `npm run limitations:extract`: **15** machine-executable remain (54/69 entries closed). Wave 7 matrix rows are closed.
+
+### Wave 8 L42-L45 - authored narrative / parser / evidence / museum presentation
+- `content/dialogue.json` now authors visual-novel and point-and-click scenes, background identities, speakers, portraits, placement, and interactive-fiction parser grammar. `sw2d.dialogue` exposes current presentation; `sw2d.narrative` resolves typed verbs, aliases, direct/indirect objects, gates, feedback, state changes, transcript, and ending.
+- `sw2d.codex` now exposes exhibit presentation metadata plus authored valid/invalid deductions, evidence links, conclusions, and invalid-attempt state. Generated investigation and museum binders render those states without duplicating ownership.
+- `npm run typecheck` PASS; focused contracts/packs/schemas/generation/runtime tests PASS (23 files / 2,422 tests).
+- `npm run qa:completion -- visual-novel point-and-click interactive-fiction-hybrid investigation-game museum-exhibit` 5/5 PASS (fresh factory output, system Chrome).
+- Limitation entries removed only after the generated-browser journeys passed; Wave 8 proof refresh/check and committed-proof run are recorded in the Wave 8 evidence file.
+- `npm run limitations:extract`: **10** machine-executable entries remain (59/69 entries closed). Wave 8 matrix rows are closed.

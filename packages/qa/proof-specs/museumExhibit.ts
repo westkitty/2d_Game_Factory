@@ -10,6 +10,11 @@ interface Look {
   readonly nearId: string | null;
   readonly lastResult: string | null;
   readonly outcome: string;
+  readonly entries: readonly { readonly id: string; readonly title: string; readonly image: string | null; readonly portrait: string | null; readonly spotlightColor: string | null; readonly inspected: boolean }[];
+  readonly inspection: { readonly id: string; readonly title: string; readonly body: string; readonly image: string | null; readonly portrait: string | null } | null;
+  readonly spotlightVisible: boolean;
+  readonly vignetteVisible: boolean;
+  readonly tourProgress: string;
 }
 interface Shell {
   readonly x: number;
@@ -23,7 +28,7 @@ export async function run(harness: Harness): Promise<SmokeOutcome> {
   const booted = await readSnapshot(harness);
   const initial = await read();
   evidence.initial = { x: initial.x, look: initial.look };
-  const startedOk = booted.installedPacks.includes('sw2d.codex') && initial.look?.mode === 'museum' && initial.look.inspected === 0 && initial.look.outcome === 'playing';
+  const startedOk = booted.installedPacks.includes('sw2d.codex') && initial.look?.mode === 'museum' && initial.look.inspected === 0 && initial.look.entries.length === 2 && initial.look.entries.every((entry) => entry.image && entry.portrait && entry.spotlightColor) && initial.look.outcome === 'playing';
 
   // Reading with no plaque in reach is refused.
   await harness.keyTap('KeyJ');
@@ -40,7 +45,7 @@ export async function run(harness: Harness): Promise<SmokeOutcome> {
   await harness.stepFrames(4);
   const oneAgain = (await read()).look!;
   evidence.plinth = { x: atPlinth.x, look: one, again: oneAgain.inspected };
-  const plinthOk = atPlinth.look?.nearId === 'plinth' && one.inspected === 1 && one.lastResult === 'inspected-plinth' && oneAgain.inspected === 1 && one.outcome === 'playing';
+  const plinthOk = atPlinth.look?.nearId === 'plinth' && one.inspected === 1 && one.lastResult === 'inspected-plinth' && oneAgain.inspected === 1 && one.outcome === 'playing' && one.inspection?.id === 'plinth' && one.inspection.title === 'Moon Vessel' && one.spotlightVisible && one.vignetteVisible && one.tourProgress === '1/2';
 
   // The bust completes the exhibit.
   const atBust = await holdUntil(harness, ['ArrowRight'], read, (s) => s.look?.nearId === 'bust');
@@ -48,7 +53,7 @@ export async function run(harness: Harness): Promise<SmokeOutcome> {
   await harness.stepFrames(6);
   const done = (await read()).look!;
   evidence.done = { x: atBust.x, look: done };
-  const doneOk = atBust.look?.nearId === 'bust' && done.inspected === 2 && done.lastResult === 'read' && done.outcome === 'complete';
+  const doneOk = atBust.look?.nearId === 'bust' && done.inspected === 2 && done.lastResult === 'read' && done.outcome === 'complete' && done.inspection?.id === 'bust' && done.tourProgress === '2/2';
 
   const run = await restartRun(harness);
   const fresh = await read();

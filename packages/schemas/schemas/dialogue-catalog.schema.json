@@ -17,7 +17,10 @@
     "hotspots": {
       "type": "array",
       "items": { "$ref": "#/definitions/hotspot" }
-    }
+    },
+    "speakers": { "type": "array", "items": { "$ref": "#/definitions/speaker" } },
+    "scenes": { "type": "array", "items": { "$ref": "#/definitions/scene" } },
+    "parser": { "$ref": "#/definitions/parser" }
   },
   "definitions": {
     "conversation": {
@@ -45,10 +48,56 @@
         "next": { "type": ["string", "null"] },
         "ending": { "type": "string", "minLength": 1 },
         "setFlag": { "type": "string", "minLength": 1 },
+        "sceneId": { "type": "string", "minLength": 1 },
+        "speakerId": { "type": "string", "minLength": 1 },
         "choices": {
           "type": "array",
           "items": { "$ref": "#/definitions/choice" }
         }
+      }
+    },
+    "speaker": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "displayName", "portrait", "position"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 }, "displayName": { "type": "string", "minLength": 1 },
+        "portrait": { "type": "string", "minLength": 1 }, "position": { "type": "string", "enum": ["left", "center", "right"] },
+        "color": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$" }
+      }
+    },
+    "scene": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "title", "background"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 }, "title": { "type": "string", "minLength": 1 },
+        "background": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$" }, "backgroundImage": { "type": "string", "minLength": 1 }
+      }
+    },
+    "parserObject": {
+      "type": "object", "additionalProperties": false, "required": ["id", "nouns"],
+      "properties": { "id": { "type": "string", "minLength": 1 }, "nouns": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } }, "aliases": { "type": "array", "items": { "type": "string", "minLength": 1 } } }
+    },
+    "parserCommand": {
+      "type": "object", "additionalProperties": false, "required": ["id", "verb", "nodeId", "text"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 }, "verb": { "type": "string", "minLength": 1 },
+        "aliases": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "objectId": { "type": "string", "minLength": 1 }, "indirectObjectId": { "type": "string", "minLength": 1 },
+        "requireFlags": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "forbidFlags": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "setFlags": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "clearFlags": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "nodeId": { "type": "string", "minLength": 1 }, "text": { "type": "string", "minLength": 1 }, "ending": { "type": "string", "minLength": 1 }
+      }
+    },
+    "parser": {
+      "type": "object", "additionalProperties": false,
+      "required": ["startNodeId", "prompt", "objects", "commands", "unknownVerb", "unknownObject", "blocked"],
+      "properties": {
+        "startNodeId": { "type": "string", "minLength": 1 }, "prompt": { "type": "string", "minLength": 1 },
+        "objects": { "type": "array", "items": { "$ref": "#/definitions/parserObject" } },
+        "commands": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/parserCommand" } },
+        "unknownVerb": { "type": "string", "minLength": 1 }, "unknownObject": { "type": "string", "minLength": 1 }, "blocked": { "type": "string", "minLength": 1 }
       }
     },
     "choice": {

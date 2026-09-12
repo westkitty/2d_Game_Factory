@@ -266,7 +266,9 @@ export function buildGameFiles(gameId: string, preset: PresetDefinition): Map<st
     'content/dialogue.json',
     JSON.stringify(
       generateDialogueCatalog(
-        requiredPackIds.includes('sw2d.dialogue')
+        preset.id === 'interactive-fiction-hybrid'
+          ? 'fiction'
+          : requiredPackIds.includes('sw2d.dialogue')
           ? preset.id === 'point-and-click'
             ? 'adventure'
             : 'novel'

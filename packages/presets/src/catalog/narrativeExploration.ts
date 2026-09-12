@@ -1,6 +1,6 @@
 import type { PresetDefinition } from '@sw2d/contracts';
 import { PACK_IDS } from '@sw2d/packs/ids';
-import { LIMITATIONS, POINTER_INPUT_MODES, VALIDATION_PROFILES, definePreset, pack } from '../shared.ts';
+import { POINTER_INPUT_MODES, VALIDATION_PROFILES, definePreset, pack } from '../shared.ts';
 
 /**
  * Family H - Narrative / exploration (recipes 58-64).
@@ -15,10 +15,10 @@ import { LIMITATIONS, POINTER_INPUT_MODES, VALIDATION_PROFILES, definePreset, pa
  * `ui-simulation`) for the two whose defining interaction is clicking
  * something (`point-and-click`, `escape-room`).
  *
- * `sw2d.narrative` remains the lightweight flag/node/seen store.
- * Branching graphs live in `sw2d.dialogue` (Category-C Wave 3). Category-C
- * Wave 14 consumes the store for menu-verb IF vs walk-and-inspect clues;
- * parser IF, evidence boards and exhibits stay out of the pack.
+ * Branching and authored presentation live in `sw2d.dialogue`; typed parser
+ * commands live in `sw2d.narrative`; evidence and exhibit metadata live in
+ * `sw2d.codex`. Generated binders render each catalog without introducing a
+ * second state owner.
  */
 export const NARRATIVE_EXPLORATION_PRESETS: readonly PresetDefinition[] = [
   definePreset({
@@ -46,7 +46,7 @@ export const NARRATIVE_EXPLORATION_PRESETS: readonly PresetDefinition[] = [
     optionalSystemPacks: [pack(PACK_IDS.progression)],
     requiredContentRoles: ['tuning', 'dialogue'],
     validationProfile: VALIDATION_PROFILES.narrativeExploration,
-    knownLimitations: [LIMITATIONS.dialoguePresentation],
+    knownLimitations: [],
   }),
 
   definePreset({
@@ -63,7 +63,7 @@ export const NARRATIVE_EXPLORATION_PRESETS: readonly PresetDefinition[] = [
     // Spatial pointer position, hover targets and world-coordinate click/drag
     // targeting are implemented and consumed by the pointer shell (capability
     // program Phase 1, ADR-0018; proof: proofs/point-and-click/).
-    knownLimitations: [LIMITATIONS.dialoguePresentation],
+    knownLimitations: [],
   }),
 
   definePreset({
@@ -76,7 +76,7 @@ export const NARRATIVE_EXPLORATION_PRESETS: readonly PresetDefinition[] = [
     optionalSystemPacks: [pack(PACK_IDS.world)],
     requiredContentRoles: ['tuning', 'dialogue'],
     validationProfile: VALIDATION_PROFILES.narrativeExploration,
-    knownLimitations: [LIMITATIONS.narrativeStore],
+    knownLimitations: [],
   }),
 
   definePreset({
@@ -90,7 +90,7 @@ export const NARRATIVE_EXPLORATION_PRESETS: readonly PresetDefinition[] = [
     requiredContentRoles: ['tuning', 'levels', 'dialogue', 'codex'],
     supportedInputModes: POINTER_INPUT_MODES,
     validationProfile: VALIDATION_PROFILES.narrativeExploration,
-    knownLimitations: [LIMITATIONS.narrativeStore],
+    knownLimitations: [],
   }),
 
   definePreset({
@@ -104,9 +104,7 @@ export const NARRATIVE_EXPLORATION_PRESETS: readonly PresetDefinition[] = [
     requiredContentRoles: ['tuning', 'levels', 'exhibits', 'codex'],
     supportedInputModes: POINTER_INPUT_MODES,
     validationProfile: VALIDATION_PROFILES.narrativeExploration,
-    knownLimitations: [
-      'Exhibit entries are reusable (sw2d.codex); portraits and a dedicated museum lighting/presentation overlay are not.',
-    ],
+    knownLimitations: [],
   }),
 
   definePreset({
