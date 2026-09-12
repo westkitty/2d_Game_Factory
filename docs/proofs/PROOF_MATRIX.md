@@ -147,8 +147,8 @@ directly), froze a `PROOF_CONTRACT.md`, and committed a real-browser spec under
 
 | Proof | Preset | Reusable capability exercised | Game-specific mechanics | Browser journey | Status |
 |---|---|---|---|---|---|
-| `proofs/physics-puzzle/` | `physics-puzzle` | `sw2d.puzzle` code seam (`physics-goal`) + Matter ball | Nudge presentation | Idle 60 frames never solves; one nudge lands the ball in the goal (`solved`, x ≥ 740); restart | PASS |
-| `proofs/escape-room/` | `escape-room` | `sw2d.puzzle` code seam (`escape-locks`) + ADR-0018 clicks | Two hotspots | Lock before note `locked`; note (idempotent); lock → key + `solved`; restart | PASS |
+| `proofs/physics-puzzle/` | `physics-puzzle` | `sw2d.puzzle-rules` `physics-goal` + Matter ball | Nudge / launch presentation | Idle 60 frames never solves; one nudge lands the ball in the goal (`solved`, x ≥ 740); restart | PASS |
+| `proofs/escape-room/` | `escape-room` | `sw2d.puzzle-rules` `escape` + ADR-0018 clicks | Inspect hotspots from content | Lock before note `locked`; note (idempotent); lock → key + `solved`; restart | PASS |
 | `proofs/drawing-game/` | `drawing-game` | ADR-0018 spatial-pointer drag (`POINTER_STARTER 'draw'`) | Stroke presentation | Tap is not a stroke; 320 px drag is one stroke ≥ 300; second completes; restart | PASS |
 | `proofs/dress-up-character-toy/` | `dress-up-character-toy` | ADR-0018 drag capture + drop-zone (`'wardrobe'`) | Wardrobe | Off-figure drop does not attach; mid-drag `draggingId 'hat'`; hat then shirt attach → `complete`; restart | PASS |
 | `proofs/sandbox-playground/` | `sandbox-playground` | ADR-0018 click stamps + pick/move/delete (`TOY_STARTER 'sandbox'`) | Authoring | Stamp → hold → move; remove then `empty`; re-stamp + ball → `complete`; restart | PASS |

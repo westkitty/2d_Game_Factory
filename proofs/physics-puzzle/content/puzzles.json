@@ -1,4 +1,21 @@
 {
   "schemaVersion": 1,
-  "puzzles": []
+  "puzzles": [
+    {
+      "id": "starter",
+      "kind": "physics-goal",
+      "launchLimit": 8,
+      "goals": [
+        {
+          "entityId": "ball",
+          "zone": {
+            "x": 740,
+            "y": 430,
+            "width": 120,
+            "height": 100
+          }
+        }
+      ]
+    }
+  ]
 }

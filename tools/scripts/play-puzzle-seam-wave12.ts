@@ -91,7 +91,7 @@ async function escapeRun(harness: Harness): Promise<SmokeOutcome> {
   const unlocked = await readShellState<PointerShell>(harness, 'game.pointer-shell');
 
   const passed =
-    initial.puzzle?.kind === 'escape-locks' &&
+    initial.puzzle?.kind === 'escape' &&
     initial.puzzle.note === false &&
     initial.puzzle.key === false &&
     initial.puzzle.solved === false &&

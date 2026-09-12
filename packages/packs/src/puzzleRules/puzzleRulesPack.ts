@@ -4,6 +4,7 @@ import type {
   GameContext,
   GridDir,
   InstalledSystemPack,
+  EscapeRules,
   MatchRules,
   PhysicsGoalRules,
   PuzzleOp,
@@ -20,7 +21,7 @@ import { CAPABILITY_IDS, PACK_IDS } from '../ids.ts';
 /**
  * Puzzle-rules pack: bounded, data-driven puzzle engines (capability program
  * Phase 6), publishing `puzzle.rules`. Sokoban / switch-sequence / match /
- * falling-block / physics-goal - a discriminated union, not a DSL. A game
+ * falling-block / physics-goal / escape - a discriminated union, not a DSL. A game
  * selects a puzzle by id from `content/puzzles.json`; this pack owns
  * `apply` / `undo` / `reset` / `isSolved` with no game-specific callback.
  */
@@ -285,24 +286,57 @@ const fallingBlock: Engine<FbState> = {
 // --- physics-goal ----------------------------------------------
 interface PgState {
   readonly positions: Readonly<Record<string, readonly [number, number]>>;
+  readonly launches: number;
+}
+function pgInZone(state: PgState, g: PhysicsGoalRules['goals'][number]): boolean {
+  const p = state.positions[g.entityId];
+  return p !== undefined && p[0] >= g.zone.x && p[0] <= g.zone.x + g.zone.width && p[1] >= g.zone.y && p[1] <= g.zone.y + g.zone.height;
 }
 const physicsGoal: Engine<PgState> = {
-  initial: () => ({ positions: {} }),
+  initial: () => ({ positions: {}, launches: 0 }),
   apply(state, op) {
+    if (op.kind === 'launch') return { ...state, launches: state.launches + 1 };
     if (op.kind !== 'report-entity') return state;
-    return { positions: { ...state.positions, [op.entityId]: [op.x, op.y] } };
+    const prev = state.positions[op.entityId];
+    if (prev && prev[0] === op.x && prev[1] === op.y) return state;
+    return { ...state, positions: { ...state.positions, [op.entityId]: [op.x, op.y] } };
   },
-  solved: (state, rulesIn) =>
-    (rulesIn as PhysicsGoalRules).goals.every((g) => {
-      const p = state.positions[g.entityId];
-      return p !== undefined && p[0] >= g.zone.x && p[0] <= g.zone.x + g.zone.width && p[1] >= g.zone.y && p[1] <= g.zone.y + g.zone.height;
-    }),
+  solved: (state, rulesIn) => (rulesIn as PhysicsGoalRules).goals.every((g) => pgInZone(state, g)),
+  extra: (state, rulesIn) => {
+    const r = rulesIn as PhysicsGoalRules;
+    const goalsMet = r.goals.filter((g) => pgInZone(state, g)).length;
+    const inGoal = goalsMet === r.goals.length && r.goals.length > 0;
+    const failed = r.launchLimit !== undefined && state.launches >= r.launchLimit && !inGoal;
+    return { goalsMet, goalCount: r.goals.length, inGoal, launches: state.launches, launchLimit: r.launchLimit ?? null, failed };
+  },
+};
+
+interface EscState {
+  readonly flags: readonly string[];
+}
+const escapeRoom: Engine<EscState> = {
+  initial: () => ({ flags: [] }),
+  apply(state, op, rulesIn) {
+    if (op.kind !== 'inspect') return state;
+    const item = (rulesIn as EscapeRules).interactables.find((entry) => entry.id === op.id);
+    if (!item) return state;
+    if ((item.requiresFlags ?? []).some((flag) => !state.flags.includes(flag))) return state;
+    const next = new Set(state.flags);
+    let changed = false;
+    for (const flag of item.setsFlags ?? []) {
+      if (!next.has(flag)) {
+        next.add(flag);
+        changed = true;
+      }
+    }
+    return changed ? { flags: [...next].sort() } : state;
+  },
+  solved: (state, rulesIn) => (rulesIn as EscapeRules).completeWhen.flags.every((flag) => state.flags.includes(flag)),
   extra: (state, rulesIn) => ({
-    goalsMet: (rulesIn as PhysicsGoalRules).goals.filter((g) => {
-      const p = state.positions[g.entityId];
-      return p !== undefined && p[0] >= g.zone.x && p[0] <= g.zone.x + g.zone.width && p[1] >= g.zone.y && p[1] <= g.zone.y + g.zone.height;
-    }).length,
-    goalCount: (rulesIn as PhysicsGoalRules).goals.length,
+    flags: state.flags,
+    note: state.flags.includes('note'),
+    key: state.flags.includes('key'),
+    interactables: (rulesIn as EscapeRules).interactables,
   }),
 };
 
@@ -312,6 +346,7 @@ const ENGINES: Readonly<Record<PuzzleRules['kind'], Engine<unknown>>> = {
   match: match as Engine<unknown>,
   'falling-block': fallingBlock as Engine<unknown>,
   'physics-goal': physicsGoal as Engine<unknown>,
+  escape: escapeRoom as Engine<unknown>,
 };
 
 class PuzzleRulesServiceImpl implements PuzzleRulesService {
@@ -349,9 +384,12 @@ class PuzzleRulesServiceImpl implements PuzzleRulesService {
     if (!this.#engine || !this.#active) return this.snapshot();
     const next = this.#engine.apply(this.#state, op, this.#active);
     if (next !== this.#state) {
-      this.#history.push(this.#state);
+      // report-entity is a sensor reading, not a player action — keep history/moves for real ops.
+      if (op.kind !== 'report-entity') {
+        this.#history.push(this.#state);
+        this.#moves += 1;
+      }
       this.#state = next;
-      this.#moves += 1;
     }
     return this.snapshot();
   }

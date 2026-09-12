@@ -225,6 +225,9 @@ describe('closed limitations stay closed (Final Product Completion program)', ()
     { id: 'pinball-lite', pattern: /Matter presentation stays on physics-toy/, closedBy: 'L28 pinball balls/drain/game-over' },
     { id: 'maze-game', pattern: /fog-of-war, minimap and authored maze generation are not/, closedBy: 'L26 maze generation + fog' },
     { id: 'boat-flight-racer', pattern: /not fluid or aerodynamic simulation/, closedBy: 'L20 arcade boat/flight loop' },
+    { id: 'physics-puzzle', pattern: /this puzzle's own rules stay game-specific TypeScript/, closedBy: 'L25 physics-goal content' },
+    { id: 'escape-room', pattern: /this puzzle's own rules stay game-specific TypeScript/, closedBy: 'L25/L46 escape content grammar' },
+    { id: 'escape-room', pattern: /No content-authored escape-room puzzle grammar exists yet/, closedBy: 'L46 escape kind' },
   ];
 
   CLOSED.forEach(({ id, pattern, closedBy }) => {

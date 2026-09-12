@@ -62,45 +62,6 @@ export function requiresCodePackConfig(preset: PresetDefinition): boolean {
   return preset.requiredSystemPacks.some((selection) => CODE_CONFIGURED_PACK_IDS.has(selection.packId));
 }
 
-const PHYSICS_PREAMBLE = `/** Physics-puzzle state: solved when the Matter ball rests in the goal. */
-export interface PlaceholderPuzzleState {
-  readonly kind: 'physics-goal';
-  readonly inGoal: boolean;
-}
-
-`;
-
-const PHYSICS_ENTRY = `  /**
-   * sw2d.puzzle is code-configured: its config is two functions, so it can
-   * never live in content/game.json. The generated pointer shell nudges a
-   * Matter ball and calls apply() when it crosses the goal.
-   */
-  'sw2d.puzzle': {
-    createInitialState: (): PlaceholderPuzzleState => ({ kind: 'physics-goal', inGoal: false }),
-    isSolved: (state: PlaceholderPuzzleState): boolean => state.inGoal,
-  },
-`;
-
-const ESCAPE_PREAMBLE = `/** Escape-room state: inspect the note, then the key. */
-export interface PlaceholderPuzzleState {
-  readonly kind: 'escape-locks';
-  readonly note: boolean;
-  readonly key: boolean;
-}
-
-`;
-
-const ESCAPE_ENTRY = `  /**
-   * sw2d.puzzle is code-configured: its config is two functions, so it can
-   * never live in content/game.json. The generated pointer shell registers
-   * two linked hotspots and calls apply() as they unlock.
-   */
-  'sw2d.puzzle': {
-    createInitialState: (): PlaceholderPuzzleState => ({ kind: 'escape-locks', note: false, key: false }),
-    isSolved: (state: PlaceholderPuzzleState): boolean => state.note && state.key,
-  },
-`;
-
 const FALLBACK_PREAMBLE = `/** Replace with this game's real puzzle state. */
 export interface PlaceholderPuzzleState {
   readonly moves: number;
@@ -129,22 +90,9 @@ const FALLBACK_ENTRY = `  /**
  */
 export function generatePackConfig(preset: PresetDefinition): string {
   const needsPuzzle = requiresCodePackConfig(preset);
-  const variant = !needsPuzzle
-    ? 'none'
-    : preset.id === 'escape-room'
-      ? 'escape'
-      : preset.id === 'physics-puzzle'
-        ? 'physics'
-        : 'fallback';
-  const preamble = variant === 'physics' ? PHYSICS_PREAMBLE : variant === 'escape' ? ESCAPE_PREAMBLE : variant === 'fallback' ? FALLBACK_PREAMBLE : '';
-  const entry =
-    variant === 'physics'
-      ? PHYSICS_ENTRY
-      : variant === 'escape'
-        ? ESCAPE_ENTRY
-        : variant === 'fallback'
-          ? FALLBACK_ENTRY
-          : '  // This preset selects no code-configured pack.';
+  const variant = needsPuzzle ? 'fallback' : 'none';
+  const preamble = variant === 'fallback' ? FALLBACK_PREAMBLE : '';
+  const entry = variant === 'fallback' ? FALLBACK_ENTRY : '  // This preset selects no code-configured pack.';
   const simulationStarter =
     preset.id === 'farming-lite' ? "'farm'" : preset.id === 'colony-lite' ? "'colony'" : 'null';
   const narrativeStarter =

@@ -417,12 +417,13 @@ export function generateEncounterCatalog(hasEncountersPack: boolean, options: { 
  * content/puzzles.json - a PuzzleRulesDoc (capability program Phase 6).
  * Always emitted; empty unless the preset installs `sw2d.puzzle-rules`. A
  * puzzle-family preset gets one built-in starter definition matching its
- * kind (sokoban, switch-sequence, match, falling-block), so its generated
- * shell loads an entire ruleset - moves, undo, reset, solved-detection -
- * from serialized data with no `createInitialState` / `isSolved` callback.
+ * kind (sokoban, switch-sequence, match, falling-block, physics-goal, escape),
+ * so its generated shell loads an entire ruleset - moves, undo, reset,
+ * solved-detection - from serialized data with no `createInitialState` /
+ * `isSolved` callback.
  */
 export function generatePuzzleRulesDoc(
-  kind: 'sokoban' | 'switch-sequence' | 'match' | 'falling-block' | 'none',
+  kind: 'sokoban' | 'switch-sequence' | 'match' | 'falling-block' | 'physics-goal' | 'escape' | 'none',
 ): Record<string, unknown> {
   if (kind === 'sokoban') {
     return {
@@ -494,6 +495,36 @@ export function generatePuzzleRulesDoc(
           pieces: [{ cells: [[0, 0], [1, 0], [2, 0]], spawnCol: 0 }],
           sequence: [0, 0, 0, 0],
           objectiveLines: 1,
+        },
+      ],
+    };
+  }
+  if (kind === 'physics-goal') {
+    return {
+      schemaVersion: 1,
+      puzzles: [
+        {
+          id: 'starter',
+          kind: 'physics-goal',
+          launchLimit: 8,
+          goals: [{ entityId: 'ball', zone: { x: 740, y: 430, width: 120, height: 100 } }],
+        },
+      ],
+    };
+  }
+  if (kind === 'escape') {
+    return {
+      schemaVersion: 1,
+      puzzles: [
+        {
+          id: 'starter',
+          kind: 'escape',
+          interactables: [
+            { id: 'note', x: 240, y: 280, radius: 28, label: 'note', setsFlags: ['note'] },
+            { id: 'key', x: 480, y: 280, radius: 28, label: 'key', requiresFlags: ['note'], setsFlags: ['key'] },
+            { id: 'door', x: 720, y: 280, radius: 28, label: 'door', requiresFlags: ['key'], setsFlags: ['escaped'] },
+          ],
+          completeWhen: { flags: ['key'] },
         },
       ],
     };
@@ -1767,10 +1798,10 @@ export function generateUiCopy(options: {
             ? 'AIM WITH MOUSE  -  FIRE J/X OR CLICK  -  CLEAR EVERY ROUND'
         : has('sw2d.weapons')
           ? 'AIM WITH MOUSE  -  FIRE J/X'
-          : has('sw2d.puzzle')
-            ? presetId === 'escape-room'
-              ? 'CLICK THE NOTE  -  THEN THE KEY'
-              : 'CLICK TO NUDGE  -  LAND IN THE GOAL'
+          : presetId === 'escape-room'
+            ? 'CLICK THE NOTE  -  THEN THE KEY'
+            : presetId === 'physics-puzzle'
+              ? 'CLICK TO NUDGE  -  LAND IN THE GOAL'
             : presetId === 'drawing-game'
               ? 'DRAW TWO STROKES ON THE PAGE'
               : presetId === 'dress-up-character-toy'

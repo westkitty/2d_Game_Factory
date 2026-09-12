@@ -6,22 +6,8 @@
  * JSON stay in content/game.json; nothing here overrides those.
  */
 
-/** Physics-puzzle state: solved when the Matter ball rests in the goal. */
-export interface PlaceholderPuzzleState {
-  readonly kind: 'physics-goal';
-  readonly inGoal: boolean;
-}
-
 export const PACK_CONFIG: Readonly<Record<string, unknown>> = {
-  /**
-   * sw2d.puzzle is code-configured: its config is two functions, so it can
-   * never live in content/game.json. The generated pointer shell nudges a
-   * Matter ball and calls apply() when it crosses the goal.
-   */
-  'sw2d.puzzle': {
-    createInitialState: (): PlaceholderPuzzleState => ({ kind: 'physics-goal', inGoal: false }),
-    isSolved: (state: PlaceholderPuzzleState): boolean => state.inGoal,
-  },
+  // This preset selects no code-configured pack.
 };
 
 /** Category-C Wave 13: farm vs colony presentation of sw2d.simulation. Null otherwise. */

@@ -14,14 +14,6 @@
       "config": {}
     },
     {
-      "packId": "sw2d.weapons",
-      "config": {}
-    },
-    {
-      "packId": "sw2d.encounters",
-      "config": {}
-    },
-    {
       "packId": "sw2d.melee",
       "config": {}
     },

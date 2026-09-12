@@ -1,4 +1,5 @@
-import type { AdvancedPhysicsService, InstalledSystemPack, PhysicsBodyHandle } from '@sw2d/contracts';
+import type { AdvancedPhysicsService, InstalledSystemPack, PhysicsBodyHandle, PuzzleRulesService } from '@sw2d/contracts';
+import { PUZZLE_RULES_CAPABILITY_ID } from '@sw2d/contracts';
 import {
   bindStarterDialogue,
   bindStarterGallery,
@@ -33,11 +34,10 @@ import { GALLERY_STARTER, LOOK_STARTER, PHYSICS_STARTER, POINTER_STARTER, TOY_ST
  * runtime. Gallery-shooter is the pointer consumer; rail-shooter does not
  * install the pack (its leftover is a rail camera).
  *
- * When `sw2d.puzzle` is installed (Category-C Wave 12) the dummy target is
- * replaced by one of two game-specific rulesets on the existing code seam:
- * a Matter ball-in-goal (`physics-goal`) or two linked inspect hotspots
- * (`escape-locks`). The pack keeps TState opaque; packConfig.ts owns the
- * shape; this shell presents it. Overlays stay local.
+ * When `sw2d.puzzle-rules` is installed (Wave 4 L25/L46) the dummy target is
+ * replaced by a content-authored ruleset from `content/puzzles.json`: a Matter
+ * ball-in-goal (`physics-goal`) or inspect hotspots (`escape`). This shell
+ * presents the board; `PuzzleRulesService` owns state. Overlays stay local.
  *
  * When `POINTER_STARTER` is draw or wardrobe (Category-C Wave 16) the dummy
  * target is replaced by two ADR-0018 presentations: stroke polylines vs
@@ -61,17 +61,14 @@ import { GALLERY_STARTER, LOOK_STARTER, PHYSICS_STARTER, POINTER_STARTER, TOY_ST
  * platformShellPack.ts's file comment for the template pattern.
  */
 
-interface CodePuzzleState {
-  readonly kind?: string;
-  readonly inGoal?: boolean;
-  readonly note?: boolean;
-  readonly key?: boolean;
-}
-
-interface CodePuzzleService {
-  current(): CodePuzzleState;
-  apply(operation: (state: CodePuzzleState) => CodePuzzleState): CodePuzzleState;
-  isSolved(): boolean;
+interface EscapeSpot {
+  readonly id: string;
+  readonly x: number;
+  readonly y: number;
+  readonly radius: number;
+  readonly label: string;
+  readonly requiresFlags?: readonly string[];
+  readonly setsFlags?: readonly string[];
 }
 
 export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
@@ -100,10 +97,10 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     const physicsPlay = bindStarterPhysics(context, { mode: PHYSICS_STARTER });
     const look = bindStarterLook(context, { mode: LOOK_STARTER });
     const weaponsActive = Boolean(weapon?.snapshot()) && !dialogue.active && !pointerPlay.active && !toy.active && !physicsPlay.active && !look.active && !gallery.active;
-    const puzzle = context.capabilities.get<CodePuzzleService>('puzzle.state');
-    const puzzleKind = puzzle?.current().kind;
+    const puzzle = context.capabilities.get<PuzzleRulesService>(PUZZLE_RULES_CAPABILITY_ID);
+    const puzzleKind = puzzle?.snapshot().kind;
     const physicsPuzzle = puzzleKind === 'physics-goal';
-    const escapePuzzle = puzzleKind === 'escape-locks';
+    const escapePuzzle = puzzleKind === 'escape';
     const dummyPointer = !dialogue.active && !weaponsActive && !physicsPuzzle && !escapePuzzle && !pointerPlay.active && !toy.active && !physicsPlay.active && !look.active && !gallery.active;
 
     let activations = 0;
@@ -147,18 +144,24 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       }
     }
 
+    const escapeSpots = (): readonly EscapeSpot[] => {
+      const raw = puzzle?.snapshot().interactables;
+      return Array.isArray(raw) ? (raw as readonly EscapeSpot[]) : [];
+    };
+    const escapeFlags = (): readonly string[] => {
+      const raw = puzzle?.snapshot().flags;
+      return Array.isArray(raw) ? (raw as readonly string[]) : [];
+    };
+    const spotReady = (spot: EscapeSpot, flags: readonly string[]): boolean =>
+      (spot.requiresFlags ?? []).every((flag) => flags.includes(flag));
+
     if (escapePuzzle && puzzle) {
-      const spots = [
-        { id: 'note', x: 240, y: 280, label: 'note' },
-        { id: 'key', x: 480, y: 280, label: 'key' },
-        { id: 'door', x: 720, y: 280, label: 'door' },
-      ];
-      for (const spot of spots) {
+      for (const spot of escapeSpots()) {
         const image = scene.add.image(spot.x, spot.y, spot.id === 'door' ? exitKey : targetKey);
         image.setDisplaySize(spot.id === 'door' ? 40 : 56, spot.id === 'door' ? 70 : 56);
         const handle = context.interaction.register({
           id: spot.id,
-          shape: { kind: 'circle', x: spot.x, y: spot.y, radius: 28 },
+          shape: { kind: 'circle', x: spot.x, y: spot.y, radius: spot.radius },
           onHoverEnter: () => {
             image.setTint(0xbfe1ff);
           },
@@ -166,31 +169,23 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
             image.clearTint();
           },
           onClick: () => {
-            const state = puzzle.current();
-            if (spot.id === 'note') {
-              if (!state.note) puzzle.apply((s) => ({ ...s, kind: 'escape-locks', note: true, key: s.key === true }));
-              lastResult = 'note';
-              context.audio.playCue('ui.confirm');
-            } else if (spot.id === 'key') {
-              if (!puzzle.current().note) {
-                lastResult = 'locked';
-                return;
-              }
-              if (!puzzle.current().key) puzzle.apply((s) => ({ ...s, kind: 'escape-locks', note: true, key: true }));
-              lastResult = 'key';
-              context.audio.playCue('ui.confirm');
-            } else {
+            const after = puzzle.apply({ kind: 'inspect', id: spot.id });
+            const flags = Array.isArray(after.flags) ? (after.flags as readonly string[]) : escapeFlags();
+            if (spot.id === 'door') {
               lastResult = puzzle.isSolved() ? 'escaped' : 'locked';
-              if (puzzle.isSolved()) context.audio.playCue('ui.confirm');
+            } else if (spotReady(spot, flags) && (spot.setsFlags ?? []).every((flag) => flags.includes(flag))) {
+              lastResult = spot.id;
+            } else {
+              lastResult = 'locked';
             }
+            if (lastResult !== 'locked') context.audio.playCue('ui.confirm');
             for (const entry of hotspotSprites) {
-              const live = puzzle.current();
-              if (entry.id === 'key') entry.image.setAlpha(live.note ? 1 : 0.35);
-              if (entry.id === 'door') entry.image.setAlpha(puzzle.isSolved() ? 1 : 0.35);
+              const live = escapeSpots().find((item) => item.id === entry.id);
+              entry.image.setAlpha(live && spotReady(live, flags) ? 1 : 0.35);
             }
           },
         });
-        if (spot.id === 'key' || spot.id === 'door') image.setAlpha(0.35);
+        image.setAlpha(spotReady(spot, escapeFlags()) ? 1 : 0.35);
         hotspotSprites.push({ id: spot.id, image, handle });
       }
     }
@@ -288,17 +283,19 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
 
     function renderHud(): void {
       if (!hud || !puzzle) return;
+      const snap = puzzle.snapshot();
       if (physicsPuzzle) {
         const ball = puzzleBall && physics ? physics.bodyState(puzzleBall) : null;
         hud.setText(
-          puzzle.isSolved()
-            ? 'SOLVED'
-            : `BALL ${ball ? Math.round(ball.x) : 0}  GOAL 740  NUDGES ${nudges}`,
+          snap.failed === true
+            ? 'FAILED'
+            : puzzle.isSolved()
+              ? 'SOLVED'
+              : `BALL ${ball ? Math.round(ball.x) : 0}  GOAL 740  NUDGES ${nudges}`,
         );
       } else {
-        const state = puzzle.current();
         hud.setText(
-          `NOTE ${state.note ? 'Y' : 'N'}  KEY ${state.key ? 'Y' : 'N'}${puzzle.isSolved() ? '  ESCAPED' : ''}`,
+          `NOTE ${snap.note ? 'Y' : 'N'}  KEY ${snap.key ? 'Y' : 'N'}${puzzle.isSolved() ? '  ESCAPED' : ''}`,
         );
       }
     }
@@ -323,11 +320,11 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       ...(puzzle
         ? {
             puzzle: {
-              kind: puzzle.current().kind ?? null,
+              kind: puzzle.snapshot().kind,
               solved: puzzle.isSolved(),
-              inGoal: puzzle.current().inGoal === true,
-              note: puzzle.current().note === true,
-              key: puzzle.current().key === true,
+              inGoal: puzzle.snapshot().inGoal === true,
+              note: puzzle.snapshot().note === true,
+              key: puzzle.snapshot().key === true,
               lastResult,
               ball: puzzleBall && physics ? physics.bodyState(puzzleBall) : null,
             },
@@ -420,7 +417,9 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         if (physicsPuzzle && puzzle && physics && puzzleBall) {
           const intent = pointerActionController.read(context.input);
           const ptr = context.spatialPointer.state;
-          if (intent.primaryPressed || ptr.justPressed) {
+          const snap = puzzle.snapshot();
+          if ((intent.primaryPressed || ptr.justPressed) && snap.failed !== true && !puzzle.isSolved()) {
+            puzzle.apply({ kind: 'launch' });
             physics.setVelocity(puzzleBall, 10, -4);
             nudges += 1;
             lastResult = 'nudge';
@@ -429,10 +428,8 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
           const ball = physics.bodyState(puzzleBall);
           ballSprite?.setPosition(ball.x, ball.y);
           ballSprite?.setRotation(ball.angle);
-          if (!puzzle.isSolved() && ball.x >= 740 && ball.y >= 430 && ball.y <= 530) {
-            puzzle.apply((s) => ({ ...s, kind: 'physics-goal', inGoal: true }));
-            lastResult = 'goal';
-          }
+          const reported = puzzle.apply({ kind: 'report-entity', entityId: 'ball', x: ball.x, y: ball.y });
+          if (reported.solved && lastResult !== 'goal') lastResult = 'goal';
           renderHud();
           return;
         }

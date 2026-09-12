@@ -92,7 +92,7 @@ controller/input-mode breakdown and full pack-consumer coverage.
 | `falling-block-puzzle` | Falling Block Puzzle | grid, ui-simulation | tuning, puzzles | proof-validated |
 | `breakout` | Breakout | top-down | tuning, ball-paddle | proof-validated |
 | `pong` | Pong | top-down | tuning, ball-paddle, local-play | proof-validated |
-| `physics-puzzle` | Physics Puzzle | pointer | tuning | proof-validated |
+| `physics-puzzle` | Physics Puzzle | pointer | tuning, puzzles | proof-validated |
 | `maze-game` | Maze Game | grid | tuning, levels, generation | proof-validated |
 | `rhythm-action` | Rhythm Action | ui-simulation | tuning, timing | proof-validated |
 | `reaction-timing` | Reaction Timing | ui-simulation | tuning, timing | proof-validated |
@@ -196,7 +196,7 @@ recipe's *first* stated limitation; see `knownLimitations` in
 | `falling-block-puzzle` | (none stated) |
 | `breakout` | (none stated) |
 | `pong` | Local hot-seat turns and simultaneous versus axes are reusable (sw2d.local-play); netcode, gamepads, split-screen cameras and more than two seats are not. |
-| `physics-puzzle` | Standard puzzle kinds (sokoban, switch/sequence, match, falling-block) are now content-authorable through the sw2d.puzzle-rules capability and content/puzzles.json (ADR-0023). This recipe's board rules are not one of those built-in kinds, so it still uses the code seam: sw2d.puzzle declares configSource: 'code' (ADR-0017) and a generated game supplies createInitialState/isSolved from src/game-specific/packConfig.ts (shipped with a working placeholder to replace) - the pack really installs, but this puzzle's own rules stay game-specific TypeScript, not content. |
+| `physics-puzzle` | (none stated) |
 | `maze-game` | (none stated) |
 | `rhythm-action` | Visual reaction cues and beat windows are reusable (sw2d.timing); a deterministic music-beat/audio-synchronization system is not. |
 | `reaction-timing` | Visual reaction cues and beat windows are reusable (sw2d.timing); a deterministic music-beat/audio-synchronization system is not. |
@@ -222,7 +222,7 @@ recipe's *first* stated limitation; see `knownLimitations` in
 | `interactive-fiction-hybrid` | Nodes, flags, choices and seen entries are reusable (sw2d.narrative); a dedicated parser/text-command system and an evidence-board/deduction/linking system are not. |
 | `investigation-game` | Nodes, flags, choices and seen entries are reusable (sw2d.narrative); a dedicated parser/text-command system and an evidence-board/deduction/linking system are not. |
 | `museum-exhibit` | Exhibit entries are reusable (sw2d.codex); portraits and a dedicated museum lighting/presentation overlay are not. |
-| `escape-room` | Standard puzzle kinds (sokoban, switch/sequence, match, falling-block) are now content-authorable through the sw2d.puzzle-rules capability and content/puzzles.json (ADR-0023). This recipe's board rules are not one of those built-in kinds, so it still uses the code seam: sw2d.puzzle declares configSource: 'code' (ADR-0017) and a generated game supplies createInitialState/isSolved from src/game-specific/packConfig.ts (shipped with a working placeholder to replace) - the pack really installs, but this puzzle's own rules stay game-specific TypeScript, not content. |
+| `escape-room` | (none stated) |
 | `microgame-collection` | Wait/go then mash rounds are a generated starter scheduler on sw2d.arcade; a content-authored rotation/meta-framework is not. |
 | `local-party-game` | Local hot-seat turns and simultaneous versus axes are reusable (sw2d.local-play); netcode, gamepads, split-screen cameras and more than two seats are not. |
 | `physics-toy` | Toy launch/goal is game-specific presentation of Matter; pinball-lite consumes sw2d.pinball instead. |

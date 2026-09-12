@@ -14,13 +14,12 @@ import { LIMITATIONS, POINTER_INPUT_MODES, VALIDATION_PROFILES, definePreset, pa
  * ADR-0037), and the one recipe that is genuinely about pointer interaction
  * (`physics-puzzle`) gets `pointer`, honestly limited to press-style actions.
  *
- * Standard puzzle kinds (sokoban, switch/sequence, match, falling-block) are
- * content-authorable through `sw2d.puzzle-rules` + `content/puzzles.json`
- * (ADR-0023, Category-C Wave 9). `sokoban`, `match-puzzle` and
- * `falling-block-puzzle` consume that reusable service. `physics-puzzle`
- * still selects the foundational, code-configured `sw2d.puzzle` (Category-C
- * Wave 12 consumes that seam with a Matter ball-in-goal) and reuses
- * `LIMITATIONS.puzzleConfigIsCode` verbatim.
+ * Standard puzzle kinds (sokoban, switch/sequence, match, falling-block,
+ * physics-goal, escape) are content-authorable through `sw2d.puzzle-rules` +
+ * `content/puzzles.json` (ADR-0023, Final Product Completion Wave 4).
+ * `sokoban`, `match-puzzle`, `falling-block-puzzle` and `physics-puzzle`
+ * consume that reusable service. The pointer shell presents physics-goal
+ * as a Matter ball-in-goal driven by `report-entity` / `launch` ops.
  */
 export const PUZZLE_ARCADE_PRESETS: readonly PresetDefinition[] = [
   definePreset({
@@ -99,14 +98,14 @@ export const PUZZLE_ARCADE_PRESETS: readonly PresetDefinition[] = [
     displayName: 'Physics Puzzle',
     family: 'puzzle-arcade',
     controllerFamilies: ['pointer'],
-    requiredSystemPacks: [pack(PACK_IDS.puzzle)],
-    requiredContentRoles: ['tuning'],
+    requiredSystemPacks: [pack(PACK_IDS.puzzleRules)],
+    requiredContentRoles: ['tuning', 'puzzles'],
     supportedInputModes: POINTER_INPUT_MODES,
     validationProfile: VALIDATION_PROFILES.puzzleArcade,
     // Phase 9 (ADR-0026): the Matter backend + reusable AdvancedPhysicsService
-    // drive motion; the puzzle's own success condition stays in sw2d.puzzle.
+    // drive motion. Wave 4 L25: goal zone / launch limit live in content/puzzles.json.
     physicsProfile: 'matter',
-    knownLimitations: [LIMITATIONS.puzzleConfigIsCode],
+    knownLimitations: [],
   }),
 
   definePreset({

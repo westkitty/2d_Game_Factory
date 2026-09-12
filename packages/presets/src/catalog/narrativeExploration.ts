@@ -115,17 +115,13 @@ export const NARRATIVE_EXPLORATION_PRESETS: readonly PresetDefinition[] = [
     displayName: 'Escape Room',
     family: 'narrative-exploration',
     controllerFamilies: ['pointer', 'ui-simulation'],
-    requiredSystemPacks: [pack(PACK_IDS.puzzle)],
+    requiredSystemPacks: [pack(PACK_IDS.puzzleRules)],
     optionalSystemPacks: [pack(PACK_IDS.narrative), pack(PACK_IDS.world)],
     requiredContentRoles: ['tuning', 'puzzles'],
     supportedInputModes: POINTER_INPUT_MODES,
     validationProfile: VALIDATION_PROFILES.narrativeExploration,
-    // Category-C Wave 12: the generated pointer shell presents two linked
-    // inspect hotspots through sw2d.puzzle. The leftover is still a
-    // content-authored grammar (not match/sokoban kinds).
-    knownLimitations: [
-      LIMITATIONS.puzzleConfigIsCode,
-      'No content-authored escape-room puzzle grammar exists yet.',
-    ],
+    // Wave 4 L25/L46: inspect hotspots, flag gates and completion live in
+    // content/puzzles.json (`escape` kind) on sw2d.puzzle-rules.
+    knownLimitations: [],
   }),
 ];

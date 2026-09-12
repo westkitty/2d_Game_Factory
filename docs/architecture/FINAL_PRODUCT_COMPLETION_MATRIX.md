@@ -265,9 +265,11 @@ exceptions: physical hardware certification and the user-owned public-license ch
 ### L25 - physics-puzzle / escape-room code seam
 - **Source text:** "Standard puzzle kinds (sokoban, switch/sequence, match, falling-block) are now content-authorable through the sw2d.puzzle-rules capability and content/puzzles.json (ADR-0023). This recipe's board rules are not one of those built-in kinds, so it still uses the code seam: sw2d.puzzle declares configSource: 'code' (ADR-0017) and a generated game supplies createInitialState/isSolved from src/game-specific/packConfig.ts (shipped with a working placeholder to replace) - the pack really installs, but this puzzle's own rules stay game-specific TypeScript, not content."
 - **Presets:** `physics-puzzle`, `escape-room`
-- **Architecture:** `sw2d.puzzle-rules` gains `physics` (declarative bodies/zones/goal/launch limits) and `escape` (interactables, flags, inventory, conditions, locks, completion) kinds; both presets require `sw2d.puzzle-rules`; generator writes real content; no TypeScript placeholder.
+- **Architecture:** `sw2d.puzzle-rules` `physics-goal` (zones, launch limit, `report-entity` / `launch`) and `escape` (interactables, flag gates, `inspect`) kinds; both presets require `sw2d.puzzle-rules`; generator writes `content/puzzles.json`; no TypeScript placeholder.
 - **Journey (physics):** launch ball → lands in goal zone → `solved`; launches exhausted → `failed`. **(escape):** inspect note → take key → unlock door → `escaped`.
 - **Checkpoint:** Wave 4.
+- **Closed by:** pointer shell consumes `PuzzleRulesService`; physics-puzzle / escape-room drop `sw2d.puzzle` code seam. **Proof/test:** `puzzleRules.test.ts` physics-goal + escape; generate tests; proof specs `physicsPuzzle` / `escapeRoom`. **Browser:** `qa:completion -- physics-puzzle escape-room` PASS; `qa:proof` PASS.
+- **Status:** CLOSED (Wave 4).
 
 ### L26 - maze fog / minimap / generation
 - **Source text:** "Grid pathfinding and walkable occupancy are reusable (sw2d.navigation); fog-of-war, minimap and authored maze generation are not."
@@ -411,6 +413,8 @@ exceptions: physical hardware certification and the user-owned public-license ch
 - **Presets:** `escape-room`
 - **Architecture:** `sw2d.puzzle-rules` `escape` kind (L25).
 - **Checkpoint:** Wave 4.
+- **Closed by:** L25. Authored interactables + flag gates in `content/puzzles.json`. **Browser:** PASS.
+- **Status:** CLOSED (Wave 4).
 
 ## I. Party / toy / weird
 
@@ -497,7 +501,7 @@ exceptions: physical hardware certification and the user-owned public-license ch
 | L22 | match-puzzle | 4 | CLOSED | wave 4 puzzle |
 | L23 | breakout, pong | 4 | CLOSED | wave 4 pinball |
 | L24 | pong, local-party-game | 9 | OPEN | |
-| L25 | physics-puzzle, escape-room | 4 | OPEN | |
+| L25 | physics-puzzle, escape-room | 4 | CLOSED | wave 4 puzzle grammar |
 | L26 | maze-game | 4 | CLOSED | wave 4 maze |
 | L27 | rhythm-action, reaction-timing | 4 | OPEN | |
 | L28 | pinball-lite | 4 | CLOSED | wave 4 pinball |
@@ -518,7 +522,7 @@ exceptions: physical hardware certification and the user-owned public-license ch
 | L43 | interactive-fiction-hybrid | 8 | OPEN | |
 | L44 | investigation-game | 8 | OPEN | |
 | L45 | museum-exhibit | 8 | OPEN | |
-| L46 | escape-room | 4 | OPEN | |
+| L46 | escape-room | 4 | CLOSED | wave 4 puzzle grammar |
 | L47 | microgame-collection | 9 | OPEN | |
 | L48 | physics-toy | 9 | OPEN | |
 | L49 | dress-up-character-toy | 9 | OPEN | |

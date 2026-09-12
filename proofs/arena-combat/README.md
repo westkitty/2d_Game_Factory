@@ -62,8 +62,8 @@ with a small working placeholder to replace. Every other pack is configured as J
 ## Composition
 
 - Controller family/families: top-down
-- Required packs (enabled by default): sw2d.combat, sw2d.weapons, sw2d.encounters, sw2d.melee
-- Optional packs (available, not enabled by default - add to content/game.json's systemPacks to use): sw2d.ai, sw2d.arcade
+- Required packs (enabled by default): sw2d.combat, sw2d.melee
+- Optional packs (available, not enabled by default - add to content/game.json's systemPacks to use): sw2d.ai, sw2d.arcade, sw2d.weapons, sw2d.encounters
 - Content roles this preset expects: tuning, levels, melee
 
 ## Known preset limitations

@@ -18,12 +18,12 @@ file is the cursor.
 
 | field | value |
 |---|---|
-| branch SHA | (see git log; this checkpoint is the Wave 1-3 independent sanity repair) |
-| waves completed | 3 + sanity repair + Wave 4 L18-L23/L26/L28 |
-| limitations closed | 32 / 69 entries |
-| remaining machine-executable | 37 |
+| branch SHA | (see git log; this checkpoint is Wave 4 L25/L46) |
+| waves completed | 3 + sanity repair + Wave 4 L18-L23/L25/L26/L28/L46 |
+| limitations closed | 35 / 69 entries |
+| remaining machine-executable | 34 |
 | blockers | none |
-| next exact action | Wave 4 remainder: L25/L46 physics/escape grammar, L27 rhythm/reaction — then Waves 5-9 |
+| next exact action | Wave 4 remainder: L27 rhythm/reaction — then Waves 5-9 |
 
 ## Checkpoint log
 
@@ -139,3 +139,11 @@ Known leftover (not a Wave 1-3 product hole, not repaired here): `bindStarterPro
 - Racing required; auto-start; buoy hazard; bank visual; boat→flight→airborne complete.
 - `qa:completion -- boat-flight-racer` PASS; `qa:proof` PASS.
 - `npm run limitations:extract`: **37** remain.
+
+### Wave 4 L25/L46 - physics-puzzle / escape-room content grammar
+- `sw2d.puzzle-rules` `physics-goal` (zones, launch limit, `report-entity`/`launch`) and `escape` (interactables, flag gates, `inspect`). Both presets require `sw2d.puzzle-rules`; `content/puzzles.json` is the board; no TypeScript placeholder.
+- Pointer shell presents Matter ball / inspect hotspots from the service snapshot. One board authority.
+- `npm run typecheck` PASS; focused vitest (puzzleRules, generate, honesty, schemas) PASS.
+- `qa:completion -- physics-puzzle escape-room` PASS (fresh factory, system Chrome).
+- `qa:proof -- physics-puzzle escape-room drawing-game dress-up-character-toy sandbox-playground rail-shooter` 6/6 PASS.
+- `npm run limitations:extract`: **34** machine-executable remain (35/69 entries closed).

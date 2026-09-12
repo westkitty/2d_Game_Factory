@@ -170,9 +170,13 @@ export function buildGameFiles(gameId: string, preset: PresetDefinition): Map<st
             ? 'match'
             : preset.id === 'falling-block-puzzle'
               ? 'falling-block'
-              : preset.controllerFamilies[0] === 'grid'
-                ? 'sokoban'
-                : 'switch-sequence'
+              : preset.id === 'physics-puzzle'
+                ? 'physics-goal'
+                : preset.id === 'escape-room'
+                  ? 'escape'
+                  : preset.controllerFamilies[0] === 'grid'
+                    ? 'sokoban'
+                    : 'switch-sequence'
           : 'none',
       ),
       null,

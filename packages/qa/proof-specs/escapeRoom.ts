@@ -22,7 +22,7 @@ export async function run(harness: Harness): Promise<SmokeOutcome> {
   const booted = await readSnapshot(harness);
   const initial = await read();
   evidence.initial = initial.puzzle;
-  const startedOk = booted.installedPacks.includes('sw2d.puzzle') && initial.puzzle?.kind === 'escape-locks' && !initial.puzzle.note && !initial.puzzle.key && !initial.puzzle.solved;
+  const startedOk = booted.installedPacks.includes('sw2d.puzzle-rules') && initial.puzzle?.kind === 'escape' && !initial.puzzle.note && !initial.puzzle.key && !initial.puzzle.solved;
 
   // The lock before the note is locked (order matters); the note hotspot unlocks the key.
   await clickAt(harness, 480, 280);

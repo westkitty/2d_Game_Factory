@@ -240,38 +240,28 @@ describe('all 74 presets generate valid, token-free, schema-valid source', () =>
 /**
  * Phase 9 / Gate B. `content/game.json` can only ever hold JSON, so a pack
  * whose config is functions (`configSource: 'code'` - `sw2d.puzzle` today)
- * cannot be configured from there. Before this phase the generator wrote
- * `config: {}` for it anyway: all six presets requiring it produced games that
- * built cleanly and then threw `createInitialState is not a function` the
- * instant the player pressed CONFIRM, taking the shell pack down with them via
- * install rollback. The generated code seam replaces that silent falsehood.
+ * cannot be configured from there. Wave 4 L25/L46 moved physics-puzzle and
+ * escape-room onto `sw2d.puzzle-rules`, so no catalog preset currently
+ * *requires* the code seam. The generator still emits packConfig.ts for every
+ * game (starter stamps live there) and still refuses a `{}` JSON config if a
+ * future preset selects `sw2d.puzzle`.
  */
 describe('code-configured packs get a real code seam, never a false JSON config', () => {
   const puzzlePresets = PRESETS.filter((preset) =>
     preset.requiredSystemPacks.some((selection) => selection.packId === 'sw2d.puzzle'),
   );
 
-  it('the catalog still has presets requiring sw2d.puzzle (otherwise this suite is vacuous)', () => {
-    expect(puzzlePresets.length).toBeGreaterThan(0);
+  it('no catalog preset requires the sw2d.puzzle code seam', () => {
+    expect(puzzlePresets.map((preset) => preset.id)).toEqual([]);
   });
 
   for (const preset of PRESETS) {
-    const needsCodeConfig = puzzlePresets.includes(preset);
-
-    it(`${preset.id} generates src/game-specific/packConfig.ts${needsCodeConfig ? ' with a working puzzle seed' : ''}`, () => {
+    it(`${preset.id} generates src/game-specific/packConfig.ts without a TypeScript puzzle placeholder`, () => {
       const files = buildGameFiles('probe-game', preset);
       const packConfig = files.get('src/game-specific/packConfig.ts');
       expect(packConfig, preset.id).toBeDefined();
       expect(packConfig, preset.id).toContain('export const PACK_CONFIG');
-
-      if (needsCodeConfig) {
-        // A real, callable default - not a `{}` placeholder that crashes on install.
-        expect(packConfig, preset.id).toContain("'sw2d.puzzle'");
-        expect(packConfig, preset.id).toContain('createInitialState');
-        expect(packConfig, preset.id).toContain('isSolved');
-      } else {
-        expect(packConfig, preset.id).not.toContain('createInitialState');
-      }
+      expect(packConfig, preset.id).not.toContain('createInitialState');
     });
 
     it(`${preset.id}'s main.ts passes packConfig to createGame`, () => {
@@ -1115,30 +1105,41 @@ describe('generated auto-runner and endless-runner consume auto-run presentation
   });
 });
 
-describe('generated pointer puzzles consume sw2d.puzzle', () => {
-  it('the generated pointer shell presents physics-goal and escape-locks on puzzle.state', () => {
+describe('generated pointer puzzles consume sw2d.puzzle-rules', () => {
+  it('the generated pointer shell presents physics-goal and escape on puzzle.rules', () => {
     const physics = PRESETS.find((candidate) => candidate.id === 'physics-puzzle')!;
     const shell = buildGameFiles('puzzle-seam-probe', physics).get('src/game-specific/shellPack.ts')!;
-    expect(shell).toContain("context.capabilities.get<CodePuzzleService>('puzzle.state')");
+    expect(shell).toContain('context.capabilities.get<PuzzleRulesService>(PUZZLE_RULES_CAPABILITY_ID)');
     expect(shell).toContain("'physics-goal'");
-    expect(shell).toContain("'escape-locks'");
-    expect(shell).toContain('puzzle.apply(');
+    expect(shell).toContain("'escape'");
+    expect(shell).toContain("puzzle.apply({ kind: 'inspect'");
+    expect(shell).toContain("puzzle.apply({ kind: 'launch' })");
+    expect(shell).toContain("puzzle.apply({ kind: 'report-entity'");
     expect(shell).toContain('physics.setVelocity(');
+    expect(shell).not.toContain('puzzle.state');
+    expect(shell).not.toContain('escape-locks');
+    expect(shell).not.toContain('createInitialState');
   });
 
-  it('physics-puzzle and escape-room enable sw2d.puzzle with different code-seam states', () => {
+  it('physics-puzzle and escape-room enable sw2d.puzzle-rules with authored content, not a code seam', () => {
     const physics = PRESETS.find((candidate) => candidate.id === 'physics-puzzle')!;
     const escape = PRESETS.find((candidate) => candidate.id === 'escape-room')!;
     const physicsFiles = buildGameFiles('puzzle-seam-probe', physics);
     const escapeFiles = buildGameFiles('puzzle-seam-probe', escape);
     const physicsJson = JSON.parse(physicsFiles.get('content/game.json')!) as { systemPacks: Array<{ packId: string }> };
     const escapeJson = JSON.parse(escapeFiles.get('content/game.json')!) as { systemPacks: Array<{ packId: string }> };
-    expect(physicsJson.systemPacks.map((s) => s.packId)).toContain('sw2d.puzzle');
-    expect(escapeJson.systemPacks.map((s) => s.packId)).toContain('sw2d.puzzle');
-    expect(physicsFiles.get('src/game-specific/packConfig.ts')).toContain("kind: 'physics-goal'");
-    expect(physicsFiles.get('src/game-specific/packConfig.ts')).toContain('inGoal');
-    expect(escapeFiles.get('src/game-specific/packConfig.ts')).toContain("kind: 'escape-locks'");
-    expect(escapeFiles.get('src/game-specific/packConfig.ts')).toContain('note');
+    expect(physicsJson.systemPacks.map((s) => s.packId)).toContain('sw2d.puzzle-rules');
+    expect(escapeJson.systemPacks.map((s) => s.packId)).toContain('sw2d.puzzle-rules');
+    expect(physicsJson.systemPacks.map((s) => s.packId)).not.toContain('sw2d.puzzle');
+    expect(escapeJson.systemPacks.map((s) => s.packId)).not.toContain('sw2d.puzzle');
+    const physicsDoc = JSON.parse(physicsFiles.get('content/puzzles.json')!) as { puzzles: Array<{ kind: string; launchLimit?: number }> };
+    const escapeDoc = JSON.parse(escapeFiles.get('content/puzzles.json')!) as { puzzles: Array<{ kind: string; interactables: unknown[] }> };
+    expect(physicsDoc.puzzles[0]?.kind).toBe('physics-goal');
+    expect(physicsDoc.puzzles[0]?.launchLimit).toBe(8);
+    expect(escapeDoc.puzzles[0]?.kind).toBe('escape');
+    expect(escapeDoc.puzzles[0]?.interactables.length).toBe(3);
+    expect(physicsFiles.get('src/game-specific/packConfig.ts')).not.toContain('createInitialState');
+    expect(escapeFiles.get('src/game-specific/packConfig.ts')).not.toContain('createInitialState');
     const physicsTheme = JSON.parse(physicsFiles.get('content/themes/default/theme.json')!) as { ui: { playHint: string } };
     const escapeTheme = JSON.parse(escapeFiles.get('content/themes/default/theme.json')!) as { ui: { playHint: string } };
     expect(physicsTheme.ui.playHint).toContain('CLICK TO NUDGE');

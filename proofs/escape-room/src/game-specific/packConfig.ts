@@ -6,23 +6,8 @@
  * JSON stay in content/game.json; nothing here overrides those.
  */
 
-/** Escape-room state: inspect the note, then the key. */
-export interface PlaceholderPuzzleState {
-  readonly kind: 'escape-locks';
-  readonly note: boolean;
-  readonly key: boolean;
-}
-
 export const PACK_CONFIG: Readonly<Record<string, unknown>> = {
-  /**
-   * sw2d.puzzle is code-configured: its config is two functions, so it can
-   * never live in content/game.json. The generated pointer shell registers
-   * two linked hotspots and calls apply() as they unlock.
-   */
-  'sw2d.puzzle': {
-    createInitialState: (): PlaceholderPuzzleState => ({ kind: 'escape-locks', note: false, key: false }),
-    isSolved: (state: PlaceholderPuzzleState): boolean => state.note && state.key,
-  },
+  // This preset selects no code-configured pack.
 };
 
 /** Category-C Wave 13: farm vs colony presentation of sw2d.simulation. Null otherwise. */

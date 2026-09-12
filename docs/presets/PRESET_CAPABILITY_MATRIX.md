@@ -72,7 +72,7 @@ pack/controller selections were actually exercised through, and
 | `falling-block-puzzle` | puzzle-rules | arcade | grid, ui-simulation | keyboard, touch | puzzle-arcade-recipe |
 | `breakout` | arcade, ball-paddle | - | top-down | keyboard, touch | puzzle-arcade-recipe |
 | `pong` | arcade, ball-paddle, local-play | - | top-down | keyboard, touch | puzzle-arcade-recipe |
-| `physics-puzzle` | puzzle | - | pointer | keyboard, pointer, touch | puzzle-arcade-recipe |
+| `physics-puzzle` | puzzle-rules | - | pointer | keyboard, pointer, touch | puzzle-arcade-recipe |
 | `maze-game` | world, world-entities, navigation, generation | arcade | grid | keyboard, touch | puzzle-arcade-recipe |
 | `rhythm-action` | arcade, timing | - | ui-simulation | keyboard, touch | puzzle-arcade-recipe |
 | `reaction-timing` | arcade, timing | - | ui-simulation | keyboard, touch | puzzle-arcade-recipe |
@@ -110,7 +110,7 @@ pack/controller selections were actually exercised through, and
 | `interactive-fiction-hybrid` | narrative | world | ui-simulation | keyboard, touch | narrative-exploration-recipe |
 | `investigation-game` | narrative, world, world-entities, codex | puzzle | top-down, pointer | keyboard, pointer, touch | narrative-exploration-recipe |
 | `museum-exhibit` | world, world-entities, codex | narrative | top-down, pointer | keyboard, pointer, touch | narrative-exploration-recipe |
-| `escape-room` | puzzle | narrative, world | pointer, ui-simulation | keyboard, pointer, touch | narrative-exploration-recipe |
+| `escape-room` | puzzle-rules | narrative, world | pointer, ui-simulation | keyboard, pointer, touch | narrative-exploration-recipe |
 ## Party / toy / weird (Phase 7C)
 
 | id | required packs | optional packs | controller(s) | input modes | validation profile |
@@ -135,7 +135,7 @@ pack/controller selections were actually exercised through, and
 | world-entities | `sw2d.world-entities` | `world.entities` | 27 | 36 |
 | progression | `sw2d.progression` | `progression.state` | 11 | 26 |
 | arcade | `sw2d.arcade` | `arcade.score` | 17 | 41 |
-| puzzle | `sw2d.puzzle` | `puzzle.state` | 2 | 6 |
+| puzzle | `sw2d.puzzle` | `puzzle.state` | 0 | 4 |
 | simulation | `sw2d.simulation` | `simulation.resources` | 9 | 10 |
 | narrative | `sw2d.narrative` | `narrative.state` | 4 | 8 |
 | strategy | `sw2d.strategy` | `strategy.turns` | 4 | 4 |
@@ -143,7 +143,7 @@ pack/controller selections were actually exercised through, and
 | weapons | `sw2d.weapons` | `combat.weapons` | 10 | 12 |
 | encounters | `sw2d.encounters` | `combat.encounters` | 9 | 11 |
 | navigation | `sw2d.navigation` | `world.navigation` | 4 | 8 |
-| puzzle-rules | `sw2d.puzzle-rules` | `puzzle.rules` | 4 | 4 |
+| puzzle-rules | `sw2d.puzzle-rules` | `puzzle.rules` | 6 | 6 |
 | generation | `sw2d.generation` | `world.generation` | 6 | 6 |
 | world-graph | `sw2d.world-graph` | `world.graph` | 2 | 2 |
 | vehicles | `sw2d.vehicles` | `vehicle.motion` | 6 | 6 |

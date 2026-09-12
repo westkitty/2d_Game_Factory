@@ -1,4 +1,52 @@
 {
   "schemaVersion": 1,
-  "puzzles": []
+  "puzzles": [
+    {
+      "id": "starter",
+      "kind": "escape",
+      "interactables": [
+        {
+          "id": "note",
+          "x": 240,
+          "y": 280,
+          "radius": 28,
+          "label": "note",
+          "setsFlags": [
+            "note"
+          ]
+        },
+        {
+          "id": "key",
+          "x": 480,
+          "y": 280,
+          "radius": 28,
+          "label": "key",
+          "requiresFlags": [
+            "note"
+          ],
+          "setsFlags": [
+            "key"
+          ]
+        },
+        {
+          "id": "door",
+          "x": 720,
+          "y": 280,
+          "radius": 28,
+          "label": "door",
+          "requiresFlags": [
+            "key"
+          ],
+          "setsFlags": [
+            "escaped"
+          ]
+        }
+      ],
+      "completeWhen": {
+        "flags": [
+          "key"
+        ]
+      }
+    }
+  ]
 }

@@ -64,7 +64,7 @@ with a small working placeholder to replace. Every other pack is configured as J
 - Controller family/families: top-down
 - Required packs (enabled by default): sw2d.combat, sw2d.weapons, sw2d.encounters, sw2d.stage-scroll
 - Optional packs (available, not enabled by default - add to content/game.json's systemPacks to use): sw2d.arcade
-- Content roles this preset expects: tuning, stage-scroll
+- Content roles this preset expects: tuning, stage-scroll, encounters
 
 ## Known preset limitations
 
