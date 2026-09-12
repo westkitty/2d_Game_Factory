@@ -1,17 +1,24 @@
 /**
- * `npm run dev` lands here.
+ * `npm run dev` and `npm run app`/`app:dev` land here.
  *
  * Starts the workbench host on loopback, prints the URL, and makes sure every
  * child process it owns (dev servers, preview servers) is torn down on exit -
  * a factory that leaks a dev server every time it stops is a factory that
  * eventually cannot start.
+ *
+ * `--app-mode` is the application-like wrapper: it opens the workbench in a
+ * dedicated Chromium-family app window (see `browserLauncher.ts`) instead of
+ * an ordinary browser tab. Without it, behaviour is unchanged from before the
+ * wrapper existed.
  */
 
 import { spawn } from 'node:child_process';
 import { startHost } from './host.ts';
+import { launchAppMode, shouldAutoLaunch } from './browserLauncher.ts';
 
 const production = process.argv.includes('--production');
 const noOpen = process.argv.includes('--no-open');
+const appMode = process.argv.includes('--app-mode');
 
 const host = await startHost({ production });
 
@@ -21,9 +28,13 @@ console.log(`  ${host.url}`);
 console.log(`  ${production ? 'production build' : 'dev (hot reload)'} | 127.0.0.1 only | no network, no account, no API key`);
 console.log('');
 
-if (!noOpen && process.stdout.isTTY) {
-  const opener = process.platform === 'darwin' ? 'open' : process.platform === 'win32' ? 'explorer' : 'xdg-open';
-  spawn(opener, [host.url], { shell: false, detached: true, stdio: 'ignore' }).unref();
+if (shouldAutoLaunch({ noOpen, isTTY: process.stdout.isTTY })) {
+  if (appMode) {
+    console.log(`  ${launchAppMode(host.url).message}`);
+  } else {
+    const opener = process.platform === 'darwin' ? 'open' : process.platform === 'win32' ? 'explorer' : 'xdg-open';
+    spawn(opener, [host.url], { shell: false, detached: true, stdio: 'ignore' }).unref();
+  }
 }
 
 let closing = false;

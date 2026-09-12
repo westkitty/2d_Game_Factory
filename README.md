@@ -38,10 +38,31 @@ and theme packs, so a new game is a *composition* rather than a fork.
 
 ## Install and run
 
+One-time setup:
+
 ```bash
 npm install
-npm run dev
 ```
+
+To use the factory day to day, launch it as a dedicated application window:
+
+```bash
+npm run app
+```
+
+This builds the production workbench, starts the host on loopback, and opens
+it in a **browser app-mode wrapper** - a Brave (or Chrome/Chromium) window
+with no tab strip or address bar, so it behaves like a dedicated local
+application even though the workbench itself is still the same browser-based
+product. It is not native application packaging (no Electron, no Tauri);
+`SW2D_APP_BROWSER_PATH` can point it at a specific Chromium-family
+executable if none of Brave/Chrome/Chromium is found at its default install
+location. Stop it with Ctrl+C in the terminal that ran it - that also stops
+the server and cleans up any preview processes it started.
+
+For development (hot reload, same app-mode window), use `npm run app:dev`
+instead. Plain `npm run dev` still opens the workbench in a normal browser
+tab, unchanged from before.
 
 That opens the **workbench**. From its home screen:
 
@@ -88,9 +109,11 @@ system Chrome is needed for the browser QA suites, and nothing else.
 ## Commands
 
 ```bash
-npm run dev              # the workbench
+npm run app              # the actual application: build + serve + open in a Brave/Chromium app-mode window
+npm run app:dev          # same wrapper window, hot-reload dev server underneath
+npm run dev              # the workbench in a normal browser tab (development)
 npm run workbench:build  # production build of the workbench UI
-npm run workbench:start  # serve that build instead of the dev server
+npm run workbench:start  # serve that build instead of the dev server (normal tab)
 npm run workbench:test   # workbench unit tests
 npm run starter:dev      # the Phase 1 foundation slice (engine evidence)
 

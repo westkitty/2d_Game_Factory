@@ -25,6 +25,8 @@
     "workbench:build": "vite build --config workbench/vite.config.ts",
     "workbench:start": "node --experimental-strip-types workbench/server/main.ts --production",
     "workbench:test": "vitest run workbench/test",
+    "app": "npm run workbench:build && node --experimental-strip-types workbench/server/main.ts --production --app-mode",
+    "app:dev": "node --experimental-strip-types workbench/server/main.ts --app-mode",
     "starter-kits:status": "node --experimental-strip-types tools/scripts/starter-kit-status.ts",
     "starter-kits:bootstrap": "node --experimental-strip-types tools/scripts/bootstrap-starter-kit.ts",
     "starter:dev": "npm run dev --workspace @sw2d/starter",
