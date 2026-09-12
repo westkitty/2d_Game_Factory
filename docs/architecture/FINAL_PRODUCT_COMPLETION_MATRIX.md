@@ -43,6 +43,8 @@ exceptions: physical hardware certification and the user-owned public-license ch
 - **Required:** authorable pursuer (speed, acceleration, catch radius, escape line) reused by chase-platformer, endless-runner and auto-runner.
 - **Journey:** start → wall advances → run right → escape line → `complete/escaped`; restart; stand still → `failed/caught`.
 - **Checkpoint:** Wave 1.
+- **Closed by:** `sw2d.pursuit` (`movement.pursuit`, `packages/packs/src/pursuit/pursuitPack.ts`), `content/pursuit.json` (`pursuit-catalog` schema), `bindStarterChase` rebuilt on the service. **Proof/test:** `packages/packs/test/pursuit.test.ts`, `packages/cli/test/generate.test.ts` (Wave 1 block), proof spec `chasePlatformer` (hand-authored proof unchanged) + completion spec `completion-specs/chasePlatformer.ts`. **Browser:** `npm run qa:completion -- chase-platformer` PASS (stand still → `caught`; restart; run → `escaped` at x ≥ 820).
+- **Status:** CLOSED (Wave 1).
 
 ### L02 - runner pressure / climbing
 - **Source text:** "Auto-run and the starter gap for the generated starter are game-specific presentation; a reusable climbing or chase-pressure system is not."
@@ -52,6 +54,8 @@ exceptions: physical hardware certification and the user-owned public-license ch
 - **Required:** a pursuer trails the runner; a missed jump (fall/stumble) lets it close; caught = `failed`; distance/course completion unchanged.
 - **Journey:** start → pursuer trails at fixed gap → miss a jump → pursuer closes → caught → restart → clear course.
 - **Checkpoint:** Wave 1.
+- **Closed by:** `sw2d.pursuit` chaser + authored stumble blocks in `bindStarterRun`; catalog requires `sw2d.pursuit` for both runners. **Proof/test:** `pursuit.test.ts` (chaser close/recover/catch), generate tests; proof spec `autoRunner` (canonical proof refreshed) + completion specs `endlessRunner` / `autoRunner`. **Browser:** `qa:completion -- endless-runner auto-runner` PASS (trip twice → `caught`; restart; clean run → `survived` / `escaped`), `qa:proof -- auto-runner endless-runner` PASS.
+- **Status:** CLOSED (Wave 1).
 
 ### L03 - ledge grab / parkour grammar
 - **Source text:** "Wall-slide and wall-jump contact are reusable (sw2d.wall); ledge-grab and a full parkour grammar are not."
@@ -61,6 +65,8 @@ exceptions: physical hardware certification and the user-owned public-license ch
 - **Required:** hanging on authored ledges, UP climbs, DOWN drops, JUMP from hang; transitions logged; disposal resets.
 - **Journey:** jump at a ledge → `ledge-hang` → UP → `climbed` on top → DOWN from next ledge → `dropped`; wall-slide → wall-jump still works.
 - **Checkpoint:** Wave 1.
+- **Closed by:** `sw2d.wall` ledge grammar (`ledges`, `state()`, `pinned()`, `climb()`, `drop()`, `release()`, `ledgeStats()`), `content/wall.json` ledges for both presets, platform shell pins the body while hanging/climbing (body disabled) and hands it back to Arcade on climb/drop/hang-jump. Also fixed: Wave 30's inverted slide/kick direction (slid while pushing away, kicked into the wall). **Proof/test:** `wall.test.ts` ledge block, generate tests, proof specs `precisionPlatformer` / `climbingGame` (canonical proofs refreshed, contracts updated). **Browser:** `qa:completion -- precision-platformer climbing-game` PASS and `qa:proof` PASS (grab → stable hang → DOWN drops/fails; grab → UP climbs → finish; slide on cliff → wall-jump → summit-ledge grab → climb → summit; hang-jump → regrab).
+- **Status:** CLOSED (Wave 1).
 
 ## B. Melee / top-down combat
 
@@ -423,9 +429,9 @@ exceptions: physical hardware certification and the user-owned public-license ch
 
 | id | presets | wave | status | final commit |
 |---|---|---|---|---|
-| L01 | chase-platformer | 1 | OPEN | |
-| L02 | endless-runner, auto-runner | 1 | OPEN | |
-| L03 | precision-platformer, climbing-game | 1 | OPEN | |
+| L01 | chase-platformer | 1 | CLOSED | wave 1 |
+| L02 | endless-runner, auto-runner | 1 | CLOSED | wave 1 |
+| L03 | precision-platformer, climbing-game | 1 | CLOSED | wave 1 |
 | L04 | action-adventure, arena-combat | 2 | OPEN | |
 | L05 | twin-stick-shooter | 2 | OPEN | |
 | L06 | survivor-like | 2 | OPEN | |

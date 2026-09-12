@@ -173,6 +173,8 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         disposed = true;
         debugHandle.dispose();
         weapon.dispose();
+        drive.dispose();
+        kartItem.dispose();
         try {
           vehicle.destroy();
         } catch {

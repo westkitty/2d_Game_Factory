@@ -62,13 +62,13 @@ with a small working placeholder to replace. Every other pack is configured as J
 ## Composition
 
 - Controller family/families: platform
-- Required packs (enabled by default): sw2d.arcade, sw2d.generation
+- Required packs (enabled by default): sw2d.arcade, sw2d.generation, sw2d.pursuit
 - Optional packs (available, not enabled by default - add to content/game.json's systemPacks to use): sw2d.world, sw2d.world-entities
-- Content roles this preset expects: tuning, levels, generation
+- Content roles this preset expects: tuning, levels, generation, pursuit
 
 ## Known preset limitations
 
-- Auto-run and the starter gap for the generated starter are game-specific presentation; a reusable climbing or chase-pressure system is not.
+- (none stated)
 
 ## How to add a level
 

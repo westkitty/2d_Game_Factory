@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:sw2d:schema:content-pursuit-catalog:v1",
+  "title": "PursuitCatalog",
+  "description": "Mirrors @sw2d/contracts PursuitCatalog (pursuit.ts). Validated as a ContentBundle.data document (document name 'pursuit'). Pursuit pressure along the run axis: a closing wall or a trailing chaser.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "mode", "startX", "speed", "catchDistance", "escapeX", "maxGap", "closeSpeed", "recoverSpeed", "stumbleMs", "failY"],
+  "properties": {
+    "schemaVersion": { "type": "integer", "minimum": 1 },
+    "mode": { "type": "string", "enum": ["wall", "chaser"] },
+    "startX": { "type": "number" },
+    "speed": { "type": "number", "minimum": 0 },
+    "catchDistance": { "type": "number", "minimum": 0 },
+    "escapeX": { "type": ["number", "null"] },
+    "maxGap": { "type": "number", "minimum": 0 },
+    "closeSpeed": { "type": "number", "minimum": 0 },
+    "recoverSpeed": { "type": "number", "minimum": 0 },
+    "stumbleMs": { "type": "number", "minimum": 0 },
+    "failY": { "type": "number" }
+  }
+}

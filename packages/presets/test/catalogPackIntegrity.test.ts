@@ -35,6 +35,7 @@ import {
   cameraPack,
   codexPack,
   targetingPack,
+  pursuitPack,
 } from '@sw2d/packs';
 import { resolveInstallOrder } from '@sw2d/runtime/composition';
 import { PRESETS } from '../src/index.ts';
@@ -90,6 +91,7 @@ const REAL_PACKS = [
   cameraPack,
   codexPack,
   targetingPack,
+  pursuitPack,
 ];
 
 const REGISTRY = new Map(REAL_PACKS.map((definition) => [definition.id, definition]));

@@ -68,7 +68,7 @@ with a small working placeholder to replace. Every other pack is configured as J
 
 ## Known preset limitations
 
-- Wall-slide and wall-jump contact are reusable (sw2d.wall); ledge-grab and a full parkour grammar are not.
+- (none stated)
 
 ## How to add a level
 

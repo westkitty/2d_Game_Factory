@@ -28,6 +28,7 @@ import {
   generateCameraCatalog,
   generateCodexCatalog,
   generateTargetingCatalog,
+  generatePursuitCatalog,
   generateResourceManifest,
   generateTiledLevel,
   generateTheme,
@@ -356,6 +357,22 @@ export function buildGameFiles(gameId: string, preset: PresetDefinition): Map<st
             : preset.id === 'turn-based-tactics'
               ? 'range'
               : 'tower'
+          : 'none',
+      ),
+      null,
+      2,
+    ) + '\n',
+  );
+  files.set(
+    'content/pursuit.json',
+    JSON.stringify(
+      generatePursuitCatalog(
+        requiredPackIds.includes('sw2d.pursuit')
+          ? preset.id === 'chase-platformer'
+            ? 'wall'
+            : preset.id === 'auto-runner'
+              ? 'chaser-course'
+              : 'chaser'
           : 'none',
       ),
       null,

@@ -455,7 +455,7 @@ describe('generated ball-paddle games consume sw2d.ball-paddle', () => {
     expect(shell).toContain('table.tick(');
     expect(buildGameFiles('ball-paddle-probe', breakout).get('src/content.ts')).toContain("'ball-paddle': ballPaddleData");
     expect(buildGameFiles('ball-paddle-probe', breakout).get('src/main.ts')).toContain(
-      'ballPaddlePack, meleePack, localPlayPack, stageScrollPack, timingPack, wallPack, territoryPack, pinballPack, cameraPack, codexPack, targetingPack, GAME_SPECIFIC_PACK',
+      'ballPaddlePack, meleePack, localPlayPack, stageScrollPack, timingPack, wallPack, territoryPack, pinballPack, cameraPack, codexPack, targetingPack, pursuitPack, GAME_SPECIFIC_PACK',
     );
   });
 
@@ -481,7 +481,7 @@ describe('generated melee games consume sw2d.melee', () => {
     expect(shell).toContain('melee.strike(');
     expect(buildGameFiles('melee-probe', adventure).get('src/content.ts')).toContain('melee: meleeData');
     expect(buildGameFiles('melee-probe', adventure).get('src/main.ts')).toContain(
-      'ballPaddlePack, meleePack, localPlayPack, stageScrollPack, timingPack, wallPack, territoryPack, pinballPack, cameraPack, codexPack, targetingPack, GAME_SPECIFIC_PACK',
+      'ballPaddlePack, meleePack, localPlayPack, stageScrollPack, timingPack, wallPack, territoryPack, pinballPack, cameraPack, codexPack, targetingPack, pursuitPack, GAME_SPECIFIC_PACK',
     );
   });
 
@@ -506,7 +506,7 @@ describe('generated local-play games consume sw2d.local-play', () => {
     expect(shell).toContain('seats.act()');
     expect(buildGameFiles('local-play-probe', party).get('src/content.ts')).toContain("'local-play': localPlayData");
     expect(buildGameFiles('local-play-probe', party).get('src/main.ts')).toContain(
-      'ballPaddlePack, meleePack, localPlayPack, stageScrollPack, timingPack, wallPack, territoryPack, pinballPack, cameraPack, codexPack, targetingPack, GAME_SPECIFIC_PACK',
+      'ballPaddlePack, meleePack, localPlayPack, stageScrollPack, timingPack, wallPack, territoryPack, pinballPack, cameraPack, codexPack, targetingPack, pursuitPack, GAME_SPECIFIC_PACK',
     );
   });
 
@@ -565,7 +565,7 @@ describe('generated timing games consume sw2d.timing', () => {
     expect(shell).toContain('clock.hit()');
     expect(buildGameFiles('timing-probe', reaction).get('src/content.ts')).toContain('timing: timingData');
     expect(buildGameFiles('timing-probe', reaction).get('src/main.ts')).toContain(
-      'ballPaddlePack, meleePack, localPlayPack, stageScrollPack, timingPack, wallPack, territoryPack, pinballPack, cameraPack, codexPack, targetingPack, GAME_SPECIFIC_PACK',
+      'ballPaddlePack, meleePack, localPlayPack, stageScrollPack, timingPack, wallPack, territoryPack, pinballPack, cameraPack, codexPack, targetingPack, pursuitPack, GAME_SPECIFIC_PACK',
     );
   });
 
@@ -599,7 +599,7 @@ describe('generated stage-scroll games consume sw2d.stage-scroll', () => {
     expect(shell).toContain('stage.tick(');
     expect(buildGameFiles('stage-scroll-probe', shmup).get('src/content.ts')).toContain("'stage-scroll': stageScrollData");
     expect(buildGameFiles('stage-scroll-probe', shmup).get('src/main.ts')).toContain(
-      'ballPaddlePack, meleePack, localPlayPack, stageScrollPack, timingPack, wallPack, territoryPack, pinballPack, cameraPack, codexPack, targetingPack, GAME_SPECIFIC_PACK',
+      'ballPaddlePack, meleePack, localPlayPack, stageScrollPack, timingPack, wallPack, territoryPack, pinballPack, cameraPack, codexPack, targetingPack, pursuitPack, GAME_SPECIFIC_PACK',
     );
   });
 
@@ -1487,5 +1487,47 @@ describe('generated wall, territory, pinball, camera, codex and targeting consum
     }
     const towerFiles = buildGameFiles('wave30-probe', PRESETS.find((candidate) => candidate.id === 'tower-defense')!);
     expect(towerFiles.get('src/game-specific/shellPack.ts')).toContain('bindStarterTargeting(context)');
+  });
+});
+
+describe('Final Product Completion Wave 1 - generated platforming consumes sw2d.pursuit and the ledge grammar', () => {
+  it('every preset emits a schema-valid content/pursuit.json (inert unless required)', () => {
+    for (const preset of PRESETS) {
+      const files = buildGameFiles('fpc-probe', preset);
+      const pursuitJson: unknown = JSON.parse(files.get('content/pursuit.json')!);
+      expect(() => validateContentBundleData({ pursuit: pursuitJson })).not.toThrow();
+      expect(files.get('src/content.ts'), preset.id).toContain('pursuit: pursuitData');
+      expect(files.get('src/main.ts'), preset.id).toContain('pursuitPack');
+      const required = preset.requiredSystemPacks.some((s) => s.packId === 'sw2d.pursuit');
+      const doc = pursuitJson as { mode: string; speed: number; maxGap: number };
+      if (!required) expect(doc.speed === 0 && doc.maxGap === 0, preset.id).toBe(true);
+    }
+  });
+
+  it('chase-platformer gets the closing wall; the runners get the trailing chaser (course vs endless escape line)', () => {
+    const read = (id: string) => {
+      const preset = PRESETS.find((candidate) => candidate.id === id)!;
+      const files = buildGameFiles('fpc-probe', preset);
+      const gameJson = JSON.parse(files.get('content/game.json')!) as { systemPacks: Array<{ packId: string }> };
+      expect(gameJson.systemPacks.map((s) => s.packId), id).toContain('sw2d.pursuit');
+      return JSON.parse(files.get('content/pursuit.json')!) as { mode: string; escapeX: number | null; speed: number; maxGap: number };
+    };
+    expect(read('chase-platformer')).toMatchObject({ mode: 'wall', escapeX: 820 });
+    expect(read('chase-platformer').speed).toBeGreaterThan(0);
+    expect(read('auto-runner')).toMatchObject({ mode: 'chaser', escapeX: 820 });
+    expect(read('endless-runner')).toMatchObject({ mode: 'chaser', escapeX: null });
+    expect(read('endless-runner').maxGap).toBeGreaterThan(0);
+  });
+
+  it('precision-platformer and climbing-game author ledges in content/wall.json', () => {
+    for (const id of ['precision-platformer', 'climbing-game'] as const) {
+      const preset = PRESETS.find((candidate) => candidate.id === id)!;
+      const files = buildGameFiles('fpc-probe', preset);
+      const doc = JSON.parse(files.get('content/wall.json')!) as { ledges?: Array<{ id: string; side: string }>; regrabLockoutMs?: number };
+      expect(doc.ledges?.length ?? 0, id).toBeGreaterThan(0);
+      expect(doc.regrabLockoutMs, id).toBeGreaterThan(0);
+      expect(files.get('src/game-specific/shellPack.ts'), id).toContain('wallsCap.climb()');
+      expect(files.get('src/game-specific/shellPack.ts'), id).toContain('wallsCap.drop()');
+    }
   });
 });

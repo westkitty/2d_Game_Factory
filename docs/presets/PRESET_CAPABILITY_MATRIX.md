@@ -20,12 +20,12 @@ pack/controller selections were actually exercised through, and
 | id | required packs | optional packs | controller(s) | input modes | validation profile |
 |---|---|---|---|---|---|
 | `traditional-platformer` | world, world-entities | arcade | platform | keyboard, touch | platform-recipe |
-| `chase-platformer` | world, world-entities | combat, arcade | platform | keyboard, touch | platform-recipe |
-| `endless-runner` | arcade, generation | world, world-entities | platform | keyboard, touch | platform-recipe |
+| `chase-platformer` | world, world-entities, pursuit | combat, arcade | platform | keyboard, touch | platform-recipe |
+| `endless-runner` | arcade, generation, pursuit | world, world-entities | platform | keyboard, touch | platform-recipe |
 | `precision-platformer` | world, world-entities, wall | arcade | platform | keyboard, touch | platform-recipe |
 | `metroidvania` | world, world-entities, progression, world-graph | combat, ai | platform | keyboard, touch | platform-recipe |
 | `puzzle-platformer` | puzzle-rules, world, world-entities | - | platform, grid | keyboard, touch | platform-recipe |
-| `auto-runner` | arcade, generation | world, world-entities | platform | keyboard, touch | platform-recipe |
+| `auto-runner` | arcade, generation, pursuit | world, world-entities | platform | keyboard, touch | platform-recipe |
 | `climbing-game` | world, world-entities, wall | arcade | platform | keyboard, touch | platform-recipe |
 | `grappling-platformer` | world, world-entities | arcade | platform | keyboard, touch | platform-recipe |
 | `collectathon-platformer` | world, world-entities, arcade, items | progression | platform | keyboard, touch | platform-recipe |
@@ -136,14 +136,14 @@ pack/controller selections were actually exercised through, and
 | progression | `sw2d.progression` | `progression.state` | 11 | 26 |
 | arcade | `sw2d.arcade` | `arcade.score` | 14 | 41 |
 | puzzle | `sw2d.puzzle` | `puzzle.state` | 2 | 6 |
-| puzzle-rules | `sw2d.puzzle-rules` | `puzzle.rules` | 4 | 4 |
 | simulation | `sw2d.simulation` | `simulation.resources` | 9 | 10 |
 | narrative | `sw2d.narrative` | `narrative.state` | 4 | 8 |
 | strategy | `sw2d.strategy` | `strategy.turns` | 4 | 4 |
 | items | `sw2d.items` | `items.state` | 1 | 2 |
 | weapons | `sw2d.weapons` | `combat.weapons` | 11 | 11 |
 | encounters | `sw2d.encounters` | `combat.encounters` | 6 | 8 |
-| navigation | `sw2d.navigation` | `world.navigation` | 3 | 7 |
+| navigation | `sw2d.navigation` | `world.navigation` | 4 | 8 |
+| puzzle-rules | `sw2d.puzzle-rules` | `puzzle.rules` | 4 | 4 |
 | generation | `sw2d.generation` | `world.generation` | 5 | 5 |
 | world-graph | `sw2d.world-graph` | `world.graph` | 2 | 2 |
 | vehicles | `sw2d.vehicles` | `vehicle.motion` | 5 | 5 |
@@ -163,6 +163,7 @@ pack/controller selections were actually exercised through, and
 | camera | `sw2d.camera` | `world.camera` | 2 | 2 |
 | codex | `sw2d.codex` | `narrative.codex` | 2 | 2 |
 | targeting | `sw2d.targeting` | `combat.targeting` | 3 | 3 |
+| pursuit | `sw2d.pursuit` | `movement.pursuit` | 3 | 3 |
 
 **All thirty-four current packs have at least one preset consumer.** `sw2d.items` (capability
 program Phase 2) is required by `collectathon-platformer`, whose generated starter consumes

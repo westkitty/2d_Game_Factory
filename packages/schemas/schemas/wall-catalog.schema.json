@@ -2,21 +2,51 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "urn:sw2d:schema:content-wall-catalog:v1",
   "title": "WallCatalog",
-  "description": "Mirrors @sw2d/contracts WallCatalog (wall.ts). Validated as a ContentBundle.data document (document name 'wall'). Wall-slide / wall-jump contact - not a full parkour grammar.",
+  "description": "Mirrors @sw2d/contracts WallCatalog (wall.ts). Validated as a ContentBundle.data document (document name 'wall'). Wall-slide / wall-jump contact plus the ledge grammar (grab, climb, drop, hang-jump).",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schemaVersion", "mode", "player", "walls", "slideSpeed", "jumpVx", "jumpVy", "goal", "failY"],
+  "required": [
+    "schemaVersion",
+    "mode",
+    "player",
+    "walls",
+    "slideSpeed",
+    "jumpVx",
+    "jumpVy",
+    "goal",
+    "failY"
+  ],
   "properties": {
-    "schemaVersion": { "type": "integer", "minimum": 1 },
-    "mode": { "type": "string", "enum": ["slide", "leap"] },
+    "schemaVersion": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "mode": {
+      "type": "string",
+      "enum": [
+        "slide",
+        "leap"
+      ]
+    },
     "player": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["x", "y", "radius"],
+      "required": [
+        "x",
+        "y",
+        "radius"
+      ],
       "properties": {
-        "x": { "type": "number" },
-        "y": { "type": "number" },
-        "radius": { "type": "number", "exclusiveMinimum": 0 }
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "radius": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
       }
     },
     "walls": {
@@ -25,29 +55,129 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["id", "x", "y", "halfWidth", "halfHeight"],
+        "required": [
+          "id",
+          "x",
+          "y",
+          "halfWidth",
+          "halfHeight"
+        ],
         "properties": {
-          "id": { "type": "string", "minLength": 1 },
-          "x": { "type": "number" },
-          "y": { "type": "number" },
-          "halfWidth": { "type": "number", "exclusiveMinimum": 0 },
-          "halfHeight": { "type": "number", "exclusiveMinimum": 0 }
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "x": {
+            "type": "number"
+          },
+          "y": {
+            "type": "number"
+          },
+          "halfWidth": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "halfHeight": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          }
         }
       }
     },
-    "slideSpeed": { "type": "number", "minimum": 0 },
-    "jumpVx": { "type": "number" },
-    "jumpVy": { "type": "number" },
+    "slideSpeed": {
+      "type": "number",
+      "minimum": 0
+    },
+    "jumpVx": {
+      "type": "number"
+    },
+    "jumpVy": {
+      "type": "number"
+    },
     "goal": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["x", "y", "radius"],
+      "required": [
+        "x",
+        "y",
+        "radius"
+      ],
       "properties": {
-        "x": { "type": "number" },
-        "y": { "type": "number" },
-        "radius": { "type": "number", "exclusiveMinimum": 0 }
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "radius": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
       }
     },
-    "failY": { "type": "number" }
+    "failY": {
+      "type": "number"
+    },
+    "ledges": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "x",
+          "y",
+          "side",
+          "grabHalfWidth",
+          "grabHalfHeight"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "x": {
+            "type": "number"
+          },
+          "y": {
+            "type": "number"
+          },
+          "side": {
+            "type": "string",
+            "enum": [
+              "left",
+              "right"
+            ]
+          },
+          "grabHalfWidth": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "grabHalfHeight": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          }
+        }
+      }
+    },
+    "hangOffsetY": {
+      "type": "number",
+      "minimum": 0
+    },
+    "hangOffsetX": {
+      "type": "number",
+      "minimum": 0
+    },
+    "climbMs": {
+      "type": "number",
+      "minimum": 0
+    },
+    "regrabLockoutMs": {
+      "type": "number",
+      "minimum": 0
+    },
+    "hangJumpVy": {
+      "type": "number"
+    }
   }
 }

@@ -36,12 +36,12 @@ controller/input-mode breakdown and full pack-consumer coverage.
 | id | display name | controller(s) | content roles | maturity |
 |---|---|---|---|---|
 | `traditional-platformer` | Traditional Platformer | platform | tuning, levels | proof-validated |
-| `chase-platformer` | Chase Platformer | platform | tuning, levels | proof-validated |
-| `endless-runner` | Endless Runner | platform | tuning, levels | proof-validated |
+| `chase-platformer` | Chase Platformer | platform | tuning, levels, pursuit | proof-validated |
+| `endless-runner` | Endless Runner | platform | tuning, levels, generation, pursuit | proof-validated |
 | `precision-platformer` | Precision Platformer | platform | tuning, levels, wall | proof-validated |
-| `metroidvania` | Metroidvania | platform | tuning, levels | proof-validated |
-| `puzzle-platformer` | Puzzle Platformer | platform, grid | tuning, levels | proof-validated |
-| `auto-runner` | Auto Runner | platform | tuning, levels | proof-validated |
+| `metroidvania` | Metroidvania | platform | tuning, levels, world-graph | proof-validated |
+| `puzzle-platformer` | Puzzle Platformer | platform, grid | tuning, levels, puzzles | proof-validated |
+| `auto-runner` | Auto Runner | platform | tuning, levels, generation, pursuit | proof-validated |
 | `climbing-game` | Climbing Game | platform | tuning, levels, wall | proof-validated |
 | `grappling-platformer` | Grappling Platformer | platform | tuning, levels | proof-validated |
 | `collectathon-platformer` | Collectathon Platformer | platform | tuning, levels, items | proof-validated |
@@ -54,10 +54,10 @@ controller/input-mode breakdown and full pack-consumer coverage.
 | `action-adventure` | Action Adventure | top-down | tuning, levels, melee | proof-validated |
 | `twin-stick-shooter` | Twin-Stick Shooter | top-down | tuning, levels | proof-validated |
 | `survivor-like` | Survivor-Like | top-down | tuning | proof-validated |
-| `dungeon-crawler` | Dungeon Crawler | top-down | tuning, levels | proof-validated |
-| `action-roguelite` | Action Roguelite | top-down | tuning, levels | proof-validated |
-| `stealth-game` | Stealth Game | top-down | tuning, levels | proof-validated |
-| `heist-game` | Heist Game | top-down | tuning, levels | proof-validated |
+| `dungeon-crawler` | Dungeon Crawler | top-down | tuning, levels, generation | proof-validated |
+| `action-roguelite` | Action Roguelite | top-down | tuning, levels, generation | proof-validated |
+| `stealth-game` | Stealth Game | top-down | tuning, levels, perception | proof-validated |
+| `heist-game` | Heist Game | top-down | tuning, levels, perception | proof-validated |
 | `arena-combat` | Arena Combat | top-down | tuning, levels, melee | proof-validated |
 | `boss-rush` | Boss Rush | top-down | tuning, levels | proof-validated |
 
@@ -77,17 +77,17 @@ controller/input-mode breakdown and full pack-consumer coverage.
 
 | id | display name | controller(s) | content roles | maturity |
 |---|---|---|---|---|
-| `top-down-racer` | Top-Down Racer | vehicle | tuning, levels | proof-validated |
-| `kart-racer` | Kart Racer | vehicle | tuning, levels | proof-validated |
-| `time-trial-racer` | Time Trial Racer | vehicle | tuning, levels | proof-validated |
-| `endless-driving` | Endless Driving | vehicle | tuning | proof-validated |
-| `boat-flight-racer` | Boat / Flight Racer | vehicle | tuning, levels | proof-validated |
+| `top-down-racer` | Top-Down Racer | vehicle | tuning, levels, vehicles, races | proof-validated |
+| `kart-racer` | Kart Racer | vehicle | tuning, levels, vehicles, races | proof-validated |
+| `time-trial-racer` | Time Trial Racer | vehicle | tuning, levels, vehicles, races | proof-validated |
+| `endless-driving` | Endless Driving | vehicle | tuning, generation, vehicles | proof-validated |
+| `boat-flight-racer` | Boat / Flight Racer | vehicle | tuning, levels, vehicles | proof-validated |
 
 ## Puzzle / arcade (Phase 7B)
 
 | id | display name | controller(s) | content roles | maturity |
 |---|---|---|---|---|
-| `sokoban` | Sokoban | grid | tuning | proof-validated |
+| `sokoban` | Sokoban | grid | tuning, puzzles | proof-validated |
 | `match-puzzle` | Match Puzzle | grid | tuning, puzzles | proof-validated |
 | `falling-block-puzzle` | Falling Block Puzzle | grid, ui-simulation | tuning, puzzles | proof-validated |
 | `breakout` | Breakout | top-down | tuning, ball-paddle | proof-validated |
@@ -127,7 +127,7 @@ controller/input-mode breakdown and full pack-consumer coverage.
 
 | id | display name | controller(s) | content roles | maturity |
 |---|---|---|---|---|
-| `exploration-game` | Exploration Game | top-down | tuning, levels | proof-validated |
+| `exploration-game` | Exploration Game | top-down | tuning, levels, world-graph | proof-validated |
 | `visual-novel` | Visual Novel | ui-simulation | tuning, dialogue | proof-validated |
 | `point-and-click` | Point and Click | pointer, ui-simulation | tuning, levels, dialogue | proof-validated |
 | `interactive-fiction-hybrid` | Interactive Fiction Hybrid | ui-simulation | tuning, dialogue | proof-validated |
@@ -160,13 +160,13 @@ recipe's *first* stated limitation; see `knownLimitations` in
 | id | most important current limitation |
 |---|---|
 | `traditional-platformer` | (none stated) |
-| `chase-platformer` | Closing-wall pursuit for the generated starter is game-specific presentation; a reusable chase/pursuit-pressure pack is not. |
-| `endless-runner` | Auto-run and the starter gap for the generated starter are game-specific presentation; a reusable climbing or chase-pressure system is not. |
-| `precision-platformer` | Wall-slide and wall-jump contact are reusable (sw2d.wall); ledge-grab and a full parkour grammar are not. |
+| `chase-platformer` | (none stated) |
+| `endless-runner` | (none stated) |
+| `precision-platformer` | (none stated) |
 | `metroidvania` | (none stated) |
 | `puzzle-platformer` | (none stated) |
-| `auto-runner` | Auto-run and the starter gap for the generated starter are game-specific presentation; a reusable climbing or chase-pressure system is not. |
-| `climbing-game` | Wall-slide and wall-jump contact are reusable (sw2d.wall); ledge-grab and a full parkour grammar are not. |
+| `auto-runner` | (none stated) |
+| `climbing-game` | (none stated) |
 | `grappling-platformer` | (none stated) |
 | `collectathon-platformer` | (none stated) |
 | `top-down-adventure` | (none stated) |

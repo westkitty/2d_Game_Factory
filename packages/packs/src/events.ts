@@ -68,6 +68,10 @@ declare module '@sw2d/contracts' {
     'timing:completed': { readonly mode: string; readonly outcome: string };
     'wall:jumped': { readonly mode: string; readonly wallId: string };
     'wall:completed': { readonly mode: string; readonly outcome: string };
+    'wall:ledge': { readonly ledgeId: string; readonly transition: string };
+    'pursuit:stumbled': { readonly stumbles: number; readonly gap: number };
+    'pursuit:caught': { readonly mode: string; readonly reason: string };
+    'pursuit:escaped': { readonly mode: string };
     'territory:owned': { readonly zoneId: string; readonly owned: number };
     'territory:completed': { readonly mode: string };
     'pinball:bumper': { readonly bumperId: string; readonly score: number };

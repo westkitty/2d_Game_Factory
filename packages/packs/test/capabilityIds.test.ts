@@ -35,6 +35,7 @@ import {
   simulationPack,
   strategyPack,
   worldPack,
+  pursuitPack,
 } from '../src/index.ts';
 
 /**
@@ -83,6 +84,7 @@ const ALL_PACKS = [
   cameraPack,
   codexPack,
   targetingPack,
+  pursuitPack,
 ];
 
 /** `<family>.<service>`: lowercase segments, at least two, dash-separated words allowed after the first. */

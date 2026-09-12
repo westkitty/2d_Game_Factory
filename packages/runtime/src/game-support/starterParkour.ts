@@ -1,5 +1,5 @@
 import type Phaser from 'phaser';
-import type { WallCatalog } from '@sw2d/contracts';
+import { WALL_CAPABILITY_ID, type WallCatalog, type WallService } from '@sw2d/contracts';
 import { accentStyle, headingStyle, mutedStyle } from '../scenes/theme.ts';
 import type { SceneContext } from '../scenes/SceneContext.ts';
 
@@ -62,7 +62,7 @@ const INERT: StarterParkourBinding = {
 const PRECISION_START = { x: 80, y: 458 };
 const CLIMB_START = { x: 100, y: 458 };
 const FLAG_X = 820;
-const CLIMB_FLAG = { x: 420, y: 338 };
+const CLIMB_FLAG = { x: 440, y: 218 };
 // Platform tops are at y 480 (floors at y 500, 40 tall); a standing player is
 // at y 458. Anything lower is in a pit. The first value (520) sat below the
 // Arcade world-bounds floor (~518 for this sprite), so a player who fell into
@@ -95,17 +95,31 @@ export function bindStarterParkour(
     addFloor(140, 500, 280, 40);
     addFloor(660, 500, 600, 40);
   } else {
+    // Each step is taller than a plain jump (apex ~84 px): the ledge grammar
+    // (grab, UP to climb) is the way up, and the cliff face between the
+    // steps is a real wall-slide.
     addFloor(120, 500, 220, 40);
-    addFloor(280, 440, 200, 24);
-    addFloor(440, 380, 220, 24);
+    addFloor(280, 372, 200, 24);
+    addFloor(440, 252, 220, 24);
   }
   const wallCatalog = context.content.data['wall']?.value as WallCatalog | undefined;
+  const markers: { destroy(): void }[] = [];
   if (hud && wallCatalog && wallCatalog.walls[0]?.id !== 'none') {
     for (const wall of wallCatalog.walls) {
-      scene.add
-        .rectangle(wall.x, wall.y, wall.halfWidth * 2, wall.halfHeight * 2, 0x4f9ee0, 0.55)
-        .setStrokeStyle(2, 0xffffff, 0.7)
-        .setDepth(12);
+      markers.push(
+        scene.add
+          .rectangle(wall.x, wall.y, wall.halfWidth * 2, wall.halfHeight * 2, 0x4f9ee0, 0.55)
+          .setStrokeStyle(2, 0xffffff, 0.7)
+          .setDepth(12),
+      );
+    }
+    // Ledge corners (Final Product Completion Wave 1): a bright lip on the
+    // open-air side so the grab target is readable in the first play.
+    for (const ledge of wallCatalog.ledges ?? []) {
+      const dir = ledge.side === 'left' ? -1 : 1;
+      markers.push(
+        scene.add.rectangle(ledge.x + dir * 6, ledge.y + 3, 16, 6, 0xffe14d, 0.95).setStrokeStyle(1, 0xffffff, 0.9).setDepth(13),
+      );
     }
   }
 
@@ -148,17 +162,27 @@ export function bindStarterParkour(
     if (mode === 'precision') {
       title.setText(snap.outcome === 'complete' ? 'FINISHED' : snap.outcome === 'failed' ? 'FELL' : 'PRECISION');
       status.setText(`x ${snap.x}  ·  jumps ${snap.jumps}${snap.lastResult ? `  ·  ${snap.lastResult}` : ''}`);
-      hint.setText(snap.outcome === 'playing' ? 'JUMP THE GAPS   REACH THE FLAG' : snap.outcome === 'complete' ? 'FINISHED' : 'FELL');
+      hint.setText(
+        snap.outcome === 'playing' ? 'JUMP THE GAPS   GRAB LEDGES   UP CLIMBS   DOWN DROPS' : snap.outcome === 'complete' ? 'FINISHED' : 'FELL',
+      );
     } else {
       title.setText(snap.outcome === 'complete' ? 'SUMMIT' : snap.outcome === 'failed' ? 'FELL' : 'CLIMB');
       status.setText(`y ${snap.y}  ·  jumps ${snap.jumps}${snap.lastResult ? `  ·  ${snap.lastResult}` : ''}`);
-      hint.setText(snap.outcome === 'playing' ? 'JUMP UP   REACH THE FLAG' : snap.outcome === 'complete' ? 'SUMMIT' : 'FELL');
+      hint.setText(
+        snap.outcome === 'playing' ? 'SLIDE WALLS   GRAB LEDGES   UP CLIMBS   REACH THE FLAG' : snap.outcome === 'complete' ? 'SUMMIT' : 'FELL',
+      );
     }
   }
 
+  const wallService = context.capabilities.get<WallService>(WALL_CAPABILITY_ID);
+  const pinnedToLedge = (): boolean => {
+    const state = wallService?.active() ? wallService.state() : 'grounded';
+    return state === 'ledge-hang' || state === 'climbing';
+  };
+
   function finish(): void {
     if (outcome !== 'playing') return;
-    if (y > FAIL_Y) {
+    if (y > FAIL_Y && !pinnedToLedge()) {
       outcome = 'failed';
       lastResult = 'fell';
       return;
@@ -169,7 +193,7 @@ export function bindStarterParkour(
       context.audio.playCue('ui.confirm');
       return;
     }
-    if (mode === 'climb' && onGround && x >= 400 && y <= 410) {
+    if (mode === 'climb' && onGround && x >= 400 && y <= 300) {
       outcome = 'complete';
       lastResult = 'summit';
       context.audio.playCue('ui.confirm');
@@ -212,6 +236,7 @@ export function bindStarterParkour(
         status?.destroy();
         hint?.destroy();
         flag?.destroy();
+        for (const marker of markers) marker.destroy();
         floors.clear(true, true);
         floors.destroy(true);
       } catch {

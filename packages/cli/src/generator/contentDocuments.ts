@@ -900,8 +900,22 @@ export function generateWallCatalog(kind: 'slide' | 'leap' | 'none'): Record<str
       slideSpeed: 80,
       jumpVx: 140,
       jumpVy: -420,
-      goal: { x: 420, y: 338, radius: 36 },
+      goal: { x: 440, y: 218, radius: 36 },
       failY: 520,
+      // Ledge grammar (Final Product Completion Wave 1): the climb's two
+      // upper platforms (tops at y 360 and y 240) sit above a plain jump's
+      // reach, so each is entered by grabbing its open-air corner: a jump
+      // toward the corner hangs; UP climbs onto the platform, DOWN drops
+      // (with a regrab lockout), JUMP launches straight up.
+      ledges: [
+        { id: 'step-ledge', x: 180, y: 360, side: 'left', grabHalfWidth: 30, grabHalfHeight: 34 },
+        { id: 'summit-ledge', x: 330, y: 240, side: 'left', grabHalfWidth: 30, grabHalfHeight: 34 },
+      ],
+      hangOffsetX: 14,
+      hangOffsetY: 22,
+      hangJumpVy: -420,
+      climbMs: 180,
+      regrabLockoutMs: 400,
     };
   }
   return {
@@ -914,6 +928,67 @@ export function generateWallCatalog(kind: 'slide' | 'leap' | 'none'): Record<str
     jumpVy: -380,
     goal: { x: 820, y: 458, radius: 36 },
     failY: 520,
+    // Ledge grammar (Final Product Completion Wave 1): the far side of the
+    // precision gap is a grabbable corner, so a jump that falls short hangs
+    // instead of failing outright; UP climbs, DOWN drops into the gap.
+    ledges: [{ id: 'gap-ledge', x: 360, y: 480, side: 'left', grabHalfWidth: 22, grabHalfHeight: 28 }],
+    hangOffsetX: 14,
+    hangOffsetY: 22,
+    hangJumpVy: -400,
+    climbMs: 180,
+    regrabLockoutMs: 400,
+  };
+}
+
+/**
+ * content/pursuit.json - a PursuitCatalog (Final Product Completion Wave 1).
+ * Always emitted so content.ts can always load and validate it; inert
+ * (speed 0 / maxGap 0) unless the preset requires sw2d.pursuit. `wall` is
+ * chase-platformer's closing wall; `chaser` is the runner pursuer that trails
+ * endless-runner / auto-runner and closes the gap while the runner stumbles.
+ */
+export function generatePursuitCatalog(kind: 'wall' | 'chaser' | 'chaser-course' | 'none'): Record<string, unknown> {
+  const empty = {
+    schemaVersion: 1,
+    mode: 'wall',
+    startX: 0,
+    speed: 0,
+    catchDistance: 0,
+    escapeX: null,
+    maxGap: 0,
+    closeSpeed: 0,
+    recoverSpeed: 0,
+    stumbleMs: 0,
+    failY: 0,
+  };
+  if (kind === 'none') return empty;
+  if (kind === 'wall') {
+    return {
+      schemaVersion: 1,
+      mode: 'wall',
+      startX: -40,
+      speed: 72,
+      catchDistance: 16,
+      escapeX: 820,
+      maxGap: 0,
+      closeSpeed: 0,
+      recoverSpeed: 0,
+      stumbleMs: 0,
+      failY: 520,
+    };
+  }
+  return {
+    schemaVersion: 1,
+    mode: 'chaser',
+    startX: 100,
+    speed: 0,
+    catchDistance: 24,
+    escapeX: kind === 'chaser-course' ? 820 : null,
+    maxGap: 150,
+    closeSpeed: 200,
+    recoverSpeed: 40,
+    stumbleMs: 520,
+    failY: 510,
   };
 }
 

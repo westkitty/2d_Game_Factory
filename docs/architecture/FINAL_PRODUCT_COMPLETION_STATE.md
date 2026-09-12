@@ -19,11 +19,11 @@ file is the cursor.
 | field | value |
 |---|---|
 | branch SHA | (see git log; updated per checkpoint below) |
-| waves completed | 0 (inventory) |
-| limitations closed | 0 / 69 entries (0 / 52 distinct) |
-| remaining machine-executable | 69 |
+| waves completed | 1 (inventory, platforming movement) |
+| limitations closed | 5 / 69 entries (L01-L03; 3 / 52 distinct) |
+| remaining machine-executable | 64 |
 | blockers | none |
-| next exact action | Wave 1: `sw2d.pursuit` pack + ledge grammar in `sw2d.wall`; integrate into platform shell; journeys for chase-platformer, endless-runner, auto-runner, precision-platformer, climbing-game |
+| next exact action | Wave 2: melee combos (L04), twin-stick opposition (L05), survivor escalation + `sw2d.runs` (L06/L08), dungeon room enemies (L07), stealth AI (L09) |
 
 ## Checkpoint log
 
@@ -37,6 +37,16 @@ file is the cursor.
   Wave 1); hand-authored proofs are kept and every changed preset additionally gets a fresh
   generated-game journey (`npm run qa:completion`).
 
+### Wave 1 - platforming movement (L01, L02, L03)
+- New reusable pack `sw2d.pursuit` (`movement.pursuit`): `wall` (closing wall) and `chaser` (trailing pursuer that closes while the runner stumbles) modes from `content/pursuit.json`. Consumers: chase-platformer, endless-runner, auto-runner (all now require it).
+- `sw2d.wall` ledge grammar: authored ledges, `grounded/airborne/sliding/ledge-hang/climbing` state machine, climb/drop/hang-jump/release, regrab lockout; platform shell pins the body while hanging. Fixed Wave 30's inverted slide/kick direction.
+- New program tooling: `npm run qa:completion` (fresh generate → tsc → vite build → real-Chrome journey, `packages/qa/completion-specs/`), `npm run proofs:refresh` / `proofs:check` (canonical proofs regenerated from the factory; 51 canonical, 23 hand-authored), `npm run docs:presets` (mechanical preset-doc tables).
+- Honesty test inverted into a closed-limitations regression guard (`packages/presets/test/honesty.test.ts`).
+
 ## Validation evidence
 
-(appended per wave)
+### Wave 1
+- `npm run typecheck` PASS; `npx vitest run` 208 files / 4160+ tests PASS (includes `pursuit.test.ts`, extended `wall.test.ts`, Wave 1 generate tests).
+- `npm run qa:completion` 5/5 PASS (chase-platformer, endless-runner, auto-runner, precision-platformer, climbing-game) - fresh factory output, system Chrome.
+- `npm run qa:proof -- chase-platformer endless-runner auto-runner precision-platformer climbing-game traditional-platformer` 6/6 PASS.
+- `npm run limitations:extract`: 64 machine-executable remain (was 69).
