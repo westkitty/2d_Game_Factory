@@ -166,10 +166,26 @@ export async function startWorkbenchSession(): Promise<WorkbenchSession> {
   async function gameFrame(timeoutMs = 60_000): Promise<Frame> {
     const deadline = Date.now() + timeoutMs;
     for (;;) {
-      for (const frame of page.frames()) {
-        if (frame === page.mainFrame()) continue;
+      // Only the iframe currently in the DOM counts. Switching Fast Preview to
+      // Production Preview swaps the element, and for a moment the old frame
+      // (still reporting a runtime) and the new one both exist; returning the
+      // old one hands the caller a frame about to detach (Category-C
+      // convergence: WB-SCENE-001 "Frame was detached" once the dev server
+      // started fast enough to expose the race).
+      const element = await page.$('iframe.preview__frame').catch(() => null);
+      const frame = element ? await element.contentFrame().catch(() => null) : null;
+      if (frame) {
         const ready = await frame.evaluate(() => Boolean((window as unknown as { __SW2D__?: unknown }).__SW2D__)).catch(() => false);
-        if (ready) return frame;
+        if (ready && !frame.isDetached()) {
+          // Stability: the same element must still be the pane's iframe a
+          // moment later, or a re-render is mid-swap and this frame is about
+          // to detach.
+          await page.waitForTimeout(400);
+          const again = await page.$('iframe.preview__frame').catch(() => null);
+          const sameFrame = again ? await again.contentFrame().catch(() => null) : null;
+          if (sameFrame === frame && !frame.isDetached()) return frame;
+          continue;
+        }
       }
       if (Date.now() > deadline) throw new Error('The preview frame never reported a running SW2D runtime.');
       await page.waitForTimeout(500);

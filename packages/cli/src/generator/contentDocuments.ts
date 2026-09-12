@@ -150,11 +150,13 @@ export function generateEncounterCatalog(hasEncountersPack: boolean): Record<str
  * content/puzzles.json - a PuzzleRulesDoc (capability program Phase 6).
  * Always emitted; empty unless the preset installs `sw2d.puzzle-rules`. A
  * puzzle-family preset gets one built-in starter definition matching its
- * kind, so its generated shell loads an entire ruleset - moves, undo, reset,
- * solved-detection - from serialized data with no `createInitialState` /
- * `isSolved` callback.
+ * kind (sokoban, switch-sequence, match, falling-block), so its generated
+ * shell loads an entire ruleset - moves, undo, reset, solved-detection -
+ * from serialized data with no `createInitialState` / `isSolved` callback.
  */
-export function generatePuzzleRulesDoc(kind: 'sokoban' | 'switch-sequence' | 'none'): Record<string, unknown> {
+export function generatePuzzleRulesDoc(
+  kind: 'sokoban' | 'switch-sequence' | 'match' | 'falling-block' | 'none',
+): Record<string, unknown> {
   if (kind === 'sokoban') {
     return {
       schemaVersion: 1,
@@ -185,6 +187,46 @@ export function generatePuzzleRulesDoc(kind: 'sokoban' | 'switch-sequence' | 'no
           kind: 'switch-sequence',
           switches: ['a', 'b', 'c'],
           completeWhen: { kind: 'all-on' },
+        },
+      ],
+    };
+  }
+  if (kind === 'match') {
+    // One adjacent swap (1,0)<->(1,1) makes column 0 three 0s.
+    return {
+      schemaVersion: 1,
+      puzzles: [
+        {
+          id: 'starter',
+          kind: 'match',
+          width: 3,
+          height: 3,
+          pieceTypes: 3,
+          matchLength: 3,
+          objectiveClears: 3,
+          board: [
+            [0, 1, 2],
+            [1, 0, 2],
+            [0, 1, 2],
+          ],
+        },
+      ],
+    };
+  }
+  if (kind === 'falling-block') {
+    // 3-wide bar in a 6-wide well: park the first piece on the right, drop
+    // the second on the left, one line clears.
+    return {
+      schemaVersion: 1,
+      puzzles: [
+        {
+          id: 'starter',
+          kind: 'falling-block',
+          width: 6,
+          height: 10,
+          pieces: [{ cells: [[0, 0], [1, 0], [2, 0]], spawnCol: 0 }],
+          sequence: [0, 0, 0, 0],
+          objectiveLines: 1,
         },
       ],
     };
@@ -387,6 +429,731 @@ export function generateVehicleCatalog(profile: 'car' | 'kart' | 'boat' | 'fligh
 }
 
 /**
+ * content/economy.json - an EconomyCatalog (Category-C Wave 1). Always
+ * emitted; empty/inert unless the preset installs `sw2d.economy`. Three
+ * bounded starter modes match the three management consumers: shop
+ * (serve from stock), kitchen (cook then serve), factory (produce, auto-sell).
+ */
+export function generateEconomyCatalog(kind: 'shop' | 'kitchen' | 'factory' | 'none'): Record<string, unknown> {
+  const empty = {
+    schemaVersion: 1,
+    mode: 'shop',
+    cash: 0,
+    goods: [],
+    demand: [],
+    spawn: { firstDelayMs: 0, intervalMs: 1000, maxQueue: 0 },
+  };
+  if (kind === 'none') return empty;
+  if (kind === 'shop') {
+    return {
+      schemaVersion: 1,
+      mode: 'shop',
+      cash: 12,
+      goods: [
+        { id: 'apple', displayName: 'Apple', price: 5, restockCost: 2, stock: 2 },
+        { id: 'bread', displayName: 'Bread', price: 8, restockCost: 4, stock: 1 },
+      ],
+      demand: [
+        { id: 'pat', displayName: 'Pat', goodId: 'apple', patienceMs: 12000 },
+        { id: 'sam', displayName: 'Sam', goodId: 'bread', patienceMs: 12000 },
+      ],
+      spawn: { firstDelayMs: 250, intervalMs: 2200, maxQueue: 2 },
+    };
+  }
+  if (kind === 'kitchen') {
+    return {
+      schemaVersion: 1,
+      mode: 'kitchen',
+      cash: 0,
+      goods: [
+        { id: 'soup', displayName: 'Soup', price: 12, stock: 0 },
+        { id: 'salad', displayName: 'Salad', price: 9, stock: 0 },
+      ],
+      recipes: [
+        { id: 'cook-soup', displayName: 'Cook soup', outputGoodId: 'soup', outputCount: 1, durationMs: 700 },
+        { id: 'cook-salad', displayName: 'Toss salad', outputGoodId: 'salad', outputCount: 1, durationMs: 500 },
+      ],
+      demand: [
+        { id: 'diner-a', displayName: 'Diner', goodId: 'soup', patienceMs: 14000 },
+        { id: 'diner-b', displayName: 'Guest', goodId: 'salad', patienceMs: 14000 },
+      ],
+      spawn: { firstDelayMs: 250, intervalMs: 2400, maxQueue: 2 },
+    };
+  }
+  return {
+    schemaVersion: 1,
+    mode: 'factory',
+    cash: 8,
+    autoSell: true,
+    goods: [{ id: 'widget', displayName: 'Widget', price: 6, stock: 0 }],
+    recipes: [{ id: 'make-widget', displayName: 'Stamp widget', outputGoodId: 'widget', outputCount: 1, durationMs: 600 }],
+    demand: [
+      { id: 'buyer-a', displayName: 'Buyer', goodId: 'widget', patienceMs: 16000 },
+      { id: 'buyer-b', displayName: 'Client', goodId: 'widget', patienceMs: 16000 },
+    ],
+    spawn: { firstDelayMs: 400, intervalMs: 1800, maxQueue: 3 },
+  };
+}
+
+/**
+ * content/needs.json - a NeedsCatalog (Category-C Wave 2). Always emitted;
+ * empty/inert unless the preset installs `sw2d.needs`. Three bounded starter
+ * modes match the three care consumers: creature (hunger/mood hold-to-win),
+ * habitat (water/food longer hold, fail-below), companion (instant win, no fail).
+ */
+export function generateNeedsCatalog(kind: 'creature' | 'habitat' | 'companion' | 'none'): Record<string, unknown> {
+  const empty = {
+    schemaVersion: 1,
+    mode: 'creature',
+    subject: { id: 'none', displayName: 'None' },
+    needs: [],
+    actions: [],
+    win: { minValue: 100, holdMs: 0, minActions: 0 },
+  };
+  if (kind === 'none') return empty;
+  if (kind === 'creature') {
+    return {
+      schemaVersion: 1,
+      mode: 'creature',
+      subject: { id: 'pet', displayName: 'Pico' },
+      needs: [
+        { id: 'hunger', displayName: 'Hunger', value: 72, min: 0, max: 100, decayPerSecond: 2.8 },
+        { id: 'mood', displayName: 'Mood', value: 72, min: 0, max: 100, decayPerSecond: 2.2 },
+      ],
+      actions: [
+        { id: 'feed', displayName: 'Feed', effects: [{ needId: 'hunger', delta: 22 }], affinityDelta: 1 },
+        { id: 'play', displayName: 'Play', effects: [{ needId: 'mood', delta: 24 }], affinityDelta: 1 },
+      ],
+      win: { minValue: 82, holdMs: 1600, minActions: 2 },
+      loseBelow: 0,
+      affinity: 0,
+    };
+  }
+  if (kind === 'habitat') {
+    return {
+      schemaVersion: 1,
+      mode: 'habitat',
+      subject: { id: 'tank', displayName: 'Tank' },
+      needs: [
+        { id: 'water', displayName: 'Water', value: 78, min: 0, max: 100, decayPerSecond: 3 },
+        { id: 'food', displayName: 'Food', value: 78, min: 0, max: 100, decayPerSecond: 3.5 },
+      ],
+      actions: [
+        { id: 'feed', displayName: 'Feed', effects: [{ needId: 'food', delta: 24 }] },
+        { id: 'refresh', displayName: 'Refresh', effects: [{ needId: 'water', delta: 24 }] },
+      ],
+      win: { minValue: 55, holdMs: 7000, minActions: 2 },
+      loseBelow: 10,
+    };
+  }
+  return {
+    schemaVersion: 1,
+    mode: 'companion',
+    subject: { id: 'buddy', displayName: 'Buddy' },
+    needs: [
+      { id: 'hunger', displayName: 'Hunger', value: 70, min: 0, max: 100, decayPerSecond: 3 },
+      { id: 'happiness', displayName: 'Happiness', value: 70, min: 0, max: 100, decayPerSecond: 2.5 },
+    ],
+    actions: [
+      { id: 'feed', displayName: 'Feed', effects: [{ needId: 'hunger', delta: 25 }], affinityDelta: 2 },
+      { id: 'play', displayName: 'Play', effects: [{ needId: 'happiness', delta: 25 }], affinityDelta: 2 },
+    ],
+    win: { minValue: 85, holdMs: 0, minActions: 2 },
+    affinity: 0,
+  };
+}
+
+/**
+ * content/dialogue.json - a DialogueCatalog (Category-C Wave 3). Always
+ * emitted; empty/inert unless the preset installs `sw2d.dialogue`. Two
+ * bounded starter modes match the two consumers: novel (auto-start, choice,
+ * two endings) and adventure (hotspot start, gated exit).
+ */
+export function generateDialogueCatalog(kind: 'novel' | 'adventure' | 'none'): Record<string, unknown> {
+  const empty = {
+    schemaVersion: 1,
+    mode: 'novel',
+    conversations: [],
+  };
+  if (kind === 'none') return empty;
+  if (kind === 'novel') {
+    return {
+      schemaVersion: 1,
+      mode: 'novel',
+      startConversationId: 'station',
+      conversations: [
+        {
+          id: 'station',
+          startNodeId: 'n0',
+          nodes: [
+            { id: 'n0', kind: 'line', speaker: 'Narrator', text: 'A stranger arrives at the old station.', next: 'n1' },
+            { id: 'n1', kind: 'line', speaker: 'Stranger', text: 'They ask you to choose what happens next.', next: 'n2' },
+            {
+              id: 'n2',
+              kind: 'choice',
+              speaker: 'Stranger',
+              text: 'What do you do?',
+              choices: [
+                { id: 'help', text: 'Help the stranger', next: 'n3', branchId: 'help-the-stranger', setFlag: 'helped' },
+                { id: 'secret', text: 'Keep the secret', next: 'n4', branchId: 'keep-the-secret', setFlag: 'secret' },
+              ],
+            },
+            { id: 'n3', kind: 'end', speaker: 'Narrator', text: 'Your choice changes the final scene.', ending: 'dawn-ending' },
+            { id: 'n4', kind: 'end', speaker: 'Narrator', text: 'Your choice changes the final scene.', ending: 'midnight-ending' },
+          ],
+        },
+      ],
+    };
+  }
+  return {
+    schemaVersion: 1,
+    mode: 'adventure',
+    conversations: [
+      {
+        id: 'note',
+        startNodeId: 'n',
+        nodes: [{ id: 'n', kind: 'end', speaker: 'You', text: 'A crumpled note: the clock is lying.', setFlag: 'saw-note' }],
+      },
+      {
+        id: 'clock',
+        startNodeId: 'c',
+        nodes: [{ id: 'c', kind: 'end', speaker: 'You', text: 'The clock hides a small brass key.', setFlag: 'saw-clock' }],
+      },
+      {
+        id: 'door',
+        startNodeId: 'd',
+        nodes: [{ id: 'd', kind: 'end', speaker: 'You', text: 'The door swings open.', ending: 'escaped' }],
+      },
+    ],
+    hotspots: [
+      { id: 'note', conversationId: 'note', x: 240, y: 280 },
+      { id: 'clock', conversationId: 'clock', x: 480, y: 280 },
+      { id: 'door', conversationId: 'door', x: 720, y: 280, requireFlags: ['saw-note', 'saw-clock'] },
+    ],
+  };
+}
+
+/**
+ * content/perception.json - a PerceptionCatalog (Category-C Wave 4). Always
+ * emitted; empty/inert unless the preset installs `sw2d.perception`. Two
+ * bounded starter modes match the two consumers: infiltrate (fail on sight)
+ * and heist (loot makes noise; alarm does not fail).
+ */
+export function generatePerceptionCatalog(kind: 'infiltrate' | 'heist' | 'none'): Record<string, unknown> {
+  const empty = {
+    schemaVersion: 1,
+    mode: 'infiltrate',
+    start: { x: 0, y: 0 },
+    playerRadius: 14,
+    hiddenMultiplier: 0.2,
+    observers: [],
+  };
+  if (kind === 'none') return empty;
+  const shared = {
+    schemaVersion: 1,
+    start: { x: 120, y: 270 },
+    playerRadius: 14,
+    hiddenMultiplier: 0.15,
+    observers: [
+      {
+        id: 'guard',
+        x: 520,
+        y: 270,
+        facingDeg: 180,
+        fovDeg: 50,
+        range: 220,
+        suspicionRisePerSecond: 2,
+        suspicionDecayPerSecond: 0.5,
+      },
+    ],
+    cover: [{ id: 'crate', x: 400, y: 180, radius: 36 }],
+    objectives: [{ id: 'intel', x: 790, y: 140, radius: 42 }],
+    exits: [{ id: 'vent', x: 110, y: 90, radius: 48 }],
+  };
+  return { ...shared, mode: kind === 'heist' ? 'heist' : 'infiltrate' };
+}
+
+/**
+ * content/ball-paddle.json - a BallPaddleCatalog (Category-C Wave 5). Always
+ * emitted; empty/inert unless the preset installs `sw2d.ball-paddle`. Two
+ * bounded starter modes match the two consumers: breakout (bricks + lives)
+ * and pong (chasing opponent, first-to-3). Constants match the expanded
+ * overlay shells so factory and overlay stay aligned.
+ */
+export function generateBallPaddleCatalog(kind: 'breakout' | 'pong' | 'none'): Record<string, unknown> {
+  const empty = {
+    schemaVersion: 1,
+    mode: 'breakout',
+    court: { width: 960, height: 540 },
+    paddle: { x: 480, y: 485, width: 150, height: 22, speed: 0, axis: 'x', min: 85, max: 875, hitHalf: 86 },
+    ball: { x: 480, y: 270, vx: 0, vy: 0, radius: 18 },
+    walls: { insetX: 12, top: 50, bottom: 522 },
+    bricks: [] as const,
+    lives: 0,
+  };
+  if (kind === 'none') return empty;
+  if (kind === 'breakout') {
+    const bricks = [];
+    for (let row = 0; row < 2; row++) {
+      for (let col = 0; col < 6; col++) {
+        bricks.push({
+          id: `brick-${row}-${col}`,
+          x: 260 + col * 82,
+          y: 105 + row * 38,
+          halfWidth: 42,
+          halfHeight: 22,
+        });
+      }
+    }
+    return {
+      schemaVersion: 1,
+      mode: 'breakout',
+      court: { width: 960, height: 540 },
+      paddle: { x: 480, y: 485, width: 150, height: 22, speed: 340, axis: 'x', min: 85, max: 875, hitHalf: 86 },
+      ball: { x: 480, y: 270, vx: 180, vy: -180, radius: 18 },
+      walls: { insetX: 12, top: 50, bottom: 522 },
+      bricks,
+      lives: 3,
+      breakout: {
+        contactDivisor: 65,
+        contactScale: 72,
+        moveScale: 24,
+        minSpeedX: 105,
+        maxSpeedX: 220,
+        parkOffset: 24,
+        serveSpeed: 180,
+        contactNear: 25,
+        contactFar: 12,
+        brickScore: 10,
+      },
+    };
+  }
+  return {
+    schemaVersion: 1,
+    mode: 'pong',
+    court: { width: 960, height: 540 },
+    paddle: { x: 55, y: 270, width: 22, height: 110, speed: 260, axis: 'y', min: 70, max: 470, hitHalf: 70 },
+    ball: { x: 480, y: 270, vx: 210, vy: 145, radius: 18 },
+    walls: { insetX: 0, top: 18, bottom: 522 },
+    bricks: [],
+    lives: 0,
+    pong: {
+      opponentX: 905,
+      opponentY: 270,
+      opponentWidth: 22,
+      opponentHeight: 110,
+      opponentHitHalf: 70,
+      lerpMs: 300,
+      playerMinX: 35,
+      playerMaxX: 75,
+      opponentMinX: 885,
+      opponentMaxX: 925,
+      speedBump: 8,
+      serveSpeed: 210,
+      scorePast: 20,
+      winScore: 3,
+    },
+  };
+}
+
+/**
+ * content/local-play.json - a LocalPlayCatalog (Category-C Wave 7). Always
+ * emitted; empty/inert unless the preset installs `sw2d.local-play`. Two
+ * bounded starter modes match the two consumers: hotseat (pass-and-play
+ * turns) and versus (disjoint axes for pong).
+ */
+export function generateLocalPlayCatalog(kind: 'hotseat' | 'versus' | 'none'): Record<string, unknown> {
+  const empty = {
+    schemaVersion: 1,
+    mode: 'hotseat',
+    players: [] as const,
+  };
+  if (kind === 'none') return empty;
+  if (kind === 'hotseat') {
+    return {
+      schemaVersion: 1,
+      mode: 'hotseat',
+      players: [
+        { id: 'p1', label: 'P1' },
+        { id: 'p2', label: 'P2' },
+      ],
+      hotseat: { turns: 6, pointsCycle: [1, 2, 3] },
+    };
+  }
+  return {
+    schemaVersion: 1,
+    mode: 'versus',
+    players: [
+      { id: 'p1', label: 'P1', negative: ['ArrowUp'], positive: ['ArrowDown'] },
+      { id: 'p2', label: 'P2', negative: ['KeyW'], positive: ['KeyS'] },
+    ],
+  };
+}
+
+/**
+ * content/stage-scroll.json - a StageScrollCatalog (Category-C Wave 8). Always
+ * emitted; empty/inert unless the preset installs `sw2d.stage-scroll`. Two
+ * bounded starter modes match the two consumers: horizontal (stream left,
+ * fire +X) and vertical (stream down, fire -Y).
+ */
+export function generateStageScrollCatalog(kind: 'horizontal' | 'vertical' | 'none'): Record<string, unknown> {
+  const empty = {
+    schemaVersion: 1,
+    mode: 'horizontal',
+    speed: 0,
+    length: 0,
+    viewport: { width: 960, height: 540 },
+    player: { x: 120, y: 270, radius: 16, speed: 0, minX: 0, maxX: 960, minY: 0, maxY: 540 },
+    hazards: [] as const,
+  };
+  if (kind === 'none') return empty;
+  if (kind === 'horizontal') {
+    return {
+      schemaVersion: 1,
+      mode: 'horizontal',
+      speed: 180,
+      length: 720,
+      viewport: { width: 960, height: 540 },
+      player: { x: 120, y: 270, radius: 16, speed: 210, minX: 40, maxX: 420, minY: 40, maxY: 500 },
+      hazards: [
+        { id: 'rock-a', along: 280, cross: 90, radius: 18 },
+        { id: 'rock-b', along: 480, cross: 450, radius: 18 },
+        { id: 'rock-c', along: 640, cross: 90, radius: 18 },
+      ],
+    };
+  }
+  return {
+    schemaVersion: 1,
+    mode: 'vertical',
+    speed: 180,
+    length: 720,
+    viewport: { width: 960, height: 540 },
+    player: { x: 480, y: 440, radius: 16, speed: 210, minX: 40, maxX: 920, minY: 260, maxY: 510 },
+    hazards: [
+      { id: 'rock-a', along: 280, cross: 120, radius: 18 },
+      { id: 'rock-b', along: 480, cross: 840, radius: 18 },
+      { id: 'rock-c', along: 640, cross: 120, radius: 18 },
+    ],
+  };
+}
+
+/**
+ * content/timing.json - a TimingCatalog (Category-C Wave 10). Always
+ * emitted; empty/inert unless the preset installs `sw2d.timing`. Two
+ * bounded starter modes match the two consumers: reaction (deterministic
+ * delay, too-early miss) and rhythm (periodic visual beats). Not audio-sync.
+ */
+export function generateTimingCatalog(kind: 'reaction' | 'rhythm' | 'none'): Record<string, unknown> {
+  const empty = {
+    schemaVersion: 1,
+    mode: 'reaction',
+    windowMs: 0,
+    hitsToWin: 0,
+    missesToFail: 0,
+    reaction: { delaysMs: [] as const, maxWaitMs: 0 },
+  };
+  if (kind === 'none') return empty;
+  if (kind === 'reaction') {
+    return {
+      schemaVersion: 1,
+      mode: 'reaction',
+      windowMs: 400,
+      hitsToWin: 2,
+      missesToFail: 3,
+      reaction: { delaysMs: [700, 700], maxWaitMs: 900 },
+    };
+  }
+  return {
+    schemaVersion: 1,
+    mode: 'rhythm',
+    windowMs: 120,
+    hitsToWin: 3,
+    missesToFail: 4,
+    rhythm: { periodMs: 500, offsetMs: 700, beats: 8 },
+  };
+}
+
+/**
+ * content/wall.json - a WallCatalog (Category-C Wave 30). Always emitted;
+ * empty/inert unless the preset installs `sw2d.wall`. Two bounded starter
+ * modes match the two consumers: slide (climbing) and leap (precision).
+ */
+export function generateWallCatalog(kind: 'slide' | 'leap' | 'none'): Record<string, unknown> {
+  const empty = {
+    schemaVersion: 1,
+    mode: 'slide',
+    player: { x: 0, y: 0, radius: 1 },
+    walls: [{ id: 'none', x: 0, y: 0, halfWidth: 1, halfHeight: 1 }],
+    slideSpeed: 0,
+    jumpVx: 0,
+    jumpVy: 0,
+    goal: { x: 0, y: 0, radius: 1 },
+    failY: 0,
+  };
+  if (kind === 'none') return empty;
+  if (kind === 'slide') {
+    return {
+      schemaVersion: 1,
+      mode: 'slide',
+      player: { x: 100, y: 458, radius: 16 },
+      walls: [{ id: 'cliff', x: 280, y: 360, halfWidth: 18, halfHeight: 140 }],
+      slideSpeed: 80,
+      jumpVx: 140,
+      jumpVy: -420,
+      goal: { x: 420, y: 338, radius: 36 },
+      failY: 520,
+    };
+  }
+  return {
+    schemaVersion: 1,
+    mode: 'leap',
+    player: { x: 80, y: 458, radius: 16 },
+    walls: [{ id: 'face', x: 240, y: 430, halfWidth: 16, halfHeight: 80 }],
+    slideSpeed: 90,
+    jumpVx: 280,
+    jumpVy: -380,
+    goal: { x: 820, y: 458, radius: 36 },
+    failY: 520,
+  };
+}
+
+/**
+ * content/territory.json - a TerritoryCatalog (Category-C Wave 30). Always
+ * emitted; empty/inert unless the preset installs `sw2d.territory`.
+ */
+export function generateTerritoryCatalog(kind: 'stand' | 'occupy' | 'none'): Record<string, unknown> {
+  const empty = {
+    schemaVersion: 1,
+    mode: 'stand',
+    zones: [{ id: 'none', x: 0, y: 0, radius: 1, holdMs: 1 }],
+  };
+  if (kind === 'none') return empty;
+  return {
+    schemaVersion: 1,
+    mode: kind,
+    zones: [
+      { id: 'zone-a', x: 280, y: 270, radius: 72, holdMs: 400 },
+      { id: 'zone-b', x: 700, y: 270, radius: 72, holdMs: 400 },
+    ],
+  };
+}
+
+/**
+ * content/pinball.json - a PinballCatalog (Category-C Wave 30). Always
+ * emitted; empty/inert unless the preset installs `sw2d.pinball`.
+ */
+export function generatePinballCatalog(kind: 'table' | 'toy' | 'none'): Record<string, unknown> {
+  const empty = {
+    schemaVersion: 1,
+    mode: 'table',
+    ball: { x: 0, y: 0, radius: 1, vx: 0, vy: 0 },
+    gravity: 0,
+    bounce: 0,
+    bounds: { minX: 0, maxX: 1, minY: 0, maxY: 1 },
+    bumpers: [] as const,
+    drainY: 0,
+    winScore: 0,
+  };
+  if (kind === 'none') return empty;
+  if (kind === 'table') {
+    return {
+      schemaVersion: 1,
+      mode: 'table',
+      // Category-C convergence: the first table launched the ball dead-centre
+      // above bumper-c with vx 0, so it scored the win with zero input. This
+      // table drifts right on launch, misses every bumper on its own, drains
+      // (table mode resets the ball) and only scores when a flipper kicks it
+      // back up - cli/test/pinballTable.test.ts pins both halves of that.
+      ball: { x: 480, y: 80, radius: 14, vx: 3, vy: 2 },
+      gravity: 18,
+      bounce: 0.7,
+      bounds: { minX: 24, maxX: 936, minY: 24, maxY: 520 },
+      bumpers: [
+        { id: 'bumper-a', x: 330, y: 200, radius: 36, score: 1 },
+        { id: 'bumper-b', x: 630, y: 200, radius: 36, score: 1 },
+        { id: 'bumper-c', x: 480, y: 300, radius: 36, score: 1 },
+      ],
+      flippers: [
+        { id: 'left', x: 320, y: 480, halfWidth: 90, kick: 14 },
+        { id: 'right', x: 640, y: 480, halfWidth: 90, kick: 14 },
+      ],
+      drainY: 530,
+      winScore: 3,
+    };
+  }
+  return {
+    schemaVersion: 1,
+    mode: 'toy',
+    ball: { x: 220, y: 400, radius: 14, vx: 0, vy: 0 },
+    gravity: 14,
+    bounce: 0.4,
+    bounds: { minX: 24, maxX: 936, minY: 24, maxY: 520 },
+    bumpers: [],
+    goal: { x: 800, y: 478, radius: 40 },
+    drainY: 530,
+    winScore: 1,
+  };
+}
+
+/**
+ * content/camera.json - a CameraCatalog (Category-C Wave 30). Always
+ * emitted; empty/inert unless the preset installs `sw2d.camera`.
+ */
+export function generateCameraCatalog(kind: 'rail' | 'frame' | 'none'): Record<string, unknown> {
+  const empty = {
+    schemaVersion: 1,
+    mode: 'rail',
+    points: [{ x: 0, y: 0 }],
+    speed: 0,
+    frame: { width: 1, height: 1 },
+    subjects: [] as const,
+    shotsToWin: 0,
+  };
+  if (kind === 'none') return empty;
+  if (kind === 'rail') {
+    return {
+      schemaVersion: 1,
+      mode: 'rail',
+      points: [
+        { x: 120, y: 270 },
+        { x: 480, y: 270 },
+        { x: 840, y: 270 },
+      ],
+      speed: 0.35,
+      frame: { width: 200, height: 140 },
+      subjects: [],
+      shotsToWin: 0,
+    };
+  }
+  return {
+    schemaVersion: 1,
+    mode: 'frame',
+    points: [{ x: 120, y: 270 }],
+    speed: 0,
+    frame: { width: 160, height: 120 },
+    subjects: [
+      { id: 'bird', x: 280, y: 270, radius: 64 },
+      { id: 'tree', x: 700, y: 270, radius: 64 },
+    ],
+    shotsToWin: 2,
+  };
+}
+
+/**
+ * content/codex.json - a CodexCatalog (Category-C Wave 30). Always
+ * emitted; empty/inert unless the preset installs `sw2d.codex`.
+ */
+export function generateCodexCatalog(kind: 'exhibit' | 'case' | 'none'): Record<string, unknown> {
+  const empty = {
+    schemaVersion: 1,
+    mode: 'exhibit',
+    entries: [{ id: 'none', title: 'None', body: 'None' }],
+  };
+  if (kind === 'none') return empty;
+  if (kind === 'exhibit') {
+    return {
+      schemaVersion: 1,
+      mode: 'exhibit',
+      entries: [
+        { id: 'plinth', title: 'Plinth', body: 'A stone plinth holds the first exhibit.' },
+        { id: 'bust', title: 'Bust', body: 'A carved bust watches the hall.' },
+      ],
+    };
+  }
+  return {
+    schemaVersion: 1,
+    mode: 'case',
+    entries: [
+      { id: 'print', title: 'Print', body: 'A boot print by the window.' },
+      { id: 'photo', title: 'Photo', body: 'A torn photograph of the hall.' },
+    ],
+  };
+}
+
+/**
+ * content/targeting.json - a TargetingCatalog (Category-C Wave 30). Always
+ * emitted; empty/inert unless the preset installs `sw2d.targeting`.
+ */
+export function generateTargetingCatalog(kind: 'tower' | 'auto' | 'range' | 'none'): Record<string, unknown> {
+  const empty = {
+    schemaVersion: 1,
+    mode: 'tower',
+    actors: [{ id: 'none', x: 0, y: 0, range: 1, damage: 1, cooldownMs: 0, team: 'player', health: 1 }],
+  };
+  if (kind === 'none') return empty;
+  if (kind === 'tower') {
+    return {
+      schemaVersion: 1,
+      mode: 'tower',
+      actors: [
+        { id: 'tower', x: 480, y: 270, range: 400, damage: 1, cooldownMs: 280, team: 'player', health: 3 },
+        { id: 'creep-a', x: 280, y: 180, range: 40, damage: 1, cooldownMs: 600, team: 'enemy', health: 2 },
+        { id: 'creep-b', x: 280, y: 360, range: 40, damage: 1, cooldownMs: 600, team: 'enemy', health: 2 },
+      ],
+    };
+  }
+  if (kind === 'auto') {
+    return {
+      schemaVersion: 1,
+      mode: 'auto',
+      actors: [
+        { id: 'fox', x: 260, y: 270, range: 520, damage: 1, cooldownMs: 280, team: 'player', health: 2 },
+        { id: 'cpu', x: 700, y: 270, range: 520, damage: 1, cooldownMs: 400, team: 'enemy', health: 2 },
+      ],
+    };
+  }
+  return {
+    schemaVersion: 1,
+    mode: 'range',
+    actors: [
+      { id: 'scout', x: 256, y: 256, range: 96, damage: 1, cooldownMs: 0, team: 'player', health: 2 },
+      { id: 'grunt', x: 640, y: 256, range: 48, damage: 1, cooldownMs: 400, team: 'enemy', health: 2 },
+    ],
+  };
+}
+
+/**
+ * content/melee.json - a MeleeCatalog (Category-C Wave 6). Always
+ * emitted; empty/inert unless the preset installs `sw2d.melee`. Two
+ * bounded starter modes match the two consumers: skirmish (one elite
+ * foe) and arena (three fodder). Constants match the expanded overlay
+ * shells so factory and overlay stay aligned.
+ */
+export function generateMeleeCatalog(kind: 'skirmish' | 'arena' | 'none'): Record<string, unknown> {
+  const empty = {
+    schemaVersion: 1,
+    mode: 'skirmish',
+    player: { id: 'player', x: 120, y: 270, radius: 16, health: 5 },
+    foes: [] as const,
+    strike: { range: 145, damage: 1, cooldownMs: 0, knockback: 8, stunMs: 80 },
+    contact: { range: 34, damage: 1, cooldownMs: 650 },
+  };
+  if (kind === 'none') return empty;
+  if (kind === 'skirmish') {
+    return {
+      schemaVersion: 1,
+      mode: 'skirmish',
+      player: { id: 'player', x: 120, y: 270, radius: 16, health: 5 },
+      foes: [{ id: 'foe-0', x: 470, y: 270, radius: 17, health: 3 }],
+      strike: { range: 145, damage: 1, cooldownMs: 0, knockback: 8, stunMs: 80 },
+      contact: { range: 34, damage: 1, cooldownMs: 650 },
+    };
+  }
+  return {
+    schemaVersion: 1,
+    mode: 'arena',
+    player: { id: 'player', x: 120, y: 270, radius: 16, health: 5 },
+    foes: [
+      { id: 'foe-0', x: 420, y: 160, radius: 17, health: 2 },
+      { id: 'foe-1', x: 560, y: 270, radius: 17, health: 2 },
+      { id: 'foe-2', x: 420, y: 380, radius: 17, health: 2 },
+    ],
+    strike: { range: 145, damage: 1, cooldownMs: 0, knockback: 8, stunMs: 80 },
+    contact: { range: 34, damage: 1, cooldownMs: 650 },
+  };
+}
+
+/**
  * content/races.json - a RaceCatalog (capability program Phase 10). Always
  * emitted; empty unless the preset installs `sw2d.racing`, then one starter
  * race: a small four-corner track, `time-trial` mode for the time-trial
@@ -437,36 +1204,141 @@ export function generateUiCopy(options: {
   readonly presetDisplayName: string;
   readonly primaryControllerFamily: string;
   readonly requiredPackIds: readonly string[];
+  readonly presetId?: string;
 }): Record<string, string> {
-  const { displayName, presetDisplayName, primaryControllerFamily, requiredPackIds } = options;
+  const { displayName, presetDisplayName, primaryControllerFamily, requiredPackIds, presetId } = options;
   const has = (id: string) => requiredPackIds.includes(id);
   let playHint = 'MOVE  -  PAUSE TO STOP';
   switch (primaryControllerFamily) {
     case 'platform':
-      playHint = has('sw2d.weapons') ? 'MOVE / JUMP  -  FIRE J/X  -  PAUSE TO STOP' : 'MOVE / JUMP  -  PAUSE TO STOP';
+      playHint =
+        presetId === 'auto-runner'
+          ? 'JUMP  -  AUTO RUN  -  REACH THE FLAG'
+          : presetId === 'endless-runner'
+            ? 'JUMP  -  AUTO RUN  -  SURVIVE'
+            : presetId === 'precision-platformer'
+              ? 'MOVE / JUMP  -  JUMP THE GAPS'
+              : presetId === 'climbing-game'
+                ? 'MOVE / JUMP  -  JUMP UP'
+                : presetId === 'chase-platformer'
+                  ? 'MOVE / JUMP  -  OUTRUN THE WALL'
+            : has('sw2d.weapons')
+              ? 'MOVE / JUMP  -  FIRE J/X  -  PAUSE TO STOP'
+              : 'MOVE / JUMP  -  PAUSE TO STOP';
       break;
     case 'top-down':
-      playHint = has('sw2d.encounters')
-        ? 'MOVE WASD/ARROWS  -  AIM WITH MOUSE  -  FIRE J/X  -  SURVIVE THE WAVES'
-        : has('sw2d.weapons')
-          ? 'MOVE WASD/ARROWS  -  AIM WITH MOUSE  -  FIRE J/X'
-          : 'MOVE WASD/ARROWS  -  PAUSE TO STOP';
+      playHint = has('sw2d.local-play') && has('sw2d.ball-paddle')
+        ? 'P1 ARROWS  -  P2 WASD  -  FIRST TO 3'
+        : has('sw2d.ball-paddle')
+        ? 'MOVE WASD/ARROWS  -  RETURN THE BALL'
+        : has('sw2d.perception')
+        ? 'MOVE WASD/ARROWS  -  AVOID THE CONE  -  HIDE IN COVER'
+        : has('sw2d.melee')
+          ? 'MOVE WASD/ARROWS  -  STRIKE J/X'
+          : has('sw2d.stage-scroll')
+            ? 'MOVE WASD/ARROWS  -  FIRE J/X  -  CLEAR THE STAGE'
+            : has('sw2d.encounters')
+              ? 'MOVE WASD/ARROWS  -  AIM WITH MOUSE  -  FIRE J/X  -  SURVIVE THE WAVES'
+              : has('sw2d.weapons')
+                ? 'MOVE WASD/ARROWS  -  AIM WITH MOUSE  -  FIRE J/X'
+                : presetId === 'investigation-game'
+                  ? 'MOVE WASD/ARROWS  -  J INSPECTS CLUES'
+                  : presetId === 'action-roguelite'
+                    ? 'MOVE WASD/ARROWS  -  J TAKES RELICS'
+                    : presetId === 'photography-game'
+                      ? 'MOVE WASD/ARROWS  -  J SHOOTS SUBJECTS'
+                    : presetId === 'dungeon-crawler'
+                      ? 'MOVE WASD/ARROWS  -  STRIKE J/X'
+                      : presetId === 'base-defense'
+                        ? 'MOVE WASD/ARROWS  -  STRIKE J/X  -  DEFEND THE BASE'
+                    : presetId === 'simple-rts'
+                      ? 'J SELECTS UNIT A  -  DRAG BOX-SELECTS  -  WASD MOVES'
+                      : presetId === 'territory-control'
+                        ? 'MOVE WASD/ARROWS  -  STAND IN BOTH ZONES'
+                        : presetId === 'museum-exhibit'
+                          ? 'MOVE WASD/ARROWS  -  J INSPECTS PLAQUES'
+                    : 'MOVE WASD/ARROWS  -  PAUSE TO STOP';
       break;
     case 'vehicle':
-      playHint = has('sw2d.racing')
-        ? 'STEER / THROTTLE WASD/ARROWS  -  ENTER STARTS THE RACE'
-        : 'STEER / THROTTLE WASD/ARROWS  -  PAUSE TO STOP';
+      playHint =
+        presetId === 'endless-driving'
+          ? 'STEER / THROTTLE WASD/ARROWS  -  HOLD UP TO BANK DISTANCE'
+          : presetId === 'boat-flight-racer'
+            ? 'STEER / THROTTLE WASD/ARROWS  -  J SWITCHES TO FLIGHT'
+          : presetId === 'kart-racer'
+            ? 'STEER / THROTTLE WASD/ARROWS  -  ENTER STARTS  -  J FIRES THE SHELL'
+          : has('sw2d.racing')
+            ? 'STEER / THROTTLE WASD/ARROWS  -  ENTER STARTS THE RACE'
+            : has('sw2d.weapons')
+              ? 'STEER / THROTTLE WASD/ARROWS  -  FIRE J/X'
+              : 'STEER / THROTTLE WASD/ARROWS  -  PAUSE TO STOP';
       break;
     case 'grid':
-      playHint = has('sw2d.puzzle-rules')
-        ? 'MOVE / PUSH WASD/ARROWS  -  UNDO BACKSPACE  -  RESET K'
-        : 'MOVE WASD/ARROWS  -  PAUSE TO STOP';
+      playHint = presetId === 'match-puzzle'
+        ? 'MOVE WASD/ARROWS  -  ENTER SELECTS OR SWAPS  -  UNDO BACKSPACE'
+        : presetId === 'falling-block-puzzle'
+          ? 'MOVE WASD/ARROWS  -  ENTER ROTATES  -  DROP K'
+          : presetId === 'turn-based-tactics'
+            ? 'ARROWS MOVE  -  J SELECTS  -  REACH THE FLAG'
+          : presetId === 'maze-game'
+            ? 'ARROWS WALK  -  REACH THE EXIT'
+            : presetId === 'lane-defense'
+              ? 'ARROWS AIM  -  J BLOCKS  -  THE RUNNER REPATHS'
+          : has('sw2d.puzzle-rules')
+            ? 'MOVE / PUSH WASD/ARROWS  -  UNDO BACKSPACE  -  RESET K'
+            : 'MOVE WASD/ARROWS  -  PAUSE TO STOP';
       break;
     case 'pointer':
-      playHint = 'POINT AT THINGS  -  CLICK TO ACT  -  PAUSE TO STOP';
+      playHint = has('sw2d.dialogue')
+        ? 'CLICK HOTSPOTS  -  ENTER ADVANCES'
+        : has('sw2d.weapons')
+          ? 'AIM WITH MOUSE  -  FIRE J/X'
+          : has('sw2d.puzzle')
+            ? presetId === 'escape-room'
+              ? 'CLICK THE NOTE  -  THEN THE KEY'
+              : 'CLICK TO NUDGE  -  LAND IN THE GOAL'
+            : presetId === 'drawing-game'
+              ? 'DRAW TWO STROKES ON THE PAGE'
+              : presetId === 'dress-up-character-toy'
+                ? 'DRAG HAT AND SHIRT ONTO THE FIGURE'
+                : presetId === 'sandbox-playground'
+                  ? 'CLICK STAMPS  -  ARROWS PICK  -  CLICK OBJECT TO MOVE  -  K DELETES'
+                : presetId === 'physics-toy'
+                  ? 'CLICK OR J LAUNCHES  -  LAND IN THE GOAL'
+                  : presetId === 'rail-shooter'
+                    ? 'J DAMAGES APPROACHING TARGETS'
+                : 'POINT AT THINGS  -  CLICK TO ACT  -  PAUSE TO STOP';
       break;
     case 'ui-simulation':
-      playHint = 'ARROWS CHANGE THE SELECTION  -  ENTER CONFIRMS  -  PAUSE TO STOP';
+      playHint = has('sw2d.economy')
+        ? 'ARROWS PICK  -  ENTER SERVES  -  K RESTOCKS OR COOKS'
+        : has('sw2d.needs')
+          ? 'J FEEDS  -  K PLAYS OR REFRESHES  -  KEEP NEEDS UP'
+          : has('sw2d.dialogue')
+            ? 'ENTER ADVANCES  -  ARROWS CHOOSE'
+            : has('sw2d.local-play')
+              ? 'J ACTS  -  PASS THE KEYBOARD  -  SIX TURNS'
+              : has('sw2d.timing')
+                ? presetId === 'rhythm-action'
+                  ? 'ENTER ON THE BEAT'
+                  : 'WAIT FOR THE GO  -  ENTER HITS'
+                : presetId === 'farming-lite'
+                  ? 'ARROWS PICK A PLOT  -  ENTER PLANTS OR HARVESTS'
+                  : presetId === 'colony-lite'
+                    ? 'ARROWS PICK A JOB  -  ENTER ASSIGNS OR BUILDS'
+                    : presetId === 'interactive-fiction-hybrid'
+                      ? 'ARROWS PICK A VERB  -  ENTER ACTS'
+                      : presetId === 'fishing-game'
+                        ? 'ENTER CASTS AND LANDS'
+                        : presetId === 'cooking-game'
+                          ? 'ARROWS PICK  -  ENTER ADDS TO THE DISH'
+                          : presetId === 'auto-battler'
+                            ? 'ARROWS PICK  -  ENTER STRIKES'
+                          : presetId === 'pinball-lite'
+                            ? 'J LEFT K RIGHT  -  HIT BUMPERS'
+                          : presetId === 'microgame-collection'
+                            ? 'ENTER ON GO  -  THEN MASH J'
+                          : 'ARROWS CHANGE THE SELECTION  -  ENTER CONFIRMS  -  PAUSE TO STOP';
       break;
     default:
       break;

@@ -22,6 +22,21 @@ import generationSchema from '../schemas/generation.schema.json' with { type: 'j
 import worldGraphSchema from '../schemas/world-graph.schema.json' with { type: 'json' };
 import vehicleCatalogSchema from '../schemas/vehicle-catalog.schema.json' with { type: 'json' };
 import raceCatalogSchema from '../schemas/race-catalog.schema.json' with { type: 'json' };
+import economyCatalogSchema from '../schemas/economy-catalog.schema.json' with { type: 'json' };
+import needsCatalogSchema from '../schemas/needs-catalog.schema.json' with { type: 'json' };
+import dialogueCatalogSchema from '../schemas/dialogue-catalog.schema.json' with { type: 'json' };
+import perceptionCatalogSchema from '../schemas/perception-catalog.schema.json' with { type: 'json' };
+import ballPaddleCatalogSchema from '../schemas/ball-paddle-catalog.schema.json' with { type: 'json' };
+import meleeCatalogSchema from '../schemas/melee-catalog.schema.json' with { type: 'json' };
+import localPlayCatalogSchema from '../schemas/local-play-catalog.schema.json' with { type: 'json' };
+import stageScrollCatalogSchema from '../schemas/stage-scroll-catalog.schema.json' with { type: 'json' };
+import timingCatalogSchema from '../schemas/timing-catalog.schema.json' with { type: 'json' };
+import wallCatalogSchema from '../schemas/wall-catalog.schema.json' with { type: 'json' };
+import territoryCatalogSchema from '../schemas/territory-catalog.schema.json' with { type: 'json' };
+import pinballCatalogSchema from '../schemas/pinball-catalog.schema.json' with { type: 'json' };
+import cameraCatalogSchema from '../schemas/camera-catalog.schema.json' with { type: 'json' };
+import codexCatalogSchema from '../schemas/codex-catalog.schema.json' with { type: 'json' };
+import targetingCatalogSchema from '../schemas/targeting-catalog.schema.json' with { type: 'json' };
 
 /**
  * Ajv-based validation for every schema this package owns.
@@ -53,7 +68,22 @@ export type SchemaName =
   | 'generation'
   | 'world-graph'
   | 'vehicle-catalog'
-  | 'race-catalog';
+  | 'race-catalog'
+  | 'economy-catalog'
+  | 'needs-catalog'
+  | 'dialogue-catalog'
+  | 'perception-catalog'
+  | 'ball-paddle-catalog'
+  | 'melee-catalog'
+  | 'local-play-catalog'
+  | 'stage-scroll-catalog'
+  | 'timing-catalog'
+  | 'wall-catalog'
+  | 'territory-catalog'
+  | 'pinball-catalog'
+  | 'camera-catalog'
+  | 'codex-catalog'
+  | 'targeting-catalog';
 
 export const SCHEMA_NAMES: readonly SchemaName[] = [
   'action-bindings',
@@ -77,6 +107,21 @@ export const SCHEMA_NAMES: readonly SchemaName[] = [
   'world-graph',
   'vehicle-catalog',
   'race-catalog',
+  'economy-catalog',
+  'needs-catalog',
+  'dialogue-catalog',
+  'perception-catalog',
+  'ball-paddle-catalog',
+  'melee-catalog',
+  'local-play-catalog',
+  'stage-scroll-catalog',
+  'timing-catalog',
+  'wall-catalog',
+  'territory-catalog',
+  'pinball-catalog',
+  'camera-catalog',
+  'codex-catalog',
+  'targeting-catalog',
 ];
 
 /** One located problem: which document, where in it, and what is wrong. */
@@ -122,6 +167,21 @@ const SCHEMA_DOCUMENTS: Readonly<Record<SchemaName, SchemaDocument>> = {
   'world-graph': worldGraphSchema,
   'vehicle-catalog': vehicleCatalogSchema,
   'race-catalog': raceCatalogSchema,
+  'economy-catalog': economyCatalogSchema,
+  'needs-catalog': needsCatalogSchema,
+  'dialogue-catalog': dialogueCatalogSchema,
+  'perception-catalog': perceptionCatalogSchema,
+  'ball-paddle-catalog': ballPaddleCatalogSchema,
+  'melee-catalog': meleeCatalogSchema,
+  'local-play-catalog': localPlayCatalogSchema,
+  'stage-scroll-catalog': stageScrollCatalogSchema,
+  'timing-catalog': timingCatalogSchema,
+  'wall-catalog': wallCatalogSchema,
+  'territory-catalog': territoryCatalogSchema,
+  'pinball-catalog': pinballCatalogSchema,
+  'camera-catalog': cameraCatalogSchema,
+  'codex-catalog': codexCatalogSchema,
+  'targeting-catalog': targetingCatalogSchema,
 };
 
 // Registration order matters: a schema must be added before anything that
@@ -147,6 +207,21 @@ for (const name of [
   'world-graph',
   'vehicle-catalog',
   'race-catalog',
+  'economy-catalog',
+  'needs-catalog',
+  'dialogue-catalog',
+  'perception-catalog',
+  'ball-paddle-catalog',
+  'melee-catalog',
+  'local-play-catalog',
+  'stage-scroll-catalog',
+  'timing-catalog',
+  'wall-catalog',
+  'territory-catalog',
+  'pinball-catalog',
+  'camera-catalog',
+  'codex-catalog',
+  'targeting-catalog',
 ] as const) {
   const schema = SCHEMA_DOCUMENTS[name];
   ajv.addSchema(schema, schema.$id);

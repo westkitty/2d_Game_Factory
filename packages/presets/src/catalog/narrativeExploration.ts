@@ -15,11 +15,10 @@ import { LIMITATIONS, POINTER_INPUT_MODES, VALIDATION_PROFILES, definePreset, pa
  * `ui-simulation`) for the two whose defining interaction is clicking
  * something (`point-and-click`, `escape-room`).
  *
- * `narrativePack`'s own doc comment: "lightweight state for later visual
- * novel/adventure systems ... No scripting language, renderer, portrait
- * system, dialogue graph loader, localization platform or quest framework
- * here" - every recipe that requires it therefore states what content it
- * cannot yet author declaratively.
+ * `sw2d.narrative` remains the lightweight flag/node/seen store.
+ * Branching graphs live in `sw2d.dialogue` (Category-C Wave 3). Category-C
+ * Wave 14 consumes the store for menu-verb IF vs walk-and-inspect clues;
+ * parser IF, evidence boards and exhibits stay out of the pack.
  */
 export const NARRATIVE_EXPLORATION_PRESETS: readonly PresetDefinition[] = [
   definePreset({
@@ -39,17 +38,15 @@ export const NARRATIVE_EXPLORATION_PRESETS: readonly PresetDefinition[] = [
 
   definePreset({
     id: 'visual-novel',
-    maturity: 'smoke-validated',
+    maturity: 'proof-validated',
     displayName: 'Visual Novel',
     family: 'narrative-exploration',
     controllerFamilies: ['ui-simulation'],
-    requiredSystemPacks: [pack(PACK_IDS.narrative)],
+    requiredSystemPacks: [pack(PACK_IDS.narrative), pack(PACK_IDS.dialogue)],
     optionalSystemPacks: [pack(PACK_IDS.progression)],
     requiredContentRoles: ['tuning', 'dialogue'],
     validationProfile: VALIDATION_PROFILES.narrativeExploration,
-    knownLimitations: [
-      'Narrative state exists, but no full content-authored branching dialogue renderer/portrait presentation system exists.',
-    ],
+    knownLimitations: [LIMITATIONS.dialoguePresentation],
   }),
 
   definePreset({
@@ -58,7 +55,7 @@ export const NARRATIVE_EXPLORATION_PRESETS: readonly PresetDefinition[] = [
     displayName: 'Point and Click',
     family: 'narrative-exploration',
     controllerFamilies: ['pointer', 'ui-simulation'],
-    requiredSystemPacks: [pack(PACK_IDS.narrative), pack(PACK_IDS.world), pack(PACK_IDS.worldEntities)],
+    requiredSystemPacks: [pack(PACK_IDS.narrative), pack(PACK_IDS.world), pack(PACK_IDS.worldEntities), pack(PACK_IDS.dialogue)],
     optionalSystemPacks: [pack(PACK_IDS.puzzle)],
     requiredContentRoles: ['tuning', 'levels', 'dialogue'],
     supportedInputModes: POINTER_INPUT_MODES,
@@ -66,11 +63,12 @@ export const NARRATIVE_EXPLORATION_PRESETS: readonly PresetDefinition[] = [
     // Spatial pointer position, hover targets and world-coordinate click/drag
     // targeting are implemented and consumed by the pointer shell (capability
     // program Phase 1, ADR-0018; proof: proofs/point-and-click/).
-    knownLimitations: ['Narrative state exists, but no full content-authored branching dialogue renderer/portrait presentation system exists.'],
+    knownLimitations: [LIMITATIONS.dialoguePresentation],
   }),
 
   definePreset({
     id: 'interactive-fiction-hybrid',
+    maturity: 'proof-validated',
     displayName: 'Interactive Fiction Hybrid',
     family: 'narrative-exploration',
     controllerFamilies: ['ui-simulation'],
@@ -78,39 +76,42 @@ export const NARRATIVE_EXPLORATION_PRESETS: readonly PresetDefinition[] = [
     optionalSystemPacks: [pack(PACK_IDS.world)],
     requiredContentRoles: ['tuning', 'dialogue'],
     validationProfile: VALIDATION_PROFILES.narrativeExploration,
-    knownLimitations: ['No dedicated parser/text-command system exists.'],
+    knownLimitations: [LIMITATIONS.narrativeStore],
   }),
 
   definePreset({
     id: 'investigation-game',
+    maturity: 'proof-validated',
     displayName: 'Investigation Game',
     family: 'narrative-exploration',
     controllerFamilies: ['top-down', 'pointer'],
-    requiredSystemPacks: [pack(PACK_IDS.narrative), pack(PACK_IDS.world), pack(PACK_IDS.worldEntities)],
+    requiredSystemPacks: [pack(PACK_IDS.narrative), pack(PACK_IDS.world), pack(PACK_IDS.worldEntities), pack(PACK_IDS.codex)],
     optionalSystemPacks: [pack(PACK_IDS.puzzle)],
-    requiredContentRoles: ['tuning', 'levels', 'dialogue'],
+    requiredContentRoles: ['tuning', 'levels', 'dialogue', 'codex'],
     supportedInputModes: POINTER_INPUT_MODES,
     validationProfile: VALIDATION_PROFILES.narrativeExploration,
-    knownLimitations: ['No evidence-board/deduction/linking system exists.'],
+    knownLimitations: [LIMITATIONS.narrativeStore],
   }),
 
   definePreset({
     id: 'museum-exhibit',
+    maturity: 'proof-validated',
     displayName: 'Museum Exhibit',
     family: 'narrative-exploration',
     controllerFamilies: ['top-down', 'pointer'],
-    requiredSystemPacks: [pack(PACK_IDS.world), pack(PACK_IDS.worldEntities)],
+    requiredSystemPacks: [pack(PACK_IDS.world), pack(PACK_IDS.worldEntities), pack(PACK_IDS.codex)],
     optionalSystemPacks: [pack(PACK_IDS.narrative)],
-    requiredContentRoles: ['tuning', 'levels', 'exhibits'],
+    requiredContentRoles: ['tuning', 'levels', 'exhibits', 'codex'],
     supportedInputModes: POINTER_INPUT_MODES,
     validationProfile: VALIDATION_PROFILES.narrativeExploration,
     knownLimitations: [
-      'No dedicated exhibit/codex presentation framework exists beyond general world/narrative/UI foundations.',
+      'Exhibit entries are reusable (sw2d.codex); portraits and a dedicated museum lighting/presentation overlay are not.',
     ],
   }),
 
   definePreset({
     id: 'escape-room',
+    maturity: 'proof-validated',
     displayName: 'Escape Room',
     family: 'narrative-exploration',
     controllerFamilies: ['pointer', 'ui-simulation'],
@@ -119,6 +120,9 @@ export const NARRATIVE_EXPLORATION_PRESETS: readonly PresetDefinition[] = [
     requiredContentRoles: ['tuning', 'puzzles'],
     supportedInputModes: POINTER_INPUT_MODES,
     validationProfile: VALIDATION_PROFILES.narrativeExploration,
+    // Category-C Wave 12: the generated pointer shell presents two linked
+    // inspect hotspots through sw2d.puzzle. The leftover is still a
+    // content-authored grammar (not match/sokoban kinds).
     knownLimitations: [
       LIMITATIONS.puzzleConfigIsCode,
       'No content-authored escape-room puzzle grammar exists yet.',

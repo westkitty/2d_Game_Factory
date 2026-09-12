@@ -85,3 +85,18 @@ export { generationPack, type GenerationService } from './generation/generationP
 export { worldGraphPack, WORLD_GRAPH_SAVE_SLOT, type WorldGraphConfig, type WorldGraphService } from './worldGraph/worldGraphPack.ts';
 export { vehiclesPack, type VehicleService } from './vehicles/vehiclesPack.ts';
 export { racingPack, RACING_SAVE_SLOT, type RacingConfig, type RaceService } from './racing/racingPack.ts';
+export { economyPack, type EconomyService } from './economy/economyPack.ts';
+export { needsPack, type NeedsService } from './needs/needsPack.ts';
+export { dialoguePack, type DialogueService } from './dialogue/dialoguePack.ts';
+export { perceptionPack, type PerceptionService } from './perception/perceptionPack.ts';
+export { ballPaddlePack, type BallPaddleService } from './ballPaddle/ballPaddlePack.ts';
+export { meleePack, type MeleeService } from './melee/meleePack.ts';
+export { localPlayPack, type LocalPlayService } from './localPlay/localPlayPack.ts';
+export { stageScrollPack, type StageScrollService } from './stageScroll/stageScrollPack.ts';
+export { timingPack, type TimingService } from './timing/timingPack.ts';
+export { wallPack, type WallService } from './wall/wallPack.ts';
+export { territoryPack, type TerritoryService } from './territory/territoryPack.ts';
+export { pinballPack, type PinballService } from './pinball/pinballPack.ts';
+export { cameraPack, type CameraService } from './camera/cameraPack.ts';
+export { codexPack, type CodexService } from './codex/codexPack.ts';
+export { targetingPack, type TargetingService } from './targeting/targetingPack.ts';

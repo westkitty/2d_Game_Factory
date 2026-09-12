@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "mode": "slide",
+  "player": {
+    "x": 0,
+    "y": 0,
+    "radius": 1
+  },
+  "walls": [
+    {
+      "id": "none",
+      "x": 0,
+      "y": 0,
+      "halfWidth": 1,
+      "halfHeight": 1
+    }
+  ],
+  "slideSpeed": 0,
+  "jumpVx": 0,
+  "jumpVy": 0,
+  "goal": {
+    "x": 0,
+    "y": 0,
+    "radius": 1
+  },
+  "failY": 0
+}

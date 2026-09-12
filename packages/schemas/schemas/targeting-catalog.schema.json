@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:sw2d:schema:content-targeting-catalog:v1",
+  "title": "TargetingCatalog",
+  "description": "Mirrors @sw2d/contracts TargetingCatalog (targeting.ts). Validated as a ContentBundle.data document (document name 'targeting'). Attack range, target select, autonomous strikes - not pathfinding.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "mode", "actors"],
+  "properties": {
+    "schemaVersion": { "type": "integer", "minimum": 1 },
+    "mode": { "type": "string", "enum": ["tower", "auto", "range"] },
+    "actors": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "x", "y", "range", "damage", "cooldownMs", "team", "health"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "x": { "type": "number" },
+          "y": { "type": "number" },
+          "range": { "type": "number", "exclusiveMinimum": 0 },
+          "damage": { "type": "number", "exclusiveMinimum": 0 },
+          "cooldownMs": { "type": "number", "minimum": 0 },
+          "team": { "type": "string", "enum": ["player", "enemy"] },
+          "health": { "type": "number", "exclusiveMinimum": 0 }
+        }
+      }
+    }
+  }
+}

@@ -62,26 +62,41 @@ export const POINTER_INPUT_MODES: readonly InputMode[] = ['keyboard', 'pointer',
 /** Recorded, reused verbatim wherever more than one recipe shares the same real gap. Keeps wording from drifting across recipes that share a limitation. */
 export const LIMITATIONS = {
   stealthAi:
-    'AI state exists, but full vision cones, awareness geometry, noise propagation and hiding are not implemented. Patrol/chase navigation can use sw2d.navigation (Phase 5).',
+    'Vision cones, occlusion, suspicion, noise and hiding are reusable (sw2d.perception); patrol pathfinding, takedowns and full stealth AI are not.',
   weaponsProjectiles:
     'The reusable weapon/projectile capability (sw2d.weapons, ADR-0020) exists; this starter\'s shell does not wire it yet.',
   climbingMechanics:
-    'Wall-slide, wall-jump and ledge-grab movement mechanics are not yet implemented as reusable capabilities (MASTER_PROJECT.md section 9.2); vertical movement must be authored as game-specific code, the same pattern starter/src/game-specific/ demonstrates.',
+    'Wall-slide and wall-jump contact are reusable (sw2d.wall); ledge-grab and a full parkour grammar are not.',
   puzzleConfigIsCode:
-    "Standard puzzle kinds (sokoban, switch/sequence) are now content-authorable through the sw2d.puzzle-rules capability and content/puzzles.json (ADR-0023). This recipe's board rules are not one of those built-in kinds, so it still uses the code seam: sw2d.puzzle declares configSource: 'code' (ADR-0017) and a generated game supplies createInitialState/isSolved from src/game-specific/packConfig.ts (shipped with a working placeholder to replace) - the pack really installs, but this puzzle's own rules stay game-specific TypeScript, not content.",
+    "Standard puzzle kinds (sokoban, switch/sequence, match, falling-block) are now content-authorable through the sw2d.puzzle-rules capability and content/puzzles.json (ADR-0023). This recipe's board rules are not one of those built-in kinds, so it still uses the code seam: sw2d.puzzle declares configSource: 'code' (ADR-0017) and a generated game supplies createInitialState/isSolved from src/game-specific/packConfig.ts (shipped with a working placeholder to replace) - the pack really installs, but this puzzle's own rules stay game-specific TypeScript, not content.",
+  puzzleBoardRules:
+    'Match-detection/cascade and falling-piece/line-clear are reusable (sw2d.puzzle-rules); pointer drag-swap, wall-kicks and overlay-local boards are not.',
   chasePressure:
-    'A reusable chase/pursuit-pressure system does not exist yet; it must be authored as game-specific code, the same pattern starter/src/game-specific/ demonstrates.',
+    'Closing-wall pursuit for the generated starter is game-specific presentation; a reusable chase/pursuit-pressure pack is not.',
   scrollingShmupCamera:
-    'Continuous scrolling-stage camera movement (the terrain streaming past a fixed ship) is not a reusable capability; the generated starter fights its encounter waves in a fixed arena.',
+    'Horizontal and vertical scrolling-stage camera movement, player band clamp, streaming hazards and stage-clear are reusable (sw2d.stage-scroll); rail-path cameras, parallax authoring and bullet-hell pooling are not.',
   // Phase 7B additions - each reused by two or more recipes; a recipe-specific gap gets an
   // inline string in its own catalog file instead (see platforming.ts's own comment on why:
   // sharing text is a decision, not laziness, and inline is correct when nothing else repeats it).
-  ballPaddleSystem: 'No reusable ball/paddle collision-and-bounce system exists yet.',
+  ballPaddleSystem:
+    'Ball, paddle, rebound, brick-clear and first-to-N scoring are reusable (sw2d.ball-paddle); a full pinball table is not.',
+  localPlaySeats:
+    'Local hot-seat turns and simultaneous versus axes are reusable (sw2d.local-play); netcode, gamepads, split-screen cameras and more than two seats are not.',
+  visualTiming:
+    'Visual reaction cues and beat windows are reusable (sw2d.timing); a deterministic music-beat/audio-synchronization system is not.',
   // Phase 7C additions - same "two or more recipes" bar as Phase 7B's four.
   customerEconomy:
-    'No complete customer AI, demand/economy model, queue/placement UI, or content-authored production chain exists.',
+    'Customer demand, queue, stock, transactions and production jobs are reusable (sw2d.economy); shop layout, walking customers, prestige and offline catch-up are not.',
   creatureSimulation:
-    'No reusable needs/behavior/relationship/creature simulation exists beyond foundational resources/state.',
+    'Needs, decay, care actions, affinity and wellbeing hold/fail are reusable (sw2d.needs); full creature behaviour AI, relationship graphs and colony assignment are not.',
+  dialoguePresentation:
+    'Branching dialogue graphs, choices, flags and endings are reusable (sw2d.dialogue); portraits, scene composition, parser IF and evidence-board deduction are not.',
+  narrativeStore:
+    'Nodes, flags, choices and seen entries are reusable (sw2d.narrative); a dedicated parser/text-command system and an evidence-board/deduction/linking system are not.',
+  arcadeScore:
+    'Score, combo, lives and elapsed are reusable (sw2d.arcade); a reusable casting/line/tension/fish behavior system and an ingredient/recipe/action-sequence cooking system are not.',
+  meleeCombat:
+    'Melee strike, knockback, hit-stun and contact damage are reusable (sw2d.melee); combo strings, directional attacks and targeting UI are not.',
 } as const;
 
 export interface PresetSpec {

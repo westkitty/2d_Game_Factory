@@ -1,0 +1,56 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:sw2d:schema:content-melee-catalog:v1",
+  "title": "MeleeCatalog",
+  "description": "Mirrors @sw2d/contracts MeleeCatalog (melee.ts). Validated as a ContentBundle.data document (document name 'melee'). Bounded close combat - no combos, no targeting UI.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "mode", "player", "foes", "strike", "contact"],
+  "properties": {
+    "schemaVersion": { "type": "integer", "minimum": 1 },
+    "mode": { "type": "string", "enum": ["skirmish", "arena"] },
+    "player": { "$ref": "#/definitions/fighter" },
+    "foes": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/fighter" }
+    },
+    "strike": { "$ref": "#/definitions/strike" },
+    "contact": { "$ref": "#/definitions/contact" }
+  },
+  "definitions": {
+    "fighter": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "x", "y", "radius", "health"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "x": { "type": "number" },
+        "y": { "type": "number" },
+        "radius": { "type": "number", "exclusiveMinimum": 0 },
+        "health": { "type": "number", "exclusiveMinimum": 0 }
+      }
+    },
+    "strike": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["range", "damage", "cooldownMs", "knockback", "stunMs"],
+      "properties": {
+        "range": { "type": "number", "exclusiveMinimum": 0 },
+        "damage": { "type": "number", "exclusiveMinimum": 0 },
+        "cooldownMs": { "type": "number", "minimum": 0 },
+        "knockback": { "type": "number", "minimum": 0 },
+        "stunMs": { "type": "number", "minimum": 0 }
+      }
+    },
+    "contact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["range", "damage", "cooldownMs"],
+      "properties": {
+        "range": { "type": "number", "exclusiveMinimum": 0 },
+        "damage": { "type": "number", "exclusiveMinimum": 0 },
+        "cooldownMs": { "type": "number", "minimum": 0 }
+      }
+    }
+  }
+}

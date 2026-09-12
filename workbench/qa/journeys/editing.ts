@@ -247,6 +247,9 @@ export async function wbScene001({ session, note }: JourneyContext): Promise<voi
   await session.clickText('Preview', '.tabs');
   await session.page.waitForTimeout(800);
   await session.clickText('Production preview');
+  // The pane swaps its iframe when the preview URL changes; wait for the
+  // production pane state, not merely for an iframe to exist.
+  await session.waitForText('BUILD · RUNNING', 90_000);
   await session.waitFor('iframe.preview__frame', 90_000);
   const frame = await session.gameFrame(90_000);
   const snapshot = await startGame(frame);

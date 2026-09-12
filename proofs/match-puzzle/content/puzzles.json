@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "puzzles": [
+    {
+      "id": "starter",
+      "kind": "match",
+      "width": 3,
+      "height": 3,
+      "pieceTypes": 3,
+      "matchLength": 3,
+      "objectiveClears": 3,
+      "board": [
+        [
+          0,
+          1,
+          2
+        ],
+        [
+          1,
+          0,
+          2
+        ],
+        [
+          0,
+          1,
+          2
+        ]
+      ]
+    }
+  ]
+}

@@ -39,6 +39,7 @@ export {
 export { ProjectilePool, type ProjectileOptions } from './game-support/projectilePool.ts';
 export { InteractionServiceImpl, phaserBoundsShape } from './game-support/interactionService.ts';
 export { bindCollectiblePickups, type CollectiblePickupBinding } from './game-support/itemPickups.ts';
+export { bindLevelObjectives, type LevelObjectivesBinding, type LevelObjectivesSnapshot } from './game-support/levelObjectives.ts';
 export { createProjectileRuntime, type ProjectileRuntime, type ProjectileRuntimeOptions } from './game-support/projectileRuntime.ts';
 export { bindStarterWeapon, type StarterWeaponBinding } from './game-support/starterWeapon.ts';
 export {
@@ -53,6 +54,122 @@ export { createRoomTransitionRuntime, type RoomTransitionRuntime, type RoomTrans
 export { createWorldMapOverlay, type WorldMapOverlay } from './game-support/worldMapOverlay.ts';
 export { createAdvancedPhysics } from './game-support/advancedPhysics.ts';
 export { createGrappleService } from './game-support/grappleService.ts';
+export { bindStarterEconomy, type StarterEconomyBinding, type StarterEconomySnapshot } from './game-support/starterEconomy.ts';
+export { bindStarterNeeds, type StarterNeedsBinding, type StarterNeedsSnapshot } from './game-support/starterNeeds.ts';
+export { bindStarterDialogue, type StarterDialogueBinding, type StarterDialogueSnapshot } from './game-support/starterDialogue.ts';
+export { bindStarterPerception, type StarterPerceptionBinding, type StarterPerceptionSnapshot } from './game-support/starterPerception.ts';
+export { bindStarterBallPaddle, type StarterBallPaddleBinding, type StarterBallPaddleSnapshot } from './game-support/starterBallPaddle.ts';
+export { bindStarterMelee, type StarterMeleeBinding, type StarterMeleeSnapshot } from './game-support/starterMelee.ts';
+export { bindStarterLocalPlay, type StarterLocalPlayBinding, type StarterLocalPlaySnapshot } from './game-support/starterLocalPlay.ts';
+export { bindStarterStageScroll, type StarterStageScrollBinding, type StarterStageScrollSnapshot } from './game-support/starterStageScroll.ts';
+export { bindStarterPuzzle, type StarterPuzzleBinding, type StarterPuzzleSnapshot } from './game-support/starterPuzzle.ts';
+export { bindStarterTiming, type StarterTimingBinding, type StarterTimingSnapshot } from './game-support/starterTiming.ts';
+export {
+  bindStarterSimulation,
+  type StarterSimulationBinding,
+  type StarterSimulationSnapshot,
+  type SimulationStarterMode,
+} from './game-support/starterSimulation.ts';
+export {
+  bindStarterNarrative,
+  type StarterNarrativeBinding,
+  type StarterNarrativeSnapshot,
+  type NarrativeStarterMode,
+} from './game-support/starterNarrative.ts';
+export {
+  bindStarterArcade,
+  type StarterArcadeBinding,
+  type StarterArcadeSnapshot,
+  type ArcadeStarterMode,
+} from './game-support/starterArcade.ts';
+export {
+  bindStarterPointer,
+  type StarterPointerBinding,
+  type StarterPointerSnapshot,
+  type PointerStarterMode,
+} from './game-support/starterPointer.ts';
+export {
+  bindStarterProgression,
+  type StarterProgressionBinding,
+  type StarterProgressionSnapshot,
+  type ProgressionStarterMode,
+} from './game-support/starterProgression.ts';
+export {
+  bindStarterStrategy,
+  type StarterStrategyBinding,
+  type StarterStrategySnapshot,
+  type StrategyStarterMode,
+} from './game-support/starterStrategy.ts';
+export {
+  bindStarterNavigation,
+  type StarterNavigationBinding,
+  type StarterNavigationSnapshot,
+  type NavigationStarterMode,
+} from './game-support/starterNavigation.ts';
+export {
+  bindStarterToy,
+  type StarterToyBinding,
+  type StarterToySnapshot,
+  type ToyStarterMode,
+} from './game-support/starterToy.ts';
+export {
+  bindStarterCombat,
+  type StarterCombatBinding,
+  type StarterCombatSnapshot,
+  type CombatStarterMode,
+} from './game-support/starterCombat.ts';
+export {
+  bindStarterRun,
+  type StarterRunBinding,
+  type StarterRunSnapshot,
+  type RunStarterMode,
+} from './game-support/starterRun.ts';
+export {
+  bindStarterVehicle,
+  type StarterVehicleBinding,
+  type StarterVehicleSnapshot,
+  type VehicleStarterMode,
+} from './game-support/starterVehicle.ts';
+export {
+  bindStarterPhysics,
+  type StarterPhysicsBinding,
+  type StarterPhysicsSnapshot,
+  type PhysicsStarterMode,
+} from './game-support/starterPhysics.ts';
+export {
+  bindStarterCommand,
+  type StarterCommandBinding,
+  type StarterCommandSnapshot,
+  type CommandStarterMode,
+} from './game-support/starterCommand.ts';
+export {
+  bindStarterLook,
+  type StarterLookBinding,
+  type StarterLookSnapshot,
+  type LookStarterMode,
+} from './game-support/starterLook.ts';
+export {
+  bindStarterParkour,
+  type StarterParkourBinding,
+  type StarterParkourSnapshot,
+  type ParkourStarterMode,
+} from './game-support/starterParkour.ts';
+export {
+  bindStarterKartItem,
+  type StarterKartItemBinding,
+  type StarterKartItemSnapshot,
+} from './game-support/starterKartItem.ts';
+export {
+  bindStarterChase,
+  type StarterChaseBinding,
+  type StarterChaseSnapshot,
+  type ChaseStarterMode,
+} from './game-support/starterChase.ts';
+export {
+  bindStarterTargeting,
+  type StarterTargetingBinding,
+  type StarterTargetingSnapshot,
+} from './game-support/starterTargeting.ts';
 
 export { LocalStorageDriver, MemoryStorageDriver } from './persistence/LocalStorageDriver.ts';
 export { SaveStoreImpl } from './persistence/SaveStoreImpl.ts';

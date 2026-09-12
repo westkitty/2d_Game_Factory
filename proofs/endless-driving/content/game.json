@@ -1,0 +1,32 @@
+{
+  "id": "proof-endless-driving",
+  "displayName": "Proof Endless Driving",
+  "version": "0.1.0",
+  "schemaVersion": 1,
+  "viewport": {
+    "width": 960,
+    "height": 540
+  },
+  "bindings": {},
+  "systemPacks": [
+    {
+      "packId": "sw2d.arcade",
+      "config": {}
+    },
+    {
+      "packId": "sw2d.generation",
+      "config": {}
+    },
+    {
+      "packId": "sw2d.vehicles",
+      "config": {}
+    },
+    {
+      "packId": "game.vehicle-shell",
+      "config": {}
+    }
+  ],
+  "defaultSettings": {
+    "masterVolume": 0.7
+  }
+}

@@ -11,12 +11,17 @@ and theme packs, so a new game is a *composition* rather than a fork.
 > **Status: the 12-phase core is complete and accepted, and the Asset-Driven
 > Game Factory Workbench is built on top of it.**
 >
-> The core - runtime, ten system-pack cores, 74 genre presets (23
-> proof-validated / 3 smoke-validated / 48 recipe), a real factory CLI with a
-> release packer, twelve committed demo games, twenty-three deep proof games, a 6/6
-> release-verification matrix, a 19-surface responsive suite and a 40-target
-> generated-runtime matrix - is recorded in
-> [`docs/architecture/PHASE12_FINAL_ACCEPTANCE.md`](docs/architecture/PHASE12_FINAL_ACCEPTANCE.md).
+> The core - runtime, 34 reusable system packs, 74 genre presets (all 74
+> proof-validated: each has a committed proof game under `proofs/<id>/` and a
+> real-browser proof journey in `npm run qa:proof`, 74/74), a real factory CLI
+> with a release packer, twelve committed demo games, a 6/6
+> release-verification matrix, a 19-surface responsive suite, a 56-target
+> generated-runtime matrix, an adversarial sweep and a real-time performance
+> pass over every proof - is recorded in
+> [`docs/architecture/PHASE12_FINAL_ACCEPTANCE.md`](docs/architecture/PHASE12_FINAL_ACCEPTANCE.md)
+> (the accepted core) and
+> [`docs/architecture/CATEGORY_C_CONVERGENCE_MATRIX.md`](docs/architecture/CATEGORY_C_CONVERGENCE_MATRIX.md)
+> (the Category-C capability program's evidence convergence).
 >
 > The workbench - the visual, asset-driven product that core exists to serve -
 > is recorded in
@@ -33,10 +38,31 @@ and theme packs, so a new game is a *composition* rather than a fork.
 
 ## Install and run
 
+One-time setup:
+
 ```bash
 npm install
-npm run dev
 ```
+
+To use the factory day to day, launch it as a dedicated application window:
+
+```bash
+npm run app
+```
+
+This builds the production workbench, starts the host on loopback, and opens
+it in a **browser app-mode wrapper** - a Brave (or Chrome/Chromium) window
+with no tab strip or address bar, so it behaves like a dedicated local
+application even though the workbench itself is still the same browser-based
+product. It is not native application packaging (no Electron, no Tauri);
+`SW2D_APP_BROWSER_PATH` can point it at a specific Chromium-family
+executable if none of Brave/Chrome/Chromium is found at its default install
+location. Stop it with Ctrl+C in the terminal that ran it - that also stops
+the server and cleans up any preview processes it started.
+
+For development (hot reload, same app-mode window), use `npm run app:dev`
+instead. Plain `npm run dev` still opens the workbench in a normal browser
+tab, unchanged from before.
 
 That opens the **workbench**. From its home screen:
 
@@ -61,7 +87,7 @@ Everything runs on your machine: no account, no API key, no upload, no network.
 ```text
 packages/contracts/       @sw2d/contracts        interfaces. Zero dependencies, no Phaser, no DOM.
 packages/runtime/         @sw2d/runtime          the reusable machine.
-packages/packs/           @sw2d/packs            ten reusable system-pack cores.
+packages/packs/           @sw2d/packs            34 reusable system packs.
 packages/presets/         @sw2d/presets          74 genre preset recipes.
 packages/content-pipeline/ @sw2d/content-pipeline Tiled normalization, entity registry, themes.
 packages/schemas/         @sw2d/schemas          Ajv validators for every content document.
@@ -70,7 +96,7 @@ packages/qa/              @sw2d/qa               real-browser (system Chrome) sm
 workbench/                @sw2d/workbench        the visual asset-driven game factory (the product).
 starter/                  @sw2d/starter          the Phase 1 vertical slice, kept as engine evidence.
 demos/                                            twelve real, committed demo games (one per genre family).
-proofs/                                            twenty-three deep, end-to-end proof-validated games.
+proofs/                                            74 committed proof games, one per preset (frozen PROOF_CONTRACT.md + real-browser spec).
 docs/                                             architecture, ADRs, QA evidence, agent workflow.
 tools/scripts/                                    repository checks.
 ```
@@ -83,18 +109,22 @@ system Chrome is needed for the browser QA suites, and nothing else.
 ## Commands
 
 ```bash
-npm run dev              # the workbench
+npm run app              # the actual application: build + serve + open in a Brave/Chromium app-mode window
+npm run app:dev          # same wrapper window, hot-reload dev server underneath
+npm run dev              # the workbench in a normal browser tab (development)
 npm run workbench:build  # production build of the workbench UI
-npm run workbench:start  # serve that build instead of the dev server
+npm run workbench:start  # serve that build instead of the dev server (normal tab)
 npm run workbench:test   # workbench unit tests
 npm run starter:dev      # the Phase 1 foundation slice (engine evidence)
 
 npm run validate         # typecheck + unit tests + build + offline guard
 npm run qa:workbench     # real-browser workbench journeys (16)
 npm run qa:smoke         # build and real-browser-smoke every demo + starter journey
-npm run qa:proof         # build and real-browser-prove every deep proof game
+npm run qa:proof         # build and real-browser-prove every proof game (74, one per preset)
+npm run qa:adversarial   # hostile-input sweep over every built proof (run after qa:proof)
+npm run qa:performance   # real-time frame pacing + heap across restarts, 8 desktop workloads
 npm run qa:responsive    # real-browser responsive/mobile check: 19 surfaces x 2 viewports
-npm run qa:matrix        # one game per distinct runtime signature: 40 targets covering all 74 presets
+npm run qa:matrix        # one game per distinct runtime signature: 56 targets covering all 74 presets
 npm run release:verify   # generate+validate+pack+verify one game per controller-shell family
 ```
 

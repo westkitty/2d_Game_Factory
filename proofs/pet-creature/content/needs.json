@@ -1,0 +1,57 @@
+{
+  "schemaVersion": 1,
+  "mode": "creature",
+  "subject": {
+    "id": "pet",
+    "displayName": "Pico"
+  },
+  "needs": [
+    {
+      "id": "hunger",
+      "displayName": "Hunger",
+      "value": 72,
+      "min": 0,
+      "max": 100,
+      "decayPerSecond": 2.8
+    },
+    {
+      "id": "mood",
+      "displayName": "Mood",
+      "value": 72,
+      "min": 0,
+      "max": 100,
+      "decayPerSecond": 2.2
+    }
+  ],
+  "actions": [
+    {
+      "id": "feed",
+      "displayName": "Feed",
+      "effects": [
+        {
+          "needId": "hunger",
+          "delta": 22
+        }
+      ],
+      "affinityDelta": 1
+    },
+    {
+      "id": "play",
+      "displayName": "Play",
+      "effects": [
+        {
+          "needId": "mood",
+          "delta": 24
+        }
+      ],
+      "affinityDelta": 1
+    }
+  ],
+  "win": {
+    "minValue": 82,
+    "holdMs": 1600,
+    "minActions": 2
+  },
+  "loseBelow": 0,
+  "affinity": 0
+}

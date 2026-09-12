@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "mode": "shop",
+  "cash": 12,
+  "goods": [
+    {
+      "id": "apple",
+      "displayName": "Apple",
+      "price": 5,
+      "restockCost": 2,
+      "stock": 2
+    },
+    {
+      "id": "bread",
+      "displayName": "Bread",
+      "price": 8,
+      "restockCost": 4,
+      "stock": 1
+    }
+  ],
+  "demand": [
+    {
+      "id": "pat",
+      "displayName": "Pat",
+      "goodId": "apple",
+      "patienceMs": 12000
+    },
+    {
+      "id": "sam",
+      "displayName": "Sam",
+      "goodId": "bread",
+      "patienceMs": 12000
+    }
+  ],
+  "spawn": {
+    "firstDelayMs": 250,
+    "intervalMs": 2200,
+    "maxQueue": 2
+  }
+}

@@ -1,8 +1,12 @@
 import Phaser from 'phaser';
-import type { AdvancedPhysicsService, InstalledSystemPack, PuzzleRulesService, WorldGraphService } from '@sw2d/contracts';
-import { PUZZLE_RULES_CAPABILITY_ID, WORLD_GRAPH_CAPABILITY_ID } from '@sw2d/contracts';
+import type { AdvancedPhysicsService, InstalledSystemPack, PuzzleRulesService, WallService, WorldGraphService } from '@sw2d/contracts';
+import { PUZZLE_RULES_CAPABILITY_ID, WALL_CAPABILITY_ID, WORLD_GRAPH_CAPABILITY_ID } from '@sw2d/contracts';
 import {
   bindCollectiblePickups,
+  bindLevelObjectives,
+  bindStarterChase,
+  bindStarterParkour,
+  bindStarterRun,
   bindStarterWeapon,
   createAdvancedPhysics,
   createRoomTransitionRuntime,
@@ -12,6 +16,7 @@ import {
   type SceneContext,
   type ScenePackDefinition,
 } from '@sw2d/runtime';
+import { CHASE_STARTER, PARKOUR_STARTER, RUN_STARTER } from './packConfig.ts';
 
 /**
  * Generated starter shell: platform controller family.
@@ -87,13 +92,52 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     player.setCollideWorldBounds(true);
     player.body.setAllowGravity(true);
     player.setGravityY(tuning.gravity);
-    scene.physics.add.collider(player, ground);
+    const groundCollider = scene.physics.add.collider(player, ground);
+    // Auto-run (Category-C Wave 22). Inert unless packConfig names a
+    // course/endless starter. Then an authored gap strip replaces dummy
+    // walk-and-jump on generated solids.
+    const run = bindStarterRun(context, { mode: RUN_STARTER });
+    if (run.active) {
+      ground.setVisible(false);
+      groundCollider.destroy();
+      player.setPosition(run.startX(), run.startY());
+      run.attach(player);
+    }
+    // Parkour (Category-C Wave 27). Inert unless packConfig names precision/climb.
+    // Player-controlled gaps vs climb; not auto-run (Wave 22).
+    const parkour = bindStarterParkour(context, { mode: PARKOUR_STARTER });
+    if (parkour.active) {
+      ground.setVisible(false);
+      groundCollider.destroy();
+      player.setPosition(parkour.startX(), parkour.startY());
+      parkour.attach(player);
+    }
+    // Chase (Category-C Wave 31). Inert unless packConfig names pursuit.
+    // Player-controlled closing wall; not auto-run, not a chase pack.
+    const chase = bindStarterChase(context, { mode: CHASE_STARTER });
+    if (chase.active) {
+      ground.setVisible(false);
+      groundCollider.destroy();
+      player.setPosition(chase.startX(), chase.startY());
+      chase.attach(player);
+    }
 
     // Data-driven item pickups (capability program Phase 2). Inert unless the
     // game installs sw2d.items; then every Collectible whose itemId names a
     // catalog entry grants that item and applies its effects through the
     // reusable service - no per-pickup code here.
     const pickups = bindCollectiblePickups(context, player, level);
+    // Level objectives (Category-C convergence): the universal level's
+    // Checkpoint / Hazard / Collectible / Exit objects become a real
+    // checkpoint-respawn, hazard-reset, collect-then-exit loop through
+    // sw2d.world. Only on the plain walk-and-jump path - the auto-run,
+    // parkour and chase starters author their own strips, and a world graph
+    // owns the right edge as a room transition. Inert without sw2d.world.
+    // When sw2d.items owns the collectibles, the exit waits for every pickup.
+    const objectives =
+      run.active || parkour.active || chase.active || context.capabilities.has(WORLD_GRAPH_CAPABILITY_ID)
+        ? bindLevelObjectives(context, player, undefined)
+        : bindLevelObjectives(context, player, level, { exitRequires: () => pickups.remaining() === 0 });
     // Weapons (capability program Phase 3). Inert unless sw2d.weapons is installed.
     const weapon = bindStarterWeapon(context);
     // Data-driven puzzle rules (capability program Phase 6). Inert unless
@@ -102,6 +146,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     // switch/goal ruleset and solved-detection are content/puzzles.json, not
     // code here.
     const puzzle = context.capabilities.get<PuzzleRulesService>(PUZZLE_RULES_CAPABILITY_ID);
+    const wallsCap = context.capabilities.get<WallService>(WALL_CAPABILITY_ID);
     // Optional advanced physics (capability program Phase 9). Inert unless
     // content/game.json sets physicsProfile: 'matter'. Then a demo crate rests
     // on a static Matter floor - the reusable Matter-backed service, no raw
@@ -147,7 +192,14 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       items: pickups.inventory(),
       pickupsRemaining: pickups.remaining(),
       weapon: weapon.snapshot(),
+      ...(objectives.active ? { objectives: objectives.snapshot() } : {}),
       ...(puzzle ? { puzzle: puzzle.snapshot(), solved: puzzle.isSolved() } : {}),
+      ...(run.active ? { run: run.snapshot() } : {}),
+      ...(parkour.active ? { parkour: parkour.snapshot() } : {}),
+      ...(chase.active ? { chase: chase.snapshot() } : {}),
+      ...(wallsCap?.active()
+        ? { wall: { sliding: wallsCap.sliding(), wallId: wallsCap.wallId(), lastResult: wallsCap.lastResult(), outcome: wallsCap.outcome() } }
+        : {}),
       ...(generationManifest ? { generation: generationManifest } : {}),
       ...(worldGraph
         ? { worldGraph: { current: worldGraph.currentNode().id, ...worldGraph.mapState(), mapOpen: worldMap?.isOpen ?? false, transitions: rooms?.transitions ?? 0 } }
@@ -164,13 +216,31 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         if (disposed) return;
         nowMs += deltaMs;
         const intent = platformController.read(context.input);
-        player.setVelocityX(intent.moveAxis * tuning.moveSpeed);
-        if (intent.moveAxis !== 0) {
-          player.setFlipX(intent.moveAxis < 0);
-          facing = intent.moveAxis < 0 ? -1 : 1;
+        if (run.active && run.snapshot().outcome !== 'playing') {
+          player.setVelocity(0, 0);
+        } else if (parkour.active && parkour.snapshot().outcome !== 'playing') {
+          player.setVelocity(0, 0);
+        } else if (chase.active && chase.snapshot().outcome !== 'playing') {
+          player.setVelocity(0, 0);
+        } else if (run.active) {
+          player.setVelocityX(260);
+          player.setFlipX(false);
+          facing = 1;
+        } else if (objectives.active && objectives.snapshot().cleared) {
+          player.setVelocityX(0);
+        } else {
+          player.setVelocityX(intent.moveAxis * tuning.moveSpeed);
+          if (intent.moveAxis !== 0) {
+            player.setFlipX(intent.moveAxis < 0);
+            facing = intent.moveAxis < 0 ? -1 : 1;
+          }
         }
         weapon.update(deltaMs, nowMs);
         if (intent.primaryPressed) weapon.fire(nowMs, facing, 0, { x: player.x, y: player.y });
+        if (objectives.active) {
+          objectives.tick(deltaMs);
+          objectives.render();
+        }
         if (puzzle) {
           if (context.input.consumePress('SECONDARY_ACTION')) {
             const snap = puzzle.snapshot() as { switches?: readonly string[]; on?: readonly string[] };
@@ -179,7 +249,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
           }
           if (context.input.consumePress('CANCEL')) puzzle.undo();
         }
-        if (worldGraph && rooms) {
+        if (worldGraph && rooms && !run.active && !parkour.active && !chase.active) {
           rooms.tick();
           if (!puzzle && context.input.consumePress('SECONDARY_ACTION')) worldMap?.toggle();
           if (!rooms.transitioning && !(worldMap?.isOpen ?? false) && player.x > context.definition.viewport.width - 48) {
@@ -187,9 +257,50 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
             if (conn) rooms.requestTransition(conn.id);
           }
         }
-        if (intent.jumpPressed && player.body.blocked.down) {
+        if (wallsCap?.active() && parkour.active && parkour.snapshot().outcome === 'playing') {
+          wallsCap.setPlayer(player.x, player.y, player.body.velocity.x, player.body.velocity.y, player.body.blocked.down);
+          wallsCap.setHoldX(intent.moveAxis);
+          wallsCap.tick(deltaMs);
+          if (wallsCap.sliding()) {
+            player.setVelocityY(Math.min(player.body.velocity.y, wallsCap.vy()));
+          }
+        }
+        const wallKick =
+          intent.jumpPressed && wallsCap?.active() && wallsCap.sliding() ? wallsCap.jump() : null;
+        if (wallKick) {
+          player.setVelocity(wallKick.vx, wallKick.vy);
+          context.audio.playCue('ui.confirm');
+          if (parkour.active) parkour.jumped();
+        } else if (
+          intent.jumpPressed &&
+          player.body.blocked.down &&
+          (!run.active || run.snapshot().outcome === 'playing') &&
+          (!parkour.active || parkour.snapshot().outcome === 'playing') &&
+          (!chase.active || chase.snapshot().outcome === 'playing')
+        ) {
           player.setVelocityY(-tuning.jumpVelocity);
           context.audio.playCue('ui.confirm');
+          if (run.active) run.jumped();
+          if (parkour.active) parkour.jumped();
+          if (chase.active) chase.jumped();
+        }
+        if (run.active) {
+          run.setPlayer(player.x, player.y, player.body.blocked.down);
+          run.tick(deltaMs);
+          run.render();
+          if (run.snapshot().outcome !== 'playing') player.setVelocity(0, 0);
+        }
+        if (parkour.active) {
+          parkour.setPlayer(player.x, player.y, player.body.blocked.down);
+          parkour.tick(deltaMs);
+          parkour.render();
+          if (parkour.snapshot().outcome !== 'playing') player.setVelocity(0, 0);
+        }
+        if (chase.active) {
+          chase.setPlayer(player.x, player.y, player.body.blocked.down);
+          chase.tick(deltaMs);
+          chase.render();
+          if (chase.snapshot().outcome !== 'playing') player.setVelocity(0, 0);
         }
       },
 
@@ -198,7 +309,11 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         disposed = true;
         debugHandle.dispose();
         pickups.dispose();
+        objectives.dispose();
         weapon.dispose();
+        run.dispose();
+        parkour.dispose();
+        chase.dispose();
         rooms?.dispose();
         worldMap?.dispose();
         advPhysics?.dispose();

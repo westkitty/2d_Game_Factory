@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "mode": "stand",
+  "zones": [
+    {
+      "id": "zone-a",
+      "x": 280,
+      "y": 270,
+      "radius": 72,
+      "holdMs": 400
+    },
+    {
+      "id": "zone-b",
+      "x": 700,
+      "y": 270,
+      "radius": 72,
+      "holdMs": 400
+    }
+  ]
+}

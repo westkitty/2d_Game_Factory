@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "mode": "frame",
+  "points": [
+    {
+      "x": 120,
+      "y": 270
+    }
+  ],
+  "speed": 0,
+  "frame": {
+    "width": 160,
+    "height": 120
+  },
+  "subjects": [
+    {
+      "id": "bird",
+      "x": 280,
+      "y": 270,
+      "radius": 64
+    },
+    {
+      "id": "tree",
+      "x": 700,
+      "y": 270,
+      "radius": 64
+    }
+  ],
+  "shotsToWin": 2
+}

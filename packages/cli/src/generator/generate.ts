@@ -13,6 +13,21 @@ import {
   generateWorldGraphDoc,
   generateVehicleCatalog,
   generateRaceCatalog,
+  generateEconomyCatalog,
+  generateNeedsCatalog,
+  generateDialogueCatalog,
+  generatePerceptionCatalog,
+  generateBallPaddleCatalog,
+  generateMeleeCatalog,
+  generateLocalPlayCatalog,
+  generateStageScrollCatalog,
+  generateTimingCatalog,
+  generateWallCatalog,
+  generateTerritoryCatalog,
+  generatePinballCatalog,
+  generateCameraCatalog,
+  generateCodexCatalog,
+  generateTargetingCatalog,
   generateResourceManifest,
   generateTiledLevel,
   generateTheme,
@@ -87,6 +102,7 @@ export function buildGameFiles(gameId: string, preset: PresetDefinition): Map<st
           presetDisplayName: preset.displayName,
           primaryControllerFamily: preset.controllerFamilies[0]!,
           requiredPackIds,
+          presetId: preset.id,
         }),
       ),
       null,
@@ -115,9 +131,13 @@ export function buildGameFiles(gameId: string, preset: PresetDefinition): Map<st
     JSON.stringify(
       generatePuzzleRulesDoc(
         requiredPackIds.includes('sw2d.puzzle-rules')
-          ? preset.controllerFamilies[0] === 'grid'
-            ? 'sokoban'
-            : 'switch-sequence'
+          ? preset.id === 'match-puzzle'
+            ? 'match'
+            : preset.id === 'falling-block-puzzle'
+              ? 'falling-block'
+              : preset.controllerFamilies[0] === 'grid'
+                ? 'sokoban'
+                : 'switch-sequence'
           : 'none',
       ),
       null,
@@ -157,6 +177,186 @@ export function buildGameFiles(gameId: string, preset: PresetDefinition): Map<st
     JSON.stringify(
       generateRaceCatalog(
         requiredPackIds.includes('sw2d.racing') ? (preset.id.includes('time-trial') ? 'time-trial' : 'race') : 'none',
+      ),
+      null,
+      2,
+    ) + '\n',
+  );
+  files.set(
+    'content/economy.json',
+    JSON.stringify(
+      generateEconomyCatalog(
+        requiredPackIds.includes('sw2d.economy')
+          ? preset.id === 'restaurant'
+            ? 'kitchen'
+            : preset.id === 'tycoon-lite'
+              ? 'factory'
+              : 'shop'
+          : 'none',
+      ),
+      null,
+      2,
+    ) + '\n',
+  );
+  files.set(
+    'content/needs.json',
+    JSON.stringify(
+      generateNeedsCatalog(
+        requiredPackIds.includes('sw2d.needs')
+          ? preset.id === 'aquarium-terrarium'
+            ? 'habitat'
+            : preset.id === 'virtual-pet'
+              ? 'companion'
+              : 'creature'
+          : 'none',
+      ),
+      null,
+      2,
+    ) + '\n',
+  );
+  files.set(
+    'content/dialogue.json',
+    JSON.stringify(
+      generateDialogueCatalog(
+        requiredPackIds.includes('sw2d.dialogue')
+          ? preset.id === 'point-and-click'
+            ? 'adventure'
+            : 'novel'
+          : 'none',
+      ),
+      null,
+      2,
+    ) + '\n',
+  );
+  files.set(
+    'content/perception.json',
+    JSON.stringify(
+      generatePerceptionCatalog(
+        requiredPackIds.includes('sw2d.perception')
+          ? preset.id === 'heist-game'
+            ? 'heist'
+            : 'infiltrate'
+          : 'none',
+      ),
+      null,
+      2,
+    ) + '\n',
+  );
+  files.set(
+    'content/ball-paddle.json',
+    JSON.stringify(
+      generateBallPaddleCatalog(
+        requiredPackIds.includes('sw2d.ball-paddle') ? (preset.id === 'pong' ? 'pong' : 'breakout') : 'none',
+      ),
+      null,
+      2,
+    ) + '\n',
+  );
+  files.set(
+    'content/melee.json',
+    JSON.stringify(
+      generateMeleeCatalog(
+        requiredPackIds.includes('sw2d.melee') ? (preset.id === 'arena-combat' ? 'arena' : 'skirmish') : 'none',
+      ),
+      null,
+      2,
+    ) + '\n',
+  );
+  files.set(
+    'content/local-play.json',
+    JSON.stringify(
+      generateLocalPlayCatalog(
+        requiredPackIds.includes('sw2d.local-play') ? (preset.id === 'pong' ? 'versus' : 'hotseat') : 'none',
+      ),
+      null,
+      2,
+    ) + '\n',
+  );
+  files.set(
+    'content/stage-scroll.json',
+    JSON.stringify(
+      generateStageScrollCatalog(
+        requiredPackIds.includes('sw2d.stage-scroll')
+          ? preset.id === 'vertical-shmup'
+            ? 'vertical'
+            : 'horizontal'
+          : 'none',
+      ),
+      null,
+      2,
+    ) + '\n',
+  );
+  files.set(
+    'content/timing.json',
+    JSON.stringify(
+      generateTimingCatalog(
+        requiredPackIds.includes('sw2d.timing') ? (preset.id === 'rhythm-action' ? 'rhythm' : 'reaction') : 'none',
+      ),
+      null,
+      2,
+    ) + '\n',
+  );
+  files.set(
+    'content/wall.json',
+    JSON.stringify(
+      generateWallCatalog(
+        requiredPackIds.includes('sw2d.wall') ? (preset.id === 'climbing-game' ? 'slide' : 'leap') : 'none',
+      ),
+      null,
+      2,
+    ) + '\n',
+  );
+  files.set(
+    'content/territory.json',
+    JSON.stringify(
+      generateTerritoryCatalog(
+        requiredPackIds.includes('sw2d.territory') ? (preset.id === 'simple-rts' ? 'occupy' : 'stand') : 'none',
+      ),
+      null,
+      2,
+    ) + '\n',
+  );
+  files.set(
+    'content/pinball.json',
+    JSON.stringify(
+      generatePinballCatalog(
+        requiredPackIds.includes('sw2d.pinball') ? (preset.id === 'physics-toy' ? 'toy' : 'table') : 'none',
+      ),
+      null,
+      2,
+    ) + '\n',
+  );
+  files.set(
+    'content/camera.json',
+    JSON.stringify(
+      generateCameraCatalog(
+        requiredPackIds.includes('sw2d.camera') ? (preset.id === 'photography-game' ? 'frame' : 'rail') : 'none',
+      ),
+      null,
+      2,
+    ) + '\n',
+  );
+  files.set(
+    'content/codex.json',
+    JSON.stringify(
+      generateCodexCatalog(
+        requiredPackIds.includes('sw2d.codex') ? (preset.id === 'investigation-game' ? 'case' : 'exhibit') : 'none',
+      ),
+      null,
+      2,
+    ) + '\n',
+  );
+  files.set(
+    'content/targeting.json',
+    JSON.stringify(
+      generateTargetingCatalog(
+        requiredPackIds.includes('sw2d.targeting')
+          ? preset.id === 'auto-battler'
+            ? 'auto'
+            : preset.id === 'turn-based-tactics'
+              ? 'range'
+              : 'tower'
+          : 'none',
       ),
       null,
       2,

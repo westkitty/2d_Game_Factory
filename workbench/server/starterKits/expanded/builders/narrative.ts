@@ -13,7 +13,7 @@ export type NarrativeStarterVariant =
 function shellSource(variant: NarrativeStarterVariant): string {
   return String.raw`import Phaser from 'phaser';
 import type { InstalledSystemPack } from '@sw2d/contracts';
-import { gridController, topDownController, uiSimulationController, type SceneContext, type ScenePackDefinition } from '@sw2d/runtime';
+import { bindStarterDialogue, gridController, topDownController, uiSimulationController, type SceneContext, type ScenePackDefinition } from '@sw2d/runtime';
 import { addBackground } from './presentation.ts';
 
 const VARIANT = ${JSON.stringify(variant)} as const;
@@ -44,6 +44,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
 
     const title = scene.add.text(width * 0.5, worldMode ? 24 : 270, '', { fontFamily: 'ui-monospace, monospace', fontSize: '20px', color: '#ffffff', align: 'center', wordWrap: { width: 760 } }).setOrigin(0.5, 0).setDepth(50);
     const hint = scene.add.text(width * 0.5, worldMode ? 490 : 440, '', { fontFamily: 'ui-monospace, monospace', fontSize: '14px', color: '#9fd7ff', align: 'center', wordWrap: { width: 820 } }).setOrigin(0.5).setDepth(50);
+    const dialogue = bindStarterDialogue(context, { hud: false });
 
     const markers: Phaser.GameObjects.Sprite[] = [];
     const points = worldMode
@@ -96,6 +97,29 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     }
 
     function visualNovel(intent: ReturnType<typeof uiSimulationController.read>): void {
+      if (dialogue.active) {
+        if (outcome === 'complete') return;
+        if (intent.navigateLeftPressed || intent.navigateUpPressed) {
+          const snap = dialogue.snapshot();
+          if (snap.selectedIndex > 0) dialogue.select(-snap.selectedIndex);
+        }
+        if (intent.navigateRightPressed || intent.navigateDownPressed) {
+          const snap = dialogue.snapshot();
+          if (snap.selectedIndex < Math.max(0, snap.choices.length - 1)) dialogue.select(1);
+        }
+        if (intent.confirmPressed) {
+          const snap = dialogue.snapshot();
+          if (snap.kind === 'choice') { dialogue.choose(); lastAction = 'choice'; }
+          else { dialogue.advance(); lastAction = snap.kind === 'end' ? 'ending' : 'advance'; }
+        }
+        const snap = dialogue.snapshot();
+        dialogueStep = snap.step;
+        selectedChoice = snap.selectedIndex;
+        branch = snap.branch;
+        ending = snap.ending;
+        if (snap.outcome === 'complete') { outcome = 'complete'; lastAction = 'ending'; }
+        return;
+      }
       if (ending) return;
       if (dialogueStep < 2 && intent.confirmPressed) { dialogueStep += 1; lastAction = 'advance'; return; }
       if (dialogueStep === 2) {
@@ -181,6 +205,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       verbState,
       outcome,
       lastAction,
+      ...(dialogue.active ? { dialogue: dialogue.snapshot() } : {}),
     }));
 
     let disposed = false;
@@ -211,6 +236,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         if (disposed) return;
         disposed = true;
         debugHandle.dispose();
+        dialogue.dispose();
         try {
           background?.destroy(); panel.destroy(); button?.destroy(); buttonLabel?.destroy(); startMarker?.destroy(); player.destroy(); title.destroy(); hint.destroy(); exit.destroy(); cursorSprite?.destroy();
           for (const marker of markers) marker.destroy();

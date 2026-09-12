@@ -20,12 +20,27 @@ import {
   worldGraphPack,
   vehiclesPack,
   racingPack,
+  economyPack,
+  needsPack,
+  dialoguePack,
+  perceptionPack,
+  ballPaddlePack,
+  meleePack,
+  localPlayPack,
+  stageScrollPack,
+  timingPack,
+  wallPack,
+  territoryPack,
+  pinballPack,
+  cameraPack,
+  codexPack,
+  targetingPack,
 } from '@sw2d/packs';
 import { resolveInstallOrder } from '@sw2d/runtime/composition';
 import { PRESETS } from '../src/index.ts';
 
 /**
- * Pack and controller integrity for all 27 recipes, against the *real*
+ * Pack and controller integrity for all 28 recipes, against the *real*
  * @sw2d/packs definitions and the *real*, pure `resolveInstallOrder` -
  * @sw2d/runtime is a devDependency here (this is a test, which may cross
  * package boundaries freely to verify; @sw2d/presets' production code does
@@ -60,6 +75,21 @@ const REAL_PACKS = [
   worldGraphPack,
   vehiclesPack,
   racingPack,
+  economyPack,
+  needsPack,
+  dialoguePack,
+  perceptionPack,
+  ballPaddlePack,
+  meleePack,
+  localPlayPack,
+  stageScrollPack,
+  timingPack,
+  wallPack,
+  territoryPack,
+  pinballPack,
+  cameraPack,
+  codexPack,
+  targetingPack,
 ];
 
 const REGISTRY = new Map(REAL_PACKS.map((definition) => [definition.id, definition]));

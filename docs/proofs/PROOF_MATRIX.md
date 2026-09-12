@@ -1,10 +1,14 @@
 # Proof Matrix
 
 Phase 10's five deep, end-to-end proof games - the tier above Phase 8's smoke bar - plus the
-capability-completion program's per-phase proof consumers. Each row is backed by a frozen
-`proofs/<id>/PROOF_CONTRACT.md`, a real generated composition, and a committed real-browser proof
-spec run through `npm run qa:proof`. Mechanically, `npm run qa:proof` is **23/23** as of this
-revision.
+capability-completion program's per-phase proof consumers and the Category-C convergence
+program's 51 committed proofs. Each row is backed by a frozen `proofs/<id>/PROOF_CONTRACT.md`
+(mechanically required for every `proofs/<id>/` by `packages/presets/test/proofEvidence.test.ts`),
+a real generated composition, and a committed real-browser proof spec run through
+`npm run qa:proof`. Mechanically, `npm run qa:proof` is **74/74** as of this revision - one proof
+per preset. `npm run qa:adversarial` additionally attacks every built proof with hostile input
+(73/74 on first run; the one leak it found is fixed) and `npm run qa:performance` records
+real-time frame pacing for eight representative workloads.
 
 ## Capability program — Phase 1: reusable spatial pointer & interaction (ADR-0018)
 
@@ -14,12 +18,12 @@ revision.
 | `proofs/point-and-click/` | `point-and-click` | `SceneContext.interaction` (hover enter/leave, click, drag→drop, pointer capture), `phaserBoundsShape` (live bounds), drop-zone resolution | A lever (hover state + click-to-pull) and a key dragged onto a chest drop-zone | Start; hover enter/leave on the lever; click pulls it; drag the key (captured while the pointer leaves its bounds) onto the chest; drop sets `keyInChest`; restart reinstalls | PASS |
 | `proofs/twin-stick-shooter/` (upgraded) | `twin-stick-shooter` | `aimFromPointer` as an **optional** aim source | Existing wave/projectile proof + step 1b: with no digital `AIM_*` held, the mouse position yields `aimX>0, aimY<0` without firing; steps 2-5 prove digital aim still overrides and is independent | PASS |
 
-The formal `proof-validated` promotion for every preset in this matrix landed in the Arena
-finish program's catalog reconciliation (docs/architecture/ARENA_FACTORY_FINISH_STATE.md):
-the catalog is now 23 proof-validated / 3 smoke-validated / 48 recipe, matching the 23
-committed proof games exactly. The paragraph below records why promotion was originally
-deferred during the capability program, not
-folded into a capability phase.
+The formal `proof-validated` promotion for every preset in this section landed in the Arena
+finish program's catalog reconciliation (docs/architecture/ARENA_FACTORY_FINISH_STATE.md),
+which took the catalog to 23 proof-validated / 3 smoke-validated / 48 recipe; the Category-C
+convergence program then committed the other 51 proofs (74 / 0 / 0). The paragraph below
+records why promotion was originally deferred during the capability program, not folded into
+a capability phase.
 
 ## Capability program — Phase 2: data-driven items / effects / pickups (ADR-0019)
 
@@ -83,6 +87,83 @@ folded into a capability phase.
 |---|---|---|---|---|---|
 | `proofs/top-down-racer/` (new) | `top-down-racer` | `sw2d.vehicles` (`VehicleService`, `vehicle.motion`) - `VehicleIntent` in, car motion out; `sw2d.racing` (`RaceService`, `race.state`) - four ordered checkpoints, two laps, a countdown, simulation time | A tiny autopilot points the wheel at `expectedCheckpoint()` (produces intent only); CONFIRM starts the race; SECONDARY_ACTION fires the last checkpoint out of order | Start + CONFIRM → `phase 'countdown'`; countdown elapses → `'racing'`, `expectedCheckpoint 'cp-1'`; the car accelerates (`maxSpeed > 100`) and steers; a skipped-checkpoint shortcut → `lastShortcutCounted false`, lap unchanged; the autopilot runs two ordered laps → `finished`, `lapCount 2`, `phase 'finished'`; restart → fresh race (`finished false`, `lapCount 0`) | PASS |
 | `proofs/time-trial-racer/` (new) | `time-trial-racer` | Same services in `time-trial` mode; best lap / total persisted through `context.saves` | Same autopilot; PRIMARY_ACTION restarts the attempt; holding INTERACT slows the autopilot for a deliberately slow first run | Start (INTERACT held, slow) + CONFIRM → countdown → `elapsedMs` climbs (a live timer); an out-of-order checkpoint is rejected; the slow lap finishes and sets `bestTotalMs`; PRIMARY_ACTION restarts (`phase 'idle'`, `elapsedMs 0`, best retained); a full-speed second lap finishes with `bestTotalMs` **less than** the first - a better valid run updates the best, and no invalid sequence is ever accepted as a run | PASS |
+
+## Category-C convergence program — committed proofs (ADR-0028..0058)
+
+The Category-C waves (`docs/architecture/CATEGORY_C_CAPABILITY_PROGRAM_STATE.md`) played every
+one of these journeys against factory-generated games but deferred the committed proof. The
+convergence program (`docs/architecture/CATEGORY_C_CONVERGENCE_MATRIX.md`) generated each proof
+through the unmodified canonical factory (`npm run sw2d -- new proof-<id> --preset <id>` - no
+`src/game-specific/` customization, because the Category-C shells consume the capability
+directly), froze a `PROOF_CONTRACT.md`, and committed a real-browser spec under
+`packages/qa/proof-specs/`. Every row below includes a genuine scene reinstall
+(`restartRun`: `runIndex` advances, state returns to the install values).
+
+### ui-simulation shell consumers
+
+| Proof | Preset | Reusable capability exercised | Game-specific mechanics | Browser journey | Status |
+|---|---|---|---|---|---|
+| `proofs/shopkeeper/` | `shopkeeper` | `sw2d.economy` (shop mode): demand queue, matching-good serve, restock cost, refusals | None beyond the generated shell (`bindStarterEconomy`) | Serve the wanted good; serve-spam refused (`no-customer`); restock then `cannot-afford`; second customer; pause/resume keeps cash; restart resets | PASS |
+| `proofs/restaurant/` | `restaurant` | `sw2d.economy` (kitchen mode): time-gated cook job then serve | None | Serve before cooking refused; three cook→serve tickets (`served 3`, cash up); pause/resume; restart (`producing null`) | PASS |
+| `proofs/tycoon-lite/` | `tycoon-lite` | `sw2d.economy` (factory mode, `autoSell`) | None | Production job is time-gated; auto-sells (`served 1`); spam while busy does not double-produce; `served 2`; pause/resume; restart | PASS |
+| `proofs/pet-creature/` | `pet-creature` | `sw2d.needs` (creature mode): decay, feed/play, affinity, 1600 ms hold | None | Hunger decays; feed raises and clamps ≤100; play raises mood; hold → `complete`; pause/resume; restart (`affinity 0`) | PASS |
+| `proofs/aquarium-terrarium/` | `aquarium-terrarium` | `sw2d.needs` (habitat mode): two meters, 7 s hold, fail floor | None | Feed + refresh water; still `playing` at 2 s of hold; `complete` at ≥7000 ms; restart | PASS |
+| `proofs/virtual-pet/` | `virtual-pet` | `sw2d.needs` (companion mode): complete on threshold after two acts | None | One act still `playing`; second act `complete`; post-complete acts inert; restart | PASS |
+| `proofs/visual-novel/` | `visual-novel` | `sw2d.dialogue` (novel mode): lines, a two-option choice, two branches, two endings | None | Choice at step 2; option 1 → `keep-the-secret` → `midnight-ending`; inert past the ending; restart; option 0 → `dawn-ending` | PASS |
+| `proofs/local-party-game/` | `local-party-game` | `sw2d.local-play` (hotseat mode): seat ownership passes per act | None | Seat 0 scores then seat 1; six acts decide a winner; inert after; restart | PASS |
+| `proofs/reaction-timing/` | `reaction-timing` | `sw2d.timing` (reaction mode): visual go-cue, hit window, latency | None | Early press not a hit; hit inside the window with numeric latency; second cue completes; restart | PASS |
+| `proofs/rhythm-action/` | `rhythm-action` | `sw2d.timing` (rhythm mode): repeating beat windows | None | Three presses each inside an open window; `complete`; restart | PASS |
+| `proofs/farming-lite/` | `farming-lite` | `sw2d.simulation` jobs as plots (`SIMULATION_STARTER 'farm'`) | Plot/crop presentation | Plant → `growing` (job queued); early harvest refused; ripe → harvest; three harvests `complete`; restart (all plots `empty`) | PASS |
+| `proofs/colony-lite/` | `colony-lite` | `sw2d.simulation` jobs as workers + construction (`'colony'`) | Worker/build presentation | Build refused (`need-materials`); assign worker (busy, re-assign refused); gather ×2; build → `built`; restart | PASS |
+| `proofs/interactive-fiction-hybrid/` | `interactive-fiction-hybrid` | `sw2d.narrative` flags/seen/choices (`NARRATIVE_STARTER 'fiction'`) | Menu verbs | TAKE `locked` before LOOK; LOOK sets flag + seen; TAKE ends `escaped`; restart | PASS |
+| `proofs/fishing-game/` | `fishing-game` | `sw2d.arcade` score (`ARCADE_STARTER 'fishing'`) | Cast/bite/land presentation | Missed bite scores nothing; strike in the window lands; second fish `complete`; restart | PASS |
+| `proofs/cooking-game/` | `cooking-game` | `sw2d.arcade` score (`'cooking'`) | Ordered recipe steps | Wrong ingredient counted, no advance; flour → egg → ready (`recipeStep 3`); restart | PASS |
+| `proofs/microgame-collection/` | `microgame-collection` | `sw2d.arcade` score (`'micro'`) | Wait/go tap + mash rounds | Tap during `wait` ignored; tap at `go` scores; five-press mash `complete`; inert after; restart | PASS |
+| `proofs/auto-battler/` | `auto-battler` | `sw2d.strategy` + `sw2d.targeting` (auto mode) - the pack is the one health owner (`health(id)`) | Lineup pick phase; CONFIRM locks and starts the fight | Idle 40 frames: nothing fights; pick changes fighter; CONFIRM `fight`, pick frozen, second CONFIRM `auto`; cpu health falls to 0 → `won`; restart restores full health | PASS |
+| `proofs/pinball-lite/` | `pinball-lite` | `sw2d.pinball` (table mode): gravity, bumpers, flippers, drain-reset, win score | Flipper sprites and HUD score read from the same catalog | Hands off: ball drains and resets with `score 0`; flipping only when the ball is over a flipper hits bumpers to `score 3` / `complete`, `flips` == presses; restart | PASS |
+
+### top-down shell consumers
+
+| Proof | Preset | Reusable capability exercised | Game-specific mechanics | Browser journey | Status |
+|---|---|---|---|---|---|
+| `proofs/stealth-game/` | `stealth-game` | `sw2d.perception` (infiltrate): vision cone, suspicion, seen/alarm, loot, exit | None beyond the generated shell | Walk into the cone → `seen`/`failed`; restart; sneak above the cone, take the loot unseen, exit → `complete`, no alarm | PASS |
+| `proofs/heist-game/` | `heist-game` | `sw2d.perception` (heist): loot trips the alarm, escape under alarm | None | Exit before loot stays `playing`; loot → `alarm true`; exit → `complete` with alarm; restart | PASS |
+| `proofs/breakout/` | `breakout` | `sw2d.ball-paddle` (breakout): rebound, 12 bricks, lives, score | None | Paddle moves; pause/resume mid-rally; track the ball → `paddleReturns ≥ 1`, all bricks cleared, `complete`; restart | PASS |
+| `proofs/pong/` | `pong` | `sw2d.ball-paddle` (pong, first-to-3) + `sw2d.local-play` (versus seats: Arrow keys vs W/S) | None | Seat axes move their own paddle only; a real `player-return`; first-to-3 decides (`complete`/`failed`), no point after; restart | PASS |
+| `proofs/action-adventure/` | `action-adventure` | `sw2d.melee` (skirmish): reach, knockback, hit-stun | None | Whiff at range; close in, `hit` leaves the foe alive; two more kill → `complete`; restart | PASS |
+| `proofs/arena-combat/` | `arena-combat` | `sw2d.melee` (arena): three foes | None | Foes 3→2→1→0 with two strikes each; inert after clear; restart | PASS |
+| `proofs/horizontal-shmup/` | `horizontal-shmup` | `sw2d.stage-scroll` (horizontal) over `sw2d.weapons` + `sw2d.encounters` | None | Offset advances on its own; ship moves in band; fire spawns projectiles; pause freezes scroll; stage-clear; restart | PASS |
+| `proofs/vertical-shmup/` | `vertical-shmup` | `sw2d.stage-scroll` (vertical, -Y fire axis) | None | Same journey on the vertical axis contract | PASS |
+| `proofs/survivor-like/` | `survivor-like` | `sw2d.progression` survive (XP from kills via `combat:entityDied` + survival ticks) over the encounter loop | None | XP ticks slowly; pause freezes the clock; aim up + fire kills a chaser (`kills ≥ 1`, +2 XP); surge at ≥6 XP; restart | PASS |
+| `proofs/action-roguelite/` | `action-roguelite` | `sw2d.progression` run (items/currency/xp/unlock) over `sw2d.generation` | Relic walk | `too-far`; core `taken` (no double-credit); spark `cleared` (currency 2, xp 10, `run-cleared`); restart | PASS |
+| `proofs/investigation-game/` | `investigation-game` | `sw2d.narrative` case + `sw2d.codex` (case) | Clue walk | `too-far`; print/photo `inspected` once each; desk `deduced` → `closed`; restart | PASS |
+| `proofs/photography-game/` | `photography-game` | `sw2d.camera` (frame) via `bindStarterToy` photo | Subject walk | `too-far`; bird captured once; tree completes the album; restart | PASS |
+| `proofs/base-defense/` | `base-defense` | `sw2d.combat` via `bindStarterCombat` hold | Raider intercept | `miss`; intercept and kill both raiders; `baseHealth 3` at `complete`; restart | PASS |
+| `proofs/simple-rts/` | `simple-rts` | `sw2d.strategy` + `sw2d.territory` (occupy catalog) + ADR-0018 drag box-select | One-unit select, two-unit box | Orders with nothing selected move nobody; PRIMARY selects one; restart; drag boxes 2; march → `seized` both ≥ 780 | PASS |
+| `proofs/territory-control/` | `territory-control` | `sw2d.territory` (stand): timed capture, ownership persists on leave | None | Pass-through does not capture; standing does (`owned 1`); kept on leave; zone B → `complete`; restart | PASS |
+| `proofs/museum-exhibit/` | `museum-exhibit` | `sw2d.codex` (exhibit) via `bindStarterLook` museum | Plaque walk | `too-far`; plinth inspected once; bust completes; restart | PASS |
+
+### pointer, grid, platform and vehicle shell consumers
+
+| Proof | Preset | Reusable capability exercised | Game-specific mechanics | Browser journey | Status |
+|---|---|---|---|---|---|
+| `proofs/physics-puzzle/` | `physics-puzzle` | `sw2d.puzzle` code seam (`physics-goal`) + Matter ball | Nudge presentation | Idle 60 frames never solves; one nudge lands the ball in the goal (`solved`, x ≥ 740); restart | PASS |
+| `proofs/escape-room/` | `escape-room` | `sw2d.puzzle` code seam (`escape-locks`) + ADR-0018 clicks | Two hotspots | Lock before note `locked`; note (idempotent); lock → key + `solved`; restart | PASS |
+| `proofs/drawing-game/` | `drawing-game` | ADR-0018 spatial-pointer drag (`POINTER_STARTER 'draw'`) | Stroke presentation | Tap is not a stroke; 320 px drag is one stroke ≥ 300; second completes; restart | PASS |
+| `proofs/dress-up-character-toy/` | `dress-up-character-toy` | ADR-0018 drag capture + drop-zone (`'wardrobe'`) | Wardrobe | Off-figure drop does not attach; mid-drag `draggingId 'hat'`; hat then shirt attach → `complete`; restart | PASS |
+| `proofs/sandbox-playground/` | `sandbox-playground` | ADR-0018 click stamps + pick/move/delete (`TOY_STARTER 'sandbox'`) | Authoring | Stamp → hold → move; remove then `empty`; re-stamp + ball → `complete`; restart | PASS |
+| `proofs/rail-shooter/` | `rail-shooter` | `sw2d.camera` (rail) + look targets + `sw2d.combat` | Reticle fire | Miss with nothing near; kill each target as the rail brings it in (2→1→0) → `cleared`; restart | PASS |
+| `proofs/match-puzzle/` | `match-puzzle` | `sw2d.puzzle-rules` match kind (board, swap legality, cascade, objective all content) | Cursor only | Cursor/select; adjacent swap clears to the objective → `solved`; restart; non-adjacent confirm is not a swap | PASS |
+| `proofs/falling-block-puzzle/` | `falling-block-puzzle` | `sw2d.puzzle-rules` falling-block kind (gravity, move/rotate/hard-drop, line-clear) | None | Shift + hard-drop parks; next hard-drop clears the line → `solved`; restart (`moves ≤ 1`: a gravity tick is a move) | PASS |
+| `proofs/maze-game/` | `maze-game` | `sw2d.navigation` occupancy + `findPath` hint (`NAV_STARTER 'maze'`) | None | Wall step refused; corridor steps shrink the path; exit `escaped`; inert after; restart | PASS |
+| `proofs/precision-platformer/` | `precision-platformer` | parkour gap course + `sw2d.wall` (leap) | None | No jump → falls, `failed` (fail line fixed below the platform row); restart; one timed jump → `finished` | PASS |
+| `proofs/climbing-game/` | `climbing-game` | parkour ledges + `sw2d.wall` (slide) | None | Walking into the ledge gains no height; two jumps → `summit`; restart | PASS |
+| `proofs/auto-runner/` | `auto-runner` | auto-run course over `sw2d.generation` (`RUN_STARTER 'course'`) | None | Runs on its own; pause freezes; no jump → `failed`; restart; timed jump → `finished` | PASS |
+| `proofs/traditional-platformer/` | `traditional-platformer` | `bindLevelObjectives` over `sw2d.world` + `sw2d.world-entities` (Checkpoint / Hazard / Collectible / Exit) | None | Jump; walk; checkpoint + coin; spikes reset to checkpoint; pause; jump the spikes → `cleared`; input frozen; restart | PASS |
+| `proofs/asteroids-shooter/` | `asteroids-shooter` | `vehicleController` + drag body + `sw2d.weapons` heading-fire | Open space | Turn at rest; thrust moves; drag halves speed; fire spawns/expires; cooldown gates spam; restart | PASS |
+| `proofs/endless-driving/` | `endless-driving` | `sw2d.vehicles` car motion as arcade distance (`VEHICLE_STARTER 'road'`) over `sw2d.generation` | None | No throttle no distance; throttle builds; pause freezes; goal → `distance`; restart | PASS |
+| `proofs/boat-flight-racer/` | `boat-flight-racer` | `sw2d.vehicles` definition reload boat → flight (`'craft'`) | None | Boat never climbs; PRIMARY → `flight`; climb → `airborne`; restart as boat | PASS |
+| `proofs/kart-racer/` | `kart-racer` | `sw2d.racing` countdown/checkpoints on the `sw2d.vehicles` kart profile | Item box + on-demand fire | `empty`; CONFIRM → countdown → racing; pickup on the straight; cp-1 passed; fire; keyboard steering to cp-2; restart | PASS |
 
 ## Phase 10 deep proofs
 

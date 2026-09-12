@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 1,
+  "mode": "kitchen",
+  "cash": 0,
+  "goods": [
+    {
+      "id": "soup",
+      "displayName": "Soup",
+      "price": 12,
+      "stock": 0
+    },
+    {
+      "id": "salad",
+      "displayName": "Salad",
+      "price": 9,
+      "stock": 0
+    }
+  ],
+  "recipes": [
+    {
+      "id": "cook-soup",
+      "displayName": "Cook soup",
+      "outputGoodId": "soup",
+      "outputCount": 1,
+      "durationMs": 700
+    },
+    {
+      "id": "cook-salad",
+      "displayName": "Toss salad",
+      "outputGoodId": "salad",
+      "outputCount": 1,
+      "durationMs": 500
+    }
+  ],
+  "demand": [
+    {
+      "id": "diner-a",
+      "displayName": "Diner",
+      "goodId": "soup",
+      "patienceMs": 14000
+    },
+    {
+      "id": "diner-b",
+      "displayName": "Guest",
+      "goodId": "salad",
+      "patienceMs": 14000
+    }
+  ],
+  "spawn": {
+    "firstDelayMs": 250,
+    "intervalMs": 2400,
+    "maxQueue": 2
+  }
+}

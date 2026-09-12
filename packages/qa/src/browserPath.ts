@@ -11,6 +11,10 @@ import { existsSync } from 'node:fs';
  * non-standard location.
  */
 export function findSystemChrome(): string | undefined {
+  // A live CDP endpoint counts as an available browser (lambda/sandbox
+  // Chromium often cannot be launched via Playwright's debugging-pipe path).
+  if (process.env.PLAYWRIGHT_CDP_URL) return process.env.PLAYWRIGHT_CDP_URL;
+
   const override = process.env.PLAYWRIGHT_CHROME_PATH;
   if (override && existsSync(override)) return override;
 

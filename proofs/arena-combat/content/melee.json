@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "mode": "arena",
+  "player": {
+    "id": "player",
+    "x": 120,
+    "y": 270,
+    "radius": 16,
+    "health": 5
+  },
+  "foes": [
+    {
+      "id": "foe-0",
+      "x": 420,
+      "y": 160,
+      "radius": 17,
+      "health": 2
+    },
+    {
+      "id": "foe-1",
+      "x": 560,
+      "y": 270,
+      "radius": 17,
+      "health": 2
+    },
+    {
+      "id": "foe-2",
+      "x": 420,
+      "y": 380,
+      "radius": 17,
+      "health": 2
+    }
+  ],
+  "strike": {
+    "range": 145,
+    "damage": 1,
+    "cooldownMs": 0,
+    "knockback": 8,
+    "stunMs": 80
+  },
+  "contact": {
+    "range": 34,
+    "damage": 1,
+    "cooldownMs": 650
+  }
+}

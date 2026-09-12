@@ -16,7 +16,7 @@ export type PartyToyStarterVariant =
 function shellSource(variant: PartyToyStarterVariant): string {
   return String.raw`import Phaser from 'phaser';
 import type { InstalledSystemPack } from '@sw2d/contracts';
-import { gridController, topDownController, uiSimulationController, type SceneContext, type ScenePackDefinition } from '@sw2d/runtime';
+import { bindStarterNeeds, bindStarterLocalPlay, gridController, topDownController, uiSimulationController, type SceneContext, type ScenePackDefinition } from '@sw2d/runtime';
 import { addBackground } from './presentation.ts';
 
 const VARIANT = ${JSON.stringify(variant)} as const;
@@ -64,6 +64,9 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     if (roleButton) objects.push(roleButton);
     if (roleButtonLabel) objects.push(roleButtonLabel);
     if (wardrobeLabels) objects.push(wardrobeLabels);
+
+    const needs = bindStarterNeeds(context, { hud: false });
+    const seats = bindStarterLocalPlay(context, { hud: false });
 
     let elapsedMs = 0;
     let outcome: 'playing' | 'complete' | 'failed' = 'playing';
@@ -193,6 +196,20 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     }
 
     function updateParty(): void {
+      if (seats.active) {
+        if (context.input.justPressed('PRIMARY_ACTION') || context.input.justPressed('CONFIRM')) {
+          seats.act();
+          lastAction = 'party-turn';
+        }
+        const snap = seats.snapshot();
+        currentPlayer = snap.currentPlayer;
+        partyScores[0] = snap.scores[0] ?? 0;
+        partyScores[1] = snap.scores[1] ?? 0;
+        partyTurns = snap.turns;
+        winner = snap.winner;
+        if (snap.outcome !== 'playing') outcome = snap.outcome as typeof outcome;
+        return;
+      }
       if (!context.input.justPressed('PRIMARY_ACTION') && !context.input.justPressed('CONFIRM')) return;
       const power = 1 + (partyTurns % 3);
       partyScores[currentPlayer] = (partyScores[currentPlayer] ?? 0) + power;
@@ -213,13 +230,23 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     }
 
     function updatePet(deltaMs: number): void {
-      hunger -= deltaMs * 0.003; happiness -= deltaMs * 0.0025;
-      if (context.input.justPressed('PRIMARY_ACTION')) { hunger += 25; petActions += 1; lastAction = 'feed'; }
-      if (context.input.justPressed('SECONDARY_ACTION')) { happiness += 25; petActions += 1; lastAction = 'play'; }
-      hunger = Phaser.Math.Clamp(hunger, 0, 100); happiness = Phaser.Math.Clamp(happiness, 0, 100);
+      if (needs.active) {
+        if (context.input.justPressed('PRIMARY_ACTION')) { needs.actByIndex(0); lastAction = 'feed'; }
+        if (context.input.justPressed('SECONDARY_ACTION')) { needs.actByIndex(1); lastAction = 'play'; }
+        const snap = needs.snapshot();
+        hunger = snap.needValues.hunger ?? hunger;
+        happiness = snap.needValues.happiness ?? happiness;
+        petActions = snap.actionsTaken;
+        if (snap.outcome !== 'playing') outcome = snap.outcome as typeof outcome;
+      } else {
+        hunger -= deltaMs * 0.003; happiness -= deltaMs * 0.0025;
+        if (context.input.justPressed('PRIMARY_ACTION')) { hunger += 25; petActions += 1; lastAction = 'feed'; }
+        if (context.input.justPressed('SECONDARY_ACTION')) { happiness += 25; petActions += 1; lastAction = 'play'; }
+        hunger = Phaser.Math.Clamp(hunger, 0, 100); happiness = Phaser.Math.Clamp(happiness, 0, 100);
+        if (hunger >= 85 && happiness >= 85 && petActions >= 2) outcome = 'complete';
+      }
       hero.setScale((92 / hero.height) * (0.9 + happiness / 500));
       if (rolePickup) rolePickup.setPosition(hero.x + 76, hero.y).setTint(happiness >= 80 ? 0x65d0a8 : 0xf0c274);
-      if (hunger >= 85 && happiness >= 85 && petActions >= 2) outcome = 'complete';
     }
 
     function updateDress(): void {
@@ -325,7 +352,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         else updatePhoto(deltaMs);
         render();
       },
-      dispose(): void { if (disposed) return; disposed = true; debugHandle.dispose(); try { background?.destroy(); hero.destroy(); status.destroy(); hint.destroy(); for (const object of objects) object.destroy(); } catch { /* scene teardown */ } },
+      dispose(): void { if (disposed) return; disposed = true; debugHandle.dispose(); needs.dispose(); seats.dispose(); try { background?.destroy(); hero.destroy(); status.destroy(); hint.destroy(); for (const object of objects) object.destroy(); } catch { /* scene teardown */ } },
     };
   },
 };

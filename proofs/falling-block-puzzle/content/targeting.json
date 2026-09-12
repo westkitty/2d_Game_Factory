@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "mode": "tower",
+  "actors": [
+    {
+      "id": "none",
+      "x": 0,
+      "y": 0,
+      "range": 1,
+      "damage": 1,
+      "cooldownMs": 0,
+      "team": "player",
+      "health": 1
+    }
+  ]
+}

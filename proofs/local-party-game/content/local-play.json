@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "mode": "hotseat",
+  "players": [
+    {
+      "id": "p1",
+      "label": "P1"
+    },
+    {
+      "id": "p2",
+      "label": "P2"
+    }
+  ],
+  "hotseat": {
+    "turns": 6,
+    "pointsCycle": [
+      1,
+      2,
+      3
+    ]
+  }
+}

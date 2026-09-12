@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "vehicles": [
+    {
+      "id": "starter-boat",
+      "profile": "boat",
+      "acceleration": 300,
+      "braking": 180,
+      "reverseAcceleration": 260,
+      "maxForwardSpeed": 260,
+      "maxReverseSpeed": 120,
+      "steeringRate": 1.5,
+      "speedSensitiveSteering": 0.5,
+      "drag": 0.9,
+      "lateralGrip": 0.35,
+      "traction": 0.4,
+      "driftFactor": 0.15,
+      "boostForce": 320,
+      "boostDurationMs": 900,
+      "boostCooldownMs": 2600,
+      "surfaceModifiers": {
+        "water": {
+          "drag": 0.95
+        }
+      }
+    },
+    {
+      "id": "starter-flight",
+      "profile": "flight",
+      "acceleration": 420,
+      "braking": 260,
+      "reverseAcceleration": 0,
+      "maxForwardSpeed": 400,
+      "maxReverseSpeed": 0,
+      "steeringRate": 2,
+      "speedSensitiveSteering": 0.1,
+      "drag": 0.92,
+      "lateralGrip": 0.55,
+      "traction": 0.5,
+      "driftFactor": 0.1,
+      "boostForce": 300,
+      "boostDurationMs": 1000,
+      "boostCooldownMs": 2600,
+      "altitudeRate": 90,
+      "minAltitude": 0,
+      "maxAltitude": 240
+    }
+  ]
+}

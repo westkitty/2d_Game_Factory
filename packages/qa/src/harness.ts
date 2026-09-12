@@ -41,11 +41,23 @@ export interface Harness {
 
 /** Launches the system-installed Chrome via playwright-core - never a bundled/downloaded browser (packages/qa/src/browserPath.ts). Throws NoBrowserAvailableError if none is found. */
 export async function launchHarness(): Promise<Harness> {
-  const executablePath = findSystemChrome();
-  if (!executablePath) throw new NoBrowserAvailableError();
-
-  const browser: Browser = await chromium.launch({ executablePath, headless: true });
-  const page = await browser.newPage({ viewport: { width: 1024, height: 768 } });
+  const cdpUrl = process.env.PLAYWRIGHT_CDP_URL;
+  let browser: Browser;
+  const usingCdp = Boolean(cdpUrl);
+  if (cdpUrl) {
+    // Sandbox / lambda Chromium often SIGTRAPs on Playwright's
+    // `--remote-debugging-pipe` launch path but serves CDP on a TCP port.
+    browser = await chromium.connectOverCDP(cdpUrl);
+  } else {
+    const executablePath = findSystemChrome();
+    if (!executablePath) throw new NoBrowserAvailableError();
+    browser = await chromium.launch({ executablePath, headless: true });
+  }
+  const existing = browser.contexts()[0];
+  const page: Page = existing
+    ? (existing.pages()[0] ?? (await existing.newPage()))
+    : await browser.newPage({ viewport: { width: 1024, height: 768 } });
+  await page.setViewportSize({ width: 1024, height: 768 });
 
   const consoleErrorMessages: string[] = [];
   page.on('console', (message: ConsoleMessage) => {
@@ -86,8 +98,25 @@ export async function launchHarness(): Promise<Harness> {
    */
   async function stopRequestAnimationFrameLoop(): Promise<void> {
     await page.evaluate(() => {
-      const loop = (window as unknown as { __SW2D__: { phaser: { loop: { stop(): void } } } }).__SW2D__.phaser.loop;
+      const w = window as unknown as {
+        __SW2D__: { phaser: { loop: { stop(): void; now: number; lastTime: number; deltaHistory?: number[]; _coolDown?: number } } };
+        __SW2D_QA_CLOCK__?: number;
+      };
+      const loop = w.__SW2D__.phaser.loop;
       loop.stop();
+      // Phaser's TimeStep smooths each delta over its last ten frames and
+      // clamps the first "late" frame - both seeded by however the real
+      // requestAnimationFrame frames happened to land before this call. Left
+      // alone, the first ~10 stepped frames integrate physics with a
+      // real-time-dependent delta, which is exactly the one-run-in-many
+      // dropped jump the Category-C convergence ladder hit (a
+      // `jumpPressed && blocked.down` edge landing one frame off). Seed the
+      // history and the clock so frame 1 of every run is the same 16.67 ms.
+      const FRAME_MS = 16.67;
+      if (Array.isArray(loop.deltaHistory)) loop.deltaHistory.fill(FRAME_MS);
+      if (typeof loop._coolDown === 'number') loop._coolDown = 0;
+      w.__SW2D_QA_CLOCK__ = loop.now;
+      loop.lastTime = loop.now;
     });
   }
 
@@ -156,6 +185,10 @@ export async function launchHarness(): Promise<Harness> {
   }
 
   async function close(): Promise<void> {
+    if (usingCdp) {
+      // Leave the shared CDP Chromium running for the next spec.
+      return;
+    }
     await browser.close();
   }
 

@@ -34,6 +34,21 @@ export const CONTENT_DOCUMENTS: Readonly<Record<string, ContentDocumentRegistryE
   'world-graph': { schemaName: 'world-graph' },
   vehicles: { schemaName: 'vehicle-catalog' },
   races: { schemaName: 'race-catalog' },
+  economy: { schemaName: 'economy-catalog' },
+  needs: { schemaName: 'needs-catalog' },
+  dialogue: { schemaName: 'dialogue-catalog' },
+  perception: { schemaName: 'perception-catalog' },
+  'ball-paddle': { schemaName: 'ball-paddle-catalog' },
+  melee: { schemaName: 'melee-catalog' },
+  'local-play': { schemaName: 'local-play-catalog' },
+  'stage-scroll': { schemaName: 'stage-scroll-catalog' },
+  timing: { schemaName: 'timing-catalog' },
+  wall: { schemaName: 'wall-catalog' },
+  territory: { schemaName: 'territory-catalog' },
+  pinball: { schemaName: 'pinball-catalog' },
+  camera: { schemaName: 'camera-catalog' },
+  codex: { schemaName: 'codex-catalog' },
+  targeting: { schemaName: 'targeting-catalog' },
 };
 
 export type ContentDocumentName = keyof typeof CONTENT_DOCUMENTS;

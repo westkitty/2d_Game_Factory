@@ -1,0 +1,130 @@
+{
+  "schemaVersion": 1,
+  "mode": "breakout",
+  "court": {
+    "width": 960,
+    "height": 540
+  },
+  "paddle": {
+    "x": 480,
+    "y": 485,
+    "width": 150,
+    "height": 22,
+    "speed": 340,
+    "axis": "x",
+    "min": 85,
+    "max": 875,
+    "hitHalf": 86
+  },
+  "ball": {
+    "x": 480,
+    "y": 270,
+    "vx": 180,
+    "vy": -180,
+    "radius": 18
+  },
+  "walls": {
+    "insetX": 12,
+    "top": 50,
+    "bottom": 522
+  },
+  "bricks": [
+    {
+      "id": "brick-0-0",
+      "x": 260,
+      "y": 105,
+      "halfWidth": 42,
+      "halfHeight": 22
+    },
+    {
+      "id": "brick-0-1",
+      "x": 342,
+      "y": 105,
+      "halfWidth": 42,
+      "halfHeight": 22
+    },
+    {
+      "id": "brick-0-2",
+      "x": 424,
+      "y": 105,
+      "halfWidth": 42,
+      "halfHeight": 22
+    },
+    {
+      "id": "brick-0-3",
+      "x": 506,
+      "y": 105,
+      "halfWidth": 42,
+      "halfHeight": 22
+    },
+    {
+      "id": "brick-0-4",
+      "x": 588,
+      "y": 105,
+      "halfWidth": 42,
+      "halfHeight": 22
+    },
+    {
+      "id": "brick-0-5",
+      "x": 670,
+      "y": 105,
+      "halfWidth": 42,
+      "halfHeight": 22
+    },
+    {
+      "id": "brick-1-0",
+      "x": 260,
+      "y": 143,
+      "halfWidth": 42,
+      "halfHeight": 22
+    },
+    {
+      "id": "brick-1-1",
+      "x": 342,
+      "y": 143,
+      "halfWidth": 42,
+      "halfHeight": 22
+    },
+    {
+      "id": "brick-1-2",
+      "x": 424,
+      "y": 143,
+      "halfWidth": 42,
+      "halfHeight": 22
+    },
+    {
+      "id": "brick-1-3",
+      "x": 506,
+      "y": 143,
+      "halfWidth": 42,
+      "halfHeight": 22
+    },
+    {
+      "id": "brick-1-4",
+      "x": 588,
+      "y": 143,
+      "halfWidth": 42,
+      "halfHeight": 22
+    },
+    {
+      "id": "brick-1-5",
+      "x": 670,
+      "y": 143,
+      "halfWidth": 42,
+      "halfHeight": 22
+    }
+  ],
+  "lives": 3,
+  "breakout": {
+    "contactDivisor": 65,
+    "contactScale": 72,
+    "moveScale": 24,
+    "minSpeedX": 105,
+    "maxSpeedX": 220,
+    "parkOffset": 24,
+    "serveSpeed": 180,
+    "contactNear": 25,
+    "contactFar": 12,
+    "brickScore": 10
+  }
+}

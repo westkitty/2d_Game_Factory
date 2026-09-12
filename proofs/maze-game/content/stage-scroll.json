@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "mode": "horizontal",
+  "speed": 0,
+  "length": 0,
+  "viewport": {
+    "width": 960,
+    "height": 540
+  },
+  "player": {
+    "x": 120,
+    "y": 270,
+    "radius": 16,
+    "speed": 0,
+    "minX": 0,
+    "maxX": 960,
+    "minY": 0,
+    "maxY": 540
+  },
+  "hazards": []
+}

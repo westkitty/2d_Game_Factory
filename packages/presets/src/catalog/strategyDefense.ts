@@ -26,9 +26,9 @@ export const STRATEGY_DEFENSE_PRESETS: readonly PresetDefinition[] = [
     displayName: 'Tower Defense',
     family: 'strategy-defense',
     controllerFamilies: ['grid', 'pointer'],
-    requiredSystemPacks: [pack(PACK_IDS.world), pack(PACK_IDS.worldEntities), pack(PACK_IDS.progression), pack(PACK_IDS.combat), pack(PACK_IDS.navigation)],
+    requiredSystemPacks: [pack(PACK_IDS.world), pack(PACK_IDS.worldEntities), pack(PACK_IDS.progression), pack(PACK_IDS.combat), pack(PACK_IDS.navigation), pack(PACK_IDS.targeting)],
     optionalSystemPacks: [pack(PACK_IDS.ai)],
-    requiredContentRoles: ['tuning', 'levels'],
+    requiredContentRoles: ['tuning', 'levels', 'targeting'],
     supportedInputModes: POINTER_INPUT_MODES,
     validationProfile: VALIDATION_PROFILES.strategyDefense,
     // Route-following pathfinding is reusable now (sw2d.navigation, ADR-0022;
@@ -36,7 +36,7 @@ export const STRATEGY_DEFENSE_PRESETS: readonly PresetDefinition[] = [
     // (Phase 1) via the pointer shell, but this proof keeps the grid cursor.
     knownLimitations: [
       'Spatial hover placement via the pointer shell is available but this starter uses the keyboard grid cursor.',
-      'Deterministic route-following pathfinding is reusable (sw2d.navigation); tower target-selection and upgrade rules stay starter-specific.',
+      'Deterministic route-following pathfinding is reusable (sw2d.navigation); tower target-selection is reusable (sw2d.targeting); upgrade rules stay starter-specific.',
     ],
   }),
 
@@ -58,26 +58,32 @@ export const STRATEGY_DEFENSE_PRESETS: readonly PresetDefinition[] = [
 
   definePreset({
     id: 'auto-battler',
+    maturity: 'proof-validated',
     displayName: 'Auto Battler',
     family: 'strategy-defense',
     controllerFamilies: ['ui-simulation'],
-    requiredSystemPacks: [pack(PACK_IDS.strategy), pack(PACK_IDS.combat), pack(PACK_IDS.ai)],
+    requiredSystemPacks: [pack(PACK_IDS.strategy), pack(PACK_IDS.combat), pack(PACK_IDS.ai), pack(PACK_IDS.targeting)],
     optionalSystemPacks: [pack(PACK_IDS.progression)],
-    requiredContentRoles: ['tuning'],
+    requiredContentRoles: ['tuning', 'targeting'],
     validationProfile: VALIDATION_PROFILES.strategyDefense,
-    knownLimitations: ['AI/combat/strategy state foundations exist, but autonomous combat orchestration is not implemented.'],
+    knownLimitations: [
+      'Teams, active turn, selection and turn advance are reusable (sw2d.strategy); autonomous strikes are reusable (sw2d.targeting); the lineup pick is presentation (it does not change the fighting actor) and loadout drafting stays starter-specific.',
+    ],
   }),
 
   definePreset({
     id: 'simple-rts',
+    maturity: 'proof-validated',
     displayName: 'Simple RTS',
     family: 'strategy-defense',
     controllerFamilies: ['top-down'],
-    requiredSystemPacks: [pack(PACK_IDS.strategy), pack(PACK_IDS.combat)],
+    requiredSystemPacks: [pack(PACK_IDS.strategy), pack(PACK_IDS.combat), pack(PACK_IDS.territory)],
     optionalSystemPacks: [pack(PACK_IDS.ai), pack(PACK_IDS.world), pack(PACK_IDS.worldEntities), pack(PACK_IDS.navigation)],
-    requiredContentRoles: ['tuning', 'levels'],
+    requiredContentRoles: ['tuning', 'levels', 'territory'],
     validationProfile: VALIDATION_PROFILES.strategyDefense,
-    knownLimitations: ['Unit pathfinding is reusable (sw2d.navigation, optional); box-select and command-queue UI are not implemented.'],
+    knownLimitations: [
+      'Unit pathfinding is reusable (sw2d.navigation, optional); box-select for the generated starter is a two-unit presentation on the spatial pointer; a command-queue UI is not implemented.',
+    ],
   }),
 
   definePreset({
@@ -86,19 +92,20 @@ export const STRATEGY_DEFENSE_PRESETS: readonly PresetDefinition[] = [
     displayName: 'Turn-Based Tactics',
     family: 'strategy-defense',
     controllerFamilies: ['grid', 'ui-simulation'],
-    requiredSystemPacks: [pack(PACK_IDS.strategy), pack(PACK_IDS.combat), pack(PACK_IDS.navigation)],
+    requiredSystemPacks: [pack(PACK_IDS.strategy), pack(PACK_IDS.combat), pack(PACK_IDS.navigation), pack(PACK_IDS.targeting)],
     optionalSystemPacks: [pack(PACK_IDS.ai), pack(PACK_IDS.world), pack(PACK_IDS.worldEntities)],
-    requiredContentRoles: ['tuning', 'levels'],
+    requiredContentRoles: ['tuning', 'levels', 'targeting'],
     validationProfile: VALIDATION_PROFILES.strategyDefense,
     // Reachable-cell movement range + deterministic route-following are reusable
     // now (sw2d.navigation, ADR-0022; proof: proofs/turn-based-tactics/).
     knownLimitations: [
-      'Attack-range/line-of-fire resolution and a full turn-action state machine are still starter-specific.',
+      'Teams, active turn, selection and turn advance are reusable (sw2d.strategy); attack-range is reusable (sw2d.targeting); a full turn-action state machine is still starter-specific.',
     ],
   }),
 
   definePreset({
     id: 'base-defense',
+    maturity: 'proof-validated',
     displayName: 'Base Defense',
     family: 'strategy-defense',
     controllerFamilies: ['top-down'],
@@ -106,18 +113,23 @@ export const STRATEGY_DEFENSE_PRESETS: readonly PresetDefinition[] = [
     optionalSystemPacks: [pack(PACK_IDS.ai), pack(PACK_IDS.progression), pack(PACK_IDS.encounters)],
     requiredContentRoles: ['tuning', 'levels'],
     validationProfile: VALIDATION_PROFILES.strategyDefense,
-    knownLimitations: ['Wave spawning is reusable (sw2d.encounters, Phase 4, optional); base-damage/target-priority resolution is still starter-specific.'],
+    knownLimitations: [
+      'Base HP and incoming contact for the generated starter use sw2d.combat; wave spawning is optional (sw2d.encounters); target-priority and upgrade rules stay starter-specific.',
+    ],
   }),
 
   definePreset({
     id: 'territory-control',
+    maturity: 'proof-validated',
     displayName: 'Territory Control',
     family: 'strategy-defense',
     controllerFamilies: ['top-down'],
-    requiredSystemPacks: [pack(PACK_IDS.world), pack(PACK_IDS.worldEntities), pack(PACK_IDS.strategy), pack(PACK_IDS.combat)],
+    requiredSystemPacks: [pack(PACK_IDS.world), pack(PACK_IDS.worldEntities), pack(PACK_IDS.strategy), pack(PACK_IDS.combat), pack(PACK_IDS.territory)],
     optionalSystemPacks: [pack(PACK_IDS.ai)],
-    requiredContentRoles: ['tuning', 'levels'],
+    requiredContentRoles: ['tuning', 'levels', 'territory'],
     validationProfile: VALIDATION_PROFILES.strategyDefense,
-    knownLimitations: ['Reusable capture-zone/territory ownership/scoring mechanics do not exist yet.'],
+    knownLimitations: [
+      'Capture-zone occupancy is reusable (sw2d.territory); scoring overlays and contested multi-faction capture stay starter-specific.',
+    ],
   }),
 ];

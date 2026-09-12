@@ -13,12 +13,15 @@ import { PRESETS } from '../src/index.ts';
  * Every preset here has a committed, frozen proof game under `proofs/<id>/`
  * (PROOF_CONTRACT.md + real generated composition) and a dedicated
  * real-browser proof spec in `packages/qa/proof-specs/*.ts`, wired into
- * `npm run qa:proof` (23/23 as of this revision). Phase 10 established the
- * first five; the capability-completion program (Phases 1-10, ADR-0018..0027)
- * added the other eighteen. The Arena finish program reconciled the catalog
- * with this evidence one preset at a time - see
- * docs/architecture/ARENA_FACTORY_FINISH_STATE.md. Only these twenty-three
- * may claim 'proof-validated'.
+ * `npm run qa:proof`. Phase 10 established the first five; the capability
+ * program (Phases 1-10, ADR-0018..0027) added eighteen; the Arena finish
+ * program reconciled the catalog with that evidence
+ * (docs/architecture/ARENA_FACTORY_FINISH_STATE.md); the Category-C
+ * convergence program (docs/architecture/CATEGORY_C_CONVERGENCE_MATRIX.md)
+ * committed the proofs the Category-C waves had played but deferred, one
+ * preset at a time, each promoted only after its proof passed `qa:proof`.
+ * Only the ids below may claim 'proof-validated'. `proofEvidence.test.ts`
+ * derives the same set mechanically from the proofs/ directory.
  */
 const PROOF_VALIDATED_IDS = [
   'chase-platformer',
@@ -46,31 +49,82 @@ const PROOF_VALIDATED_IDS = [
   'physics-toy',
   'top-down-racer',
   'time-trial-racer',
+  // Category-C convergence - ui-simulation shell consumers (Waves 1/2/3/7/10/13/14/15/18/24/28/30).
+  'shopkeeper',
+  'restaurant',
+  'tycoon-lite',
+  'pet-creature',
+  'aquarium-terrarium',
+  'virtual-pet',
+  'visual-novel',
+  'local-party-game',
+  'reaction-timing',
+  'rhythm-action',
+  'farming-lite',
+  'colony-lite',
+  'interactive-fiction-hybrid',
+  'fishing-game',
+  'cooking-game',
+  'microgame-collection',
+  'auto-battler',
+  'pinball-lite',
+  // Category-C convergence - top-down shell consumers (Waves 4/5/6/7/8/14/17/20/21/25/26/30/31).
+  'stealth-game',
+  'heist-game',
+  'breakout',
+  'pong',
+  'action-adventure',
+  'arena-combat',
+  'horizontal-shmup',
+  'vertical-shmup',
+  'survivor-like',
+  'action-roguelite',
+  'investigation-game',
+  'photography-game',
+  'base-defense',
+  'simple-rts',
+  'territory-control',
+  'museum-exhibit',
+  // Category-C convergence - pointer / grid / platform / vehicle shell consumers.
+  'physics-puzzle',
+  'escape-room',
+  'drawing-game',
+  'dress-up-character-toy',
+  'sandbox-playground',
+  'rail-shooter',
+  'match-puzzle',
+  'falling-block-puzzle',
+  'maze-game',
+  'precision-platformer',
+  'climbing-game',
+  'auto-runner',
+  'traditional-platformer',
+  'asteroids-shooter',
+  'endless-driving',
+  'boat-flight-racer',
+  'kart-racer',
 ].sort();
 
 /**
- * Phase 8's remaining representative demos (demos/<preset-id>/), each with a
- * real, committed browser smoke test (packages/qa/specs/*.ts) that passed
- * against system Chrome - see docs/architecture/PHASE8_OPUS_GATE_B_HANDOFF.md.
- * Everything that has since earned a committed proof game graduated to
- * 'proof-validated' (above); these three still have demo-level evidence only.
- * Every other preset stays 'recipe' until it earns the same real evidence.
+ * Phase 8's representative demos (demos/<preset-id>/) once held three presets
+ * at 'smoke-validated' on demo-level evidence alone. Every one of them has
+ * since earned a committed proof game and graduated to 'proof-validated'
+ * (above), so this list is empty - kept so the partition below stays explicit
+ * and a future demo-only preset has somewhere honest to go.
  */
-const SMOKE_VALIDATED_IDS = [
-  'traditional-platformer',
-  'stealth-game',
-  'visual-novel',
-].sort();
+const SMOKE_VALIDATED_IDS: readonly string[] = [];
+
+const TOTAL_PRESETS = 74;
 
 describe('maturity honesty', () => {
-  it('exactly the twenty-three presets with committed passing proof games are "proof-validated", nothing else', () => {
+  it('exactly the presets with committed passing proof games are "proof-validated", nothing else', () => {
     const actual = PRESETS.filter((p) => p.maturity === 'proof-validated')
       .map((p) => p.id)
       .sort();
     expect(actual).toEqual(PROOF_VALIDATED_IDS);
   });
 
-  it('exactly the remaining three Phase 8 demo presets are "smoke-validated", nothing else', () => {
+  it('exactly the remaining Phase 8 demo presets without a proof game are "smoke-validated", nothing else', () => {
     const actual = PRESETS.filter((p) => p.maturity === 'smoke-validated')
       .map((p) => p.id)
       .sort();
@@ -95,11 +149,15 @@ describe('maturity honesty', () => {
     }
   });
 
-  it('exactly 23 proof-validated, 3 smoke-validated and 48 recipe presets out of the full 74-preset catalog', () => {
-    expect(PRESETS.length).toBe(74);
-    expect(PRESETS.filter((p) => p.maturity === 'proof-validated').length).toBe(23);
-    expect(PRESETS.filter((p) => p.maturity === 'smoke-validated').length).toBe(3);
-    expect(PRESETS.filter((p) => p.maturity === 'recipe').length).toBe(48);
+  it('the pinned lists partition the full 74-preset catalog (no preset unaccounted for, no overlap)', () => {
+    expect(PRESETS.length).toBe(TOTAL_PRESETS);
+    const overlap = PROOF_VALIDATED_IDS.filter((id) => SMOKE_VALIDATED_IDS.includes(id));
+    expect(overlap).toEqual([]);
+    expect(PRESETS.filter((p) => p.maturity === 'proof-validated').length).toBe(PROOF_VALIDATED_IDS.length);
+    expect(PRESETS.filter((p) => p.maturity === 'smoke-validated').length).toBe(SMOKE_VALIDATED_IDS.length);
+    expect(PRESETS.filter((p) => p.maturity === 'recipe').length).toBe(
+      TOTAL_PRESETS - PROOF_VALIDATED_IDS.length - SMOKE_VALIDATED_IDS.length,
+    );
   });
 });
 
@@ -127,52 +185,63 @@ describe('input-mode honesty', () => {
 
 describe('required knownLimitations (MASTER_PROJECT.md section 12)', () => {
   const cases: ReadonlyArray<{ id: string; pattern: RegExp }> = [
-    { id: 'stealth-game', pattern: /vision cones, awareness geometry, noise propagation and hiding are not implemented/ },
-    { id: 'heist-game', pattern: /vision cones, awareness geometry, noise propagation and hiding are not implemented/ },
+    { id: 'stealth-game', pattern: /Vision cones, occlusion, suspicion, noise and hiding are reusable/ },
+    { id: 'heist-game', pattern: /Vision cones, occlusion, suspicion, noise and hiding are reusable/ },
     { id: 'horizontal-shmup', pattern: /scrolling-stage camera movement/ },
     { id: 'vertical-shmup', pattern: /scrolling-stage camera movement/ },
     { id: 'bullet-hell', pattern: /Per-bullet GPU-scale pooling/ },
     { id: 'run-and-gun', pattern: /Enemy encounter orchestration/ },
     { id: 'boss-rush', pattern: /Sequencing multiple bosses/ },
     // Phase 7B (MASTER_PROJECT.md section 9)
-    { id: 'match-puzzle', pattern: /match-detection\/cascade board rules are consumed by this recipe/ },
-    { id: 'falling-block-puzzle', pattern: /No reusable falling-piece\/line-clear board engine/ },
-    { id: 'breakout', pattern: /No reusable ball\/paddle collision-and-bounce system/ },
-    { id: 'pong', pattern: /No reusable ball\/paddle collision-and-bounce system/ },
-    { id: 'rhythm-action', pattern: /No deterministic music-beat\/audio-synchronization system/ },
-    { id: 'reaction-timing', pattern: /no specialized reaction-test flow is implemented/ },
+    { id: 'match-puzzle', pattern: /Match-detection\/cascade and falling-piece\/line-clear are reusable/ },
+    { id: 'falling-block-puzzle', pattern: /Match-detection\/cascade and falling-piece\/line-clear are reusable/ },
+    { id: 'action-adventure', pattern: /Melee strike, knockback, hit-stun and contact damage are reusable/ },
+    { id: 'arena-combat', pattern: /Melee strike, knockback, hit-stun and contact damage are reusable/ },
+    { id: 'breakout', pattern: /Ball, paddle, rebound, brick-clear and first-to-N scoring are reusable/ },
+    { id: 'pong', pattern: /Ball, paddle, rebound, brick-clear and first-to-N scoring are reusable/ },
+    { id: 'rhythm-action', pattern: /music-beat\/audio-synchronization/ },
+    { id: 'reaction-timing', pattern: /sw2d\.timing/ },
     { id: 'tower-defense', pattern: /keyboard grid cursor/ },
     { id: 'tower-defense', pattern: /route-following pathfinding is reusable/ },
     { id: 'lane-defense', pattern: /Lane-spawn scheduling and combat resolution are still starter-specific/ },
-    { id: 'auto-battler', pattern: /autonomous combat orchestration is not implemented/ },
-    { id: 'simple-rts', pattern: /box-select and command-queue UI are not implemented/ },
-    { id: 'turn-based-tactics', pattern: /turn-action state machine are still starter-specific/ },
-    { id: 'base-defense', pattern: /base-damage\/target-priority/ },
-    { id: 'territory-control', pattern: /Reusable capture-zone\/territory ownership\/scoring mechanics/ },
+    { id: 'maze-game', pattern: /Grid pathfinding and walkable occupancy are reusable/ },
+    { id: 'auto-battler', pattern: /autonomous strikes are reusable \(sw2d\.targeting\)/ },
+    { id: 'chase-platformer', pattern: /chase\/pursuit-pressure/ },
+    { id: 'simple-rts', pattern: /box-select for the generated starter is a two-unit presentation/ },
+    { id: 'turn-based-tactics', pattern: /turn-action state machine is still starter-specific/ },
+    { id: 'base-defense', pattern: /target-priority/ },
+    { id: 'territory-control', pattern: /Capture-zone occupancy is reusable \(sw2d\.territory\)/ },
     // Phase 7C (MASTER_PROJECT.md section 11)
     { id: 'idle-incremental', pattern: /offline-progress\/catch-up, prestige, and large economy balancing/ },
-    { id: 'shopkeeper', pattern: /No complete customer AI, demand\/economy model/ },
-    { id: 'tycoon-lite', pattern: /No complete customer AI, demand\/economy model/ },
-    { id: 'restaurant', pattern: /No complete customer AI, demand\/economy model/ },
-    { id: 'farming-lite', pattern: /No reusable crop-growth\/season\/plot-interaction system/ },
-    { id: 'pet-creature', pattern: /No reusable needs\/behavior\/relationship\/creature simulation/ },
-    { id: 'virtual-pet', pattern: /No reusable needs\/behavior\/relationship\/creature simulation/ },
-    { id: 'aquarium-terrarium', pattern: /No reusable needs\/behavior\/relationship\/creature simulation/ },
-    { id: 'colony-lite', pattern: /needs, assignment AI, construction placement and colony simulation are not/ },
-    { id: 'visual-novel', pattern: /no full content-authored branching dialogue renderer/ },
-    { id: 'point-and-click', pattern: /no full content-authored branching dialogue renderer/ },
-    { id: 'interactive-fiction-hybrid', pattern: /No dedicated parser\/text-command system/ },
-    { id: 'investigation-game', pattern: /No evidence-board\/deduction\/linking system/ },
-    { id: 'museum-exhibit', pattern: /No dedicated exhibit\/codex presentation framework/ },
+    { id: 'shopkeeper', pattern: /Customer demand, queue, stock, transactions and production jobs are reusable/ },
+    { id: 'tycoon-lite', pattern: /Customer demand, queue, stock, transactions and production jobs are reusable/ },
+    { id: 'restaurant', pattern: /Customer demand, queue, stock, transactions and production jobs are reusable/ },
+    { id: 'farming-lite', pattern: /crop growth and season rotation for the generated starter/ },
+    { id: 'pet-creature', pattern: /Needs, decay, care actions, affinity and wellbeing hold\/fail are reusable/ },
+    { id: 'virtual-pet', pattern: /Needs, decay, care actions, affinity and wellbeing hold\/fail are reusable/ },
+    { id: 'aquarium-terrarium', pattern: /Needs, decay, care actions, affinity and wellbeing hold\/fail are reusable/ },
+    { id: 'colony-lite', pattern: /Resource ledger and timed jobs are reusable \(sw2d\.simulation\); colonist pathfinding is reusable \(sw2d\.navigation, optional\); needs, assignment AI and construction placement are not/ },
+    { id: 'visual-novel', pattern: /Branching dialogue graphs, choices, flags and endings are reusable/ },
+    { id: 'point-and-click', pattern: /Branching dialogue graphs, choices, flags and endings are reusable/ },
+    { id: 'interactive-fiction-hybrid', pattern: /parser\/text-command/ },
+    { id: 'investigation-game', pattern: /evidence-board\/deduction\/linking/ },
+    { id: 'museum-exhibit', pattern: /Exhibit entries are reusable \(sw2d\.codex\)/ },
     { id: 'escape-room', pattern: /No content-authored escape-room puzzle grammar/ },
-    { id: 'microgame-collection', pattern: /No microgame scheduler\/rotation\/meta-framework/ },
-    { id: 'local-party-game', pattern: /No multi-player\/local multi-device input routing/ },
-    { id: 'dress-up-character-toy', pattern: /No wardrobe\/attachment system is built on the drag/ },
-    { id: 'sandbox-playground', pattern: /No generalized authoring\/editing sandbox/ },
-    { id: 'drawing-game', pattern: /No canvas-stroke\/drawing capture is built on the spatial pointer/ },
-    { id: 'fishing-game', pattern: /No reusable casting\/line\/tension\/fish behavior system/ },
-    { id: 'cooking-game', pattern: /No reusable ingredient\/recipe\/action-sequence cooking system/ },
-    { id: 'photography-game', pattern: /No reusable camera\/framing\/scoring\/photo-capture gameplay system/ },
+    { id: 'microgame-collection', pattern: /Wait\/go then mash rounds are a generated starter scheduler/ },
+    { id: 'local-party-game', pattern: /Local hot-seat turns and simultaneous versus axes are reusable/ },
+    { id: 'dress-up-character-toy', pattern: /Wardrobe slots for the generated starter use interaction drag\/drop/ },
+    { id: 'sandbox-playground', pattern: /interaction click \(ADR-0018\)/ },
+    { id: 'drawing-game', pattern: /Stroke polylines for the generated starter are captured through the spatial pointer/ },
+    { id: 'survivor-like', pattern: /sw2d\.progression/ },
+    { id: 'action-roguelite', pattern: /sw2d\.progression/ },
+    { id: 'fishing-game', pattern: /casting\/line\/tension\/fish behavior system/ },
+    { id: 'cooking-game', pattern: /ingredient\/recipe\/action-sequence cooking system/ },
+    { id: 'photography-game', pattern: /spatial pointer \(ADR-0018\)/ },
+    { id: 'asteroids-shooter', pattern: /sw2d\.weapons/ },
+    { id: 'gallery-shooter', pattern: /sw2d\.weapons/ },
+    { id: 'rail-shooter', pattern: /Fixed-path\/rail camera movement is reusable \(sw2d\.camera\)/ },
+    { id: 'auto-runner', pattern: /climbing or chase-pressure/ },
+    { id: 'endless-runner', pattern: /climbing or chase-pressure/ },
   ];
 
   cases.forEach(({ id, pattern }, index) => {

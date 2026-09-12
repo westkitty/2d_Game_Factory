@@ -34,6 +34,21 @@ export const PACK_IDS = {
   worldGraph: 'sw2d.world-graph',
   vehicles: 'sw2d.vehicles',
   racing: 'sw2d.racing',
+  economy: 'sw2d.economy',
+  needs: 'sw2d.needs',
+  dialogue: 'sw2d.dialogue',
+  perception: 'sw2d.perception',
+  ballPaddle: 'sw2d.ball-paddle',
+  melee: 'sw2d.melee',
+  localPlay: 'sw2d.local-play',
+  stageScroll: 'sw2d.stage-scroll',
+  timing: 'sw2d.timing',
+  wall: 'sw2d.wall',
+  territory: 'sw2d.territory',
+  pinball: 'sw2d.pinball',
+  camera: 'sw2d.camera',
+  codex: 'sw2d.codex',
+  targeting: 'sw2d.targeting',
 } as const;
 
 export const CAPABILITY_IDS = {
@@ -66,4 +81,34 @@ export const CAPABILITY_IDS = {
   vehicles: 'vehicle.motion',
   /** Capability program Phase 10: race / checkpoint / lap state, separate from vehicle motion. */
   racing: 'race.state',
+  /** Category-C Wave 1: customer / demand / transaction / production economy. */
+  economy: 'simulation.economy',
+  /** Category-C Wave 2: creature / habitat / companion needs, decay and care. */
+  needs: 'simulation.needs',
+  /** Category-C Wave 3: branching dialogue graphs, choices, flags and endings. */
+  dialogue: 'narrative.dialogue',
+  /** Category-C Wave 4: FOV cones, occlusion, suspicion, noise and hiding. */
+  perception: 'ai.perception',
+  /** Category-C Wave 5: arcade ball / paddle / rebound. */
+  ballPaddle: 'arcade.ball',
+  /** Category-C Wave 6: melee strike, knockback, hit-stun (composes with combat.health). */
+  melee: 'combat.melee',
+  /** Category-C Wave 7: local hot-seat / versus seats (one keyboard). */
+  localPlay: 'arcade.seats',
+  /** Category-C Wave 8: scrolling stage / player band / streaming hazards. */
+  stageScroll: 'world.scroll',
+  /** Category-C Wave 10: visual reaction cues and beat windows (not audio-sync). */
+  timing: 'arcade.timing',
+  /** Category-C Wave 30: wall-slide / wall-jump contact. */
+  wall: 'movement.wall',
+  /** Category-C Wave 30: capture-zone occupancy. */
+  territory: 'strategy.zones',
+  /** Category-C Wave 30: arcade pinball table. */
+  pinball: 'arcade.table',
+  /** Category-C Wave 30: rail-path camera and framing. */
+  camera: 'world.camera',
+  /** Category-C Wave 30: exhibit / codex entries. */
+  codex: 'narrative.codex',
+  /** Category-C Wave 30: attack range, target select, autonomous strikes. */
+  targeting: 'combat.targeting',
 } as const;

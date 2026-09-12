@@ -17,8 +17,12 @@ import { generateUiCopy } from '../src/generator/contentDocuments.ts';
 // Control vocabulary the hints may use -> why it is true.
 //  - MOVE / STEER / THROTTLE / ARROWS / WASD: every controller family reads MOVE_*.
 //  - JUMP: platform controller (JUMP: Space/KeyW/ArrowUp).
-//  - FIRE J/X: PRIMARY_ACTION keyboard bindings are KeyJ/KeyX.
-//  - AIM WITH MOUSE: topDownShellPack consumes aimFromPointer (ADR-0018).
+//  - FIRE J/X / J SELECTS: PRIMARY_ACTION keyboard bindings are KeyJ/KeyX.
+//    Grid tactics (Wave 18) reads PRIMARY_ACTION for unit select.
+//  - AIM WITH MOUSE: topDownShellPack consumes aimFromPointer (ADR-0018);
+//    pointerShellPack fires toward context.spatialPointer when weapons are on.
+//  - DRAG: pointerShellPack bindStarterPointer wardrobe/draw uses ADR-0018 drag;
+//    top-down command starter box-select also reads spatialPointer drag.
 //  - UNDO BACKSPACE: CANCEL is Backspace; gridShellPack calls puzzle.undo() on CANCEL.
 //  - RESET K: SECONDARY_ACTION is KeyK/KeyC; gridShellPack calls puzzle.reset().
 //  - ENTER: CONFIRM is Enter/Space/NumpadEnter; vehicle shell starts the race,
@@ -27,7 +31,6 @@ import { generateUiCopy } from '../src/generator/contentDocuments.ts';
 const ALLOWED_HINT_WORDS = /^[A-Z0-9\/() .-]+$/;
 const FORBIDDEN_CLAIMS: readonly { pattern: RegExp; reason: string }[] = [
   { pattern: /INTERACT/, reason: 'no generated shell reads the INTERACT action' },
-  { pattern: /DRAG/, reason: 'the pointer shell hit-tests hover/click; it has no drag interaction' },
   { pattern: /GAMEPAD|STICK/, reason: 'gamepad honesty: the starter does not claim device support it cannot prove' },
 ];
 
@@ -39,6 +42,7 @@ describe('generateUiCopy (generated games announce their genre honestly)', () =>
       presetDisplayName: preset.displayName,
       primaryControllerFamily: preset.controllerFamilies[0]!,
       requiredPackIds: preset.requiredSystemPacks.map((s) => s.packId),
+      presetId: preset.id,
     });
   };
 
@@ -61,8 +65,9 @@ describe('generateUiCopy (generated games announce their genre honestly)', () =>
   });
 
   it('tells an encounter-family player about the battle, and a weaponless one nothing about firing', () => {
-    expect(copyFor('vertical-shmup').playHint).toContain('SURVIVE THE WAVES');
+    expect(copyFor('vertical-shmup').playHint).toContain('CLEAR THE STAGE');
     expect(copyFor('vertical-shmup').playHint).toContain('FIRE J/X');
+    expect(copyFor('vertical-shmup').playHint).not.toContain('SURVIVE');
     expect(copyFor('twin-stick-shooter').playHint).toContain('FIRE J/X');
     expect(copyFor('twin-stick-shooter').playHint).not.toContain('SURVIVE');
     expect(copyFor('top-down-adventure').playHint).not.toContain('FIRE');
@@ -70,7 +75,62 @@ describe('generateUiCopy (generated games announce their genre honestly)', () =>
 
   it('names only real bindings for the puzzle, racing and menu families', () => {
     expect(copyFor('sokoban').playHint).toBe('MOVE / PUSH WASD/ARROWS  -  UNDO BACKSPACE  -  RESET K');
+    expect(copyFor('match-puzzle').playHint).toContain('ENTER SELECTS OR SWAPS');
+    expect(copyFor('falling-block-puzzle').playHint).toContain('DROP K');
     expect(copyFor('time-trial-racer').playHint).toContain('ENTER STARTS THE RACE');
-    expect(copyFor('visual-novel').playHint).toContain('ENTER CONFIRMS');
+    expect(copyFor('visual-novel').playHint).toContain('ENTER ADVANCES');
+    expect(copyFor('shopkeeper').playHint).toContain('ENTER SERVES');
+    expect(copyFor('restaurant').playHint).toContain('K RESTOCKS OR COOKS');
+    expect(copyFor('pet-creature').playHint).toContain('J FEEDS');
+    expect(copyFor('virtual-pet').playHint).toContain('J FEEDS');
+    expect(copyFor('stealth-game').playHint).toContain('AVOID THE CONE');
+    expect(copyFor('heist-game').playHint).toContain('AVOID THE CONE');
+    expect(copyFor('breakout').playHint).toContain('RETURN THE BALL');
+    expect(copyFor('pong').playHint).toContain('P1 ARROWS');
+    expect(copyFor('local-party-game').playHint).toContain('PASS THE KEYBOARD');
+    expect(copyFor('reaction-timing').playHint).toContain('WAIT FOR THE GO');
+    expect(copyFor('rhythm-action').playHint).toBe('ENTER ON THE BEAT');
+    expect(copyFor('action-adventure').playHint).toContain('STRIKE J/X');
+    expect(copyFor('arena-combat').playHint).toContain('STRIKE J/X');
+    expect(copyFor('asteroids-shooter').playHint).toContain('FIRE J/X');
+    expect(copyFor('gallery-shooter').playHint).toContain('FIRE J/X');
+    expect(copyFor('rail-shooter').playHint).not.toContain('FIRE');
+    expect(copyFor('physics-puzzle').playHint).toBe('CLICK TO NUDGE  -  LAND IN THE GOAL');
+    expect(copyFor('escape-room').playHint).toBe('CLICK THE NOTE  -  THEN THE KEY');
+    expect(copyFor('farming-lite').playHint).toBe('ARROWS PICK A PLOT  -  ENTER PLANTS OR HARVESTS');
+    expect(copyFor('colony-lite').playHint).toBe('ARROWS PICK A JOB  -  ENTER ASSIGNS OR BUILDS');
+    expect(copyFor('interactive-fiction-hybrid').playHint).toBe('ARROWS PICK A VERB  -  ENTER ACTS');
+    expect(copyFor('investigation-game').playHint).toBe('MOVE WASD/ARROWS  -  J INSPECTS CLUES');
+    expect(copyFor('fishing-game').playHint).toBe('ENTER CASTS AND LANDS');
+    expect(copyFor('cooking-game').playHint).toBe('ARROWS PICK  -  ENTER ADDS TO THE DISH');
+    expect(copyFor('drawing-game').playHint).toBe('DRAW TWO STROKES ON THE PAGE');
+    expect(copyFor('dress-up-character-toy').playHint).toBe('DRAG HAT AND SHIRT ONTO THE FIGURE');
+    expect(copyFor('photography-game').playHint).toBe('MOVE WASD/ARROWS  -  J SHOOTS SUBJECTS');
+    expect(copyFor('sandbox-playground').playHint).toBe(
+      'CLICK STAMPS  -  ARROWS PICK  -  CLICK OBJECT TO MOVE  -  K DELETES',
+    );
+    expect(copyFor('action-roguelite').playHint).toBe('MOVE WASD/ARROWS  -  J TAKES RELICS');
+    expect(copyFor('survivor-like').playHint).toContain('SURVIVE THE WAVES');
+    expect(copyFor('dungeon-crawler').playHint).toBe('MOVE WASD/ARROWS  -  STRIKE J/X');
+    expect(copyFor('base-defense').playHint).toBe('MOVE WASD/ARROWS  -  STRIKE J/X  -  DEFEND THE BASE');
+    expect(copyFor('auto-runner').playHint).toBe('JUMP  -  AUTO RUN  -  REACH THE FLAG');
+    expect(copyFor('endless-runner').playHint).toBe('JUMP  -  AUTO RUN  -  SURVIVE');
+    expect(copyFor('endless-driving').playHint).toBe('STEER / THROTTLE WASD/ARROWS  -  HOLD UP TO BANK DISTANCE');
+    expect(copyFor('boat-flight-racer').playHint).toBe('STEER / THROTTLE WASD/ARROWS  -  J SWITCHES TO FLIGHT');
+    expect(copyFor('physics-toy').playHint).toBe('CLICK OR J LAUNCHES  -  LAND IN THE GOAL');
+    expect(copyFor('pinball-lite').playHint).toBe('J LEFT K RIGHT  -  HIT BUMPERS');
+    expect(copyFor('simple-rts').playHint).toBe(
+      'J SELECTS UNIT A  -  DRAG BOX-SELECTS  -  WASD MOVES',
+    );
+    expect(copyFor('territory-control').playHint).toBe('MOVE WASD/ARROWS  -  STAND IN BOTH ZONES');
+    expect(copyFor('museum-exhibit').playHint).toBe('MOVE WASD/ARROWS  -  J INSPECTS PLAQUES');
+    expect(copyFor('rail-shooter').playHint).toBe('J DAMAGES APPROACHING TARGETS');
+    expect(copyFor('chase-platformer').playHint).toBe('MOVE / JUMP  -  OUTRUN THE WALL');
+    expect(copyFor('precision-platformer').playHint).toBe('MOVE / JUMP  -  JUMP THE GAPS');
+    expect(copyFor('climbing-game').playHint).toBe('MOVE / JUMP  -  JUMP UP');
+    expect(copyFor('microgame-collection').playHint).toBe('ENTER ON GO  -  THEN MASH J');
+    expect(copyFor('kart-racer').playHint).toBe(
+      'STEER / THROTTLE WASD/ARROWS  -  ENTER STARTS  -  J FIRES THE SHELL',
+    );
   });
 });

@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "mode": "shop",
+  "cash": 0,
+  "goods": [],
+  "demand": [],
+  "spawn": {
+    "firstDelayMs": 0,
+    "intervalMs": 1000,
+    "maxQueue": 0
+  }
+}

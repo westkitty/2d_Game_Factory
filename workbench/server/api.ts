@@ -46,6 +46,16 @@ import { previewGeneration } from './generationLab.ts';
 import { inspectWorldGraph } from './worldGraphLab.ts';
 import { inspectPhysics } from './physicsLab.ts';
 import { inspectRacing } from './racingLab.ts';
+import { inspectEconomy } from './economyLab.ts';
+import { inspectNeeds } from './needsLab.ts';
+import { inspectDialogue } from './dialogueLab.ts';
+import { inspectPerception } from './perceptionLab.ts';
+import { inspectBallPaddle } from './ballPaddleLab.ts';
+import { inspectMelee } from './meleeLab.ts';
+import { inspectLocalPlay } from './localPlayLab.ts';
+import { inspectStageScroll } from './stageScrollLab.ts';
+import { inspectTiming } from './timingLab.ts';
+import { inspectWave30 } from './wave30Lab.ts';
 import { loadScene, listLevels, newObject, objectClassOptions, saveScene, SceneValidationError, type SceneDocument } from './sceneStore.ts';
 import { buildProject, createProject, packProject, validateProject } from './factoryService.ts';
 import { presetEvidenceFor } from './presetEvidence.ts';
@@ -670,6 +680,105 @@ const ROUTES: ReadonlyMap<string, Handler> = new Map<string, Handler>([
     (request) => {
       const body = bodyObject(request);
       return ok(inspectRacing(gameIdOf(request, body)));
+    },
+  ],
+
+  [
+    // Economy surface (Category-C Wave 1). Reports content/economy.json
+    // (mode, goods, recipes, demand, spawn). Live queue belongs in-game.
+    'POST /economy/inspect',
+    (request) => {
+      const body = bodyObject(request);
+      return ok(inspectEconomy(gameIdOf(request, body)));
+    },
+  ],
+
+  [
+    // Needs surface (Category-C Wave 2). Reports content/needs.json
+    // (mode, subject, needs, actions, win/lose). Live values belong in-game.
+    'POST /needs/inspect',
+    (request) => {
+      const body = bodyObject(request);
+      return ok(inspectNeeds(gameIdOf(request, body)));
+    },
+  ],
+
+  [
+    // Dialogue surface (Category-C Wave 3). Reports content/dialogue.json
+    // (mode, conversations, hotspots). Live node/flags belong in-game.
+    'POST /dialogue/inspect',
+    (request) => {
+      const body = bodyObject(request);
+      return ok(inspectDialogue(gameIdOf(request, body)));
+    },
+  ],
+
+  [
+    // Perception surface (Category-C Wave 4). Reports content/perception.json
+    // (mode, observers, cover, loot). Live suspicion belongs in-game.
+    'POST /perception/inspect',
+    (request) => {
+      const body = bodyObject(request);
+      return ok(inspectPerception(gameIdOf(request, body)));
+    },
+  ],
+
+  [
+    // Ball / paddle surface (Category-C Wave 5). Reports content/ball-paddle.json
+    // (mode, bricks, lives, win score). Live paddle/ball belong in-game.
+    'POST /ball-paddle/inspect',
+    (request) => {
+      const body = bodyObject(request);
+      return ok(inspectBallPaddle(gameIdOf(request, body)));
+    },
+  ],
+
+  [
+    // Melee surface (Category-C Wave 6). Reports content/melee.json
+    // (mode, foes, strike range). Live HP belongs in-game.
+    'POST /melee/inspect',
+    (request) => {
+      const body = bodyObject(request);
+      return ok(inspectMelee(gameIdOf(request, body)));
+    },
+  ],
+
+  [
+    // Local-play surface (Category-C Wave 7). Reports content/local-play.json
+    // (mode, seats). Live axes/scores belong in-game.
+    'POST /local-play/inspect',
+    (request) => {
+      const body = bodyObject(request);
+      return ok(inspectLocalPlay(gameIdOf(request, body)));
+    },
+  ],
+
+  [
+    // Stage-scroll surface (Category-C Wave 8). Reports content/stage-scroll.json
+    // (mode, length, hazards). Live offset belongs in-game.
+    'POST /stage-scroll/inspect',
+    (request) => {
+      const body = bodyObject(request);
+      return ok(inspectStageScroll(gameIdOf(request, body)));
+    },
+  ],
+
+  [
+    // Timing surface (Category-C Wave 10). Reports content/timing.json
+    // (mode, window). Live elapsed belongs in-game.
+    'POST /timing/inspect',
+    (request) => {
+      const body = bodyObject(request);
+      return ok(inspectTiming(gameIdOf(request, body)));
+    },
+  ],
+
+  [
+    // Wave-30 leftover catalogs (ADR-0057). Live occupancy belongs in-game.
+    'POST /wave30/inspect',
+    (request) => {
+      const body = bodyObject(request);
+      return ok(inspectWave30(gameIdOf(request, body)));
     },
   ],
 

@@ -19,6 +19,16 @@ import { renderGenerationLab } from './generationLab.ts';
 import { renderWorldGraphLab } from './worldGraphLab.ts';
 import { renderPhysicsLab } from './physicsLab.ts';
 import { renderRacingLab } from './racingLab.ts';
+import { renderEconomyLab } from './economyLab.ts';
+import { renderNeedsLab } from './needsLab.ts';
+import { renderDialogueLab } from './dialogueLab.ts';
+import { renderPerceptionLab } from './perceptionLab.ts';
+import { renderBallPaddleLab } from './ballPaddleLab.ts';
+import { renderMeleeLab } from './meleeLab.ts';
+import { renderLocalPlayLab } from './localPlayLab.ts';
+import { renderStageScrollLab } from './stageScrollLab.ts';
+import { renderTimingLab } from './timingLab.ts';
+import { renderWave30Lab } from './wave30Lab.ts';
 import { thumbnailFor } from '../image/clientImage.ts';
 import { ROLE_LABELS, type AssetRecord, type Provenance, type RoleAssignment } from '../../shared/types.ts';
 import { classifyFrames } from '../../shared/spritePresentation.ts';
@@ -41,11 +51,31 @@ export function renderInspector(host: HTMLElement): () => void {
   const worldGraphHost = el('div', { class: 'pane__body', style: { 'border-top': '1px solid var(--line, #2a2a2a)' } });
   const physicsHost = el('div', { class: 'pane__body', style: { 'border-top': '1px solid var(--line, #2a2a2a)' } });
   const racingHost = el('div', { class: 'pane__body', style: { 'border-top': '1px solid var(--line, #2a2a2a)' } });
+  const economyHost = el('div', { class: 'pane__body', style: { 'border-top': '1px solid var(--line, #2a2a2a)' } });
+  const needsHost = el('div', { class: 'pane__body', style: { 'border-top': '1px solid var(--line, #2a2a2a)' } });
+  const dialogueHost = el('div', { class: 'pane__body', style: { 'border-top': '1px solid var(--line, #2a2a2a)' } });
+  const perceptionHost = el('div', { class: 'pane__body', style: { 'border-top': '1px solid var(--line, #2a2a2a)' } });
+  const ballPaddleHost = el('div', { class: 'pane__body', style: { 'border-top': '1px solid var(--line, #2a2a2a)' } });
+  const meleeHost = el('div', { class: 'pane__body', style: { 'border-top': '1px solid var(--line, #2a2a2a)' } });
+  const localPlayHost = el('div', { class: 'pane__body', style: { 'border-top': '1px solid var(--line, #2a2a2a)' } });
+  const stageScrollHost = el('div', { class: 'pane__body', style: { 'border-top': '1px solid var(--line, #2a2a2a)' } });
+  const timingHost = el('div', { class: 'pane__body', style: { 'border-top': '1px solid var(--line, #2a2a2a)' } });
+  const wave30Host = el('div', { class: 'pane__body', style: { 'border-top': '1px solid var(--line, #2a2a2a)' } });
   let genLabGameId: string | null = null;
   let disposeGenLab: (() => void) | null = null;
   let disposeWorldGraphLab: (() => void) | null = null;
   let disposePhysicsLab: (() => void) | null = null;
   let disposeRacingLab: (() => void) | null = null;
+  let disposeEconomyLab: (() => void) | null = null;
+  let disposeNeedsLab: (() => void) | null = null;
+  let disposeDialogueLab: (() => void) | null = null;
+  let disposePerceptionLab: (() => void) | null = null;
+  let disposeBallPaddleLab: (() => void) | null = null;
+  let disposeMeleeLab: (() => void) | null = null;
+  let disposeLocalPlayLab: (() => void) | null = null;
+  let disposeStageScrollLab: (() => void) | null = null;
+  let disposeTimingLab: (() => void) | null = null;
+  let disposeWave30Lab: (() => void) | null = null;
 
   function roleRow(assignment: RoleAssignment, state: AppState): HTMLElement {
     const current = state.current!;
@@ -278,15 +308,55 @@ export function renderInspector(host: HTMLElement): () => void {
     disposePhysicsLab = null;
     disposeRacingLab?.();
     disposeRacingLab = null;
+    disposeEconomyLab?.();
+    disposeEconomyLab = null;
+    disposeNeedsLab?.();
+    disposeNeedsLab = null;
+    disposeDialogueLab?.();
+    disposeDialogueLab = null;
+    disposePerceptionLab?.();
+    disposePerceptionLab = null;
+    disposeBallPaddleLab?.();
+    disposeBallPaddleLab = null;
+    disposeMeleeLab?.();
+    disposeMeleeLab = null;
+    disposeLocalPlayLab?.();
+    disposeLocalPlayLab = null;
+    disposeStageScrollLab?.();
+    disposeStageScrollLab = null;
+    disposeTimingLab?.();
+    disposeTimingLab = null;
+    disposeWave30Lab?.();
+    disposeWave30Lab = null;
     replace(genLabHost);
     replace(worldGraphHost);
     replace(physicsHost);
     replace(racingHost);
+    replace(economyHost);
+    replace(needsHost);
+    replace(dialogueHost);
+    replace(perceptionHost);
+    replace(ballPaddleHost);
+    replace(meleeHost);
+    replace(localPlayHost);
+    replace(stageScrollHost);
+    replace(timingHost);
+    replace(wave30Host);
     if (gameId) {
       disposeGenLab = renderGenerationLab(genLabHost, gameId);
       disposeWorldGraphLab = renderWorldGraphLab(worldGraphHost, gameId);
       disposePhysicsLab = renderPhysicsLab(physicsHost, gameId);
       disposeRacingLab = renderRacingLab(racingHost, gameId);
+      disposeEconomyLab = renderEconomyLab(economyHost, gameId);
+      disposeNeedsLab = renderNeedsLab(needsHost, gameId);
+      disposeDialogueLab = renderDialogueLab(dialogueHost, gameId);
+      disposePerceptionLab = renderPerceptionLab(perceptionHost, gameId);
+      disposeBallPaddleLab = renderBallPaddleLab(ballPaddleHost, gameId);
+      disposeMeleeLab = renderMeleeLab(meleeHost, gameId);
+      disposeLocalPlayLab = renderLocalPlayLab(localPlayHost, gameId);
+      disposeStageScrollLab = renderStageScrollLab(stageScrollHost, gameId);
+      disposeTimingLab = renderTimingLab(timingHost, gameId);
+      disposeWave30Lab = renderWave30Lab(wave30Host, gameId);
     }
   }
 
@@ -327,7 +397,7 @@ export function renderInspector(host: HTMLElement): () => void {
     );
   }
 
-  replace(host, head, body, genLabHost, worldGraphHost, physicsHost, racingHost);
+  replace(host, head, body, genLabHost, worldGraphHost, physicsHost, racingHost, economyHost, needsHost, dialogueHost, perceptionHost, ballPaddleHost, meleeHost, localPlayHost, stageScrollHost, timingHost, wave30Host);
   paint(getState());
   const unsubscribe = subscribe(paint);
   return () => {
@@ -336,6 +406,16 @@ export function renderInspector(host: HTMLElement): () => void {
     disposeWorldGraphLab?.();
     disposePhysicsLab?.();
     disposeRacingLab?.();
+    disposeEconomyLab?.();
+    disposeNeedsLab?.();
+    disposeDialogueLab?.();
+    disposePerceptionLab?.();
+    disposeBallPaddleLab?.();
+    disposeMeleeLab?.();
+    disposeLocalPlayLab?.();
+    disposeStageScrollLab?.();
+    disposeTimingLab?.();
+    disposeWave30Lab?.();
   };
 }
 

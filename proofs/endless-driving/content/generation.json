@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "seed": 909,
+  "generators": [
+    {
+      "id": "main",
+      "kind": "road-chain",
+      "count": 12,
+      "templates": [
+        {
+          "id": "straight",
+          "entryHeading": 0,
+          "exitHeading": 0,
+          "length": 240,
+          "width": 200,
+          "weight": 4,
+          "difficulty": 0,
+          "tags": [
+            "road"
+          ]
+        },
+        {
+          "id": "straight-obstacle",
+          "entryHeading": 0,
+          "exitHeading": 0,
+          "length": 240,
+          "width": 200,
+          "weight": 2,
+          "difficulty": 1,
+          "tags": [
+            "road"
+          ],
+          "obstacles": [
+            70,
+            130
+          ]
+        }
+      ]
+    }
+  ]
+}

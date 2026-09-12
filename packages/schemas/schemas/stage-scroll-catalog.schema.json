@@ -1,0 +1,58 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:sw2d:schema:content-stage-scroll-catalog:v1",
+  "title": "StageScrollCatalog",
+  "description": "Mirrors @sw2d/contracts StageScrollCatalog (stageScroll.ts). Validated as a ContentBundle.data document (document name 'stage-scroll'). Bounded scrolling stage - no rail-path cameras, no parallax authoring.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "mode", "speed", "length", "viewport", "player", "hazards"],
+  "properties": {
+    "schemaVersion": { "type": "integer", "minimum": 1 },
+    "mode": { "type": "string", "enum": ["horizontal", "vertical"] },
+    "speed": { "type": "number", "minimum": 0 },
+    "length": { "type": "number", "minimum": 0 },
+    "viewport": { "$ref": "#/definitions/viewport" },
+    "player": { "$ref": "#/definitions/player" },
+    "hazards": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/hazard" }
+    }
+  },
+  "definitions": {
+    "viewport": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["width", "height"],
+      "properties": {
+        "width": { "type": "number", "exclusiveMinimum": 0 },
+        "height": { "type": "number", "exclusiveMinimum": 0 }
+      }
+    },
+    "player": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y", "radius", "speed", "minX", "maxX", "minY", "maxY"],
+      "properties": {
+        "x": { "type": "number" },
+        "y": { "type": "number" },
+        "radius": { "type": "number", "exclusiveMinimum": 0 },
+        "speed": { "type": "number", "minimum": 0 },
+        "minX": { "type": "number" },
+        "maxX": { "type": "number" },
+        "minY": { "type": "number" },
+        "maxY": { "type": "number" }
+      }
+    },
+    "hazard": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "along", "cross", "radius"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "along": { "type": "number" },
+        "cross": { "type": "number" },
+        "radius": { "type": "number", "exclusiveMinimum": 0 }
+      }
+    }
+  }
+}

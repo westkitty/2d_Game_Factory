@@ -15,7 +15,7 @@ export type PuzzleArcadeStarterVariant =
 function shellSource(variant: PuzzleArcadeStarterVariant): string {
   return String.raw`import Phaser from 'phaser';
 import type { InstalledSystemPack } from '@sw2d/contracts';
-import { gridController, type SceneContext, type ScenePackDefinition } from '@sw2d/runtime';
+import { bindStarterBallPaddle, gridController, type SceneContext, type ScenePackDefinition } from '@sw2d/runtime';
 import { addBackground } from './presentation.ts';
 
 const VARIANT = ${JSON.stringify(variant)} as const;
@@ -103,6 +103,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     const opponent = scene.add.sprite(width - 55, opponentY, context.assets.resolve('enemy')).setDisplaySize(22, 110);
     const ball = scene.add.sprite(ballX, ballY, context.assets.resolve('pickup')).setDisplaySize(18, 18);
     objects.push(paddle, opponent, ball);
+    const table = bindStarterBallPaddle(context, { hud: false });
 
     let matchBoard = [
       [0, 1, 0],
@@ -269,7 +270,22 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     }
 
     function updatePong(deltaMs: number): void {
-      const move = context.input.axis('MOVE_UP', 'MOVE_DOWN'); paddleY = Phaser.Math.Clamp(paddleY + move * 260 * deltaMs / 1000, 70, height - 70); paddle.setY(paddleY);
+      const move = context.input.axis('MOVE_UP', 'MOVE_DOWN');
+      if (table.active) {
+        table.setPaddleAxis(move);
+        table.tick(deltaMs);
+        const snap = table.snapshot();
+        paddleX = snap.paddleX; paddleY = snap.paddleY; ballX = snap.ballX; ballY = snap.ballY;
+        playerScore = snap.playerScore; opponentScore = snap.opponentScore;
+        if (snap.lastResult) lastAction = snap.lastResult;
+        outcome = snap.outcome as 'playing' | 'complete' | 'failed';
+        paddle.setPosition(paddleX, paddleY);
+        const opp = table.opponent();
+        if (opp) { opponentY = opp.y; opponent.setPosition(opp.x, opp.y); }
+        ball.setPosition(ballX, ballY);
+        return;
+      }
+      paddleY = Phaser.Math.Clamp(paddleY + move * 260 * deltaMs / 1000, 70, height - 70); paddle.setY(paddleY);
       opponentY = Phaser.Math.Linear(opponentY, ballY, Math.min(1, deltaMs / 300)); opponent.setY(opponentY);
       ballX += ballVx * deltaMs / 1000; ballY += ballVy * deltaMs / 1000;
       if (ballY < 18 || ballY > height - 18) ballVy *= -1;
@@ -370,7 +386,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         else updatePinball(deltaMs);
         render();
       },
-      dispose(): void { if (disposed) return; disposed = true; debugHandle.dispose(); try { background?.destroy(); avatar.destroy(); status.destroy(); clearBoardSprites(); for (const object of objects) object.destroy(); } catch { /* scene teardown */ } },
+      dispose(): void { if (disposed) return; disposed = true; debugHandle.dispose(); table.dispose(); try { background?.destroy(); avatar.destroy(); status.destroy(); clearBoardSprites(); for (const object of objects) object.destroy(); } catch { /* scene teardown */ } },
     };
   },
 };

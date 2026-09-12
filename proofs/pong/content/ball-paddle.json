@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "mode": "pong",
+  "court": {
+    "width": 960,
+    "height": 540
+  },
+  "paddle": {
+    "x": 55,
+    "y": 270,
+    "width": 22,
+    "height": 110,
+    "speed": 260,
+    "axis": "y",
+    "min": 70,
+    "max": 470,
+    "hitHalf": 70
+  },
+  "ball": {
+    "x": 480,
+    "y": 270,
+    "vx": 210,
+    "vy": 145,
+    "radius": 18
+  },
+  "walls": {
+    "insetX": 0,
+    "top": 18,
+    "bottom": 522
+  },
+  "bricks": [],
+  "lives": 0,
+  "pong": {
+    "opponentX": 905,
+    "opponentY": 270,
+    "opponentWidth": 22,
+    "opponentHeight": 110,
+    "opponentHitHalf": 70,
+    "lerpMs": 300,
+    "playerMinX": 35,
+    "playerMaxX": 75,
+    "opponentMinX": 885,
+    "opponentMaxX": 925,
+    "speedBump": 8,
+    "serveSpeed": 210,
+    "scorePast": 20,
+    "winScore": 3
+  }
+}

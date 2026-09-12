@@ -21,6 +21,7 @@
 | Expansion scaffolds | **69 / 69 implemented, registered, and mechanically required by regression test** |
 | Current milestone | **Free-Sprite Intelligence reconciled with current `main` (frame-group animation preserved); rights-freshness model corrected** |
 | Merge gate (`repair/free-sprite-main-reconciliation` → `main`) | **PASS** — all revalidation gates green on the reconciled + rights-repaired HEAD; both systems proven together; no confirmed in-scope defect remains |
+| Category-C evidence convergence (`claude/category-c-final-convergence`) | Workbench surfaces unchanged; the repository-derived evidence flags (`workbench/server/presetEvidence.ts`) now report a committed proof game for all 74 presets and the catalogue shows 74 proof-validated / 0 / 0. `qa:workbench` and `qa:starter-kits` (69/69) re-run green on the convergence head; the product was also exercised by hand (create → run → reopen → validate → build → pack → checksum). See `docs/architecture/CATEGORY_C_CONVERGENCE_MATRIX.md`. |
 
 ---
 

@@ -31,3 +31,34 @@ One short record per decision that constrains later work. No ADR for trivia.
 | [0025](0025-world-graph-rooms-transitions-map.md) | World graph, room transitions and map: one capability that composes with world.state | Capability program 8 |
 | [0026](0026-optional-advanced-physics-and-constraints.md) | Advanced physics is an opt-in Matter profile with a renderer-neutral service | Capability program 9 |
 | [0027](0027-vehicle-handling-and-racing.md) | Vehicle handling and race state are two separate pure capabilities; the controller stays intent-only | Capability program 10 |
+| [0028](0028-customer-demand-transaction-production-economy.md) | Customer demand, stock, transactions and production jobs are one reusable economy capability | Category-C Wave 1 |
+| [0029](0029-creature-habitat-companion-needs.md) | Creature, habitat and companion needs are one reusable care capability | Category-C Wave 2 |
+| [0030](0030-branching-dialogue-graphs.md) | Branching dialogue graphs, choices, flags and endings are one reusable narrative-presentation capability | Category-C Wave 3 |
+| [0031](0031-stealth-perception-suspicion-hiding.md) | Vision cones, suspicion, noise and hiding are one reusable perception capability | Category-C Wave 4 |
+| [0032](0032-arcade-ball-paddle-rebound.md) | Ball, paddle, rebound, brick-clear and first-to-N scoring are one reusable arcade capability | Category-C Wave 5 |
+| [0033](0033-combat-melee-knockback.md) | Melee strike, knockback and hit-stun are one reusable close-combat capability | Category-C Wave 6 |
+| [0034](0034-local-multiplayer-input-ownership.md) | Local hot-seat and versus seats are one reusable input-ownership capability | Category-C Wave 7 |
+| [0035](0035-scrolling-stage-camera.md) | Horizontal and vertical scrolling stages are one reusable camera capability | Category-C Wave 8 |
+| [0036](0036-puzzle-board-match-and-falling-block.md) | Match and falling-block engines are consumed, not a new pack | Category-C Wave 9 |
+| [0037](0037-visual-timing-windows.md) | Visual reaction and beat windows are a timing pack | Category-C Wave 10 |
+| [0038](0038-consume-weapons-in-vehicle-and-pointer-shells.md) | Consume existing weapons in vehicle and pointer shells | Category-C Wave 11 |
+| [0039](0039-consume-puzzle-code-seam-in-pointer-shell.md) | Consume the puzzle code seam in the pointer shell | Category-C Wave 12 |
+| [0040](0040-consume-simulation-ledger-in-farm-and-colony-shells.md) | Consume the simulation ledger in farm and colony shells | Category-C Wave 13 |
+| [0041](0041-consume-narrative-store-in-if-and-investigation-shells.md) | Consume the narrative store in IF and investigation shells | Category-C Wave 14 |
+| [0042](0042-consume-arcade-score-in-fishing-and-cooking-shells.md) | Consume arcade score in fishing and cooking shells | Category-C Wave 15 |
+| [0043](0043-consume-spatial-pointer-in-drawing-and-wardrobe-shells.md) | Consume spatial pointer drag/drop in drawing and wardrobe shells | Category-C Wave 16 |
+| [0044](0044-consume-progression-in-survivor-and-roguelite-shells.md) | Consume progression XP/currency in survivor and roguelite shells | Category-C Wave 17 |
+| [0045](0045-consume-strategy-turns-in-tactics-and-battler-shells.md) | Consume strategy turns in tactics and battler shells | Category-C Wave 18 |
+| [0046](0046-consume-navigation-in-maze-and-lane-shells.md) | Consume navigation in maze and lane shells | Category-C Wave 19 |
+| [0047](0047-consume-spatial-pointer-in-photo-and-sandbox-shells.md) | Consume spatial pointer click in photo and sandbox shells | Category-C Wave 20 |
+| [0048](0048-consume-combat-in-dungeon-and-base-shells.md) | Consume combat health in dungeon and base-defense shells | Category-C Wave 21 |
+| [0049](0049-consume-auto-run-in-course-and-endless-shells.md) | Consume auto-run presentation in course and endless shells | Category-C Wave 22 |
+| [0050](0050-consume-vehicle-in-road-and-craft-shells.md) | Consume vehicle.motion in road and craft shells | Category-C Wave 23 |
+| [0051](0051-consume-physics-in-toy-and-table-shells.md) | Consume AdvancedPhysics in toy and table shells | Category-C Wave 24 |
+| [0052](0052-consume-command-in-rts-and-zone-shells.md) | Consume one-unit command vs stand-in occupy | Category-C Wave 25 |
+| [0053](0053-consume-look-in-museum-and-rail-shells.md) | Consume look as museum plaques vs rail targets | Category-C Wave 26 |
+| [0054](0054-consume-parkour-in-precision-and-climb-shells.md) | Consume player-controlled parkour vs climb | Category-C Wave 27 |
+| [0055](0055-consume-arcade-in-microgame-shell.md) | Consume arcade score as microgame tap-then-mash | Category-C Wave 28 |
+| [0056](0056-kart-item-fire-is-game-specific.md) | Kart on-demand item-fire is game-specific | Category-C Wave 29 |
+| [0057](0057-wave-30-leftover-packs.md) | Six leftover packs: wall, territory, pinball, camera, codex, targeting | Category-C Wave 30 |
+| [0058](0058-wave-31-leftover-presentations.md) | Chase, two-unit box-select, sandbox pick/move/delete are game-specific | Category-C Wave 31 |

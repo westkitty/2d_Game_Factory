@@ -34,15 +34,15 @@ export const TOP_DOWN_ACTION_PRESETS: readonly PresetDefinition[] = [
 
   definePreset({
     id: 'action-adventure',
+    maturity: 'proof-validated',
     displayName: 'Action Adventure',
     family: 'top-down-action',
     controllerFamilies: ['top-down'],
-    requiredSystemPacks: [pack(PACK_IDS.world), pack(PACK_IDS.worldEntities), pack(PACK_IDS.combat), pack(PACK_IDS.weapons)],
+    requiredSystemPacks: [pack(PACK_IDS.world), pack(PACK_IDS.worldEntities), pack(PACK_IDS.combat), pack(PACK_IDS.weapons), pack(PACK_IDS.melee)],
     optionalSystemPacks: [pack(PACK_IDS.ai), pack(PACK_IDS.progression)],
-    requiredContentRoles: ['tuning', 'levels'],
+    requiredContentRoles: ['tuning', 'levels', 'melee'],
     validationProfile: VALIDATION_PROFILES.topDown,
-    // Weapons/projectiles are reusable now (Phase 3).
-    knownLimitations: ['Melee / knockback combat is not a reusable capability. Encounter orchestration (sw2d.encounters, Phase 4) is reusable but this recipe does not install it.'],
+    knownLimitations: [LIMITATIONS.meleeCombat],
   }),
 
   definePreset({
@@ -65,6 +65,7 @@ export const TOP_DOWN_ACTION_PRESETS: readonly PresetDefinition[] = [
 
   definePreset({
     id: 'survivor-like',
+    maturity: 'proof-validated',
     displayName: 'Survivor-Like',
     family: 'top-down-action',
     controllerFamilies: ['top-down'],
@@ -72,10 +73,12 @@ export const TOP_DOWN_ACTION_PRESETS: readonly PresetDefinition[] = [
     optionalSystemPacks: [pack(PACK_IDS.arcade), pack(PACK_IDS.world)],
     requiredContentRoles: ['tuning'],
     validationProfile: VALIDATION_PROFILES.topDown,
-    // The generated shell now loops content/encounters.json as survival waves
-    // (bindStarterEncounters, Arena finish Wave 2); what is still missing is
-    // escalation between loops.
-    knownLimitations: ['Endless difficulty scaling / meta-progression between runs is not a reusable system; the starter survival loop repeats the authored encounter without escalating it.'],
+    // The generated shell loops content/encounters.json as survival waves
+    // (bindStarterEncounters) and now banks in-run XP on sw2d.progression
+    // (Category-C Wave 17). What is still missing is escalation between loops.
+    knownLimitations: [
+      'In-run XP and unlock flags for the generated starter use sw2d.progression; endless difficulty scaling / meta-progression between runs is not a reusable system; the starter survival loop repeats the authored encounter without escalating it.',
+    ],
   }),
 
   definePreset({
@@ -90,13 +93,15 @@ export const TOP_DOWN_ACTION_PRESETS: readonly PresetDefinition[] = [
     validationProfile: VALIDATION_PROFILES.topDown,
     // Phase 7 (ADR-0024): the dungeon is a deterministic seeded room graph from
     // content/generation.json, driven by the reusable sw2d.generation capability.
+    // Category-C Wave 21: contact/strike for the generated starter use sw2d.combat.
     knownLimitations: [
-      'The room graph places Enemy objects, but the generated top-down shell does not yet wire them into sw2d.combat / sw2d.ai - enemy behaviour is game-specific code.',
+      'Contact damage and strike for the generated starter use sw2d.combat; generated Enemy objects from the room graph and AI behaviour are not wired.',
     ],
   }),
 
   definePreset({
     id: 'action-roguelite',
+    maturity: 'proof-validated',
     displayName: 'Action Roguelite',
     family: 'top-down-action',
     controllerFamilies: ['top-down'],
@@ -105,38 +110,42 @@ export const TOP_DOWN_ACTION_PRESETS: readonly PresetDefinition[] = [
     requiredContentRoles: ['tuning', 'levels', 'generation'],
     validationProfile: VALIDATION_PROFILES.topDown,
     // Phase 7 (ADR-0024): deterministic seeded room graph via sw2d.generation.
+    // Category-C Wave 17 banks in-run relics on sw2d.progression; permadeath
+    // and between-run loadouts stay leftover.
     knownLimitations: [
-      'Run-based meta-progression/permadeath state is not yet a reusable capability beyond sw2d.progression.',
+      'In-run currency, XP, items and unlock flags for the generated starter use sw2d.progression; run-based permadeath and between-run loadouts are not a reusable capability.',
     ],
   }),
 
   definePreset({
     id: 'stealth-game',
-    maturity: 'smoke-validated',
+    maturity: 'proof-validated',
     displayName: 'Stealth Game',
     family: 'top-down-action',
     controllerFamilies: ['top-down'],
-    requiredSystemPacks: [pack(PACK_IDS.ai), pack(PACK_IDS.combat), pack(PACK_IDS.world)],
+    requiredSystemPacks: [pack(PACK_IDS.ai), pack(PACK_IDS.combat), pack(PACK_IDS.world), pack(PACK_IDS.perception)],
     optionalSystemPacks: [pack(PACK_IDS.worldEntities), pack(PACK_IDS.navigation)],
-    requiredContentRoles: ['tuning', 'levels'],
+    requiredContentRoles: ['tuning', 'levels', 'perception'],
     validationProfile: VALIDATION_PROFILES.topDown,
     knownLimitations: [LIMITATIONS.stealthAi],
   }),
 
   definePreset({
     id: 'heist-game',
+    maturity: 'proof-validated',
     displayName: 'Heist Game',
     family: 'top-down-action',
     controllerFamilies: ['top-down'],
-    requiredSystemPacks: [pack(PACK_IDS.ai), pack(PACK_IDS.combat), pack(PACK_IDS.world)],
+    requiredSystemPacks: [pack(PACK_IDS.ai), pack(PACK_IDS.combat), pack(PACK_IDS.world), pack(PACK_IDS.perception)],
     optionalSystemPacks: [pack(PACK_IDS.worldEntities), pack(PACK_IDS.progression), pack(PACK_IDS.navigation)],
-    requiredContentRoles: ['tuning', 'levels'],
+    requiredContentRoles: ['tuning', 'levels', 'perception'],
     validationProfile: VALIDATION_PROFILES.topDown,
     knownLimitations: [LIMITATIONS.stealthAi],
   }),
 
   definePreset({
     id: 'arena-combat',
+    maturity: 'proof-validated',
     displayName: 'Arena Combat',
     family: 'top-down-action',
     controllerFamilies: ['top-down'],
@@ -144,11 +153,11 @@ export const TOP_DOWN_ACTION_PRESETS: readonly PresetDefinition[] = [
     // fighting content-driven waves in a fixed arena is this preset's whole
     // genre, and the generated top-down shell now wires it for real
     // (bindStarterEncounters).
-    requiredSystemPacks: [pack(PACK_IDS.combat), pack(PACK_IDS.weapons), pack(PACK_IDS.encounters)],
+    requiredSystemPacks: [pack(PACK_IDS.combat), pack(PACK_IDS.weapons), pack(PACK_IDS.encounters), pack(PACK_IDS.melee)],
     optionalSystemPacks: [pack(PACK_IDS.ai), pack(PACK_IDS.arcade)],
-    requiredContentRoles: ['tuning', 'levels'],
+    requiredContentRoles: ['tuning', 'levels', 'melee'],
     validationProfile: VALIDATION_PROFILES.topDown,
-    knownLimitations: ['Melee weapons/knockback are not reusable capabilities; the starter arena fight is ranged (projectile) combat.'],
+    knownLimitations: [LIMITATIONS.meleeCombat],
   }),
 
   definePreset({

@@ -1,0 +1,83 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:sw2d:schema:content-needs-catalog:v1",
+  "title": "NeedsCatalog",
+  "description": "Mirrors @sw2d/contracts NeedsCatalog (needs.ts). Validated as a ContentBundle.data document (document name 'needs'). Bounded creature/habitat/companion care semantics - no scripting.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "mode", "subject", "needs", "actions", "win"],
+  "properties": {
+    "schemaVersion": { "type": "integer", "minimum": 1 },
+    "mode": { "type": "string", "enum": ["creature", "habitat", "companion"] },
+    "subject": { "$ref": "#/definitions/subject" },
+    "needs": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/need" }
+    },
+    "actions": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/action" }
+    },
+    "win": { "$ref": "#/definitions/win" },
+    "loseBelow": { "type": "number" },
+    "affinity": { "type": "number" }
+  },
+  "definitions": {
+    "subject": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "displayName"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "displayName": { "type": "string", "minLength": 1 }
+      }
+    },
+    "need": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "displayName", "value", "min", "max", "decayPerSecond"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "displayName": { "type": "string", "minLength": 1 },
+        "value": { "type": "number" },
+        "min": { "type": "number" },
+        "max": { "type": "number" },
+        "decayPerSecond": { "type": "number", "minimum": 0 }
+      }
+    },
+    "effect": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["needId", "delta"],
+      "properties": {
+        "needId": { "type": "string", "minLength": 1 },
+        "delta": { "type": "number" }
+      }
+    },
+    "action": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "displayName", "effects"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "displayName": { "type": "string", "minLength": 1 },
+        "effects": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/definitions/effect" }
+        },
+        "affinityDelta": { "type": "number" }
+      }
+    },
+    "win": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["minValue", "holdMs", "minActions"],
+      "properties": {
+        "minValue": { "type": "number" },
+        "holdMs": { "type": "number", "minimum": 0 },
+        "minActions": { "type": "integer", "minimum": 0 }
+      }
+    }
+  }
+}

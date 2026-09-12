@@ -123,7 +123,14 @@ export async function wbImage001({ session, note }: JourneyContext): Promise<voi
 
   // Image-first creation ends on the running game, without a separate hidden
   // preview step.
-  await session.waitFor('iframe.preview__frame', 90_000);
+  try {
+    await session.waitFor('iframe.preview__frame', 90_000);
+  } catch (error) {
+    // Surface what the preview pane was saying, so a CI-only failure is diagnosable from the log.
+    const status = await session.text('.play-status').catch(() => '(no .play-status)');
+    const pane = await session.text('.preview').catch(() => '(no .preview)');
+    throw new Error(`${error instanceof Error ? error.message.split('\n')[0] : String(error)} - play-status: "${status}" - preview pane: "${pane.slice(0, 300)}"`);
+  }
   expect((await session.text('.play-status')).includes('RUNNING'), 'the created game is not visibly running');
 
   // Build, then show the production preview: what final validation relies on.
@@ -132,6 +139,9 @@ export async function wbImage001({ session, note }: JourneyContext): Promise<voi
   await session.clickText('Preview', '.tabs');
   await session.page.waitForTimeout(800);
   await session.clickText('Production preview');
+  // The pane swaps its iframe when the preview URL changes; wait for the
+  // production pane state, not merely for an iframe to exist.
+  await session.waitForText('BUILD · RUNNING', 90_000);
   await session.waitFor('iframe.preview__frame', 90_000);
 
   const frame = await session.gameFrame(90_000);

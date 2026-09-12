@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "mode": "reaction",
+  "windowMs": 400,
+  "hitsToWin": 2,
+  "missesToFail": 3,
+  "reaction": {
+    "delaysMs": [
+      700,
+      700
+    ],
+    "maxWaitMs": 900
+  }
+}

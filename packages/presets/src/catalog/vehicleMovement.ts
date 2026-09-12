@@ -31,6 +31,7 @@ export const VEHICLE_MOVEMENT_PRESETS: readonly PresetDefinition[] = [
 
   definePreset({
     id: 'kart-racer',
+    maturity: 'proof-validated',
     displayName: 'Kart Racer',
     family: 'vehicle-movement',
     controllerFamilies: ['vehicle'],
@@ -59,6 +60,7 @@ export const VEHICLE_MOVEMENT_PRESETS: readonly PresetDefinition[] = [
 
   definePreset({
     id: 'endless-driving',
+    maturity: 'proof-validated',
     displayName: 'Endless Driving',
     family: 'vehicle-movement',
     controllerFamilies: ['vehicle'],
@@ -68,11 +70,15 @@ export const VEHICLE_MOVEMENT_PRESETS: readonly PresetDefinition[] = [
     validationProfile: VALIDATION_PROFILES.vehicleMovement,
     vehicleProfile: 'car',
     // Phase 7 (ADR-0024) road generation + Phase 10 (ADR-0027) vehicle handling.
-    knownLimitations: [],
+    // Category-C Wave 23: generated starter banks arcade distance.
+    knownLimitations: [
+      'Arcade distance for the generated starter is game-specific presentation of sw2d.vehicles + sw2d.arcade; a reusable kart item-fire system is not.',
+    ],
   }),
 
   definePreset({
     id: 'boat-flight-racer',
+    maturity: 'proof-validated',
     displayName: 'Boat / Flight Racer',
     family: 'vehicle-movement',
     controllerFamilies: ['vehicle'],
