@@ -1,49 +1,75 @@
 {
   "schemaVersion": 1,
+  "archetypes": {
+    "raider": {
+      "motion": "drift",
+      "speed": 150,
+      "driftDeg": 180,
+      "score": 10,
+      "size": 26
+    },
+    "gunner": {
+      "motion": "drift",
+      "speed": 90,
+      "driftDeg": 180,
+      "score": 20,
+      "size": 30
+    }
+  },
   "encounters": [
     {
-      "id": "starter-skirmish",
+      "id": "stage-formations",
       "phases": [
         {
-          "id": "wave-1",
+          "id": "wing-1",
           "spawns": [
             {
-              "archetype": "grunt",
-              "count": 3,
+              "archetype": "raider",
+              "count": 4,
               "at": {
-                "kind": "edge",
-                "edge": "top"
+                "kind": "formation",
+                "shape": "column",
+                "x": 990,
+                "y": 270,
+                "spacing": 90
               },
-              "intervalMs": 500,
-              "health": 20
+              "intervalMs": 200,
+              "health": 10
             }
           ],
           "completeWhen": {
-            "kind": "spawns-cleared"
+            "kind": "elapsed",
+            "ms": 4500
           }
         },
         {
-          "id": "wave-2",
+          "id": "wing-2",
           "spawns": [
             {
-              "archetype": "grunt",
-              "count": 2,
+              "archetype": "raider",
+              "count": 5,
               "at": {
-                "kind": "edge",
-                "edge": "left"
+                "kind": "formation",
+                "shape": "v",
+                "x": 990,
+                "y": 200,
+                "spacing": 80
               },
-              "intervalMs": 600,
-              "health": 20
+              "intervalMs": 200,
+              "health": 10
             },
             {
-              "archetype": "shooter",
+              "archetype": "gunner",
               "count": 2,
               "at": {
-                "kind": "edge",
-                "edge": "top"
+                "kind": "formation",
+                "shape": "column",
+                "x": 990,
+                "y": 270,
+                "spacing": 200
               },
-              "intervalMs": 900,
-              "health": 30,
+              "startDelayMs": 1200,
+              "health": 20,
               "emitterIds": [
                 "aimed-shot"
               ]
@@ -57,11 +83,12 @@
                 "kind": "aimed"
               },
               "everyMs": 1400,
-              "startDelayMs": 800
+              "startDelayMs": 900
             }
           ],
           "completeWhen": {
-            "kind": "spawns-cleared"
+            "kind": "elapsed",
+            "ms": 6000
           }
         }
       ]

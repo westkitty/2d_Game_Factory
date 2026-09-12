@@ -1,8 +1,8 @@
 import Phaser from 'phaser';
 import type { InstalledSystemPack, RaceService, VehicleService } from '@sw2d/contracts';
 import { RACE_STATE_CAPABILITY_ID, VEHICLE_MOTION_CAPABILITY_ID } from '@sw2d/contracts';
-import { bindStarterKartItem, bindStarterVehicle, bindStarterWeapon, resolveSceneLevel, vehicleController, type SceneContext, type ScenePackDefinition } from '@sw2d/runtime';
-import { KART_STARTER, VEHICLE_STARTER } from './packConfig.ts';
+import { bindStarterAsteroids, bindStarterKartItem, bindStarterVehicle, bindStarterWeapon, resolveSceneLevel, vehicleController, type SceneContext, type ScenePackDefinition } from '@sw2d/runtime';
+import { ASTEROIDS_STARTER, KART_STARTER, VEHICLE_STARTER } from './packConfig.ts';
 
 /**
  * Generated starter shell: vehicle controller family.
@@ -50,18 +50,23 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     const spawn = level?.objects.find((object) => object.class === 'PlayerSpawn');
     const vehicleSvc = context.capabilities.get<VehicleService>(VEHICLE_MOTION_CAPABILITY_ID);
     const raceSvc = context.capabilities.get<RaceService>(RACE_STATE_CAPABILITY_ID);
+    // Asteroids (Final Product Completion Wave 3). Inert unless packConfig
+    // names the field starter. The rock field owns the weapon and its
+    // projectile runtime; the ship is the sw2d.vehicles `ship` profile.
+    const rocks = bindStarterAsteroids(context, { mode: ASTEROIDS_STARTER });
     // Weapons (capability program Phase 3 / Category-C Wave 11). Inert unless
-    // sw2d.weapons is installed. Asteroids heading-fire is the vehicle consumer.
-    const weapon = bindStarterWeapon(context);
+    // sw2d.weapons is installed (and the rock field does not own it).
+    const weapon = rocks.active ? null : bindStarterWeapon(context);
     // Endless road vs boat/flight (Category-C Wave 23). Inert unless
     // packConfig names a road/craft starter. Kart racing stays on RaceService.
     const drive = bindStarterVehicle(context, { mode: VEHICLE_STARTER });
     // Kart on-demand item (Category-C Wave 29). Inert unless packConfig
     // names the item starter. Pickup/fire stay game-specific.
     const kartItem = bindStarterKartItem(context, { mode: KART_STARTER });
-    const openSpace = (Boolean(weapon.snapshot()) && !vehicleSvc) || drive.active;
+    const openSpace = (Boolean(weapon?.snapshot()) && !vehicleSvc) || drive.active || rocks.active;
 
     const spawnX = drive.active ? drive.startX() : kartItem.active ? 160 : openSpace ? width * 0.5 : (spawn?.x ?? width * 0.5);
+    if (rocks.active) walls.setVisible(false);
     const spawnY = drive.active ? drive.startY() : kartItem.active ? 440 : openSpace ? height * 0.5 : (spawn?.y ?? height * 0.5);
 
     if (vehicleSvc && vehicleSvc.definitionIds().length > 0) {
@@ -69,8 +74,12 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     }
 
     const vehicle = scene.physics.add.sprite(spawnX, spawnY, vehicleKey);
-    vehicle.setCollideWorldBounds(true);
+    vehicle.setCollideWorldBounds(!rocks.active);
     vehicle.body.setAllowGravity(false);
+    if (rocks.active) {
+      vehicle.setRotation(-Math.PI / 2);
+      rocks.attach(vehicle);
+    }
     if (drive.active || kartItem.active) walls.setVisible(false);
     if (!vehicleSvc) {
       if (openSpace) {
@@ -95,8 +104,9 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       ...(raceSvc ? { race: raceSvc.raceState(), expectedCheckpoint: raceSvc.expectedCheckpoint()?.id ?? null } : {}),
       ...(drive.active ? { drive: drive.snapshot() } : {}),
       ...(kartItem.active ? { kartItem: kartItem.snapshot() } : {}),
+      ...(rocks.active ? { asteroids: rocks.snapshot() } : {}),
       ...(generationManifest ? { generation: generationManifest } : {}),
-      weapon: weapon.snapshot(),
+      weapon: weapon?.snapshot() ?? null,
     }));
 
     const scratch = new Phaser.Math.Vector2();
@@ -128,7 +138,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
           // checkpoint, lap, clock) is deliberately untouched, so the reset
           // costs time but not progress.
           const margin = 48;
-          if (!drive.active && (st.x < -margin || st.x > width + margin || st.y < -margin || st.y > height + margin)) {
+          if (!drive.active && !rocks.active && (st.x < -margin || st.x > width + margin || st.y < -margin || st.y > height + margin)) {
             vehicleSvc.reset();
           }
           const now = vehicleSvc.state();
@@ -155,15 +165,16 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
           if (intent.brake > 0) vehicle.body.velocity.scale(1 - intent.brake * 0.1);
         }
 
-        weapon.update(deltaMs, nowMs);
-        if (context.input.justPressed('PRIMARY_ACTION')) {
+        weapon?.update(deltaMs, nowMs);
+        if (rocks.active) rocks.tick(deltaMs, nowMs);
+        if (context.input.justPressed('PRIMARY_ACTION') || (rocks.active && context.input.isDown('PRIMARY_ACTION'))) {
           if (kartItem.active) {
             kartItem.fire();
           } else if (drive.active && drive.snapshot().mode === 'craft') {
             drive.switchCraft();
           } else {
             const heading = vehicleSvc ? vehicleSvc.state().heading : vehicle.rotation;
-            weapon.fire(nowMs, Math.cos(heading), Math.sin(heading), { x: vehicle.x, y: vehicle.y });
+            (weapon ?? rocks).fire(nowMs, Math.cos(heading), Math.sin(heading), { x: vehicle.x, y: vehicle.y });
           }
         }
       },
@@ -172,7 +183,8 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         if (disposed) return;
         disposed = true;
         debugHandle.dispose();
-        weapon.dispose();
+        weapon?.dispose();
+        rocks.dispose();
         drive.dispose();
         kartItem.dispose();
         try {

@@ -13,3 +13,4 @@ export { runSmoke, type SmokeOutcome, type SmokeResult, type SmokeSpec } from '.
 export { readSnapshot, readShellState, type DebugSnapshotLike } from './snapshot.ts';
 export { startPlay, waitUntil, holdUntil, pauseResume, restartRun, pointerAt, clickAt, shellReader } from './journey.ts';
 export { buildRoomMap, routeRooms, readDungeon, walkTo, walkToRoom, fightNearestInRoom, type DungeonShell, type DungeonSnap, type DungeonEnemy, type RoomMap } from './dungeonJourney.ts';
+export { leadPoint, aimAt, type AimTarget } from './shooterJourney.ts';

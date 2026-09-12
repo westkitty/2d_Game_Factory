@@ -38,6 +38,8 @@ declare module '@sw2d/contracts' {
     'encounters:battleOver': { readonly outcome: 'failed' | 'complete'; readonly kills: number; readonly wavesCleared: number };
     'encounters:bossStarted': { readonly encounterId: string; readonly index: number; readonly of: number };
     'encounters:bossDefeated': { readonly encounterId: string; readonly index: number; readonly of: number };
+    'encounters:escaped': { readonly requestId: string; readonly escaped: number };
+    'asteroids:shipHit': { readonly lives: number };
     'economy:served': { readonly customerId: string; readonly goodId: string; readonly cash: number; readonly stock: number };
     'economy:customerArrived': { readonly customerId: string; readonly goodId: string; readonly queueLength: number };
     'economy:customerLeft': { readonly customerId: string; readonly reason: 'impatient' };

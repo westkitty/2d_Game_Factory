@@ -19,11 +19,11 @@ file is the cursor.
 | field | value |
 |---|---|
 | branch SHA | (see git log; updated per checkpoint below) |
-| waves completed | 2 (inventory, platforming movement, combat / top-down) |
-| limitations closed | 14 / 69 entries (L01-L09; 9 / 52 distinct) |
-| remaining machine-executable | 55 |
+| waves completed | 3 (inventory, platforming movement, combat / top-down, shooters) |
+| limitations closed | 22 / 69 entries (L01-L17; 17 / 52 distinct) |
+| remaining machine-executable | 47 |
 | blockers | none |
-| next exact action | Wave 3: boss sequencing (L10), shmup parallax/rail/formations (L11), bullet pooling + budget (L12), asteroids (L13/L14), gallery targets (L15), run-and-gun opposition (L16), rail-shooter weapons (L17) |
+| next exact action | Wave 4: kart held items (L18/L19), boat/flight arcade (L20), puzzle boards (L21/L22), pinball (L23/L28), physics/escape puzzle grammar (L25/L46), maze (L26), rhythm audio clock + reaction (L27) |
 
 ## Checkpoint log
 
@@ -52,6 +52,15 @@ file is the cursor.
 - twin-stick-shooter requires `sw2d.encounters`; dungeon-crawler requires `sw2d.ai`.
 - New QA helper `packages/qa/src/dungeonJourney.ts` (room-graph navigation from the manifest); tools helper `tools/scripts/register-content-document.py`.
 
+### Wave 3 - shooters (L10-L17)
+- `sw2d.encounters`: `sequence` (boss rush), `archetypes` behaviour metadata (chase / ground / drift / approach / hold), `formation` spawn points; `entity-health-below` waits for its spawn.
+- `bindStarterEncounters`: archetype motion, HUD, `arcade.score`, escapes/misses, time limit, boss sequencing, ground walkers under gravity (platform shell), scroll offsets (rail), dynamic projectile bounds.
+- Pooled `createProjectileRuntime` + `npm run qa:bullet-budget` (400+ live @ 60 fps; stress 1676).
+- `sw2d.stage-scroll`: parallax `layers`, `rail` legs, `crossOffset`; starter draws planes.
+- `sw2d.vehicles` `ship` profile; new `bindStarterAsteroids`; new `bindStarterGallery` (gallery + rail modes); `GALLERY_STARTER` / `ASTEROIDS_STARTER` in packConfig (LOOK_STARTER 'rail' retired).
+- Catalog: run-and-gun, gallery-shooter, rail-shooter, asteroids-shooter require the packs they now consume.
+- Fixes found by play: pointer `inside` without `pointerenter`; PlayScene camera bounds pinned the old rail; per-entity health condition before spawn.
+
 ## Validation evidence
 
 ### Wave 1
@@ -64,4 +73,11 @@ file is the cursor.
 - `npm run typecheck` PASS; `npx vitest run` 209 files / 4195+ tests PASS.
 - `npm run qa:completion` PASS for action-adventure, arena-combat, twin-stick-shooter, dungeon-crawler, action-roguelite, survivor-like, stealth-game, heist-game (fresh factory output, system Chrome).
 - `npm run qa:proof` 14/14 PASS for every wave-2-affected proof (incl. hand-authored twin-stick, dungeon-crawler, bullet-hell, boss-rush, run-and-gun, base-defense).
-- `npm run limitations:extract`: 55 machine-executable remain.
+- `npm run limitations:extract`: 56 machine-executable remain.
+
+### Wave 3
+- `npm run typecheck` PASS; `npx vitest run` 209 files / 4212 tests PASS.
+- `npm run qa:completion` 21/21 PASS (all Wave 1-3 presets, fresh factory output).
+- `npm run qa:proof` 18/18 PASS for every wave-3-affected proof (incl. hand-authored gallery, boss-rush, bullet-hell, run-and-gun, twin-stick, racers).
+- `npm run qa:bullet-budget` PASS: 429 live @ 60.1 fps (p95 16.7 ms), pool reuse 82.7 %; `--stress` 1676 live @ 60.1 fps.
+- `npm run limitations:extract`: 47 machine-executable remain.

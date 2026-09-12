@@ -6,15 +6,18 @@
  * that intent plus a bounded tuning definition into vehicle motion. Racing
  * state (checkpoints, laps, time trial) is a SEPARATE capability (racing.ts).
  *
- * One reusable system, four bounded profiles - car / kart / boat / flight -
- * not four engines.
+ * One reusable system, five bounded profiles - car / kart / boat / flight /
+ * ship - not five engines. The `ship` profile (Final Product Completion Wave
+ * 3, matrix L14) is Newtonian: thrust along the heading into a free velocity
+ * that persists (momentum), rotational inertia (angular acceleration and
+ * damping), and optional wrap-around bounds - the asteroids feel.
  */
 
 import type { VehicleIntent } from './controllers.ts';
 
 export const VEHICLE_MOTION_CAPABILITY_ID = 'vehicle.motion';
 
-export type VehicleProfile = 'car' | 'kart' | 'boat' | 'flight';
+export type VehicleProfile = 'car' | 'kart' | 'boat' | 'flight' | 'ship';
 
 /** Multipliers a tagged surface applies to bounded handling attributes. All default 1. */
 export interface VehicleSurfaceModifier {
@@ -55,6 +58,12 @@ export interface VehicleDefinition {
   readonly altitudeRate?: number;
   readonly minAltitude?: number;
   readonly maxAltitude?: number;
+  /** Ship profile only: radians/s^2 of heading change at full lock. */
+  readonly angularAcceleration?: number;
+  /** Ship profile only: per-second angular velocity retention (0..1). */
+  readonly angularDamping?: number;
+  /** Ship profile only: wrap the position around this play area (with a margin). */
+  readonly wrap?: { readonly width: number; readonly height: number; readonly margin: number };
   /** Tag -> modifier. Applied when `update` is told the current surface tag. */
   readonly surfaceModifiers?: Readonly<Record<string, VehicleSurfaceModifier>>;
 }
@@ -78,6 +87,10 @@ export interface VehicleState {
   readonly speed: number;
   readonly boosting: boolean;
   readonly boostCooldownRemainingMs: number;
+  /** Ship profile: current rotational velocity (radians/s). 0 for other profiles. */
+  readonly angularVelocity: number;
+  /** Ship profile: wraps performed this life (HUD / QA evidence). */
+  readonly wraps: number;
   readonly drifting: boolean;
   /** Flight profile only; 0 for ground vehicles. */
   readonly altitude: number;
@@ -178,5 +191,24 @@ export const VEHICLE_PROFILE_DEFAULTS: Readonly<Record<VehicleProfile, Omit<Vehi
     altitudeRate: 90,
     minAltitude: 0,
     maxAltitude: 240,
+  },
+  ship: {
+    acceleration: 240,
+    braking: 160,
+    reverseAcceleration: 160,
+    maxForwardSpeed: 320,
+    maxReverseSpeed: 320,
+    steeringRate: 0,
+    speedSensitiveSteering: 0,
+    drag: 0.82,
+    lateralGrip: 0,
+    traction: 0,
+    driftFactor: 0,
+    boostForce: 260,
+    boostDurationMs: 600,
+    boostCooldownMs: 2400,
+    angularAcceleration: 9,
+    angularDamping: 0.08,
+    wrap: { width: 960, height: 540, margin: 24 },
   },
 };

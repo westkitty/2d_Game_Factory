@@ -104,12 +104,15 @@ export function generateWeaponCatalog(hasWeaponsPack: boolean, hasEncountersPack
  * content/encounters.json - an EncounterCatalog (capability program Phase 4).
  * Always emitted; empty unless the preset installs `sw2d.encounters`.
  */
-export function generateEncounterCatalog(hasEncountersPack: boolean, options: { readonly escalate?: boolean } = {}): Record<string, unknown> {
+export type EncounterStarterKind = 'skirmish' | 'swarm' | 'platform' | 'boss-rush' | 'bullet-hell' | 'gallery' | 'rail' | 'shmup-h' | 'shmup-v' | 'none';
+
+export function generateEncounterCatalog(hasEncountersPack: boolean, options: { readonly escalate?: boolean; readonly kind?: EncounterStarterKind } = {}): Record<string, unknown> {
   if (!hasEncountersPack) return { schemaVersion: 1, encounters: [] };
+  const kind: EncounterStarterKind = options.kind ?? (options.escalate ? 'swarm' : 'skirmish');
   // Survivor-like (Final Product Completion Wave 2): every loop of the same
   // content is a bigger, tougher, faster wave - the reusable escalation the
   // encounters pack applies from this document.
-  if (options.escalate) {
+  if (kind === 'swarm') {
     return {
       schemaVersion: 1,
       escalation: { countPerWave: 1, healthScalePerWave: 0.25, speedScalePerWave: 0.15, maxWaves: 12 },
@@ -121,6 +124,218 @@ export function generateEncounterCatalog(hasEncountersPack: boolean, options: { 
               id: 'swarm',
               spawns: [{ archetype: 'grunt', count: 3, at: { kind: 'edge', edge: 'top' }, intervalMs: 400, health: 20 }],
               completeWhen: { kind: 'spawns-cleared' },
+            },
+          ],
+        },
+      ],
+    };
+  }
+  // Run-and-gun (Final Product Completion Wave 3, matrix L16): walkers under
+  // gravity come in from the right; wave 2 adds a standing shooter.
+  if (kind === 'platform') {
+    return {
+      schemaVersion: 1,
+      archetypes: { walker: { motion: 'ground', speed: 70 }, shooter: { motion: 'hold', speed: 0 } },
+      encounters: [
+        {
+          id: 'starter-assault',
+          phases: [
+            {
+              id: 'wave-1',
+              spawns: [{ archetype: 'walker', count: 3, at: { kind: 'point', x: 900, y: 380 }, intervalMs: 700, health: 20 }],
+              completeWhen: { kind: 'spawns-cleared' },
+            },
+            {
+              id: 'wave-2',
+              spawns: [
+                { archetype: 'walker', count: 2, at: { kind: 'point', x: 900, y: 380 }, intervalMs: 900, health: 20 },
+                { archetype: 'shooter', count: 1, at: { kind: 'point', x: 760, y: 467 }, health: 30, emitterIds: ['aimed-shot'] },
+              ],
+              emitters: [{ id: 'aimed-shot', weaponId: 'enemy-blaster', pattern: { kind: 'aimed' }, everyMs: 1500, startDelayMs: 600 }],
+              completeWhen: { kind: 'spawns-cleared' },
+            },
+          ],
+        },
+      ],
+    };
+  }
+  // Boss rush (Final Product Completion Wave 3, matrix L10): three bosses in
+  // sequence, each its own encounter with its own pattern; the shell runs the
+  // `sequence` back to back with a readable transition.
+  if (kind === 'boss-rush') {
+    const boss = (id: string, health: number, pattern: Record<string, unknown>, everyMs: number, x: number) => ({
+      id,
+      phases: [
+        {
+          id: 'fight',
+          spawns: [{ archetype: 'boss', count: 1, at: { kind: 'point', x, y: 120 }, health, emitterIds: ['barrage'] }],
+          emitters: [{ id: 'barrage', weaponId: 'enemy-blaster', pattern, everyMs, startDelayMs: 500 }],
+          completeWhen: { kind: 'spawns-cleared' },
+        },
+      ],
+    });
+    return {
+      schemaVersion: 1,
+      archetypes: { boss: { motion: 'hold', speed: 0, size: 56, score: 100 } },
+      sequence: { encounterIds: ['boss-warden', 'boss-sentinel', 'boss-tyrant'], transitionMs: 1500 },
+      encounters: [
+        boss('boss-warden', 60, { kind: 'aimed' }, 900, 480),
+        boss('boss-sentinel', 90, { kind: 'fan', count: 3, spreadDeg: 40, aimed: true }, 1100, 300),
+        boss('boss-tyrant', 120, { kind: 'ring', count: 8 }, 1300, 660),
+      ],
+    };
+  }
+  // Bullet hell (Final Product Completion Wave 3, matrix L12): one boss whose
+  // three emitters (a 24-way ring, a rotating 8-way spiral and an aimed fan)
+  // keep several hundred bullets live at once - the workload the pooled
+  // projectile runtime is tuned and benchmarked against
+  // (tools/scripts/qa-bullet-budget.ts).
+  if (kind === 'bullet-hell') {
+    return {
+      schemaVersion: 1,
+      archetypes: { boss: { motion: 'hold', speed: 0, size: 56, score: 500 }, drone: { motion: 'chase', speed: 40, score: 10 } },
+      encounters: [
+        {
+          id: 'hell-gate',
+          phases: [
+            {
+              id: 'opening',
+              spawns: [{ archetype: 'boss', count: 1, at: { kind: 'point', x: 480, y: 110 }, health: 400, emitterIds: ['ring', 'spiral', 'fan'] }],
+              emitters: [
+                { id: 'ring', weaponId: 'enemy-blaster', pattern: { kind: 'ring', count: 24 }, everyMs: 320, startDelayMs: 400 },
+                { id: 'spiral', weaponId: 'enemy-blaster', pattern: { kind: 'spiral', count: 8, rotationStepDeg: 13 }, everyMs: 90, startDelayMs: 200 },
+                { id: 'fan', weaponId: 'enemy-blaster', pattern: { kind: 'fan', count: 5, spreadDeg: 50, aimed: true }, everyMs: 700, startDelayMs: 600 },
+              ],
+              completeWhen: { kind: 'entity-health-below', entityId: 'hell-gate:opening:0:0', fraction: 0.5 },
+            },
+            {
+              id: 'frenzy',
+              spawns: [{ archetype: 'drone', count: 4, at: { kind: 'edge', edge: 'top' }, intervalMs: 500, health: 20 }],
+              emitters: [
+                { id: 'ring', weaponId: 'enemy-blaster', pattern: { kind: 'ring', count: 32 }, everyMs: 280, startDelayMs: 100 },
+                { id: 'spiral', weaponId: 'enemy-blaster', pattern: { kind: 'spiral', count: 10, rotationStepDeg: 17 }, everyMs: 80, startDelayMs: 100 },
+              ],
+              completeWhen: { kind: 'spawns-cleared' },
+            },
+          ],
+        },
+      ],
+    };
+  }
+  // Gallery shooter (Final Product Completion Wave 3, matrix L15): two rounds
+  // of drifting targets worth points; targets never fight back.
+  if (kind === 'gallery') {
+    return {
+      schemaVersion: 1,
+      archetypes: { target: { motion: 'drift', speed: 120, driftDeg: 0, score: 10, size: 30 }, bonus: { motion: 'drift', speed: 200, driftDeg: 180, score: 25, size: 22 } },
+      sequence: { encounterIds: ['round-1', 'round-2'], transitionMs: 800 },
+      encounters: [
+        {
+          id: 'round-1',
+          phases: [
+            {
+              id: 'targets',
+              spawns: [{ archetype: 'target', count: 4, at: { kind: 'formation', shape: 'line', x: 480, y: 150, spacing: 140 }, intervalMs: 150, health: 10 }],
+              completeWhen: { kind: 'spawns-cleared' },
+            },
+          ],
+        },
+        {
+          id: 'round-2',
+          phases: [
+            {
+              id: 'targets',
+              spawns: [
+                { archetype: 'target', count: 5, at: { kind: 'formation', shape: 'v', x: 480, y: 130, spacing: 120 }, intervalMs: 150, health: 10 },
+                { archetype: 'bonus', count: 2, at: { kind: 'formation', shape: 'line', x: 480, y: 300, spacing: 300 }, startDelayMs: 400, health: 10 },
+              ],
+              completeWhen: { kind: 'spawns-cleared' },
+            },
+          ],
+        },
+      ],
+    };
+  }
+  // Rail shooter (Final Product Completion Wave 3, matrix L17): drones ahead of
+  // the gun approach it; two legs of the rail, each its own encounter.
+  if (kind === 'rail') {
+    return {
+      schemaVersion: 1,
+      archetypes: { drone: { motion: 'approach', speed: 55, score: 5, size: 30 }, hunter: { motion: 'approach', speed: 85, score: 15, size: 34 } },
+      sequence: { encounterIds: ['leg-1', 'leg-2'], transitionMs: 700 },
+      encounters: [
+        {
+          id: 'leg-1',
+          phases: [
+            {
+              id: 'drones',
+              spawns: [{ archetype: 'drone', count: 4, at: { kind: 'formation', shape: 'line', x: 480, y: 110, spacing: 170 }, intervalMs: 350, health: 10 }],
+              completeWhen: { kind: 'spawns-cleared' },
+            },
+          ],
+        },
+        {
+          id: 'leg-2',
+          phases: [
+            {
+              id: 'hunters',
+              spawns: [
+                { archetype: 'drone', count: 3, at: { kind: 'formation', shape: 'v', x: 480, y: 100, spacing: 160 }, intervalMs: 300, health: 10 },
+                { archetype: 'hunter', count: 2, at: { kind: 'formation', shape: 'line', x: 480, y: 60, spacing: 400 }, startDelayMs: 900, health: 20 },
+              ],
+              completeWhen: { kind: 'spawns-cleared' },
+            },
+          ],
+        },
+      ],
+    };
+  }
+  // Shmups (Final Product Completion Wave 3, matrix L11): enemy formations
+  // sweep across the streaming stage (drift + escape), a shooter wing fires.
+  if (kind === 'shmup-h' || kind === 'shmup-v') {
+    const vertical = kind === 'shmup-v';
+    const drift = vertical ? 90 : 180;
+    return {
+      schemaVersion: 1,
+      archetypes: { raider: { motion: 'drift', speed: 150, driftDeg: drift, score: 10, size: 26 }, gunner: { motion: 'drift', speed: 90, driftDeg: drift, score: 20, size: 30 } },
+      encounters: [
+        {
+          id: 'stage-formations',
+          phases: [
+            {
+              id: 'wing-1',
+              spawns: [
+                {
+                  archetype: 'raider',
+                  count: 4,
+                  at: vertical ? { kind: 'formation', shape: 'line', x: 480, y: -30, spacing: 130 } : { kind: 'formation', shape: 'column', x: 990, y: 270, spacing: 90 },
+                  intervalMs: 200,
+                  health: 10,
+                },
+              ],
+              completeWhen: { kind: 'elapsed', ms: 4500 },
+            },
+            {
+              id: 'wing-2',
+              spawns: [
+                {
+                  archetype: 'raider',
+                  count: 5,
+                  at: vertical ? { kind: 'formation', shape: 'v', x: 480, y: -30, spacing: 110 } : { kind: 'formation', shape: 'v', x: 990, y: 200, spacing: 80 },
+                  intervalMs: 200,
+                  health: 10,
+                },
+                {
+                  archetype: 'gunner',
+                  count: 2,
+                  at: vertical ? { kind: 'formation', shape: 'line', x: 480, y: -30, spacing: 300 } : { kind: 'formation', shape: 'column', x: 990, y: 270, spacing: 200 },
+                  startDelayMs: 1200,
+                  health: 20,
+                  emitterIds: ['aimed-shot'],
+                },
+              ],
+              emitters: [{ id: 'aimed-shot', weaponId: 'enemy-blaster', pattern: { kind: 'aimed' }, everyMs: 1400, startDelayMs: 900 }],
+              completeWhen: { kind: 'elapsed', ms: 6000 },
             },
           ],
         },
@@ -399,7 +614,7 @@ export function generateWorldGraphDoc(hasWorldGraphPack: boolean): Record<string
  * recipe can show both). Values come from VEHICLE_PROFILE_DEFAULTS, expressed
  * inline so the document is real, editable tuning.
  */
-export function generateVehicleCatalog(profile: 'car' | 'kart' | 'boat' | 'flight' | 'none'): Record<string, unknown> {
+export function generateVehicleCatalog(profile: 'car' | 'kart' | 'boat' | 'flight' | 'ship' | 'none'): Record<string, unknown> {
   const car = {
     id: 'starter-car',
     profile: 'car',
@@ -443,6 +658,30 @@ export function generateVehicleCatalog(profile: 'car' | 'kart' | 'boat' | 'fligh
     minAltitude: 0,
     maxAltitude: 240,
   };
+  // Final Product Completion Wave 3 (matrix L14): the asteroids ship -
+  // Newtonian thrust with momentum, rotational inertia, wrap-around.
+  const ship = {
+    id: 'starter-ship',
+    profile: 'ship',
+    acceleration: 240,
+    braking: 160,
+    reverseAcceleration: 160,
+    maxForwardSpeed: 320,
+    maxReverseSpeed: 320,
+    steeringRate: 0,
+    speedSensitiveSteering: 0,
+    drag: 0.82,
+    lateralGrip: 0,
+    traction: 0,
+    driftFactor: 0,
+    boostForce: 260,
+    boostDurationMs: 600,
+    boostCooldownMs: 2400,
+    angularAcceleration: 9,
+    angularDamping: 0.08,
+    wrap: { width: 960, height: 540, margin: 24 },
+  };
+  if (profile === 'ship') return { schemaVersion: 1, vehicles: [ship] };
   if (profile === 'kart') return { schemaVersion: 1, vehicles: [kart] };
   if (profile === 'boat') return { schemaVersion: 1, vehicles: [boat, flight] };
   if (profile === 'flight') return { schemaVersion: 1, vehicles: [flight] };
@@ -842,7 +1081,7 @@ export function generateStageScrollCatalog(kind: 'horizontal' | 'vertical' | 'no
       schemaVersion: 1,
       mode: 'horizontal',
       speed: 180,
-      length: 720,
+      length: 1400,
       viewport: { width: 960, height: 540 },
       player: { x: 120, y: 270, radius: 16, speed: 210, minX: 40, maxX: 420, minY: 40, maxY: 500 },
       hazards: [
@@ -850,19 +1089,42 @@ export function generateStageScrollCatalog(kind: 'horizontal' | 'vertical' | 'no
         { id: 'rock-b', along: 480, cross: 450, radius: 18 },
         { id: 'rock-c', along: 640, cross: 90, radius: 18 },
       ],
+      // Final Product Completion Wave 3 (matrix L11): three parallax planes
+      // and a rail path - the stage slows and drifts down through a canyon
+      // on its middle leg, then speeds up and climbs back.
+      layers: [
+        { id: 'stars-far', speedFactor: 0.2, spacing: 160, size: 6, alpha: 0.25, cross: 80 },
+        { id: 'ridge-mid', speedFactor: 0.5, spacing: 120, size: 14, alpha: 0.35, cross: 470 },
+        { id: 'debris-near', speedFactor: 1.4, spacing: 200, size: 10, alpha: 0.6, cross: 250 },
+      ],
+      rail: [
+        { from: 0, speed: 180, crossDrift: 0 },
+        { from: 480, speed: 120, crossDrift: 40 },
+        { from: 960, speed: 220, crossDrift: -40 },
+      ],
     };
   }
   return {
     schemaVersion: 1,
     mode: 'vertical',
     speed: 180,
-    length: 720,
+    length: 1400,
     viewport: { width: 960, height: 540 },
     player: { x: 480, y: 440, radius: 16, speed: 210, minX: 40, maxX: 920, minY: 260, maxY: 510 },
     hazards: [
       { id: 'rock-a', along: 280, cross: 120, radius: 18 },
       { id: 'rock-b', along: 480, cross: 840, radius: 18 },
       { id: 'rock-c', along: 640, cross: 120, radius: 18 },
+    ],
+    layers: [
+      { id: 'stars-far', speedFactor: 0.2, spacing: 160, size: 6, alpha: 0.25, cross: 120 },
+      { id: 'cloud-mid', speedFactor: 0.5, spacing: 140, size: 14, alpha: 0.35, cross: 820 },
+      { id: 'spray-near', speedFactor: 1.4, spacing: 220, size: 10, alpha: 0.6, cross: 480 },
+    ],
+    rail: [
+      { from: 0, speed: 180, crossDrift: 0 },
+      { from: 480, speed: 120, crossDrift: 60 },
+      { from: 960, speed: 220, crossDrift: -60 },
     ],
   };
 }
@@ -1460,6 +1722,10 @@ export function generateUiCopy(options: {
     case 'pointer':
       playHint = has('sw2d.dialogue')
         ? 'CLICK HOTSPOTS  -  ENTER ADVANCES'
+        : presetId === 'rail-shooter'
+          ? 'AIM WITH MOUSE  -  FIRE J/X OR CLICK  -  RIDE THE RAIL'
+          : presetId === 'gallery-shooter'
+            ? 'AIM WITH MOUSE  -  FIRE J/X OR CLICK  -  CLEAR EVERY ROUND'
         : has('sw2d.weapons')
           ? 'AIM WITH MOUSE  -  FIRE J/X'
           : has('sw2d.puzzle')
@@ -1474,8 +1740,6 @@ export function generateUiCopy(options: {
                   ? 'CLICK STAMPS  -  ARROWS PICK  -  CLICK OBJECT TO MOVE  -  K DELETES'
                 : presetId === 'physics-toy'
                   ? 'CLICK OR J LAUNCHES  -  LAND IN THE GOAL'
-                  : presetId === 'rail-shooter'
-                    ? 'J DAMAGES APPROACHING TARGETS'
                 : 'POINT AT THINGS  -  CLICK TO ACT  -  PAUSE TO STOP';
       break;
     case 'ui-simulation':

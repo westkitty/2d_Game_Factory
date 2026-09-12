@@ -1,6 +1,7 @@
 import type { AdvancedPhysicsService, InstalledSystemPack, PhysicsBodyHandle } from '@sw2d/contracts';
 import {
   bindStarterDialogue,
+  bindStarterGallery,
   bindStarterWeapon,
   bindStarterPointer,
   bindStarterToy,
@@ -12,7 +13,7 @@ import {
   type SceneContext,
   type ScenePackDefinition,
 } from '@sw2d/runtime';
-import { LOOK_STARTER, PHYSICS_STARTER, POINTER_STARTER, TOY_STARTER } from './packConfig.ts';
+import { GALLERY_STARTER, LOOK_STARTER, PHYSICS_STARTER, POINTER_STARTER, TOY_STARTER } from './packConfig.ts';
 
 /**
  * Generated starter shell: pointer controller family.
@@ -89,17 +90,21 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     const centre = { x: width * 0.5, y: height * 0.5, radius: 48 };
 
     const dialogue = bindStarterDialogue(context);
-    const weapon = bindStarterWeapon(context);
+    // Target shooter (Final Product Completion Wave 3): gallery rounds or the
+    // camera rail, on sw2d.encounters + sw2d.weapons + sw2d.arcade (+ sw2d.camera).
+    // The battle owns the weapon, so the plain starter weapon stays inert.
+    const gallery = bindStarterGallery(context, { mode: GALLERY_STARTER });
+    const weapon = gallery.active ? null : bindStarterWeapon(context);
     const pointerPlay = bindStarterPointer(context, { mode: POINTER_STARTER });
     const toy = bindStarterToy(context, { mode: TOY_STARTER });
     const physicsPlay = bindStarterPhysics(context, { mode: PHYSICS_STARTER });
     const look = bindStarterLook(context, { mode: LOOK_STARTER });
-    const weaponsActive = Boolean(weapon.snapshot()) && !dialogue.active && !pointerPlay.active && !toy.active && !physicsPlay.active && !look.active;
+    const weaponsActive = Boolean(weapon?.snapshot()) && !dialogue.active && !pointerPlay.active && !toy.active && !physicsPlay.active && !look.active && !gallery.active;
     const puzzle = context.capabilities.get<CodePuzzleService>('puzzle.state');
     const puzzleKind = puzzle?.current().kind;
     const physicsPuzzle = puzzleKind === 'physics-goal';
     const escapePuzzle = puzzleKind === 'escape-locks';
-    const dummyPointer = !dialogue.active && !weaponsActive && !physicsPuzzle && !escapePuzzle && !pointerPlay.active && !toy.active && !physicsPlay.active && !look.active;
+    const dummyPointer = !dialogue.active && !weaponsActive && !physicsPuzzle && !escapePuzzle && !pointerPlay.active && !toy.active && !physicsPlay.active && !look.active && !gallery.active;
 
     let activations = 0;
     let highlighted = false;
@@ -313,7 +318,8 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       ...(toy.active ? { toy: toy.snapshot() } : {}),
       ...(physicsPlay.active ? { physicsPlay: physicsPlay.snapshot() } : {}),
       ...(look.active ? { look: look.snapshot() } : {}),
-      weapon: weapon.snapshot(),
+      ...(gallery.active ? { gallery: gallery.snapshot() } : {}),
+      weapon: weapon?.snapshot() ?? null,
       ...(puzzle
         ? {
             puzzle: {
@@ -346,7 +352,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       update(deltaMs: number): void {
         if (disposed) return;
         nowMs += deltaMs;
-        weapon.update(deltaMs, nowMs);
+        weapon?.update(deltaMs, nowMs);
 
         if (dialogue.active) {
           const intent = pointerActionController.read(context.input);
@@ -355,6 +361,14 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
             else dialogue.advance();
           }
           dialogue.render();
+          return;
+        }
+
+        if (gallery.active) {
+          const intent = pointerActionController.read(context.input);
+          const ptr = context.spatialPointer.state;
+          if (intent.primaryPressed || ptr.justPressed || context.input.isDown('PRIMARY_ACTION')) gallery.fireAt(nowMs, ptr.worldX, ptr.worldY);
+          gallery.tick(deltaMs, nowMs);
           return;
         }
 
@@ -398,7 +412,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
             const dx = ptr.worldX - ox;
             const dy = ptr.worldY - oy;
             const len = Math.hypot(dx, dy);
-            weapon.fire(nowMs, len > 1 ? dx / len : 0, len > 1 ? dy / len : -1, { x: ox, y: oy });
+            weapon?.fire(nowMs, len > 1 ? dx / len : 0, len > 1 ? dy / len : -1, { x: ox, y: oy });
           }
           return;
         }
@@ -440,7 +454,8 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
           }
         }
         dialogue.dispose();
-        weapon.dispose();
+        gallery.dispose();
+        weapon?.dispose();
         pointerPlay.dispose();
         toy.dispose();
         physicsPlay.dispose();

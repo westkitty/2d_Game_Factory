@@ -176,8 +176,9 @@ export function generatePackConfig(preset: PresetDefinition): string {
     preset.id === 'physics-toy' ? "'toy'" : preset.id === 'pinball-lite' ? "'table'" : 'null';
   const commandStarter =
     preset.id === 'simple-rts' ? "'rts'" : preset.id === 'territory-control' ? "'zone'" : 'null';
-  const lookStarter =
-    preset.id === 'museum-exhibit' ? "'museum'" : preset.id === 'rail-shooter' ? "'rail'" : 'null';
+  const lookStarter = preset.id === 'museum-exhibit' ? "'museum'" : 'null';
+  const galleryStarter = preset.id === 'gallery-shooter' ? "'gallery'" : preset.id === 'rail-shooter' ? "'rail'" : 'null';
+  const asteroidsStarter = preset.id === 'asteroids-shooter' ? "'field'" : 'null';
   const parkourStarter =
     preset.id === 'precision-platformer' ? "'precision'" : preset.id === 'climbing-game' ? "'climb'" : 'null';
   const kartStarter = preset.id === 'kart-racer' ? "'item'" : 'null';
@@ -249,6 +250,12 @@ export function generatePackConfig(preset: PresetDefinition): string {
     '',
     '/** Final Product Completion Wave 2: room-graph dungeon (crawl) vs roguelite run (rogue). Null otherwise. */',
     `export const DUNGEON_STARTER: 'crawl' | 'rogue' | null = ${dungeonStarter};`,
+    '',
+    '/** Final Product Completion Wave 3: pointer target shooter - fixed gallery vs camera rail. Null otherwise. */',
+    `export const GALLERY_STARTER: 'gallery' | 'rail' | null = ${galleryStarter};`,
+    '',
+    '/** Final Product Completion Wave 3: the Asteroids rock field on the vehicle shell. Null otherwise. */',
+    `export const ASTEROIDS_STARTER: 'field' | null = ${asteroidsStarter};`,
     '',
   ]
     .filter((line, index, all) => !(line === '' && all[index - 1] === ''))

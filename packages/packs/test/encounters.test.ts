@@ -190,3 +190,33 @@ describe('sw2d.encounters - escalation and boss sequence (Final Product Completi
     expect(service.sequence()).toBeNull();
   });
 });
+
+describe('sw2d.encounters - entity-health-below waits for its own spawn (Final Product Completion Wave 3)', () => {
+  it('does not complete the phase before the referenced spawn exists', () => {
+    const catalog = {
+      schemaVersion: 1,
+      encounters: [
+        {
+          id: 'boss',
+          phases: [
+            { id: 'p1', spawns: [{ archetype: 'boss', count: 1, at: { kind: 'point', x: 1, y: 1 }, health: 100 }], completeWhen: { kind: 'entity-health-below', entityId: 'boss:p1:0:0', fraction: 0.5 } },
+            { id: 'p2', completeWhen: { kind: 'elapsed', ms: 10 } },
+          ],
+        },
+      ],
+    } as unknown as EncounterCatalog;
+    const { svc } = makeService(catalog);
+    svc.start('boss');
+    let fraction = 0;
+    const ctx = fakeCtx({ healthFraction: () => fraction });
+    const first = svc.update(16, ctx);
+    expect(first.spawns).toHaveLength(1);
+    expect(svc.state().phaseId).toBe('p1');
+    fraction = 1;
+    svc.update(16, ctx);
+    expect(svc.state().phaseId).toBe('p1');
+    fraction = 0.4;
+    svc.update(16, ctx);
+    expect(svc.state().phaseId).toBe('p2');
+  });
+});

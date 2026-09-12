@@ -119,6 +119,20 @@ export class SpatialPointerHost implements SpatialPointerInput, SpatialPointerSi
     this.#rawInside = true;
   };
 
+  /**
+   * A move delivered *on the root* means the pointer is over it, whether or
+   * not a `pointerenter` preceded it (a mouse already resting on the canvas
+   * when the page loads gets its first `pointermove` before any enter; the
+   * QA harness dispatches moves on the canvas the same way). Found by the
+   * Final Product Completion program: the generated top-down shell only aims
+   * with the pointer while `inside` is true, so a still player could never
+   * aim at a distant boss.
+   */
+  readonly #onRootPointerMove = (event: Event): void => {
+    this.#rawInside = true;
+    this.#onPointerMove(event);
+  };
+
   readonly #onPointerLeave = (): void => {
     this.#rawInside = false;
   };
@@ -127,7 +141,7 @@ export class SpatialPointerHost implements SpatialPointerInput, SpatialPointerSi
     this.#root = root;
     this.#resolveWorld = resolveWorld;
     this.#toCanvasSpace = toCanvasSpace;
-    root.addEventListener('pointermove', this.#onPointerMove);
+    root.addEventListener('pointermove', this.#onRootPointerMove);
     root.addEventListener('pointerdown', this.#onPointerDown);
     root.addEventListener('pointerup', this.#onPointerUp);
     root.addEventListener('pointercancel', this.#onPointerUp);
@@ -246,7 +260,7 @@ export class SpatialPointerHost implements SpatialPointerInput, SpatialPointerSi
   dispose(): void {
     if (this.#disposed) return;
     this.#disposed = true;
-    this.#root.removeEventListener('pointermove', this.#onPointerMove);
+    this.#root.removeEventListener('pointermove', this.#onRootPointerMove);
     this.#root.removeEventListener('pointerdown', this.#onPointerDown);
     this.#root.removeEventListener('pointerup', this.#onPointerUp);
     this.#root.removeEventListener('pointercancel', this.#onPointerUp);

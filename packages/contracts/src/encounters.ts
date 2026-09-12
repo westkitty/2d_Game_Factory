@@ -14,7 +14,9 @@ export const ENCOUNTERS_CAPABILITY_ID = 'combat.encounters';
 export type SpawnPoint =
   | { readonly kind: 'point'; readonly x: number; readonly y: number }
   | { readonly kind: 'rect'; readonly x: number; readonly y: number; readonly width: number; readonly height: number }
-  | { readonly kind: 'edge'; readonly edge: 'top' | 'bottom' | 'left' | 'right' };
+  | { readonly kind: 'edge'; readonly edge: 'top' | 'bottom' | 'left' | 'right' }
+  /** A formation (Final Product Completion Wave 3): members laid out in a shape around (x, y). */
+  | { readonly kind: 'formation'; readonly shape: 'line' | 'column' | 'v' | 'ring'; readonly x: number; readonly y: number; readonly spacing: number };
 
 /** A declarative bullet pattern. Produces fire directions; the projectile itself comes from a Phase 3 weapon. */
 export type FirePattern =
@@ -102,11 +104,33 @@ export interface EncounterSequence {
   readonly transitionMs: number;
 }
 
+/**
+ * Archetype behaviour (Final Product Completion Wave 3 - matrix L11 / L15 /
+ * L16 / L17). Renderer-neutral metadata the runtime bridge turns into motion:
+ *   - `chase`    - close on the player at `speed` (default for any archetype).
+ *   - `ground`   - a platformer walker: gravity, walks toward the player along x.
+ *   - `drift`    - gallery target: constant velocity, bounces off the play area.
+ *   - `approach` - rail target: moves toward the gun; reaching it is a miss.
+ *   - `hold`     - stands where it spawned (a turret).
+ */
+export interface EncounterArchetypeDef {
+  readonly motion: 'chase' | 'ground' | 'drift' | 'approach' | 'hold';
+  /** px/s. */
+  readonly speed: number;
+  /** drift: initial direction in degrees (0 = +x). */
+  readonly driftDeg?: number;
+  /** Score awarded through `arcade.score` when this archetype dies. */
+  readonly score?: number;
+  /** Display size hint for the runtime sprite. */
+  readonly size?: number;
+}
+
 export interface EncounterCatalog {
   readonly schemaVersion: number;
   readonly encounters: readonly EncounterDefinition[];
   readonly escalation?: EncounterEscalation;
   readonly sequence?: EncounterSequence;
+  readonly archetypes?: Readonly<Record<string, EncounterArchetypeDef>>;
 }
 
 // --- Runtime output --------------------------------------------------
@@ -179,6 +203,7 @@ export interface EncounterService {
   stop(): void;
   escalation(): EncounterEscalation | null;
   sequence(): EncounterSequence | null;
+  archetype(name: string): EncounterArchetypeDef | null;
   /** Enemy speed multiplier for the running wave (1 with no escalation). */
   speedScale(): number;
   update(deltaMs: number, context: EncounterUpdateContext): EncounterTick;

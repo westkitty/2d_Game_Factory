@@ -206,6 +206,15 @@ describe('closed limitations stay closed (Final Product Completion program)', ()
     { id: 'action-roguelite', pattern: /permadeath and between-run loadouts are not a reusable capability/, closedBy: 'L08 sw2d.runs' },
     { id: 'stealth-game', pattern: /patrol pathfinding, takedowns and full stealth AI are not/, closedBy: 'L09 sw2d.perception AI' },
     { id: 'heist-game', pattern: /patrol pathfinding, takedowns and full stealth AI are not/, closedBy: 'L09 sw2d.perception AI' },
+    { id: 'boss-rush', pattern: /Sequencing multiple bosses across a run is starter-specific/, closedBy: 'L10 encounter sequence' },
+    { id: 'horizontal-shmup', pattern: /rail-path cameras, parallax authoring and bullet-hell pooling are not/, closedBy: 'L11 stage-scroll layers + rail' },
+    { id: 'vertical-shmup', pattern: /rail-path cameras, parallax authoring and bullet-hell pooling are not/, closedBy: 'L11 stage-scroll layers + rail' },
+    { id: 'bullet-hell', pattern: /Per-bullet GPU-scale pooling/, closedBy: 'L12 pooled projectile runtime + qa:bullet-budget' },
+    { id: 'asteroids-shooter', pattern: /Drifting rock fields and wrap-around collision stay game-specific/, closedBy: 'L13 bindStarterAsteroids' },
+    { id: 'asteroids-shooter', pattern: /not rotational-inertia physics/, closedBy: 'L14 sw2d.vehicles ship profile' },
+    { id: 'gallery-shooter', pattern: /stay in the frozen proof/, closedBy: 'L15 bindStarterGallery' },
+    { id: 'run-and-gun', pattern: /this recipe does not install it/, closedBy: 'L16 encounters required on the platform shell' },
+    { id: 'rail-shooter', pattern: /does not wire sw2d\.weapons/, closedBy: 'L17 bindStarterGallery rail' },
   ];
 
   CLOSED.forEach(({ id, pattern, closedBy }) => {

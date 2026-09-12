@@ -62,7 +62,8 @@
     "docs:presets": "node --experimental-strip-types tools/scripts/regenerate-preset-docs.ts",
     "qa:completion": "node --experimental-strip-types tools/scripts/qa-completion.ts",
     "proofs:refresh": "node --experimental-strip-types tools/scripts/refresh-canonical-proofs.ts",
-    "proofs:check": "node --experimental-strip-types tools/scripts/refresh-canonical-proofs.ts --check"
+    "proofs:check": "node --experimental-strip-types tools/scripts/refresh-canonical-proofs.ts --check",
+    "qa:bullet-budget": "node --experimental-strip-types tools/scripts/qa-bullet-budget.ts"
   },
   "devDependencies": {
     "@types/node": "24.13.3",

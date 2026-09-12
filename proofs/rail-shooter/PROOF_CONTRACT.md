@@ -19,12 +19,13 @@ Generated via `npm run sw2d -- new proof-rail-shooter --preset rail-shooter` (th
 
 ## Defining journey (automated, real-browser, deterministic frame stepping)
 
-1. Start; `sw2d.camera` + `sw2d.combat` installed; mode `rail`; `foesAlive 2`.
-2. PRIMARY with nothing near -> `foesAlive 2`.
-3. Loop: PRIMARY when `nearId` is set -> first kill (`foesAlive 1`, still `playing`), then `cleared`, `complete`, `foesAlive 0`.
-4. Restart: `foesAlive 2`, `playing`.
+Final Product Completion Wave 3 (matrix L17): the gun rides the `sw2d.camera` rail and fires the `sw2d.weapons` catalog weapon at `sw2d.encounters` `approach` drones (two legs in a `sequence`), scored through `sw2d.arcade` (`bindStarterGallery` in rail mode).
+
+1. Start; `sw2d.camera` + `sw2d.weapons` + `sw2d.encounters` installed; mode `rail`; weapon `sidearm`; a drone alive; `sequenceLength 2`.
+2. Hold PRIMARY while the pointer leads the nearest drone -> the camera scroll and the gun advance by more than 150 px; drones die (`kills >= 9`, `score >= 45`, `hits >= 9`); both legs clear -> `complete`, `bossesDefeated 2`.
+3. Restart: progress near 0, `score 0`, `playing`.
 
 ## Acceptance
 
-- Weapons on the rail (projectiles) stay a limitation; the look kill is instantaneous.
+- Rail movement, weapons, target generation, hit resolution, scoring, progression and completion are the reusable capabilities the generated pointer shell composes - no catalog limitation remains.
 - Zero console errors, zero external requests.

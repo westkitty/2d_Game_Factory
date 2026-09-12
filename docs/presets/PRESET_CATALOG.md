@@ -68,10 +68,10 @@ controller/input-mode breakdown and full pack-consumer coverage.
 | `horizontal-shmup` | Horizontal Shmup | top-down | tuning, stage-scroll | proof-validated |
 | `vertical-shmup` | Vertical Shmup | top-down | tuning, stage-scroll | proof-validated |
 | `bullet-hell` | Bullet Hell | top-down | tuning | proof-validated |
-| `asteroids-shooter` | Asteroids Shooter | vehicle | tuning | proof-validated |
-| `gallery-shooter` | Gallery Shooter | pointer | tuning | proof-validated |
-| `run-and-gun` | Run and Gun | platform | tuning, levels | proof-validated |
-| `rail-shooter` | Rail Shooter | pointer | tuning, camera | proof-validated |
+| `asteroids-shooter` | Asteroids Shooter | vehicle | tuning, vehicles | proof-validated |
+| `gallery-shooter` | Gallery Shooter | pointer | tuning, encounters | proof-validated |
+| `run-and-gun` | Run and Gun | platform | tuning, levels, encounters | proof-validated |
+| `rail-shooter` | Rail Shooter | pointer | tuning, camera, encounters | proof-validated |
 
 ## Vehicle / movement (Phase 7B)
 
@@ -178,14 +178,14 @@ recipe's *first* stated limitation; see `knownLimitations` in
 | `stealth-game` | (none stated) |
 | `heist-game` | (none stated) |
 | `arena-combat` | (none stated) |
-| `boss-rush` | Sequencing multiple bosses across a run is starter-specific; sw2d.encounters drives one boss encounter at a time. |
-| `horizontal-shmup` | Horizontal and vertical scrolling-stage camera movement, player band clamp, streaming hazards and stage-clear are reusable (sw2d.stage-scroll); rail-path cameras, parallax authoring and bullet-hell pooling are not. |
-| `vertical-shmup` | Horizontal and vertical scrolling-stage camera movement, player band clamp, streaming hazards and stage-clear are reusable (sw2d.stage-scroll); rail-path cameras, parallax authoring and bullet-hell pooling are not. |
-| `bullet-hell` | Per-bullet GPU-scale pooling for thousands of simultaneous bullets is not tuned; patterns are bounded. |
-| `asteroids-shooter` | Drifting rock fields and wrap-around collision stay game-specific; the generated starter steers and fires along heading through sw2d.weapons. |
-| `gallery-shooter` | Authored gallery target waves and projectile-vs-target scoring stay in the frozen proof; the generated starter fires toward the cursor through sw2d.weapons. |
-| `run-and-gun` | Enemy encounter orchestration (sw2d.encounters, Phase 4, ADR-0021) is reusable now, but this recipe does not install it - its enemy waves/patterns would be authored as game-specific code or by adding that pack. |
-| `rail-shooter` | Fixed-path/rail camera movement is reusable (sw2d.camera); this starter still does not wire sw2d.weapons. |
+| `boss-rush` | (none stated) |
+| `horizontal-shmup` | (none stated) |
+| `vertical-shmup` | (none stated) |
+| `bullet-hell` | (none stated) |
+| `asteroids-shooter` | (none stated) |
+| `gallery-shooter` | (none stated) |
+| `run-and-gun` | (none stated) |
+| `rail-shooter` | (none stated) |
 | `top-down-racer` | (none stated) |
 | `kart-racer` | Holding and firing a kart item on demand (a shell, an on-use boost pickup) is game-specific code; item boxes grant canonical sw2d.items entries (Phase 2), and drift / handling are the reusable sw2d.vehicles kart profile. |
 | `time-trial-racer` | (none stated) |

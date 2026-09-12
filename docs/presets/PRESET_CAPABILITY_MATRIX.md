@@ -50,10 +50,10 @@ pack/controller selections were actually exercised through, and
 | `horizontal-shmup` | combat, weapons, encounters, stage-scroll | arcade | top-down | keyboard, touch | shooter-recipe |
 | `vertical-shmup` | combat, weapons, encounters, stage-scroll | arcade | top-down | keyboard, touch | shooter-recipe |
 | `bullet-hell` | combat, weapons, encounters | arcade | top-down | keyboard, touch | shooter-recipe |
-| `asteroids-shooter` | combat, weapons | arcade | vehicle | keyboard, touch | shooter-recipe |
-| `gallery-shooter` | combat, weapons | arcade | pointer | keyboard, pointer, touch | shooter-recipe |
-| `run-and-gun` | combat, world, world-entities, weapons | arcade | platform | keyboard, touch | shooter-recipe |
-| `rail-shooter` | combat, camera | arcade | pointer | keyboard, pointer, touch | shooter-recipe |
+| `asteroids-shooter` | combat, weapons, vehicles, arcade | - | vehicle | keyboard, touch | shooter-recipe |
+| `gallery-shooter` | combat, weapons, encounters, arcade | - | pointer | keyboard, pointer, touch | shooter-recipe |
+| `run-and-gun` | combat, world, world-entities, weapons, encounters | arcade | platform | keyboard, touch | shooter-recipe |
+| `rail-shooter` | combat, camera, weapons, encounters, arcade | - | pointer | keyboard, pointer, touch | shooter-recipe |
 ## Vehicle / movement (Phase 7B)
 
 | id | required packs | optional packs | controller(s) | input modes | validation profile |
@@ -134,19 +134,19 @@ pack/controller selections were actually exercised through, and
 | world | `sw2d.world` | `world.state` | 31 | 44 |
 | world-entities | `sw2d.world-entities` | `world.entities` | 27 | 36 |
 | progression | `sw2d.progression` | `progression.state` | 11 | 26 |
-| arcade | `sw2d.arcade` | `arcade.score` | 14 | 41 |
+| arcade | `sw2d.arcade` | `arcade.score` | 17 | 41 |
 | puzzle | `sw2d.puzzle` | `puzzle.state` | 2 | 6 |
 | simulation | `sw2d.simulation` | `simulation.resources` | 9 | 10 |
 | narrative | `sw2d.narrative` | `narrative.state` | 4 | 8 |
 | strategy | `sw2d.strategy` | `strategy.turns` | 4 | 4 |
 | items | `sw2d.items` | `items.state` | 1 | 2 |
-| weapons | `sw2d.weapons` | `combat.weapons` | 11 | 11 |
-| encounters | `sw2d.encounters` | `combat.encounters` | 7 | 8 |
+| weapons | `sw2d.weapons` | `combat.weapons` | 12 | 12 |
+| encounters | `sw2d.encounters` | `combat.encounters` | 10 | 11 |
 | navigation | `sw2d.navigation` | `world.navigation` | 4 | 8 |
 | puzzle-rules | `sw2d.puzzle-rules` | `puzzle.rules` | 4 | 4 |
 | generation | `sw2d.generation` | `world.generation` | 5 | 5 |
 | world-graph | `sw2d.world-graph` | `world.graph` | 2 | 2 |
-| vehicles | `sw2d.vehicles` | `vehicle.motion` | 5 | 5 |
+| vehicles | `sw2d.vehicles` | `vehicle.motion` | 6 | 6 |
 | racing | `sw2d.racing` | `race.state` | 3 | 4 |
 | economy | `sw2d.economy` | `simulation.economy` | 3 | 3 |
 | needs | `sw2d.needs` | `simulation.needs` | 3 | 3 |

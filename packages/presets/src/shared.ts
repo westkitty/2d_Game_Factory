@@ -113,7 +113,7 @@ export interface PresetSpec {
   /** Capability program Phase 9: 'matter' opts the generated game into the Matter backend. */
   readonly physicsProfile?: 'matter';
   /** Capability program Phase 10: default vehicle profile the generated content/vehicles.json uses. */
-  readonly vehicleProfile?: 'car' | 'kart' | 'boat' | 'flight';
+  readonly vehicleProfile?: 'car' | 'kart' | 'boat' | 'flight' | 'ship';
   /** Defaults to 'recipe'. Only set to 'smoke-validated' once a real, committed browser smoke test passes (Phase 8's twelve demos) - never hand-waved. */
   readonly maturity?: PresetMaturity;
 }

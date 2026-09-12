@@ -46,6 +46,15 @@ export const COMPLETION_SPEC_MODULES: Readonly<Record<string, string>> = {
   'survivor-like': 'survivorLike',
   'stealth-game': 'stealthGame',
   'heist-game': 'heistGame',
+  // Wave 3 - shooters
+  'boss-rush': 'bossRush',
+  'gallery-shooter': 'galleryShooter',
+  'run-and-gun': 'runAndGun',
+  'rail-shooter': 'railShooter',
+  'horizontal-shmup': 'horizontalShmup',
+  'vertical-shmup': 'verticalShmup',
+  'asteroids-shooter': 'asteroidsShooter',
+  'bullet-hell': 'bulletHell',
 };
 
 interface Target {

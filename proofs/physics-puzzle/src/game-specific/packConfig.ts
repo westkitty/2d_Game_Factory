@@ -77,3 +77,9 @@ export const CHASE_STARTER: 'pursuit' | null = null;
 
 /** Final Product Completion Wave 2: room-graph dungeon (crawl) vs roguelite run (rogue). Null otherwise. */
 export const DUNGEON_STARTER: 'crawl' | 'rogue' | null = null;
+
+/** Final Product Completion Wave 3: pointer target shooter - fixed gallery vs camera rail. Null otherwise. */
+export const GALLERY_STARTER: 'gallery' | 'rail' | null = null;
+
+/** Final Product Completion Wave 3: the Asteroids rock field on the vehicle shell. Null otherwise. */
+export const ASTEROIDS_STARTER: 'field' | null = null;

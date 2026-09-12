@@ -6,6 +6,7 @@ import {
   type EncounterSpawnRequest,
   type WeaponsService,
 } from '@sw2d/contracts';
+import { accentStyle, headingStyle, mutedStyle } from '../scenes/theme.ts';
 import type { SceneContext } from '../scenes/SceneContext.ts';
 import { createEncounterRuntime, type EncounterRuntime } from './encounterRuntime.ts';
 import { createProjectileRuntime, type ProjectileRuntime } from './projectileRuntime.ts';
@@ -65,6 +66,25 @@ export interface StarterEncounterOptions {
   readonly loadout?: { readonly maxHealthBonus?: number; readonly damageBonus?: number; readonly speedBonus?: number };
   /** Extra enemy archetype -> texture role resolution (the boss archetype gets the hazard role by default). */
   readonly enemyTextureRole?: (archetype: string) => 'enemy' | 'hazard' | 'pickup' | 'player';
+  /**
+   * Final Product Completion Wave 3 options.
+   * `hud`: draw the battle HUD (wave / boss / score / time). Default true.
+   * `walls`: a static group `ground` archetypes collide with (platformers).
+   * `gravity`: gravity applied to `ground` archetypes. Default 1100.
+   * `spawnOffset`: world offset added to spawn positions (a rail camera's scroll).
+   * `timeLimitMs`: gallery time limit - the sequence must finish before it runs out.
+   * `escapeEdge`: enemies leaving the play area count as escaped (gallery / rail misses) and are removed.
+   */
+  readonly hud?: boolean;
+  readonly walls?: Phaser.Physics.Arcade.StaticGroup;
+  readonly gravity?: number;
+  readonly spawnOffset?: () => readonly [number, number];
+  readonly timeLimitMs?: number;
+  readonly escapeEdge?: boolean;
+  /** Whether `drift` archetypes bounce off the play area (gallery targets) or sweep straight off it (stage formations). Default true. */
+  readonly driftBounce?: boolean;
+  /** World size for edge checks when it differs from the viewport. */
+  readonly world?: () => { readonly width: number; readonly height: number; readonly x: number; readonly y: number };
 }
 
 export interface StarterEncounterSnapshot {
@@ -90,9 +110,21 @@ export interface StarterEncounterSnapshot {
   readonly sequenceLength: number;
   readonly bossesDefeated: number;
   readonly transitionMsLeft: number;
+  /** Score banked through `arcade.score` (0 when no arcade ledger / no archetype score). */
+  readonly score: number;
+  /** Gallery / rail: enemies that escaped the play area. */
+  readonly escaped: number;
+  /** Player shots that landed vs fired (accuracy). */
+  readonly hits: number;
+  readonly shots: number;
+  readonly timeLeftMs: number | null;
+  readonly bossHealth: { readonly current: number; readonly max: number } | null;
+  /** Projectile pool statistics (matrix L12): sprites allocated at peak, spawns served from the pool. */
+  readonly poolAllocated: number;
+  readonly poolReused: number;
   readonly playerHealth: { readonly current: number; readonly max: number } | null;
-  /** Live enemy positions (rounded) - for HUD/QA aiming, never gameplay logic. */
-  readonly enemies: readonly { readonly id: string; readonly x: number; readonly y: number }[];
+  /** Live enemy positions / velocities (rounded) - for HUD/QA aiming, never gameplay logic. */
+  readonly enemies: readonly { readonly id: string; readonly x: number; readonly y: number; readonly vx: number; readonly vy: number; readonly archetype: string }[];
 }
 
 export interface StarterEncounterBinding {
@@ -143,6 +175,11 @@ export function bindStarterEncounters(
   const playerDamageBonus = loadout.damageBonus ?? 0;
   const respawn = options.respawn !== false;
   const escalation = encounters.escalation();
+  const hud = options.hud !== false;
+  const gravity = options.gravity ?? 1100;
+  const arcade = context.capabilities.get<{ score(): number; addScore(delta: number): number }>('arcade.score') ?? null;
+  const timeLimitMs = options.timeLimitMs ?? null;
+  const world = options.world ?? (() => ({ x: 0, y: 0, width, height }));
   const contactDamage = options.contactDamage ?? 8;
   const contactInvulnMs = options.contactInvulnMs ?? 700;
   const respawnInvulnMs = options.respawnInvulnMs ?? 1500;
@@ -155,7 +192,17 @@ export function bindStarterEncounters(
   const playerWeapon = weaponIds.find((id) => weapons.lookup(id)?.team === 'player') ?? weaponIds[0];
   if (playerWeapon) weapons.equip(playerId, playerWeapon);
 
-  const enemies = new Map<string, { sprite: Phaser.Physics.Arcade.Sprite; alive: boolean }>();
+  interface LiveEnemy {
+    sprite: Phaser.Physics.Arcade.Sprite;
+    alive: boolean;
+    archetype: string;
+    motion: 'chase' | 'ground' | 'drift' | 'approach' | 'hold';
+    speed: number;
+    vx: number;
+    vy: number;
+    score: number;
+  }
+  const enemies = new Map<string, LiveEnemy>();
   const spriteToEnemy = new Map<Phaser.GameObjects.GameObject, string>();
   // Plain (non-physics) groups on purpose: an Arcade physics group applies its
   // body defaults to every added child, which silently reset the shell's
@@ -173,6 +220,10 @@ export function bindStarterEncounters(
   let nowMsLatest = 0;
   let over = false;
   let outcome: 'playing' | 'failed' | 'complete' = 'playing';
+  let escaped = 0;
+  let shots = 0;
+  let elapsedMs = 0;
+  let scoreBanked = 0;
   let sequenceIndex = 0;
   let bossesDefeated = 0;
   let transitionMsLeft = 0;
@@ -193,6 +244,7 @@ export function bindStarterEncounters(
       return id && enemies.get(id)?.alive ? { entityId: id, team: 'enemy' } : null;
     },
     damageBonusFor: (ownerId) => (ownerId === playerId ? playerDamageBonus : 0),
+    bounds: world,
   });
 
   const encounter: EncounterRuntime = createEncounterRuntime({
@@ -209,12 +261,31 @@ export function bindStarterEncounters(
     bossOrigin: () => [width * 0.5, 48],
     spawnEnemy: (request: EncounterSpawnRequest) => {
       const role: 'enemy' | 'hazard' | 'pickup' | 'player' = options.enemyTextureRole?.(request.archetype) ?? (request.archetype === 'boss' ? 'hazard' : 'enemy');
-      const sprite = scene.physics.add.sprite(request.x, request.y, context.assets.resolve(role));
-      if (request.archetype === 'boss') sprite.setDisplaySize(56, 56);
-      sprite.body.setAllowGravity(false);
+      const [ox, oy] = options.spawnOffset?.() ?? [0, 0];
+      const sprite = scene.physics.add.sprite(request.x + ox, request.y + oy, context.assets.resolve(role));
+      const def = encounters.archetype(request.archetype);
+      const size = def?.size ?? (request.archetype === 'boss' ? 56 : 0);
+      if (size > 0) sprite.setDisplaySize(size, size);
+      const motion = def?.motion ?? 'chase';
+      sprite.body.setAllowGravity(motion === 'ground');
+      if (motion === 'ground') {
+        sprite.setGravityY(gravity);
+        if (options.walls) scene.physics.add.collider(sprite, options.walls);
+      }
       enemyGroup.add(sprite);
       combat.register(request.requestId, request.health);
-      enemies.set(request.requestId, { sprite, alive: true });
+      const speed = def?.speed ?? baseEnemySpeed;
+      const driftRad = ((def?.driftDeg ?? 0) * Math.PI) / 180;
+      enemies.set(request.requestId, {
+        sprite,
+        alive: true,
+        archetype: request.archetype,
+        motion,
+        speed,
+        vx: motion === 'drift' ? Math.cos(driftRad) * speed : 0,
+        vy: motion === 'drift' ? Math.sin(driftRad) * speed : 0,
+        score: def?.score ?? 0,
+      });
       spriteToEnemy.set(sprite, request.requestId);
       return { entityId: request.requestId, pos: () => [sprite.x, sprite.y] };
     },
@@ -237,10 +308,7 @@ export function bindStarterEncounters(
       playerDeaths += 1;
       if (!respawn) {
         // Permadeath: the battle is over. Enemies freeze, nothing respawns.
-        over = true;
-        outcome = 'failed';
-        for (const enemy of enemies.values()) enemy.sprite.setVelocity(0, 0);
-        context.events.emit('encounters:battleOver', { outcome: 'failed', kills, wavesCleared });
+        finish('failed');
         return;
       }
       combat.remove(playerId);
@@ -251,6 +319,10 @@ export function bindStarterEncounters(
     const enemy = enemies.get(entityId);
     if (enemy) {
       kills += 1;
+      if (enemy.score > 0 && arcade) {
+        arcade.addScore(enemy.score);
+        scoreBanked += enemy.score;
+      }
       enemy.alive = false;
       spriteToEnemy.delete(enemy.sprite);
       enemies.delete(entityId);
@@ -262,21 +334,81 @@ export function bindStarterEncounters(
     }
   });
 
+  const title = hud ? scene.add.text(width * 0.5, 28, '', headingStyle(20)).setOrigin(0.5).setScrollFactor(0).setDepth(50) : null;
+  const status = hud ? scene.add.text(width * 0.5, 54, '', mutedStyle(14)).setOrigin(0.5).setScrollFactor(0).setDepth(50) : null;
+  const hint = hud ? scene.add.text(width * 0.5, height - 28, '', accentStyle(14)).setOrigin(0.5).setScrollFactor(0).setDepth(50) : null;
+
+  function bossHealth(): { current: number; max: number } | null {
+    if (sequenceIds.length === 0) return null;
+    let best: { current: number; max: number } | null = null;
+    for (const [id, enemy] of enemies) {
+      if (!enemy.alive || !combat.has(id)) continue;
+      const h = combat.get(id);
+      if (!best || h.max > best.max) best = { current: h.current, max: h.max };
+    }
+    return best;
+  }
+
+  function paint(): void {
+    if (!title || !status || !hint) return;
+    const health = combat.has(playerId) ? combat.get(playerId) : null;
+    const timeLeft = timeLimitMs === null ? null : Math.max(0, timeLimitMs - elapsedMs);
+    if (sequenceIds.length > 0) {
+      const boss = bossHealth();
+      title.setText(outcome === 'complete' ? 'ALL BOSSES DOWN' : outcome === 'failed' ? (timeLeft === 0 ? 'TIME UP' : 'DOWN') : transitionMsLeft > 0 ? `BOSS ${sequenceIndex} DOWN` : `BOSS ${sequenceIndex + 1} / ${sequenceIds.length}`);
+      status.setText(
+        `${health ? `hp ${health.current}/${health.max}` : ''}${boss ? `  ·  boss ${boss.current}/${boss.max}` : ''}  ·  kills ${kills}${scoreBanked > 0 ? `  ·  score ${arcade?.score() ?? scoreBanked}` : ''}${
+          escaped > 0 ? `  ·  escaped ${escaped}` : ''
+        }${timeLeft !== null ? `  ·  ${(timeLeft / 1000).toFixed(1)}s` : ''}${shots > 0 ? `  ·  ${projectiles.hitsResolved}/${shots} hits` : ''}`,
+      );
+      hint.setText(outcome === 'playing' ? (transitionMsLeft > 0 ? 'NEXT BOSS INCOMING' : 'FIRE J/X   AIM WITH MOUSE OR NUMPAD') : 'P THEN K RESTARTS');
+    } else {
+      title.setText(outcome === 'complete' ? 'CLEARED' : outcome === 'failed' ? 'RUN OVER' : `WAVE ${wavesCleared + 1}`);
+      status.setText(
+        `${health ? `hp ${health.current}/${health.max}` : ''}  ·  foes ${[...enemies.values()].filter((e) => e.alive).length}  ·  kills ${kills}${
+          scoreBanked > 0 ? `  ·  score ${arcade?.score() ?? scoreBanked}` : ''
+        }${escaped > 0 ? `  ·  escaped ${escaped}` : ''}${timeLeft !== null ? `  ·  ${(timeLeft / 1000).toFixed(1)}s` : ''}${
+          encounters.state().wave > 0 ? `  ·  escalation x${encounters.state().wave}` : ''
+        }`,
+      );
+      hint.setText(outcome === 'playing' ? 'FIRE J/X   AIM WITH MOUSE OR NUMPAD   CLEAR THE WAVE' : 'P THEN K RESTARTS');
+    }
+  }
+
+  function finish(next: 'failed' | 'complete'): void {
+    if (over) return;
+    over = true;
+    outcome = next;
+    for (const enemy of enemies.values()) enemy.sprite.setVelocity(0, 0);
+    context.events.emit('encounters:battleOver', { outcome: next, kills, wavesCleared });
+  }
+
+  paint();
   let disposed = false;
 
   return {
     active: true,
 
     fire(nowMs, dirX, dirY, origin) {
-      if (disposed || !playerWeapon) return;
-      projectiles.fire({ ownerId: playerId, originX: origin.x, originY: origin.y, dirX, dirY, nowMs });
+      if (disposed || !playerWeapon || over) return;
+      const result = projectiles.fire({ ownerId: playerId, originX: origin.x, originY: origin.y, dirX, dirY, nowMs });
+      if (result.fired) shots += 1;
     },
 
     update(deltaMs, nowMs) {
       if (disposed) return;
       nowMsLatest = nowMs;
       projectiles.update(deltaMs, nowMs);
-      if (over) return;
+      if (over) {
+        paint();
+        return;
+      }
+      elapsedMs += deltaMs;
+      if (timeLimitMs !== null && elapsedMs >= timeLimitMs) {
+        finish('failed');
+        paint();
+        return;
+      }
       if (transitionMsLeft > 0) {
         // Boss sequence: readable gap between one boss falling and the next.
         transitionMsLeft = Math.max(0, transitionMsLeft - deltaMs);
@@ -285,18 +417,62 @@ export function bindStarterEncounters(
           encounter.start(currentEncounterId);
           context.events.emit('encounters:bossStarted', { encounterId: currentEncounterId, index: sequenceIndex, of: sequenceIds.length });
         }
+        paint();
         return;
       }
       encounter.update(deltaMs, nowMs);
-      // Simple deterministic pressure: every live enemy closes on the player.
-      const speed = enemySpeed();
-      for (const enemy of enemies.values()) {
+      // Deterministic pressure by archetype behaviour (content/encounters.json
+      // `archetypes`; default chase): close on the player, walk the ground,
+      // drift and bounce, approach the gun, or hold.
+      const scale = encounters.speedScale();
+      const bounds = world();
+      for (const [id, enemy] of enemies) {
         if (!enemy.alive) continue;
-        const dx = player.x - enemy.sprite.x;
-        const dy = player.y - enemy.sprite.y;
+        const sprite = enemy.sprite;
+        const speed = (enemy.motion === 'chase' ? enemySpeed() : enemy.speed * scale);
+        const dx = player.x - sprite.x;
+        const dy = player.y - sprite.y;
         const dist = Math.hypot(dx, dy);
-        if (dist > 1) enemy.sprite.setVelocity((dx / dist) * speed, (dy / dist) * speed);
-        else enemy.sprite.setVelocity(0, 0);
+        switch (enemy.motion) {
+          case 'chase':
+          case 'approach':
+            if (dist > 1) sprite.setVelocity((dx / dist) * speed, (dy / dist) * speed);
+            else sprite.setVelocity(0, 0);
+            break;
+          case 'ground':
+            sprite.setVelocityX(Math.abs(dx) > 8 ? Math.sign(dx) * speed : 0);
+            break;
+          case 'drift': {
+            // Gallery targets bounce inside the play area; on a stage whose
+            // edges are escapes (escapeEdge), a formation sweeps straight off.
+            if (options.driftBounce !== false) {
+              if ((sprite.x <= bounds.x + 16 && enemy.vx < 0) || (sprite.x >= bounds.x + bounds.width - 16 && enemy.vx > 0)) enemy.vx = -enemy.vx;
+              if ((sprite.y <= bounds.y + 16 && enemy.vy < 0) || (sprite.y >= bounds.y + bounds.height - 16 && enemy.vy > 0)) enemy.vy = -enemy.vy;
+            }
+            sprite.setVelocity(enemy.vx * scale, enemy.vy * scale);
+            break;
+          }
+          case 'hold':
+            sprite.setVelocity(0, 0);
+            break;
+        }
+        if (options.escapeEdge) {
+          // Gallery / rail: a target that gets past the gun line or leaves the
+          // world has escaped - a miss, not a kill.
+          const margin = 40;
+          const past = enemy.motion === 'approach' ? dist <= 28 : false;
+          const gone = sprite.x < bounds.x - margin || sprite.x > bounds.x + bounds.width + margin || sprite.y < bounds.y - margin || sprite.y > bounds.y + bounds.height + margin;
+          if (past || gone) {
+            escaped += 1;
+            enemy.alive = false;
+            spriteToEnemy.delete(sprite);
+            enemies.delete(id);
+            enemyGroup.remove(sprite, true, true);
+            if (combat.has(id)) combat.remove(id);
+            encounters.reportDeath(id);
+            context.events.emit('encounters:escaped', { requestId: id, escaped });
+          }
+        }
       }
       if (sequenceIds.length > 0 && encounter.completed && enemies.size === 0) {
         // One boss down. Next one after the transition, or the rush is complete.
@@ -306,11 +482,10 @@ export function bindStarterEncounters(
           transitionMsLeft = Math.max(1, sequence?.transitionMs ?? 0);
           context.events.emit('encounters:bossDefeated', { encounterId: currentEncounterId, index: sequenceIndex - 1, of: sequenceIds.length });
         } else {
-          over = true;
-          outcome = 'complete';
           context.events.emit('encounters:bossDefeated', { encounterId: currentEncounterId, index: sequenceIndex, of: sequenceIds.length });
-          context.events.emit('encounters:battleOver', { outcome: 'complete', kills, wavesCleared });
+          finish('complete');
         }
+        paint();
         return;
       }
       // Survival loop: when the wave content is exhausted and the field is
@@ -328,6 +503,7 @@ export function bindStarterEncounters(
         encounter.start(encounterId, escalation ? { wave: wavesCleared } : undefined);
         context.events.emit('encounters:waveCleared', { wavesCleared, wave: encounters.state().wave });
       }
+      paint();
     },
 
     snapshot: () => ({
@@ -349,8 +525,18 @@ export function bindStarterEncounters(
       sequenceLength: sequenceIds.length,
       bossesDefeated,
       transitionMsLeft: Math.round(transitionMsLeft),
+      score: arcade?.score() ?? scoreBanked,
+      escaped,
+      hits: projectiles.hitsResolved,
+      shots,
+      timeLeftMs: timeLimitMs === null ? null : Math.round(Math.max(0, timeLimitMs - elapsedMs)),
+      bossHealth: bossHealth(),
+      poolAllocated: projectiles.poolAllocated,
+      poolReused: projectiles.poolReused,
       playerHealth: combat.has(playerId) ? { current: combat.get(playerId).current, max: combat.get(playerId).max } : null,
-      enemies: [...enemies.entries()].filter(([, e]) => e.alive).map(([id, e]) => ({ id, x: Math.round(e.sprite.x), y: Math.round(e.sprite.y) })),
+      enemies: [...enemies.entries()]
+        .filter(([, e]) => e.alive)
+        .map(([id, e]) => ({ id, x: Math.round(e.sprite.x), y: Math.round(e.sprite.y), vx: Math.round(e.sprite.body?.velocity.x ?? 0), vy: Math.round(e.sprite.body?.velocity.y ?? 0), archetype: e.archetype })),
     }),
 
     dispose() {
@@ -372,6 +558,9 @@ export function bindStarterEncounters(
       spriteToEnemy.clear();
       if (combat.has(playerId)) combat.remove(playerId);
       try {
+        title?.destroy();
+        status?.destroy();
+        hint?.destroy();
         enemyGroup.destroy(false);
         playerGroup.destroy(false);
       } catch {

@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import type { InstalledSystemPack, RunsService, WorldGraphService } from '@sw2d/contracts';
-import { RUNS_CAPABILITY_ID, WORLD_GRAPH_CAPABILITY_ID, aimFromPointer } from '@sw2d/contracts';
+import { RUNS_CAPABILITY_ID, STAGE_SCROLL_CAPABILITY_ID, WORLD_GRAPH_CAPABILITY_ID, aimFromPointer } from '@sw2d/contracts';
 import {
   bindCollectiblePickups,
   bindLevelObjectives,
@@ -108,7 +108,16 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     // + sw2d.encounters are all installed, content/encounters.json drives real
     // enemy waves that chase and shoot; the player fights back with the
     // catalog weapon and respawns on death (unless this is a run). Inert otherwise.
-    const battle = bindStarterEncounters(context, player, runLoadout ? { respawn: false, loadout: runLoadout } : {});
+    const battle = bindStarterEncounters(context, player, {
+      ...(runLoadout ? { respawn: false, loadout: runLoadout } : {}),
+      // A progression starter (survive) draws the run HUD; the battle keeps
+      // its own otherwise, except under a scrolling stage whose own HUD leads.
+      hud: PROGRESSION_STARTER === null && !context.capabilities.has(STAGE_SCROLL_CAPABILITY_ID),
+      // On a scrolling stage, formations that sweep off-screen have flown past
+      // (Final Product Completion Wave 3) - they are not waiting to be killed.
+      escapeEdge: context.capabilities.has(STAGE_SCROLL_CAPABILITY_ID),
+      driftBounce: !context.capabilities.has(STAGE_SCROLL_CAPABILITY_ID),
+    });
     // Perception (Category-C Wave 4). Inert unless sw2d.perception is
     // installed with a non-empty catalog. Then FOV cones, cover, loot and
     // exit replace the dummy wander.

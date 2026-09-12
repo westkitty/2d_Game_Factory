@@ -5,6 +5,7 @@ import {
   bindCollectiblePickups,
   bindLevelObjectives,
   bindStarterChase,
+  bindStarterEncounters,
   bindStarterParkour,
   bindStarterRun,
   bindStarterWeapon,
@@ -138,8 +139,14 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       run.active || parkour.active || chase.active || context.capabilities.has(WORLD_GRAPH_CAPABILITY_ID)
         ? bindLevelObjectives(context, player, undefined)
         : bindLevelObjectives(context, player, level, { exitRequires: () => pickups.remaining() === 0 });
-    // Weapons (capability program Phase 3). Inert unless sw2d.weapons is installed.
-    const weapon = bindStarterWeapon(context);
+    // Encounters (Final Product Completion Wave 3, matrix L16): when sw2d.combat +
+    // sw2d.weapons + sw2d.encounters are installed, content/encounters.json
+    // drives real waves on the platform strip - `ground` archetypes walk the
+    // solids under gravity, shooters hold and fire. Inert otherwise.
+    const battle = bindStarterEncounters(context, player, { walls: ground, gravity: tuning.gravity, enemySpeed: 70 });
+    // Weapons (capability program Phase 3). Inert unless sw2d.weapons is
+    // installed; the battle owns the weapon when it is active.
+    const weapon = battle.active ? null : bindStarterWeapon(context);
     // Data-driven puzzle rules (capability program Phase 6). Inert unless
     // sw2d.puzzle-rules is installed; then SECONDARY_ACTION toggles the next
     // switch and CANCEL undoes, all through the reusable service - the
@@ -191,7 +198,8 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       onGround: player.body.blocked.down,
       items: pickups.inventory(),
       pickupsRemaining: pickups.remaining(),
-      weapon: weapon.snapshot(),
+      weapon: weapon?.snapshot() ?? null,
+      ...(battle.active ? { battle: battle.snapshot() } : {}),
       ...(objectives.active ? { objectives: objectives.snapshot() } : {}),
       ...(puzzle ? { puzzle: puzzle.snapshot(), solved: puzzle.isSolved() } : {}),
       ...(run.active ? { run: run.snapshot() } : {}),
@@ -249,8 +257,10 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
             facing = intent.moveAxis < 0 ? -1 : 1;
           }
         }
-        weapon.update(deltaMs, nowMs);
-        if (intent.primaryPressed) weapon.fire(nowMs, facing, 0, { x: player.x, y: player.y });
+        weapon?.update(deltaMs, nowMs);
+        battle.update(deltaMs, nowMs);
+        const firing = intent.primaryPressed || (battle.active && context.input.isDown('PRIMARY_ACTION'));
+        if (firing) (weapon ?? battle).fire(nowMs, facing, 0, { x: player.x, y: player.y });
         if (objectives.active) {
           objectives.tick(deltaMs);
           objectives.render();
@@ -356,7 +366,8 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         debugHandle.dispose();
         pickups.dispose();
         objectives.dispose();
-        weapon.dispose();
+        weapon?.dispose();
+        battle.dispose();
         run.dispose();
         parkour.dispose();
         chase.dispose();

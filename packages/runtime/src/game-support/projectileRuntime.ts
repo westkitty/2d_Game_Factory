@@ -9,7 +9,8 @@ import type {
 } from '@sw2d/contracts';
 
 /**
- * Runtime bridge for the `sw2d.weapons` model (capability program Phase 3).
+ * Runtime bridge for the `sw2d.weapons` model (capability program Phase 3;
+ * pooled since the Final Product Completion program, Wave 3 - matrix L12).
  *
  * The renderer-coupled half of weapons/projectiles - the same reason
  * `ProjectilePool` lives here and not in `@sw2d/packs`. It renders the
@@ -18,6 +19,13 @@ import type {
  * and bounce, and applies on-hit effects through `sw2d.items` when present.
  * A game-specific shell wires `fire()` to input and `update()` to its step;
  * `sw2d.weapons`' own pack host advances cooldowns/reload/burst timing.
+ *
+ * Pooling: a projectile that expires is parked (inactive, invisible, body
+ * disabled - its overlap colliders stay registered and skip disabled bodies)
+ * and the next spawn reuses it, so a bullet-hell pattern that emits and
+ * retires hundreds of bullets a second allocates sprites and colliders only
+ * up to its peak, never per bullet. `tools/scripts/qa-bullet-budget.ts`
+ * measures the resulting live-bullet budget on the target desktop browser.
  */
 
 export interface ProjectileRuntimeOptions {
@@ -35,6 +43,8 @@ export interface ProjectileRuntimeOptions {
   readonly resolveTarget: (sprite: Phaser.GameObjects.GameObject) => { entityId: string; team: string } | null;
   /** Flat damage added to projectiles by owner (a run loadout's damage bonus). Default 0. */
   readonly damageBonusFor?: (ownerId: string) => number;
+  /** Live play-area bounds (a scrolling camera); defaults to (0, 0, worldWidth, worldHeight). */
+  readonly bounds?: () => { readonly x: number; readonly y: number; readonly width: number; readonly height: number };
 }
 
 interface LiveProjectile {
@@ -61,6 +71,10 @@ export interface ProjectileRuntime {
   readonly expiredTotal: number;
   readonly hitsResolved: number;
   readonly overlapFires: number;
+  /** Pool statistics: sprites ever allocated (the peak), spawns served from the pool, and the current parked count. */
+  readonly poolAllocated: number;
+  readonly poolReused: number;
+  readonly poolFree: number;
   dispose(): void;
 }
 
@@ -70,29 +84,32 @@ export function createProjectileRuntime(options: ProjectileRuntimeOptions): Proj
   // group's body defaults and zeroes its velocity. Projectiles are tracked in
   // `live` and collided per-sprite, the shape `ProjectilePool` already proves.
   const live = new Map<Phaser.GameObjects.GameObject, LiveProjectile>();
+  /** Parked sprites (with their persistent overlap colliders) ready for reuse. */
+  const free: { sprite: Phaser.Physics.Arcade.Sprite; overlaps: Phaser.Physics.Arcade.Collider[] }[] = [];
   let spawnedTotal = 0;
   let expiredTotal = 0;
   let hitsResolved = 0;
   let overlapFires = 0;
+  let poolAllocated = 0;
+  let poolReused = 0;
   let disposed = false;
 
   function removeProjectile(sprite: Phaser.GameObjects.GameObject): void {
     const record = live.get(sprite);
     if (!record) return;
     live.delete(sprite);
-    for (const collider of record.overlaps) {
-      try {
-        scene.physics.world.removeCollider(collider);
-      } catch {
-        /* scene already tearing down */
-      }
-    }
+    expiredTotal += 1;
+    // Park, do not destroy: the sprite and its colliders are reused by the
+    // next spawn. A disabled body takes no part in overlap checks.
     try {
-      (sprite as Phaser.GameObjects.Sprite).destroy();
+      const parked = record.sprite;
+      parked.setVelocity(0, 0);
+      parked.setActive(false).setVisible(false);
+      (parked.body as Phaser.Physics.Arcade.Body).enable = false;
+      free.push({ sprite: parked, overlaps: record.overlaps });
     } catch {
       /* scene already tearing down */
     }
-    expiredTotal += 1;
   }
 
   function onHit(projectileObj: Phaser.GameObjects.GameObject, targetObj: Phaser.GameObjects.GameObject): void {
@@ -118,18 +135,36 @@ export function createProjectileRuntime(options: ProjectileRuntimeOptions): Proj
   const nowMsRef = { value: 0 };
 
   function spawn(s: ProjectileSpawn): void {
-    const sprite = scene.physics.add.sprite(s.x, s.y, options.resolveTexture(s.assetRole));
+    const texture = options.resolveTexture(s.assetRole);
+    let sprite: Phaser.Physics.Arcade.Sprite;
+    let overlaps: Phaser.Physics.Arcade.Collider[];
+    const parked = free.pop();
+    if (parked) {
+      sprite = parked.sprite;
+      overlaps = parked.overlaps;
+      poolReused += 1;
+      if (sprite.texture.key !== texture) sprite.setTexture(texture);
+      const body = sprite.body as Phaser.Physics.Arcade.Body;
+      body.enable = true;
+      sprite.setActive(true).setVisible(true);
+      body.reset(s.x, s.y);
+    } else {
+      sprite = scene.physics.add.sprite(s.x, s.y, texture);
+      poolAllocated += 1;
+      (sprite.body as Phaser.Physics.Arcade.Body).setAllowGravity(false);
+      // A per-projectile overlap against each target group - the same shape the
+      // proven demos use, robust to groups populated after construction. The
+      // colliders live as long as the pooled sprite does.
+      overlaps = options.targetGroups.map((targetGroup) =>
+        scene.physics.add.overlap(sprite, targetGroup, (proj, tgt) =>
+          onHit(proj as Phaser.GameObjects.GameObject, tgt as Phaser.GameObjects.GameObject),
+        ),
+      );
+    }
     sprite.setDisplaySize(s.size, s.size);
-    (sprite.body as Phaser.Physics.Arcade.Body).setAllowGravity(false);
     if (s.bounce > 0) sprite.setBounce(1, 1).setCollideWorldBounds(true);
+    else sprite.setBounce(0, 0).setCollideWorldBounds(false);
     sprite.setVelocity(s.vx, s.vy);
-    // A per-projectile overlap against each target group - the same shape the
-    // proven demos use, robust to groups populated after construction.
-    const overlaps = options.targetGroups.map((targetGroup) =>
-      scene.physics.add.overlap(sprite, targetGroup, (proj, tgt) =>
-        onHit(proj as Phaser.GameObjects.GameObject, tgt as Phaser.GameObjects.GameObject),
-      ),
-    );
     live.set(sprite, {
       sprite,
       team: s.team,
@@ -166,7 +201,8 @@ export function createProjectileRuntime(options: ProjectileRuntimeOptions): Proj
         projectile.remainingMs -= deltaMs;
         const { x, y } = projectile.sprite;
         const margin = 48;
-        const oob = x < -margin || x > options.worldWidth + margin || y < -margin || y > options.worldHeight + margin;
+        const b = options.bounds?.() ?? { x: 0, y: 0, width: options.worldWidth, height: options.worldHeight };
+        const oob = x < b.x - margin || x > b.x + b.width + margin || y < b.y - margin || y > b.y + b.height + margin;
         // A bounce keeps the projectile alive; only a real out-of-world escape
         // (bounce budget spent) or ttl expiry removes it.
         if (projectile.remainingMs <= 0 || !projectile.sprite.active || (oob && projectile.bounceLeft <= 0)) {
@@ -190,11 +226,21 @@ export function createProjectileRuntime(options: ProjectileRuntimeOptions): Proj
     get overlapFires(): number {
       return overlapFires;
     },
+    get poolAllocated(): number {
+      return poolAllocated;
+    },
+    get poolReused(): number {
+      return poolReused;
+    },
+    get poolFree(): number {
+      return free.length;
+    },
 
     dispose(): void {
       if (disposed) return;
       disposed = true;
-      for (const projectile of live.values()) {
+      const everything = [...[...live.values()].map((p) => ({ sprite: p.sprite, overlaps: p.overlaps })), ...free];
+      for (const projectile of everything) {
         for (const collider of projectile.overlaps) {
           try {
             scene.physics.world.removeCollider(collider);
@@ -209,6 +255,7 @@ export function createProjectileRuntime(options: ProjectileRuntimeOptions): Proj
         }
       }
       live.clear();
+      free.length = 0;
     },
   };
 }

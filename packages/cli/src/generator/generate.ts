@@ -126,7 +126,30 @@ export function buildGameFiles(gameId: string, preset: PresetDefinition): Map<st
   );
   files.set(
     'content/encounters.json',
-    JSON.stringify(generateEncounterCatalog(requiredPackIds.includes('sw2d.encounters'), { escalate: preset.id === 'survivor-like' }), null, 2) + '\n',
+    JSON.stringify(
+      generateEncounterCatalog(requiredPackIds.includes('sw2d.encounters'), {
+        kind:
+          preset.id === 'survivor-like'
+            ? 'swarm'
+            : preset.id === 'run-and-gun'
+              ? 'platform'
+              : preset.id === 'boss-rush'
+                ? 'boss-rush'
+                : preset.id === 'bullet-hell'
+                  ? 'bullet-hell'
+                : preset.id === 'gallery-shooter'
+                  ? 'gallery'
+                  : preset.id === 'rail-shooter'
+                    ? 'rail'
+                    : preset.id === 'horizontal-shmup'
+                      ? 'shmup-h'
+                      : preset.id === 'vertical-shmup'
+                        ? 'shmup-v'
+                        : 'skirmish',
+      }),
+      null,
+      2,
+    ) + '\n',
   );
   files.set(
     'content/puzzles.json',

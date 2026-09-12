@@ -646,7 +646,8 @@ describe('generated vehicle and pointer shooters consume sw2d.weapons', () => {
     const shell = buildGameFiles('weapons-probe', asteroids).get('src/game-specific/shellPack.ts')!;
     expect(shell).toContain('bindStarterWeapon(context)');
     expect(shell).toContain("justPressed('PRIMARY_ACTION')");
-    expect(shell).toContain('weapon.fire(');
+    // Final Product Completion Wave 3: the rock field owns the weapon when active.
+    expect(shell).toContain('(weapon ?? rocks).fire(');
     expect(buildGameFiles('weapons-probe', asteroids).get('src/content.ts')).toContain('weapons: weaponsData');
   });
 
@@ -654,7 +655,9 @@ describe('generated vehicle and pointer shooters consume sw2d.weapons', () => {
     const gallery = PRESETS.find((candidate) => candidate.id === 'gallery-shooter')!;
     const shell = buildGameFiles('weapons-probe', gallery).get('src/game-specific/shellPack.ts')!;
     expect(shell).toContain('bindStarterWeapon(context)');
-    expect(shell).toContain('weapon.fire(');
+    // Final Product Completion Wave 3: the gallery owns the weapon when active.
+    expect(shell).toContain('weapon?.fire(');
+    expect(shell).toContain('gallery.fireAt(');
     expect(shell).toContain('context.spatialPointer.state');
   });
 
@@ -671,13 +674,13 @@ describe('generated vehicle and pointer shooters consume sw2d.weapons', () => {
     }
   });
 
-  it('rail-shooter does not enable sw2d.weapons (rail-camera leftover, not a second shooting adapter)', () => {
+  it('rail-shooter enables sw2d.weapons and fires the catalog weapon from the rail (Final Product Completion Wave 3, L17)', () => {
     const rail = PRESETS.find((candidate) => candidate.id === 'rail-shooter')!;
     const files = buildGameFiles('weapons-probe', rail);
     const gameJson = JSON.parse(files.get('content/game.json')!) as { systemPacks: Array<{ packId: string }> };
-    expect(gameJson.systemPacks.map((s) => s.packId)).not.toContain('sw2d.weapons');
+    expect(gameJson.systemPacks.map((s) => s.packId)).toContain('sw2d.weapons');
     const theme = JSON.parse(files.get('content/themes/default/theme.json')!) as { ui: { playHint: string } };
-    expect(theme.ui.playHint).not.toContain('FIRE');
+    expect(theme.ui.playHint).toContain('FIRE');
   });
 });
 
@@ -1322,7 +1325,7 @@ describe('generated museum and rail consume look presentation', () => {
       "LOOK_STARTER: 'museum' | 'rail' | null = 'museum'",
     );
     expect(railFiles.get('src/game-specific/packConfig.ts')).toContain(
-      "LOOK_STARTER: 'museum' | 'rail' | null = 'rail'",
+      "LOOK_STARTER: 'museum' | 'rail' | null = null",
     );
     expect(photoFiles.get('src/game-specific/packConfig.ts')).toContain(
       "LOOK_STARTER: 'museum' | 'rail' | null = null",
@@ -1330,8 +1333,8 @@ describe('generated museum and rail consume look presentation', () => {
     const museumTheme = JSON.parse(museumFiles.get('content/themes/default/theme.json')!) as { ui: { playHint: string } };
     const railTheme = JSON.parse(railFiles.get('content/themes/default/theme.json')!) as { ui: { playHint: string } };
     expect(museumTheme.ui.playHint).toContain('J INSPECTS PLAQUES');
-    expect(railTheme.ui.playHint).toContain('J DAMAGES APPROACHING TARGETS');
-    expect(railTheme.ui.playHint).not.toContain('FIRE');
+    expect(railTheme.ui.playHint).toContain('RIDE THE RAIL');
+    expect(railTheme.ui.playHint).toContain('FIRE');
   });
 });
 
@@ -1578,5 +1581,59 @@ describe('Final Product Completion Wave 2 - generated combat games consume runs,
     const meleeDoc = JSON.parse(buildGameFiles('fpc-probe', melee).get('content/melee.json')!) as { combo?: { steps: unknown[] }; arcDeg?: number };
     expect(meleeDoc.combo?.steps.length).toBe(3);
     expect(meleeDoc.arcDeg).toBe(120);
+  });
+});
+
+describe('Final Product Completion Wave 3 - generated shooters consume formations, sequences, pooling, the ship and the gallery', () => {
+  const doc = (id: string, file: string): Record<string, unknown> => JSON.parse(buildGameFiles('fpc-probe', PRESETS.find((p) => p.id === id)!).get(file)!) as Record<string, unknown>;
+  const shell = (id: string): string => buildGameFiles('fpc-probe', PRESETS.find((p) => p.id === id)!).get('src/game-specific/shellPack.ts')!;
+
+  it('boss-rush authors a three-boss sequence; bullet-hell a dense boss; both validate', () => {
+    const rush = doc('boss-rush', 'content/encounters.json') as { sequence?: { encounterIds: string[] }; archetypes?: Record<string, { motion: string }> };
+    expect(rush.sequence?.encounterIds).toHaveLength(3);
+    expect(rush.archetypes?.boss?.motion).toBe('hold');
+    const hell = doc('bullet-hell', 'content/encounters.json') as { encounters: Array<{ phases: Array<{ emitters?: unknown[] }> }> };
+    expect(hell.encounters[0]?.phases[0]?.emitters?.length).toBe(3);
+    expect(() => validateContentBundleData({ encounters: rush })).not.toThrow();
+    expect(() => validateContentBundleData({ encounters: hell })).not.toThrow();
+  });
+
+  it('the shmups author parallax layers, a rail and drifting formations', () => {
+    for (const id of ['horizontal-shmup', 'vertical-shmup'] as const) {
+      const stage = doc(id, 'content/stage-scroll.json') as { layers?: unknown[]; rail?: unknown[] };
+      expect(stage.layers?.length, id).toBe(3);
+      expect(stage.rail?.length, id).toBe(3);
+      const enc = doc(id, 'content/encounters.json') as { archetypes?: Record<string, { motion: string }>; encounters: Array<{ phases: Array<{ spawns?: Array<{ at: { kind: string } }> }> }> };
+      expect(enc.archetypes?.raider?.motion, id).toBe('drift');
+      expect(enc.encounters[0]?.phases[0]?.spawns?.[0]?.at.kind, id).toBe('formation');
+    }
+  });
+
+  it('asteroids requires sw2d.vehicles (ship profile) + sw2d.arcade and binds the rock field', () => {
+    const preset = PRESETS.find((p) => p.id === 'asteroids-shooter')!;
+    expect(preset.vehicleProfile).toBe('ship');
+    expect(preset.requiredSystemPacks.map((s) => s.packId)).toEqual(expect.arrayContaining(['sw2d.vehicles', 'sw2d.arcade']));
+    const vehicles = doc('asteroids-shooter', 'content/vehicles.json') as { vehicles: Array<{ profile: string; wrap?: unknown; angularAcceleration?: number }> };
+    expect(vehicles.vehicles[0]?.profile).toBe('ship');
+    expect(vehicles.vehicles[0]?.wrap).toBeDefined();
+    expect(shell('asteroids-shooter')).toContain("bindStarterAsteroids(context, { mode: ASTEROIDS_STARTER })");
+    expect(buildGameFiles('fpc-probe', preset).get('src/game-specific/packConfig.ts')).toContain("ASTEROIDS_STARTER: 'field' | null = 'field'");
+  });
+
+  it('gallery-shooter and rail-shooter require encounters + arcade (+ weapons) and bind the gallery; run-and-gun binds encounters on the platform shell', () => {
+    for (const id of ['gallery-shooter', 'rail-shooter'] as const) {
+      const preset = PRESETS.find((p) => p.id === id)!;
+      expect(preset.requiredSystemPacks.map((s) => s.packId), id).toEqual(expect.arrayContaining(['sw2d.encounters', 'sw2d.arcade', 'sw2d.weapons']));
+      expect(shell(id), id).toContain('bindStarterGallery(context, { mode: GALLERY_STARTER })');
+      const enc = doc(id, 'content/encounters.json') as { sequence?: unknown; archetypes?: Record<string, { motion: string }> };
+      expect(enc.sequence, id).toBeDefined();
+      expect(Object.values(enc.archetypes ?? {}).map((a) => a.motion), id).toContain(id === 'rail-shooter' ? 'approach' : 'drift');
+    }
+    expect(buildGameFiles('fpc-probe', PRESETS.find((p) => p.id === 'gallery-shooter')!).get('src/game-specific/packConfig.ts')).toContain("GALLERY_STARTER: 'gallery' | 'rail' | null = 'gallery'");
+    const rng = PRESETS.find((p) => p.id === 'run-and-gun')!;
+    expect(rng.requiredSystemPacks.map((s) => s.packId)).toContain('sw2d.encounters');
+    expect(shell('run-and-gun')).toContain('bindStarterEncounters(context, player, { walls: ground');
+    const enc = doc('run-and-gun', 'content/encounters.json') as { archetypes?: Record<string, { motion: string }> };
+    expect(enc.archetypes?.walker?.motion).toBe('ground');
   });
 });

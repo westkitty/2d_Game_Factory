@@ -131,6 +131,8 @@ exceptions: physical hardware certification and the user-owned public-license ch
 - **Architecture:** `sw2d.encounters` sequence (ordered encounter list, transitions, per-boss state, final completion), `bindStarterEncounters`.
 - **Journey:** boss 1 → defeated → transition banner → boss 2 → defeated → boss 3 → `complete`; restart resets to boss 1.
 - **Checkpoint:** Wave 3.
+- **Closed by:** `EncounterCatalog.sequence` (ordered encounter ids + `transitionMs`) run back to back by `bindStarterEncounters` (per-boss state, transition banner, boss health on the HUD, final completion, restart); boss-rush content authors three bosses with distinct patterns. **Proof/test:** `encounters.test.ts` (sequence exposure), generate tests; completion spec `bossRush`. **Browser:** PASS.
+- **Status:** CLOSED (Wave 3).
 
 ## C. Shooters
 
@@ -140,6 +142,8 @@ exceptions: physical hardware certification and the user-owned public-license ch
 - **Architecture:** `sw2d.stage-scroll` gets parallax layers, waypoint rail paths and enemy formations authored in `content/stage-scroll.json`; projectile runtime pooled (L12).
 - **Journey:** stage scrolls with parallax layers at different speeds → formation spawns → rail waypoint changes scroll direction → stage clear.
 - **Checkpoint:** Wave 3.
+- **Closed by:** `sw2d.stage-scroll` `layers` (parallax planes at their own speed factors, drawn by `bindStarterStageScroll`) and `rail` (speed / cross-drift legs - a 2D rail path the hazards and layers follow through `crossOffset()`); enemy formations via `sw2d.encounters` `formation` spawn points with `drift` archetypes that sweep the stage. **Proof/test:** stage-scroll + encounters unit tests, generate tests, proof specs `horizontalShmup` / `verticalShmup` (parallax ordering, rail legs 120 → 220 px/s, cross offset, formation escape). **Browser:** PASS.
+- **Status:** CLOSED (Wave 3).
 
 ### L12 - bullet-hell pooling / budget
 - **Source text:** "Per-bullet GPU-scale pooling for thousands of simultaneous bullets is not tuned; patterns are bounded."
@@ -147,6 +151,8 @@ exceptions: physical hardware certification and the user-owned public-license ch
 - **Architecture:** pooled projectile runtime (`ProjectilePool` in every encounter/weapon consumer), benchmark in `qa:performance`, documented simultaneous-projectile budget.
 - **Journey:** dense pattern → measured live projectile count ≥ budget at ≥ 55 fps stepped, zero errors, pool reuse proven.
 - **Checkpoint:** Wave 3 / Wave 11.
+- **Closed by:** pooled `createProjectileRuntime` (parked sprites with persistent colliders reused by the next spawn; pool stats exposed), bullet-hell content with ring / spiral / fan emitters (400+ live bullets), `npm run qa:bullet-budget` benchmark (canonical game, real rAF): **peak 429 live at 60.1 fps mean, p95 16.7 ms, pool reuse 82.7 %**; `--stress` ceiling **1676 live at 60.1 fps** on Chrome 152 / macOS arm64. Supported budget documented in `docs/qa/QA_MATRIX.md`: 400 simultaneous projectiles at 60 fps on desktop Chrome. Also fixed: `entity-health-below` completed a phase before its boss spawned. **Proof/test:** encounters test, completion spec `bulletHell` (≥300 live, pool reuse, frenzy phase, restart). **Browser:** PASS.
+- **Status:** CLOSED (Wave 3).
 
 ### L13 - asteroids rock field / wrap / splitting
 - **Source text:** "Drifting rock fields and wrap-around collision stay game-specific; the generated starter steers and fires along heading through sw2d.weapons."
@@ -154,6 +160,8 @@ exceptions: physical hardware certification and the user-owned public-license ch
 - **Architecture:** `sw2d.vehicles` `ship` profile (thrust + rotational inertia + wrap), `bindStarterAsteroids` (rock field, drift, wrap, split, score, lives, waves) on `sw2d.combat`/`sw2d.weapons`/`sw2d.arcade`.
 - **Journey:** rocks drift and wrap → shoot → rock splits → all cleared → next wave larger → collide → lose life → 0 lives `failed` → restart.
 - **Checkpoint:** Wave 3.
+- **Closed by:** `bindStarterAsteroids` on the vehicle shell (drifting + wrapping rock field, pooled projectile vs rock collision through `sw2d.weapons`/`sw2d.combat`, large → medium → small splitting, `sw2d.arcade` score, ship-vs-rock lives with a grace window, growing waves, fail / restart HUD); asteroids-shooter requires `sw2d.vehicles` + `sw2d.arcade`. **Proof/test:** generate tests; proof spec `asteroidsShooter` (canonical proof refreshed, contract updated). **Browser:** PASS.
+- **Status:** CLOSED (Wave 3).
 
 ### L14 - asteroids rotational inertia
 - **Source text:** "vehicleController supplies arcade steering/throttle intent only, not rotational-inertia physics."
@@ -161,6 +169,8 @@ exceptions: physical hardware certification and the user-owned public-license ch
 - **Architecture:** `sw2d.vehicles` `ship` profile (angular acceleration/damping, momentum), `content/vehicles.json`.
 - **Journey:** tap turn → heading keeps rotating and damps; thrust → velocity persists after release.
 - **Checkpoint:** Wave 3.
+- **Closed by:** `sw2d.vehicles` `ship` profile (`angularAcceleration`, `angularDamping`, momentum, `wrap`; `angularVelocity` / `wraps` in `VehicleState`), `vehicleProfile: 'ship'` in the catalog. **Proof/test:** proof spec `asteroidsShooter` (tap → keeps spinning → settles; thrust → coasts; wraps). **Browser:** PASS.
+- **Status:** CLOSED (Wave 3).
 
 ### L15 - gallery target waves in generated starter
 - **Source text:** "Authored gallery target waves and projectile-vs-target scoring stay in the frozen proof; the generated starter fires toward the cursor through sw2d.weapons."
@@ -168,6 +178,8 @@ exceptions: physical hardware certification and the user-owned public-license ch
 - **Architecture:** `sw2d.encounters` (required) target waves with movement patterns + `sw2d.arcade` scoring, pointer shell binds a gallery runtime (pointer fire, hit/miss, timer, success/failure, restart).
 - **Journey:** targets appear/move → click hits → score → miss counted → wave cleared → `complete`; timer out → `failed`.
 - **Checkpoint:** Wave 3.
+- **Closed by:** `bindStarterGallery` (gallery mode) on the pointer shell: `sw2d.encounters` rounds (`sequence`) of `drift` targets in `formation`s, pointer-aimed `sw2d.weapons` fire, hit / miss accuracy, `sw2d.arcade` score, 45 s time limit, complete / failed, restart; gallery-shooter requires encounters + arcade. Also fixed: `SpatialPointerHost` never marked the pointer inside without a `pointerenter` (a resting mouse could not aim). **Proof/test:** generate tests; completion spec `galleryShooter`. **Browser:** PASS.
+- **Status:** CLOSED (Wave 3).
 
 ### L16 - run-and-gun opposition
 - **Source text:** "Enemy encounter orchestration (sw2d.encounters, Phase 4, ADR-0021) is reusable now, but this recipe does not install it - its enemy waves/patterns would be authored as game-specific code or by adding that pack."
@@ -175,6 +187,8 @@ exceptions: physical hardware certification and the user-owned public-license ch
 - **Architecture:** catalog (encounters required), platform shell binds `bindStarterEncounters` (gravity-aware enemies).
 - **Journey:** run right → enemies spawn/shoot → fire → kill → wave clear → `complete`.
 - **Checkpoint:** Wave 3.
+- **Closed by:** run-and-gun requires `sw2d.encounters`; the platform shell binds `bindStarterEncounters` with the ground group and gravity; `ground` archetype walkers walk the strip, a `hold` shooter fires. **Proof/test:** generate tests; completion spec `runAndGun`. **Browser:** PASS.
+- **Status:** CLOSED (Wave 3).
 
 ### L17 - rail-shooter weapons
 - **Source text:** "Fixed-path/rail camera movement is reusable (sw2d.camera); this starter still does not wire sw2d.weapons."
@@ -182,6 +196,8 @@ exceptions: physical hardware certification and the user-owned public-license ch
 - **Architecture:** catalog (weapons + encounters required), `bindStarterLook` rail mode fires catalog weapon through the projectile runtime at encounter targets; scoring; progression; completion/failure.
 - **Journey:** rail moves → targets spawn → click fires weapon → projectile hits → score → path end `complete`.
 - **Checkpoint:** Wave 3.
+- **Closed by:** rail-shooter requires `sw2d.weapons` + `sw2d.encounters` + `sw2d.arcade`; `bindStarterGallery` rail mode rides the `sw2d.camera` rail (camera bounds released - the Wave 26 rail never actually scrolled), fires the catalog weapon at `approach` drones, scores, completes both legs. **Proof/test:** proof spec `railShooter` (canonical proof refreshed, contract updated). **Browser:** PASS.
+- **Status:** CLOSED (Wave 3).
 
 ## D. Vehicles
 
@@ -450,14 +466,14 @@ exceptions: physical hardware certification and the user-owned public-license ch
 | L07 | dungeon-crawler | 2 | CLOSED | wave 2 |
 | L08 | action-roguelite | 2 | CLOSED | wave 2 |
 | L09 | stealth-game, heist-game | 2 | CLOSED | wave 2 |
-| L10 | boss-rush | 3 | OPEN | |
-| L11 | horizontal-shmup, vertical-shmup | 3 | OPEN | |
-| L12 | bullet-hell | 3/11 | OPEN | |
-| L13 | asteroids-shooter | 3 | OPEN | |
-| L14 | asteroids-shooter | 3 | OPEN | |
-| L15 | gallery-shooter | 3 | OPEN | |
-| L16 | run-and-gun | 3 | OPEN | |
-| L17 | rail-shooter | 3 | OPEN | |
+| L10 | boss-rush | 3 | CLOSED | wave 3 |
+| L11 | horizontal-shmup, vertical-shmup | 3 | CLOSED | wave 3 |
+| L12 | bullet-hell | 3/11 | CLOSED | wave 3 |
+| L13 | asteroids-shooter | 3 | CLOSED | wave 3 |
+| L14 | asteroids-shooter | 3 | CLOSED | wave 3 |
+| L15 | gallery-shooter | 3 | CLOSED | wave 3 |
+| L16 | run-and-gun | 3 | CLOSED | wave 3 |
+| L17 | rail-shooter | 3 | CLOSED | wave 3 |
 | L18 | kart-racer | 4 | OPEN | |
 | L19 | endless-driving | 4 | OPEN | |
 | L20 | boat-flight-racer | 4 | OPEN | |

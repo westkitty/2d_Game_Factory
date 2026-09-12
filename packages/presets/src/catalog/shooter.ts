@@ -1,6 +1,6 @@
 import type { PresetDefinition } from '@sw2d/contracts';
 import { PACK_IDS } from '@sw2d/packs/ids';
-import { LIMITATIONS, POINTER_INPUT_MODES, VALIDATION_PROFILES, definePreset, pack } from '../shared.ts';
+import { POINTER_INPUT_MODES, VALIDATION_PROFILES, definePreset, pack } from '../shared.ts';
 
 /**
  * Family C - Shooter (recipes 21-27).
@@ -33,7 +33,11 @@ export const SHOOTER_PRESETS: readonly PresetDefinition[] = [
     optionalSystemPacks: [pack(PACK_IDS.arcade)],
     requiredContentRoles: ['tuning', 'stage-scroll'],
     validationProfile: VALIDATION_PROFILES.shooter,
-    knownLimitations: [LIMITATIONS.scrollingShmupCamera],
+    // Final Product Completion Wave 3 (matrix L11): parallax layers and the
+    // rail path (speed / cross-drift legs) are authored in content/stage-scroll.json
+    // and drawn by the shared shell; enemy formations sweep the stage through
+    // sw2d.encounters `formation` spawn points; bullets are pooled (L12).
+    knownLimitations: [],
   }),
 
   definePreset({
@@ -47,7 +51,11 @@ export const SHOOTER_PRESETS: readonly PresetDefinition[] = [
     optionalSystemPacks: [pack(PACK_IDS.arcade)],
     requiredContentRoles: ['tuning', 'stage-scroll'],
     validationProfile: VALIDATION_PROFILES.shooter,
-    knownLimitations: [LIMITATIONS.scrollingShmupCamera],
+    // Final Product Completion Wave 3 (matrix L11): parallax layers and the
+    // rail path (speed / cross-drift legs) are authored in content/stage-scroll.json
+    // and drawn by the shared shell; enemy formations sweep the stage through
+    // sw2d.encounters `formation` spawn points; bullets are pooled (L12).
+    knownLimitations: [],
   }),
 
   definePreset({
@@ -62,9 +70,11 @@ export const SHOOTER_PRESETS: readonly PresetDefinition[] = [
     validationProfile: VALIDATION_PROFILES.shooter,
     // Dense bullet-pattern choreography, waves and phases are reusable now
     // (capability program Phase 4, ADR-0021; proof: proofs/bullet-hell/).
-    knownLimitations: [
-      'Per-bullet GPU-scale pooling for thousands of simultaneous bullets is not tuned; patterns are bounded.',
-    ],
+    // Final Product Completion Wave 3 (matrix L12): the projectile runtime is
+    // pooled (sprites and colliders allocated to the peak, then reused) and
+    // benchmarked by `npm run qa:bullet-budget` on the target desktop browser
+    // - see docs/qa/QA_MATRIX.md for the supported simultaneous-bullet budget.
+    knownLimitations: [],
   }),
 
   definePreset({
@@ -73,14 +83,18 @@ export const SHOOTER_PRESETS: readonly PresetDefinition[] = [
     displayName: 'Asteroids Shooter',
     family: 'shooter',
     controllerFamilies: ['vehicle'],
-    requiredSystemPacks: [pack(PACK_IDS.combat), pack(PACK_IDS.weapons)],
-    optionalSystemPacks: [pack(PACK_IDS.arcade)],
-    requiredContentRoles: ['tuning'],
+    requiredSystemPacks: [pack(PACK_IDS.combat), pack(PACK_IDS.weapons), pack(PACK_IDS.vehicles), pack(PACK_IDS.arcade)],
+    requiredContentRoles: ['tuning', 'vehicles'],
     validationProfile: VALIDATION_PROFILES.shooter,
-    knownLimitations: [
-      'Drifting rock fields and wrap-around collision stay game-specific; the generated starter steers and fires along heading through sw2d.weapons.',
-      'vehicleController supplies arcade steering/throttle intent only, not rotational-inertia physics.',
-    ],
+    // Final Product Completion Wave 3 (matrix L13 / L14): the ship is the
+    // reusable sw2d.vehicles `ship` profile (Newtonian thrust with momentum,
+    // rotational inertia, wrap-around) and the generated vehicle shell runs
+    // the actual Asteroids loop - a drifting, wrapping rock field, projectile
+    // vs rock collision through sw2d.weapons / sw2d.combat, rock splitting,
+    // sw2d.arcade score, ship collision and lives, successive waves,
+    // fail / restart (bindStarterAsteroids).
+    vehicleProfile: 'ship',
+    knownLimitations: [],
   }),
 
   definePreset({
@@ -89,19 +103,17 @@ export const SHOOTER_PRESETS: readonly PresetDefinition[] = [
     displayName: 'Gallery Shooter',
     family: 'shooter',
     controllerFamilies: ['pointer'],
-    requiredSystemPacks: [pack(PACK_IDS.combat), pack(PACK_IDS.weapons)],
-    optionalSystemPacks: [pack(PACK_IDS.arcade)],
-    requiredContentRoles: ['tuning'],
+    requiredSystemPacks: [pack(PACK_IDS.combat), pack(PACK_IDS.weapons), pack(PACK_IDS.encounters), pack(PACK_IDS.arcade)],
+    requiredContentRoles: ['tuning', 'encounters'],
     supportedInputModes: POINTER_INPUT_MODES,
     validationProfile: VALIDATION_PROFILES.shooter,
     // Spatial pointer/world-space click targeting is implemented and consumed
-    // by this preset's starter (capability program Phase 1, ADR-0018; proof:
-    // proofs/gallery-shooter/). Category-C Wave 11 also wires sw2d.weapons
-    // into the generated pointer shell (cursor-aimed fire). Authored target
-    // waves stay in the frozen proof, not a reusable gallery-stage pack.
-    knownLimitations: [
-      'Authored gallery target waves and projectile-vs-target scoring stay in the frozen proof; the generated starter fires toward the cursor through sw2d.weapons.',
-    ],
+    // by this preset's starter (capability program Phase 1, ADR-0018).
+    // Final Product Completion Wave 3 (matrix L15): the generated pointer
+    // shell runs authored target rounds (sw2d.encounters `drift` targets in
+    // formations, a sequence of rounds, a time limit) scored through
+    // sw2d.arcade, with hit / miss accuracy - bindStarterGallery.
+    knownLimitations: [],
   }),
 
   definePreset({
@@ -110,13 +122,15 @@ export const SHOOTER_PRESETS: readonly PresetDefinition[] = [
     displayName: 'Run and Gun',
     family: 'shooter',
     controllerFamilies: ['platform'],
-    requiredSystemPacks: [pack(PACK_IDS.combat), pack(PACK_IDS.world), pack(PACK_IDS.worldEntities), pack(PACK_IDS.weapons)],
+    requiredSystemPacks: [pack(PACK_IDS.combat), pack(PACK_IDS.world), pack(PACK_IDS.worldEntities), pack(PACK_IDS.weapons), pack(PACK_IDS.encounters)],
     optionalSystemPacks: [pack(PACK_IDS.arcade)],
-    requiredContentRoles: ['tuning', 'levels'],
+    requiredContentRoles: ['tuning', 'levels', 'encounters'],
     validationProfile: VALIDATION_PROFILES.shooter,
     // Reusable weapons/projectiles consumed by the platform shell (Phase 3;
-    // proof: proofs/run-and-gun/).
-    knownLimitations: ['Enemy encounter orchestration (sw2d.encounters, Phase 4, ADR-0021) is reusable now, but this recipe does not install it - its enemy waves/patterns would be authored as game-specific code or by adding that pack.'],
+    // proof: proofs/run-and-gun/). Final Product Completion Wave 3 (matrix
+    // L16): sw2d.encounters is required and the platform shell binds it -
+    // `ground` walkers come in under gravity, a shooter holds and fires.
+    knownLimitations: [],
   }),
 
   definePreset({
@@ -125,13 +139,14 @@ export const SHOOTER_PRESETS: readonly PresetDefinition[] = [
     displayName: 'Rail Shooter',
     family: 'shooter',
     controllerFamilies: ['pointer'],
-    requiredSystemPacks: [pack(PACK_IDS.combat), pack(PACK_IDS.camera)],
-    optionalSystemPacks: [pack(PACK_IDS.arcade)],
-    requiredContentRoles: ['tuning', 'camera'],
+    requiredSystemPacks: [pack(PACK_IDS.combat), pack(PACK_IDS.camera), pack(PACK_IDS.weapons), pack(PACK_IDS.encounters), pack(PACK_IDS.arcade)],
+    requiredContentRoles: ['tuning', 'camera', 'encounters'],
     supportedInputModes: POINTER_INPUT_MODES,
     validationProfile: VALIDATION_PROFILES.shooter,
-    knownLimitations: [
-      'Fixed-path/rail camera movement is reusable (sw2d.camera); this starter still does not wire sw2d.weapons.',
-    ],
+    // Final Product Completion Wave 3 (matrix L17): the gun rides the reusable
+    // sw2d.camera rail and fires the sw2d.weapons catalog weapon at
+    // sw2d.encounters `approach` drones, scored through sw2d.arcade
+    // (bindStarterGallery in rail mode).
+    knownLimitations: [],
   }),
 ];

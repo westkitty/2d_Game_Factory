@@ -32,6 +32,8 @@ const ZERO_STATE: VehicleState = {
   boostCooldownRemainingMs: 0,
   drifting: false,
   altitude: 0,
+  angularVelocity: 0,
+  wraps: 0,
 };
 
 class VehicleServiceImpl implements VehicleService {
@@ -46,6 +48,11 @@ class VehicleServiceImpl implements VehicleService {
   #altitude = 0;
   #boostMs = 0;
   #cooldownMs = 0;
+  // Ship profile: free world-space velocity and rotational inertia.
+  #vx = 0;
+  #vy = 0;
+  #angVel = 0;
+  #wraps = 0;
 
   constructor(catalog: VehicleCatalog | undefined) {
     for (const def of catalog?.vehicles ?? []) {
@@ -75,12 +82,72 @@ class VehicleServiceImpl implements VehicleService {
     this.#altitude = this.#active?.minAltitude ?? 0;
     this.#boostMs = 0;
     this.#cooldownMs = 0;
+    this.#vx = 0;
+    this.#vy = 0;
+    this.#angVel = 0;
+    this.#wraps = 0;
+  }
+
+  /**
+   * Ship profile (Final Product Completion Wave 3, matrix L14): Newtonian
+   * momentum and rotational inertia. Steering is angular *acceleration*, so
+   * the ship keeps turning after the key lifts until damping settles it;
+   * thrust adds to a velocity that persists after the throttle lifts, decays
+   * with drag and wraps around the authored play area.
+   */
+  #updateShip(dt: number, deltaMs: number, intent: VehicleIntent, def: VehicleDefinition): VehicleState {
+    if (this.#cooldownMs > 0) this.#cooldownMs = Math.max(0, this.#cooldownMs - deltaMs);
+    if (this.#boostMs > 0) this.#boostMs = Math.max(0, this.#boostMs - deltaMs);
+    if (intent.boostPressed && this.#boostMs === 0 && this.#cooldownMs === 0) {
+      this.#boostMs = def.boostDurationMs;
+      this.#cooldownMs = def.boostCooldownMs;
+    }
+    const angAccel = def.angularAcceleration ?? 9;
+    const angDamp = def.angularDamping ?? 0.08;
+    this.#angVel += intent.steering * angAccel * dt;
+    this.#angVel *= Math.pow(angDamp, dt);
+    if (Math.abs(this.#angVel) < 1e-4) this.#angVel = 0;
+    this.#heading += this.#angVel * dt;
+    const cos = Math.cos(this.#heading);
+    const sin = Math.sin(this.#heading);
+    let thrust = intent.throttle > 0 ? def.acceleration * intent.throttle : 0;
+    if (this.#boostMs > 0) thrust += def.boostForce;
+    if (intent.brake > 0) thrust -= def.reverseAcceleration * intent.brake;
+    this.#vx += cos * thrust * dt;
+    this.#vy += sin * thrust * dt;
+    const keep = Math.pow(Math.min(1, def.drag), dt);
+    this.#vx *= keep;
+    this.#vy *= keep;
+    const speed = Math.hypot(this.#vx, this.#vy);
+    if (speed > def.maxForwardSpeed) {
+      this.#vx *= def.maxForwardSpeed / speed;
+      this.#vy *= def.maxForwardSpeed / speed;
+    }
+    this.#x += this.#vx * dt;
+    this.#y += this.#vy * dt;
+    if (def.wrap) {
+      const { width, height, margin } = def.wrap;
+      const w = width + margin * 2;
+      const h = height + margin * 2;
+      if (this.#x < -margin || this.#x > width + margin) {
+        this.#x = ((((this.#x + margin) % w) + w) % w) - margin;
+        this.#wraps += 1;
+      }
+      if (this.#y < -margin || this.#y > height + margin) {
+        this.#y = ((((this.#y + margin) % h) + h) % h) - margin;
+        this.#wraps += 1;
+      }
+    }
+    this.#fwd = this.#vx * cos + this.#vy * sin;
+    this.#lat = -this.#vx * sin + this.#vy * cos;
+    return this.state();
   }
 
   update(deltaMs: number, intent: VehicleIntent, surfaceTag?: string): VehicleState {
     const def = this.#active;
     if (!def || deltaMs <= 0) return this.state();
     const dt = deltaMs / 1000;
+    if (def.profile === 'ship') return this.#updateShip(dt, deltaMs, intent, def);
     const mod = (surfaceTag && def.surfaceModifiers?.[surfaceTag]) || {};
     const traction = def.traction * (mod.traction ?? 1);
     const drag = Math.min(1, def.drag * (mod.drag ?? 1));
@@ -153,6 +220,8 @@ class VehicleServiceImpl implements VehicleService {
       boostCooldownRemainingMs: this.#cooldownMs,
       drifting: this.#boostMs > 0 ? false : this.#lat !== 0 && Math.abs(this.#lat) > Math.abs(this.#fwd) * 0.2,
       altitude: this.#altitude,
+      angularVelocity: this.#angVel,
+      wraps: this.#wraps,
     };
   }
 }

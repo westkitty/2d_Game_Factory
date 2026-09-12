@@ -95,7 +95,7 @@ describe('generateUiCopy (generated games announce their genre honestly)', () =>
     expect(copyFor('arena-combat').playHint).toContain('STRIKE J/X');
     expect(copyFor('asteroids-shooter').playHint).toContain('FIRE J/X');
     expect(copyFor('gallery-shooter').playHint).toContain('FIRE J/X');
-    expect(copyFor('rail-shooter').playHint).not.toContain('FIRE');
+    expect(copyFor('rail-shooter').playHint).toContain('FIRE');
     expect(copyFor('physics-puzzle').playHint).toBe('CLICK TO NUDGE  -  LAND IN THE GOAL');
     expect(copyFor('escape-room').playHint).toBe('CLICK THE NOTE  -  THEN THE KEY');
     expect(copyFor('farming-lite').playHint).toBe('ARROWS PICK A PLOT  -  ENTER PLANTS OR HARVESTS');
@@ -125,7 +125,7 @@ describe('generateUiCopy (generated games announce their genre honestly)', () =>
     );
     expect(copyFor('territory-control').playHint).toBe('MOVE WASD/ARROWS  -  STAND IN BOTH ZONES');
     expect(copyFor('museum-exhibit').playHint).toBe('MOVE WASD/ARROWS  -  J INSPECTS PLAQUES');
-    expect(copyFor('rail-shooter').playHint).toBe('J DAMAGES APPROACHING TARGETS');
+    expect(copyFor('rail-shooter').playHint).toBe('AIM WITH MOUSE  -  FIRE J/X OR CLICK  -  RIDE THE RAIL');
     expect(copyFor('chase-platformer').playHint).toBe('MOVE / JUMP  -  OUTRUN THE WALL');
     expect(copyFor('precision-platformer').playHint).toBe('MOVE / JUMP  -  JUMP THE GAPS');
     expect(copyFor('climbing-game').playHint).toBe('MOVE / JUMP  -  JUMP UP');

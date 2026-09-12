@@ -191,6 +191,9 @@ export const TOP_DOWN_ACTION_PRESETS: readonly PresetDefinition[] = [
     validationProfile: VALIDATION_PROFILES.topDown,
     // Reusable boss-phase orchestration implemented and consumed (capability
     // program Phase 4, ADR-0021; proof: proofs/boss-rush/).
-    knownLimitations: ['Sequencing multiple bosses across a run is starter-specific; sw2d.encounters drives one boss encounter at a time.'],
+    // Final Product Completion Wave 3 (matrix L10): the encounter catalog's
+    // `sequence` runs several bosses back to back with a readable transition,
+    // per-boss health on the HUD, final completion and restart (bindStarterEncounters).
+    knownLimitations: [],
   }),
 ];

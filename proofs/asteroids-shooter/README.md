@@ -62,14 +62,13 @@ with a small working placeholder to replace. Every other pack is configured as J
 ## Composition
 
 - Controller family/families: vehicle
-- Required packs (enabled by default): sw2d.combat, sw2d.weapons
-- Optional packs (available, not enabled by default - add to content/game.json's systemPacks to use): sw2d.arcade
-- Content roles this preset expects: tuning
+- Required packs (enabled by default): sw2d.combat, sw2d.weapons, sw2d.vehicles, sw2d.arcade
+- Optional packs (available, not enabled by default - add to content/game.json's systemPacks to use): (none)
+- Content roles this preset expects: tuning, vehicles
 
 ## Known preset limitations
 
-- Drifting rock fields and wrap-around collision stay game-specific; the generated starter steers and fires along heading through sw2d.weapons.
-- vehicleController supplies arcade steering/throttle intent only, not rotational-inertia physics.
+- (none stated)
 
 ## How to add a level
 

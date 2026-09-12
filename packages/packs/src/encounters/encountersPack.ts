@@ -2,6 +2,7 @@ import type {
   EmitterDefinition,
   EncounterCatalog,
   EncounterCondition,
+  EncounterArchetypeDef,
   EncounterDefinition,
   EncounterEscalation,
   EncounterFireRequest,
@@ -54,6 +55,21 @@ function spawnPointAt(sp: SpawnPoint, index: number, total: number, view: { widt
       if (sp.edge === 'left') return { x: -m, y: view.height * t };
       return { x: view.width + m, y: view.height * t };
     }
+    case 'formation': {
+      const centred = index - (total - 1) / 2;
+      switch (sp.shape) {
+        case 'line':
+          return { x: sp.x + centred * sp.spacing, y: sp.y };
+        case 'column':
+          return { x: sp.x, y: sp.y + centred * sp.spacing };
+        case 'v':
+          return { x: sp.x + centred * sp.spacing, y: sp.y + Math.abs(centred) * sp.spacing * 0.6 };
+        case 'ring': {
+          const angle = (index / Math.max(1, total)) * Math.PI * 2;
+          return { x: sp.x + Math.cos(angle) * sp.spacing, y: sp.y + Math.sin(angle) * sp.spacing };
+        }
+      }
+    }
   }
 }
 
@@ -67,6 +83,7 @@ class EncounterServiceImpl implements EncounterService {
   readonly #events: EventBus;
   readonly #escalation: EncounterEscalation | null;
   readonly #sequence: EncounterSequence | null;
+  readonly #archetypes: Readonly<Record<string, EncounterArchetypeDef>>;
 
   #def: EncounterDefinition | null = null;
   #wave = 0;
@@ -84,6 +101,7 @@ class EncounterServiceImpl implements EncounterService {
     this.#events = events;
     this.#escalation = catalog?.escalation ?? null;
     this.#sequence = catalog?.sequence ?? null;
+    this.#archetypes = catalog?.archetypes ?? {};
     for (const def of catalog?.encounters ?? []) {
       if (this.#defs.has(def.id)) throw new Error(`Duplicate encounter id "${def.id}".`);
       this.#defs.set(def.id, def);
@@ -104,6 +122,10 @@ class EncounterServiceImpl implements EncounterService {
 
   sequence(): EncounterSequence | null {
     return this.#sequence;
+  }
+
+  archetype(name: string): EncounterArchetypeDef | null {
+    return this.#archetypes[name] ?? null;
   }
 
   speedScale(): number {
@@ -162,7 +184,8 @@ class EncounterServiceImpl implements EncounterService {
     const fires = this.#dueFires(phase, deltaMs, ctx);
 
     let enteredPhaseId: string | null = null;
-    if (this.#phaseComplete(phase, ctx)) {
+    const justSpawned = new Set(spawns.map((s) => s.requestId));
+    if (this.#phaseComplete(phase, ctx, justSpawned)) {
       this.#phaseIndex += 1;
       this.#elapsedInPhaseMs = 0;
       this.#spawnedKeys.clear();
@@ -277,11 +300,11 @@ class EncounterServiceImpl implements EncounterService {
     };
   }
 
-  #phaseComplete(phase: EncounterPhaseDefinition, ctx: EncounterUpdateContext): boolean {
-    return this.#conditionMet(phase, phase.completeWhen, ctx);
+  #phaseComplete(phase: EncounterPhaseDefinition, ctx: EncounterUpdateContext, justSpawned: ReadonlySet<string>): boolean {
+    return this.#conditionMet(phase, phase.completeWhen, ctx, justSpawned);
   }
 
-  #conditionMet(phase: EncounterPhaseDefinition, c: EncounterCondition, ctx: EncounterUpdateContext): boolean {
+  #conditionMet(phase: EncounterPhaseDefinition, c: EncounterCondition, ctx: EncounterUpdateContext, justSpawned: ReadonlySet<string>): boolean {
     switch (c.kind) {
       case 'elapsed':
         return this.#elapsedInPhaseMs >= c.ms;
@@ -290,8 +313,15 @@ class EncounterServiceImpl implements EncounterService {
         const totalMembers = (phase.spawns ?? []).reduce((n, g) => n + (esc ? g.count + Math.floor(esc.countPerWave * this.#wave) : g.count), 0);
         return this.#spawnedKeys.size >= totalMembers && this.#liveSpawns.size === 0;
       }
-      case 'entity-health-below':
+      case 'entity-health-below': {
+        // A phase spawn that has not been materialised yet has no health to
+        // be below anything - the condition waits for it (found by the Final
+        // Product Completion bullet-hell journey: the opening phase ended on
+        // its first tick, before the boss existed).
+        const isPhaseSpawn = (phase.spawns ?? []).some((_, gi) => c.entityId.startsWith(`${this.#def!.id}:${phase.id}:${gi}:`));
+        if (isPhaseSpawn && (!this.#spawnedKeys.has(c.entityId) || justSpawned.has(c.entityId))) return false;
         return ctx.healthFraction(c.entityId) < c.fraction;
+      }
       case 'flag':
         return ctx.flag(c.flag) === (c.value ?? true);
     }

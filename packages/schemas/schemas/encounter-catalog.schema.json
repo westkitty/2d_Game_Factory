@@ -68,6 +68,44 @@
           "minimum": 0
         }
       }
+    },
+    "archetypes": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "motion",
+          "speed"
+        ],
+        "properties": {
+          "motion": {
+            "type": "string",
+            "enum": [
+              "chase",
+              "ground",
+              "drift",
+              "approach",
+              "hold"
+            ]
+          },
+          "speed": {
+            "type": "number",
+            "minimum": 0
+          },
+          "driftDeg": {
+            "type": "number"
+          },
+          "score": {
+            "type": "number",
+            "minimum": 0
+          },
+          "size": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          }
+        }
+      }
     }
   },
   "definitions": {
@@ -257,6 +295,40 @@
                 "left",
                 "right"
               ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "shape",
+            "x",
+            "y",
+            "spacing"
+          ],
+          "properties": {
+            "kind": {
+              "const": "formation"
+            },
+            "shape": {
+              "enum": [
+                "line",
+                "column",
+                "v",
+                "ring"
+              ]
+            },
+            "x": {
+              "type": "number"
+            },
+            "y": {
+              "type": "number"
+            },
+            "spacing": {
+              "type": "number",
+              "exclusiveMinimum": 0
             }
           }
         }

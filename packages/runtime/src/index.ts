@@ -113,6 +113,18 @@ export {
   type ToyStarterMode,
 } from './game-support/starterToy.ts';
 export {
+  bindStarterAsteroids,
+  type StarterAsteroidsBinding,
+  type StarterAsteroidsSnapshot,
+  type AsteroidsStarterMode,
+} from './game-support/starterAsteroids.ts';
+export {
+  bindStarterGallery,
+  type StarterGalleryBinding,
+  type StarterGallerySnapshot,
+  type GalleryStarterMode,
+} from './game-support/starterGallery.ts';
+export {
   bindStarterDungeon,
   type StarterDungeonBinding,
   type StarterDungeonSnapshot,

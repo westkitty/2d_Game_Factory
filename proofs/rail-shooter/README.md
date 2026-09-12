@@ -62,13 +62,13 @@ with a small working placeholder to replace. Every other pack is configured as J
 ## Composition
 
 - Controller family/families: pointer
-- Required packs (enabled by default): sw2d.combat, sw2d.camera
-- Optional packs (available, not enabled by default - add to content/game.json's systemPacks to use): sw2d.arcade
-- Content roles this preset expects: tuning, camera
+- Required packs (enabled by default): sw2d.combat, sw2d.camera, sw2d.weapons, sw2d.encounters, sw2d.arcade
+- Optional packs (available, not enabled by default - add to content/game.json's systemPacks to use): (none)
+- Content roles this preset expects: tuning, camera, encounters
 
 ## Known preset limitations
 
-- Fixed-path/rail camera movement is reusable (sw2d.camera); this starter still does not wire sw2d.weapons.
+- (none stated)
 
 ## How to add a level
 
