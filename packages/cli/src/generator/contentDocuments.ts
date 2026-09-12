@@ -202,9 +202,9 @@ export function generateEncounterCatalog(hasEncountersPack: boolean, options: { 
               id: 'opening',
               spawns: [{ archetype: 'boss', count: 1, at: { kind: 'point', x: 480, y: 110 }, health: 400, emitterIds: ['ring', 'spiral', 'fan'] }],
               emitters: [
-                { id: 'ring', weaponId: 'enemy-blaster', pattern: { kind: 'ring', count: 24 }, everyMs: 320, startDelayMs: 400 },
-                { id: 'spiral', weaponId: 'enemy-blaster', pattern: { kind: 'spiral', count: 8, rotationStepDeg: 13 }, everyMs: 90, startDelayMs: 200 },
-                { id: 'fan', weaponId: 'enemy-blaster', pattern: { kind: 'fan', count: 5, spreadDeg: 50, aimed: true }, everyMs: 700, startDelayMs: 600 },
+                { id: 'ring', weaponId: 'enemy-blaster', pattern: { kind: 'ring', count: 32 }, everyMs: 260, startDelayMs: 200 },
+                { id: 'spiral', weaponId: 'enemy-blaster', pattern: { kind: 'spiral', count: 10, rotationStepDeg: 13 }, everyMs: 70, startDelayMs: 100 },
+                { id: 'fan', weaponId: 'enemy-blaster', pattern: { kind: 'fan', count: 7, spreadDeg: 50, aimed: true }, everyMs: 480, startDelayMs: 300 },
               ],
               completeWhen: { kind: 'entity-health-below', entityId: 'hell-gate:opening:0:0', fraction: 0.5 },
             },

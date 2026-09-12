@@ -220,3 +220,45 @@ describe('sw2d.encounters - entity-health-below waits for its own spawn (Final P
     expect(svc.state().phaseId).toBe('p2');
   });
 });
+
+describe('sw2d.encounters - entity-carried emitters on non-zero spawn groups', () => {
+  it('fires emitters carried by spawn group 1 from that entity origin, not the boss', () => {
+    const catalog = {
+      schemaVersion: 1,
+      encounters: [
+        {
+          id: 'assault',
+          phases: [
+            {
+              id: 'wave-2',
+              spawns: [
+                { archetype: 'walker', count: 1, at: { kind: 'point', x: 10, y: 10 }, health: 20 },
+                { archetype: 'shooter', count: 1, at: { kind: 'point', x: 80, y: 40 }, health: 30, emitterIds: ['aimed-shot'] },
+              ],
+              emitters: [{ id: 'aimed-shot', weaponId: 'enemy-blaster', pattern: { kind: 'aimed' }, everyMs: 200, startDelayMs: 0 }],
+              completeWhen: { kind: 'elapsed', ms: 2000 },
+            },
+          ],
+        },
+      ],
+    } as unknown as EncounterCatalog;
+    const origins: Record<string, readonly [number, number]> = {
+      'assault:wave-2:0:0': [10, 10],
+      'assault:wave-2:1:0': [80, 40],
+    };
+    const { svc } = makeService(catalog);
+    svc.start('assault');
+    const ctx = fakeCtx({
+      originOf: (id) => origins[id] ?? null,
+      bossOrigin: () => [100, 40],
+    });
+    const spawned = svc.update(0, ctx);
+    expect(spawned.spawns.map((s) => s.requestId).sort()).toEqual(['assault:wave-2:0:0', 'assault:wave-2:1:0']);
+    expect(spawned.fires).toHaveLength(0);
+    const tick = svc.update(200, ctx);
+    expect(tick.fires).toHaveLength(1);
+    expect(tick.fires[0]!.originX).toBe(80);
+    expect(tick.fires[0]!.originY).toBe(40);
+    expect(tick.fires[0]!.weaponId).toBe('enemy-blaster');
+  });
+});

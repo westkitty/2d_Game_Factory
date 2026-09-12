@@ -59,15 +59,15 @@ controller/input-mode breakdown and full pack-consumer coverage.
 | `stealth-game` | Stealth Game | top-down | tuning, levels, perception | proof-validated |
 | `heist-game` | Heist Game | top-down | tuning, levels, perception | proof-validated |
 | `arena-combat` | Arena Combat | top-down | tuning, levels, melee | proof-validated |
-| `boss-rush` | Boss Rush | top-down | tuning, levels | proof-validated |
+| `boss-rush` | Boss Rush | top-down | tuning, levels, encounters | proof-validated |
 
 ## Shooter (Phase 7A)
 
 | id | display name | controller(s) | content roles | maturity |
 |---|---|---|---|---|
-| `horizontal-shmup` | Horizontal Shmup | top-down | tuning, stage-scroll | proof-validated |
-| `vertical-shmup` | Vertical Shmup | top-down | tuning, stage-scroll | proof-validated |
-| `bullet-hell` | Bullet Hell | top-down | tuning | proof-validated |
+| `horizontal-shmup` | Horizontal Shmup | top-down | tuning, stage-scroll, encounters | proof-validated |
+| `vertical-shmup` | Vertical Shmup | top-down | tuning, stage-scroll, encounters | proof-validated |
+| `bullet-hell` | Bullet Hell | top-down | tuning, encounters | proof-validated |
 | `asteroids-shooter` | Asteroids Shooter | vehicle | tuning, vehicles | proof-validated |
 | `gallery-shooter` | Gallery Shooter | pointer | tuning, encounters | proof-validated |
 | `run-and-gun` | Run and Gun | platform | tuning, levels, encounters | proof-validated |

@@ -249,11 +249,14 @@ class EncounterServiceImpl implements EncounterService {
       if (fire) out.push(fire);
     }
     // Entity-carried emitters: one run per (live entity, emitter id).
+    // requestId is `${encounterId}:${phaseId}:${groupIndex}:${memberIndex}`
+    // - parse group index from the second-last segment so wave-2 shooters
+    // (group 1+) actually fire. Taking slice(-3)[2] used to read the member
+    // index and look up the wrong spawn group.
     for (const rid of this.#liveSpawns) {
-      // The emitterIds carried are stored on the spawn key's group; recompute.
-      const [, , giStr] = rid.split(':').slice(-3);
-      const gi = Number(giStr);
-      const carried = (phase.spawns ?? [])[gi]?.emitterIds ?? [];
+      const parts = rid.split(':');
+      const gi = Number(parts[parts.length - 2]);
+      const carried = Number.isInteger(gi) ? ((phase.spawns ?? [])[gi]?.emitterIds ?? []) : [];
       for (const eid of carried) {
         const e = byId.get(eid);
         const origin = ctx.originOf(rid);

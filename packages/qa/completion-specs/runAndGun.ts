@@ -48,6 +48,18 @@ export async function run(harness: Harness): Promise<SmokeOutcome> {
   const wave2 = await waitUntil(harness, read, (s) => s.battle?.encounterPhase === 'wave-2', 400, 4);
   evidence.wave2 = { kills: wave2.battle?.kills, phase: wave2.battle?.encounterPhase };
   const wave2Ok = wave2.battle?.encounterPhase === 'wave-2' && (wave2.battle.kills ?? 0) >= 3;
+  const shooterLive = await waitUntil(
+    harness,
+    read,
+    (s) => (s.battle?.enemies.some((e) => e.archetype === 'shooter') ?? false) && (s.battle?.projectilesSpawned ?? 0) > 0,
+    200,
+    4,
+  );
+  evidence.shooter = {
+    enemies: shooterLive.battle?.enemies,
+    projectilesSpawned: shooterLive.battle?.projectilesSpawned,
+  };
+  const shooterOk = (shooterLive.battle?.enemies.some((e) => e.archetype === 'shooter') ?? false) && (shooterLive.battle?.projectilesSpawned ?? 0) > 0;
   const cleared = await waitUntil(harness, read, (s) => (s.battle?.wavesCleared ?? 0) >= 1, 500, 4);
   await harness.keyUp('KeyJ');
   evidence.cleared = { kills: cleared.battle?.kills, waves: cleared.battle?.wavesCleared, deaths: cleared.battle?.playerDeaths };
@@ -58,6 +70,6 @@ export async function run(harness: Harness): Promise<SmokeOutcome> {
   evidence.restart = { ...restart, kills: fresh.battle?.kills, phase: fresh.battle?.encounterPhase };
   const restartOk = restart.after === restart.before + 1 && fresh.battle?.kills === 0 && fresh.battle.encounterPhase === 'wave-1';
 
-  const passed = startedOk && groundedOk && wave2Ok && clearedOk && restartOk;
-  return { passed, details: { ...evidence, startedOk, groundedOk, wave2Ok, clearedOk, restartOk } };
+  const passed = startedOk && groundedOk && wave2Ok && shooterOk && clearedOk && restartOk;
+  return { passed, details: { ...evidence, startedOk, groundedOk, wave2Ok, shooterOk, clearedOk, restartOk } };
 }

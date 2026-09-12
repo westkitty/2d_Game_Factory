@@ -14,9 +14,8 @@ import { POINTER_INPUT_MODES, VALIDATION_PROFILES, definePreset, pack } from '..
  * Shmups, bullet-hell and run-and-gun already require `sw2d.weapons`.
  * Category-C Wave 11 also wires that existing pack into the vehicle
  * (asteroids heading-fire) and pointer (gallery cursor-fire) shells.
- * Rail-shooter consumes sw2d.camera for the rail path; it still does not
- * wire sw2d.weapons (look/damage owns the kill-win, not a second shooting
- * adapter).
+ * Rail-shooter consumes sw2d.camera for the rail path and fires the
+ * catalog weapon through bindStarterGallery (Final Product Completion Wave 3).
  */
 export const SHOOTER_PRESETS: readonly PresetDefinition[] = [
   definePreset({
@@ -31,7 +30,7 @@ export const SHOOTER_PRESETS: readonly PresetDefinition[] = [
     // (bindStarterEncounters) whenever combat+weapons+encounters are present.
     requiredSystemPacks: [pack(PACK_IDS.combat), pack(PACK_IDS.weapons), pack(PACK_IDS.encounters), pack(PACK_IDS.stageScroll)],
     optionalSystemPacks: [pack(PACK_IDS.arcade)],
-    requiredContentRoles: ['tuning', 'stage-scroll'],
+    requiredContentRoles: ['tuning', 'stage-scroll', 'encounters'],
     validationProfile: VALIDATION_PROFILES.shooter,
     // Final Product Completion Wave 3 (matrix L11): parallax layers and the
     // rail path (speed / cross-drift legs) are authored in content/stage-scroll.json
@@ -49,7 +48,7 @@ export const SHOOTER_PRESETS: readonly PresetDefinition[] = [
     // Same Wave 2 change as horizontal-shmup: formations are the genre.
     requiredSystemPacks: [pack(PACK_IDS.combat), pack(PACK_IDS.weapons), pack(PACK_IDS.encounters), pack(PACK_IDS.stageScroll)],
     optionalSystemPacks: [pack(PACK_IDS.arcade)],
-    requiredContentRoles: ['tuning', 'stage-scroll'],
+    requiredContentRoles: ['tuning', 'stage-scroll', 'encounters'],
     validationProfile: VALIDATION_PROFILES.shooter,
     // Final Product Completion Wave 3 (matrix L11): parallax layers and the
     // rail path (speed / cross-drift legs) are authored in content/stage-scroll.json
@@ -66,7 +65,7 @@ export const SHOOTER_PRESETS: readonly PresetDefinition[] = [
     controllerFamilies: ['top-down'],
     requiredSystemPacks: [pack(PACK_IDS.combat), pack(PACK_IDS.weapons), pack(PACK_IDS.encounters)],
     optionalSystemPacks: [pack(PACK_IDS.arcade)],
-    requiredContentRoles: ['tuning'],
+    requiredContentRoles: ['tuning', 'encounters'],
     validationProfile: VALIDATION_PROFILES.shooter,
     // Dense bullet-pattern choreography, waves and phases are reusable now
     // (capability program Phase 4, ADR-0021; proof: proofs/bullet-hell/).

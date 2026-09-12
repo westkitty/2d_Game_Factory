@@ -86,7 +86,7 @@ exceptions: physical hardware certification and the user-owned public-license ch
 - **Architecture:** catalog (encounters required), generator (encounter catalog), top-down shell already binds `bindStarterEncounters`.
 - **Journey:** start → enemies spawn and chase → fire → kill → wave clear → `complete`; die → respawn.
 - **Checkpoint:** Wave 2.
-- **Closed by:** `sw2d.encounters` required for twin-stick-shooter; the canonical starter fights `content/encounters.json` waves through `bindStarterEncounters`. **Proof/test:** generate/uiCopy tests; completion spec `twinStickShooter` (pointer-aim kiting: kills, wave 1 → wave 2, restart). **Browser:** `qa:completion -- twin-stick-shooter` PASS; hand-authored proof still PASS.
+- **Closed by:** `sw2d.encounters` required for twin-stick-shooter; the canonical starter fights `content/encounters.json` waves through `bindStarterEncounters`. Wave-2 shooters now actually fire (same group-index parse repair as L16). **Proof/test:** generate/uiCopy tests; completion spec `twinStickShooter` (pointer-aim kiting: kills, wave 1 → wave 2, restart). **Browser:** `qa:completion -- twin-stick-shooter` PASS; hand-authored proof still PASS.
 - **Status:** CLOSED (Wave 2).
 
 ### L06 - survivor escalation / meta progression
@@ -151,7 +151,7 @@ exceptions: physical hardware certification and the user-owned public-license ch
 - **Architecture:** pooled projectile runtime (`ProjectilePool` in every encounter/weapon consumer), benchmark in `qa:performance`, documented simultaneous-projectile budget.
 - **Journey:** dense pattern → measured live projectile count ≥ budget at ≥ 55 fps stepped, zero errors, pool reuse proven.
 - **Checkpoint:** Wave 3 / Wave 11.
-- **Closed by:** pooled `createProjectileRuntime` (parked sprites with persistent colliders reused by the next spawn; pool stats exposed), bullet-hell content with ring / spiral / fan emitters (400+ live bullets), `npm run qa:bullet-budget` benchmark (canonical game, real rAF): **peak 429 live at 60.1 fps mean, p95 16.7 ms, pool reuse 82.7 %**; `--stress` ceiling **1676 live at 60.1 fps** on Chrome 152 / macOS arm64. Supported budget documented in `docs/qa/QA_MATRIX.md`: 400 simultaneous projectiles at 60 fps on desktop Chrome. Also fixed: `entity-health-below` completed a phase before its boss spawned. **Proof/test:** encounters test, completion spec `bulletHell` (≥300 live, pool reuse, frenzy phase, restart). **Browser:** PASS.
+- **Closed by:** pooled `createProjectileRuntime` (parked sprites with persistent colliders reused by the next spawn; pool stats exposed), bullet-hell content with ring / spiral / fan emitters (400+ live bullets), `npm run qa:bullet-budget` benchmark (canonical game, real rAF). Independent re-measure after densifying the opening pattern (the inherited Wave 3 content peaked at 342 live and failed the gate): **peak 555 live at 60.1 fps mean, p95 16.7 ms, pool reuse 80.8 %** on Chrome 152 / macOS arm64. Supported budget documented in `docs/qa/QA_MATRIX.md`: 400 simultaneous projectiles at 60 fps on desktop Chrome. Also fixed: `entity-health-below` completed a phase before its boss spawned. **Proof/test:** encounters test, completion spec `bulletHell` (≥300 live, pool reuse, frenzy phase, restart). **Browser:** PASS.
 - **Status:** CLOSED (Wave 3).
 
 ### L13 - asteroids rock field / wrap / splitting
@@ -187,7 +187,7 @@ exceptions: physical hardware certification and the user-owned public-license ch
 - **Architecture:** catalog (encounters required), platform shell binds `bindStarterEncounters` (gravity-aware enemies).
 - **Journey:** run right → enemies spawn/shoot → fire → kill → wave clear → `complete`.
 - **Checkpoint:** Wave 3.
-- **Closed by:** run-and-gun requires `sw2d.encounters`; the platform shell binds `bindStarterEncounters` with the ground group and gravity; `ground` archetype walkers walk the strip, a `hold` shooter fires. **Proof/test:** generate tests; completion spec `runAndGun`. **Browser:** PASS.
+- **Closed by:** run-and-gun requires `sw2d.encounters`; the platform shell binds `bindStarterEncounters` with the ground group and gravity; `ground` archetype walkers walk the strip, a `hold` shooter fires. Independent audit found entity-carried emitters on spawn group ≥ 1 never fired (`requestId` parsed the member index as the group). Fixed in the Wave 1-3 sanity repair; completion spec now requires a live `shooter` and enemy `projectilesSpawned` in wave 2. **Proof/test:** generate tests; `encounters.test.ts` group-1 origin fire; completion spec `runAndGun`. **Browser:** PASS.
 - **Status:** CLOSED (Wave 3).
 
 ### L17 - rail-shooter weapons

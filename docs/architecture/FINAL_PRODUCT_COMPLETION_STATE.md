@@ -18,10 +18,10 @@ file is the cursor.
 
 | field | value |
 |---|---|
-| branch SHA | (see git log; updated per checkpoint below) |
-| waves completed | 3 (inventory, platforming movement, combat / top-down, shooters) |
+| branch SHA | (see git log; this checkpoint is the Wave 1-3 independent sanity repair) |
+| waves completed | 3 (inventory, platforming movement, combat / top-down, shooters) + independent sanity repair |
 | limitations closed | 22 / 69 entries (L01-L17; 17 / 52 distinct) |
-| remaining machine-executable | 47 |
+| remaining machine-executable | 47 (recomputed live: 47 entries / 35 distinct / 74 presets) |
 | blockers | none |
 | next exact action | Wave 4: kart held items (L18/L19), boat/flight arcade (L20), puzzle boards (L21/L22), pinball (L23/L28), physics/escape puzzle grammar (L25/L46), maze (L26), rhythm audio clock + reaction (L27) |
 
@@ -81,3 +81,28 @@ file is the cursor.
 - `npm run qa:proof` 18/18 PASS for every wave-3-affected proof (incl. hand-authored gallery, boss-rush, bullet-hell, run-and-gun, twin-stick, racers).
 - `npm run qa:bullet-budget` PASS: 429 live @ 60.1 fps (p95 16.7 ms), pool reuse 82.7 %; `--stress` 1676 live @ 60.1 fps.
 - `npm run limitations:extract`: 47 machine-executable remain.
+
+### Independent sanity audit (post-Wave 3, before Wave 4)
+Inherited HEAD `df850f2` was clean (no uncommitted Wave 4). Local tree matched origin. AntiGravity worktree `~/2d_game_factory/2d_Game_Factory` was not touched. Live extractor: **47 machine-executable / 35 distinct / 74 presets** (matches the ledger remaining count; original 69/52).
+
+**Defects found in inherited Waves 1-3 (not trusted from docs):**
+1. **BLOCKER** `EncounterServiceImpl.#dueFires` parsed `requestId` group index from the member slot (`slice(-3)[2]`), so entity-carried emitters on spawn group ≥ 1 never fired. Run-and-gun wave-2 shooters, twin-stick/skirmish wave-2 shooters, and shmup gunners were silent. Completion specs did not assert enemy shots.
+2. **L12 budget claim was false on this machine.** Isolated `qa:bullet-budget` peaked at **342 live** (60 fps, 80.3 % reuse) against a 400 live gate. Prior "429 live" claim is not reproducible from `df850f2` factory output.
+3. **Catalog honesty:** arena-combat required parked `sw2d.encounters`/`sw2d.weapons` (melee returns before `battle.update`); action-adventure required unused `sw2d.weapons`; stealth/heist required unused `sw2d.ai`/`sw2d.combat`. Boss-rush / shmups / bullet-hell required encounters without an `encounters` content role.
+4. Stale `shooter.ts` header still claimed rail-shooter does not wire `sw2d.weapons`.
+
+**Repairs in this checkpoint:**
+- Parse group index from the second-last `requestId` segment; unit test fires a group-1 shooter from that origin.
+- Densify bullet-hell opening emitters so the supported budget is actually reached.
+- Drop unused required packs (stealth/heist: perception+world only; arena-combat: combat+melee; action-adventure: drop weapons from required). Add `encounters` content roles where the pack is required.
+- `run-and-gun` completion spec now requires a live `shooter` *and* enemy `projectilesSpawned` in wave 2.
+
+**Re-validation (this agent, system Chrome 152 / macOS arm64):**
+- `npm run typecheck` PASS
+- `npx vitest run` targeted: pursuit/wall/melee/runs/encounters/perception/vehicles/stage-scroll/items/puzzleRules/pinball/timing/generation/honesty/generate/catalogPackIntegrity/docsSync PASS (2587 in the generate+honesty+encounters batch)
+- `npm run qa:completion` **21/21 PASS** (all Wave 1-3 completion specs, fresh factory output)
+- `npm run qa:proof -- run-and-gun twin-stick-shooter stealth-game bullet-hell arena-combat action-adventure` **6/6 PASS**
+- `npm run qa:bullet-budget` PASS: **peak 555 live @ 60.1 fps mean, p95 16.7 ms, pool reuse 80.8 %**
+- `npm run limitations:extract`: 47 remain (unchanged; no Wave 4 rows closed)
+
+Known leftover (not a Wave 1-3 product hole, not repaired here): `bindStarterProgression` survive mode still sets `outcome: 'complete'` at XP 6 as a surge milestone while the permadeath run continues (proof `survivorLike` asserts that). Dual HUD, not a second run authority. `ProjectilePool` remains the unpooled demo/proof path; generated games use `createProjectileRuntime`.

@@ -34,14 +34,14 @@ pack/controller selections were actually exercised through, and
 | id | required packs | optional packs | controller(s) | input modes | validation profile |
 |---|---|---|---|---|---|
 | `top-down-adventure` | world, world-entities | narrative, progression | top-down | keyboard, touch | top-down-action-recipe |
-| `action-adventure` | world, world-entities, combat, weapons, melee | ai, progression | top-down | keyboard, touch | top-down-action-recipe |
+| `action-adventure` | world, world-entities, combat, melee | ai, progression, weapons | top-down | keyboard, touch | top-down-action-recipe |
 | `twin-stick-shooter` | combat, weapons, encounters | world, world-entities, arcade | top-down | keyboard, touch | top-down-action-recipe |
 | `survivor-like` | combat, ai, progression, weapons, encounters, runs | arcade, world | top-down | keyboard, touch | top-down-action-recipe |
 | `dungeon-crawler` | world, world-entities, combat, generation, ai | progression | top-down | keyboard, touch | top-down-action-recipe |
 | `action-roguelite` | combat, progression, generation, ai, runs | world, world-entities | top-down | keyboard, touch | top-down-action-recipe |
-| `stealth-game` | ai, combat, world, perception | world-entities, navigation | top-down | keyboard, touch | top-down-action-recipe |
-| `heist-game` | ai, combat, world, perception | world-entities, progression, navigation | top-down | keyboard, touch | top-down-action-recipe |
-| `arena-combat` | combat, weapons, encounters, melee | ai, arcade | top-down | keyboard, touch | top-down-action-recipe |
+| `stealth-game` | world, perception | world-entities, navigation, combat, ai | top-down | keyboard, touch | top-down-action-recipe |
+| `heist-game` | world, perception | world-entities, progression, navigation, combat, ai | top-down | keyboard, touch | top-down-action-recipe |
+| `arena-combat` | combat, melee | ai, arcade, weapons, encounters | top-down | keyboard, touch | top-down-action-recipe |
 | `boss-rush` | combat, ai, weapons, encounters | arcade | top-down | keyboard, touch | top-down-action-recipe |
 ## Shooter (Phase 7A)
 
@@ -129,8 +129,8 @@ pack/controller selections were actually exercised through, and
 
 | short id | real pack id | capability id | recipes requiring it | recipes referencing it (required or optional) |
 |---|---|---|---|---|
-| combat | `sw2d.combat` | `combat.health` | 22 | 26 |
-| ai | `sw2d.ai` | `ai.state` | 7 | 15 |
+| combat | `sw2d.combat` | `combat.health` | 20 | 26 |
+| ai | `sw2d.ai` | `ai.state` | 5 | 15 |
 | world | `sw2d.world` | `world.state` | 31 | 44 |
 | world-entities | `sw2d.world-entities` | `world.entities` | 27 | 36 |
 | progression | `sw2d.progression` | `progression.state` | 11 | 26 |
@@ -140,8 +140,8 @@ pack/controller selections were actually exercised through, and
 | narrative | `sw2d.narrative` | `narrative.state` | 4 | 8 |
 | strategy | `sw2d.strategy` | `strategy.turns` | 4 | 4 |
 | items | `sw2d.items` | `items.state` | 1 | 2 |
-| weapons | `sw2d.weapons` | `combat.weapons` | 12 | 12 |
-| encounters | `sw2d.encounters` | `combat.encounters` | 10 | 11 |
+| weapons | `sw2d.weapons` | `combat.weapons` | 10 | 12 |
+| encounters | `sw2d.encounters` | `combat.encounters` | 9 | 11 |
 | navigation | `sw2d.navigation` | `world.navigation` | 4 | 8 |
 | puzzle-rules | `sw2d.puzzle-rules` | `puzzle.rules` | 4 | 4 |
 | generation | `sw2d.generation` | `world.generation` | 5 | 5 |

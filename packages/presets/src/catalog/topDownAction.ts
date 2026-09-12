@@ -38,8 +38,8 @@ export const TOP_DOWN_ACTION_PRESETS: readonly PresetDefinition[] = [
     displayName: 'Action Adventure',
     family: 'top-down-action',
     controllerFamilies: ['top-down'],
-    requiredSystemPacks: [pack(PACK_IDS.world), pack(PACK_IDS.worldEntities), pack(PACK_IDS.combat), pack(PACK_IDS.weapons), pack(PACK_IDS.melee)],
-    optionalSystemPacks: [pack(PACK_IDS.ai), pack(PACK_IDS.progression)],
+    requiredSystemPacks: [pack(PACK_IDS.world), pack(PACK_IDS.worldEntities), pack(PACK_IDS.combat), pack(PACK_IDS.melee)],
+    optionalSystemPacks: [pack(PACK_IDS.ai), pack(PACK_IDS.progression), pack(PACK_IDS.weapons)],
     requiredContentRoles: ['tuning', 'levels', 'melee'],
     validationProfile: VALIDATION_PROFILES.topDown,
     // Final Product Completion Wave 2 (matrix L04): combo chains, directional
@@ -133,14 +133,15 @@ export const TOP_DOWN_ACTION_PRESETS: readonly PresetDefinition[] = [
     displayName: 'Stealth Game',
     family: 'top-down-action',
     controllerFamilies: ['top-down'],
-    requiredSystemPacks: [pack(PACK_IDS.ai), pack(PACK_IDS.combat), pack(PACK_IDS.world), pack(PACK_IDS.perception)],
-    optionalSystemPacks: [pack(PACK_IDS.worldEntities), pack(PACK_IDS.navigation)],
+    requiredSystemPacks: [pack(PACK_IDS.world), pack(PACK_IDS.perception)],
+    optionalSystemPacks: [pack(PACK_IDS.worldEntities), pack(PACK_IDS.navigation), pack(PACK_IDS.combat), pack(PACK_IDS.ai)],
     requiredContentRoles: ['tuning', 'levels', 'perception'],
     validationProfile: VALIDATION_PROFILES.topDown,
     // Final Product Completion Wave 2 (matrix L09): patrol routes, the observer
     // state machine (patrol / suspicious / chase / investigate / return),
     // catch, noise investigation and takedowns are the reusable sw2d.perception
-    // stealth AI from content/perception.json.
+    // stealth AI from content/perception.json. sw2d.ai / sw2d.combat are not
+    // required: perception owns observer state and does not register agents.
     knownLimitations: [],
   }),
 
@@ -150,8 +151,8 @@ export const TOP_DOWN_ACTION_PRESETS: readonly PresetDefinition[] = [
     displayName: 'Heist Game',
     family: 'top-down-action',
     controllerFamilies: ['top-down'],
-    requiredSystemPacks: [pack(PACK_IDS.ai), pack(PACK_IDS.combat), pack(PACK_IDS.world), pack(PACK_IDS.perception)],
-    optionalSystemPacks: [pack(PACK_IDS.worldEntities), pack(PACK_IDS.progression), pack(PACK_IDS.navigation)],
+    requiredSystemPacks: [pack(PACK_IDS.world), pack(PACK_IDS.perception)],
+    optionalSystemPacks: [pack(PACK_IDS.worldEntities), pack(PACK_IDS.progression), pack(PACK_IDS.navigation), pack(PACK_IDS.combat), pack(PACK_IDS.ai)],
     requiredContentRoles: ['tuning', 'levels', 'perception'],
     validationProfile: VALIDATION_PROFILES.topDown,
     // Final Product Completion Wave 2 (matrix L09): patrol routes, the observer
@@ -171,8 +172,8 @@ export const TOP_DOWN_ACTION_PRESETS: readonly PresetDefinition[] = [
     // fighting content-driven waves in a fixed arena is this preset's whole
     // genre, and the generated top-down shell now wires it for real
     // (bindStarterEncounters).
-    requiredSystemPacks: [pack(PACK_IDS.combat), pack(PACK_IDS.weapons), pack(PACK_IDS.encounters), pack(PACK_IDS.melee)],
-    optionalSystemPacks: [pack(PACK_IDS.ai), pack(PACK_IDS.arcade)],
+    requiredSystemPacks: [pack(PACK_IDS.combat), pack(PACK_IDS.melee)],
+    optionalSystemPacks: [pack(PACK_IDS.ai), pack(PACK_IDS.arcade), pack(PACK_IDS.weapons), pack(PACK_IDS.encounters)],
     requiredContentRoles: ['tuning', 'levels', 'melee'],
     validationProfile: VALIDATION_PROFILES.topDown,
     // Final Product Completion Wave 2 (matrix L04): see action-adventure.
@@ -187,7 +188,7 @@ export const TOP_DOWN_ACTION_PRESETS: readonly PresetDefinition[] = [
     controllerFamilies: ['top-down'],
     requiredSystemPacks: [pack(PACK_IDS.combat), pack(PACK_IDS.ai), pack(PACK_IDS.weapons), pack(PACK_IDS.encounters)],
     optionalSystemPacks: [pack(PACK_IDS.arcade)],
-    requiredContentRoles: ['tuning', 'levels'],
+    requiredContentRoles: ['tuning', 'levels', 'encounters'],
     validationProfile: VALIDATION_PROFILES.topDown,
     // Reusable boss-phase orchestration implemented and consumed (capability
     // program Phase 4, ADR-0021; proof: proofs/boss-rush/).
