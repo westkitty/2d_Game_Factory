@@ -403,6 +403,8 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         if (fight.active) {
           fight.setPlayer(player.x, player.y);
           if (intent.primaryPressed) fight.strike();
+          if (context.input.consumePress('SECONDARY_ACTION')) fight.upgrade();
+          if (context.input.consumePress('CANCEL')) fight.cyclePriority();
           fight.tick(deltaMs);
           fight.render();
           if (fight.snapshot().outcome !== 'playing') player.setVelocity(0, 0);

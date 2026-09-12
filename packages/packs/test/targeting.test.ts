@@ -72,6 +72,27 @@ describe('sw2d.targeting - tower', () => {
   });
 });
 
+describe('sw2d.targeting - lineup', () => {
+  it('only the selected combatant participates', () => {
+    const catalog: TargetingCatalog = {
+      schemaVersion: 1,
+      mode: 'auto',
+      actors: [
+        { id: 'fox', x: 260, y: 270, range: 520, damage: 1, cooldownMs: 0, team: 'player', health: 2 },
+        { id: 'bear', x: 260, y: 270, range: 520, damage: 1, cooldownMs: 0, team: 'player', health: 4 },
+        { id: 'cpu', x: 700, y: 270, range: 520, damage: 1, cooldownMs: 400, team: 'enemy', health: 1 },
+      ],
+    };
+    const { aim } = install(catalog);
+    aim.setLineup(['bear']);
+    expect(aim.lineup()).toEqual(['bear']);
+    aim.tick(16, 0);
+    expect(aim.health('bear')).toBeGreaterThan(0);
+    expect(aim.health('cpu')).toBe(0);
+    expect(aim.outcome()).toBe('complete');
+  });
+});
+
 describe('sw2d.targeting - auto', () => {
   it('two sides strike until one pool is gone', () => {
     const { aim } = install(AUTO);

@@ -323,6 +323,8 @@ exceptions: physical hardware certification and the user-owned public-license ch
 - **Architecture:** `sw2d.encounters` lane-scheduled waves + `sw2d.combat` resolution (both required), `bindStarterNavigation` lane mode consumes them; unit placement, waves, victory/failure.
 - **Journey:** schedule spawns per lane → place defender → combat resolves → wave cleared → all waves → `victory`; enemy reaches base → `failed`.
 - **Checkpoint:** Wave 5.
+- **Closed by:** lane-defense requires encounters+combat; runners spawn from `starter-lane`; pads damage; base HP; victory/fail. **Browser:** `qa:completion -- lane-defense` PASS; frozen proof PASS.
+- **Status:** CLOSED (Wave 5).
 
 ### L32 - auto-battler lineup is presentation only
 - **Source text:** "Teams, active turn, selection and turn advance are reusable (sw2d.strategy); autonomous strikes are reusable (sw2d.targeting); the lineup pick is presentation (it does not change the fighting actor) and loadout drafting stays starter-specific."
@@ -330,6 +332,8 @@ exceptions: physical hardware certification and the user-owned public-license ch
 - **Architecture:** `content/targeting.json` roster; `bindStarterStrategy` battler mode: draft changes the actual fighters/stats; rounds; win/loss; restart.
 - **Journey:** draft tank vs archer → different fighters → autonomous rounds → outcome differs by draft → restart.
 - **Checkpoint:** Wave 5.
+- **Closed by:** `TargetingService.setLineup`; FOX vs BEAR actually fight. **Browser:** PASS.
+- **Status:** CLOSED (Wave 5).
 
 ### L33 - RTS box select / command queue
 - **Source text:** "Unit pathfinding is reusable (sw2d.navigation, optional); box-select for the generated starter is a two-unit presentation on the spatial pointer; a command-queue UI is not implemented."
@@ -337,24 +341,32 @@ exceptions: physical hardware certification and the user-owned public-license ch
 - **Architecture:** `bindStarterCommand` rts mode: N-unit box selection, queued move commands (shift-queue), grid pathfinding via `sw2d.navigation` (required), dead-unit selection cleanup, objective.
 - **Journey:** box-select 3 units → click → queue 2 waypoints → units path around walls → capture zone → `complete`; unit dies → selection drops it.
 - **Checkpoint:** Wave 5.
+- **Closed by:** 3 units, box-select, click-queue, hazard death drops selection. **Browser:** PASS.
+- **Status:** CLOSED (Wave 5).
 
 ### L34 - tactics turn-action state machine
 - **Source text:** "Teams, active turn, selection and turn advance are reusable (sw2d.strategy); attack-range is reusable (sw2d.targeting); a full turn-action state machine is still starter-specific."
 - **Presets:** `turn-based-tactics`
 - **Architecture:** `sw2d.strategy` turn-action machine (`select-unit → choose move/attack → legal targets → execute → consume action → next unit → enemy side → victory/failure`), enemy AI turn, restart.
 - **Checkpoint:** Wave 5.
+- **Closed by:** select/move/spend/attack/end-turn/cpu strike; invalid/dead/out-of-range. **Browser:** PASS.
+- **Status:** CLOSED (Wave 5).
 
 ### L35 - base-defense waves / priority / upgrades
 - **Source text:** "Base HP and incoming contact for the generated starter use sw2d.combat; wave spawning is optional (sw2d.encounters); target-priority and upgrade rules stay starter-specific."
 - **Presets:** `base-defense`
 - **Architecture:** encounters required; `sw2d.targeting` priority (nearest-to-base / lowest-hp); upgrade with resource cost via `sw2d.progression`; base failure; victory; restart.
 - **Checkpoint:** Wave 5.
+- **Closed by:** hold upgrades (K), priority cycle, encounter wave 2, base HP. **Browser:** PASS.
+- **Status:** CLOSED (Wave 5).
 
 ### L36 - territory scoring overlays / multi-faction
 - **Source text:** "Capture-zone occupancy is reusable (sw2d.territory); scoring overlays and contested multi-faction capture stay starter-specific."
 - **Presets:** `territory-control`
 - **Architecture:** `sw2d.territory` multi-faction contested capture progress + score + victory threshold; overlay in `bindStarterCommand` zone mode; reset.
 - **Checkpoint:** Wave 5.
+- **Closed by:** factions player/red, contested decay, score, victoryScore. **Browser:** PASS.
+- **Status:** CLOSED (Wave 5).
 
 ## G. Simulation / economy
 
@@ -513,12 +525,12 @@ exceptions: physical hardware certification and the user-owned public-license ch
 | L28 | pinball-lite | 4 | CLOSED | wave 4 pinball |
 | L29 | tower-defense | 5 | CLOSED | wave 5 targeting |
 | L30 | tower-defense | 5 | CLOSED | wave 5 targeting |
-| L31 | lane-defense | 5 | OPEN | |
-| L32 | auto-battler | 5 | OPEN | |
-| L33 | simple-rts | 5 | OPEN | |
-| L34 | turn-based-tactics | 5 | OPEN | |
-| L35 | base-defense | 5 | OPEN | |
-| L36 | territory-control | 5 | OPEN | |
+| L31 | lane-defense | 5 | CLOSED | wave 5 strategy |
+| L32 | auto-battler | 5 | CLOSED | wave 5 strategy |
+| L33 | simple-rts | 5 | CLOSED | wave 5 strategy |
+| L34 | turn-based-tactics | 5 | CLOSED | wave 5 strategy |
+| L35 | base-defense | 5 | CLOSED | wave 5 strategy |
+| L36 | territory-control | 5 | CLOSED | wave 5 strategy |
 | L37 | idle-incremental | 6 | OPEN | |
 | L38 | shopkeeper, tycoon-lite, restaurant | 6 | OPEN | |
 | L39 | farming-lite | 6 | OPEN | |

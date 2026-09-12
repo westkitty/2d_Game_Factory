@@ -1,3 +1,4 @@
+import { ENCOUNTERS_CAPABILITY_ID, type EncounterService, type TargetingService, TARGETING_CAPABILITY_ID } from '@sw2d/contracts';
 import { accentStyle, headingStyle, mutedStyle } from '../scenes/theme.ts';
 import type { SceneContext } from '../scenes/SceneContext.ts';
 
@@ -23,6 +24,10 @@ export interface StarterCombatSnapshot {
   readonly nearId: string | null;
   readonly lastResult: string | null;
   readonly outcome: 'playing' | 'complete' | 'failed';
+  readonly priority: string;
+  readonly damage: number;
+  readonly gold: number;
+  readonly wave: number;
 }
 
 export interface StarterCombatBinding {
@@ -31,6 +36,8 @@ export interface StarterCombatBinding {
   startY(): number;
   setPlayer(x: number, y: number): void;
   strike(): 'hit' | 'miss' | 'cooldown';
+  upgrade(): boolean;
+  cyclePriority(): void;
   tick(deltaMs: number): void;
   snapshot(): StarterCombatSnapshot;
   render(): void;
@@ -43,6 +50,8 @@ const INERT: StarterCombatBinding = {
   startY: () => 0,
   setPlayer: () => undefined,
   strike: () => 'miss',
+  upgrade: () => false,
+  cyclePriority: () => undefined,
   tick: () => undefined,
   snapshot: () => ({
     active: false,
@@ -53,6 +62,10 @@ const INERT: StarterCombatBinding = {
     nearId: null,
     lastResult: null,
     outcome: 'playing',
+    priority: 'nearest',
+    damage: 0,
+    gold: 0,
+    wave: 0,
   }),
   render: () => undefined,
   dispose: () => undefined,
@@ -118,6 +131,8 @@ export function bindStarterCombat(
   if (mode !== 'room' && mode !== 'hold') return INERT;
   if (!context.capabilities.has(COMBAT_CAPABILITY_ID)) return INERT;
   const combat = context.capabilities.require<CombatSlice>(COMBAT_CAPABILITY_ID);
+  const encounters = context.capabilities.get<EncounterService>(ENCOUNTERS_CAPABILITY_ID);
+  const targeting = context.capabilities.get<TargetingService>(TARGETING_CAPABILITY_ID);
 
   const hud = options?.hud !== false;
   const scene = context.scene;
@@ -158,16 +173,27 @@ export function bindStarterCombat(
   let lastResult: string | null = null;
   let outcome: 'playing' | 'complete' | 'failed' = 'playing';
   let disposed = false;
+  let gold = 40;
+  let strikeDamage = 1;
+  let priority: 'nearest' | 'lowest' = 'nearest';
+  let waveStarted = false;
 
   function living(): Foe[] {
     return foes.filter((foe) => combat.has(foe.id) && combat.get(foe.id).current > 0);
   }
 
   function nearId(): string | null {
-    let best: { id: string; d: number } | null = null;
+    let best: { id: string; d: number; hp: number } | null = null;
     for (const foe of living()) {
       const d = dist(playerX, playerY, foe.x, foe.y);
-      if (d <= STRIKE_RANGE && (best === null || d < best.d)) best = { id: foe.id, d };
+      if (d > STRIKE_RANGE) continue;
+      const hp = combat.get(foe.id).current;
+      if (
+        best === null ||
+        (priority === 'lowest' ? hp < best.hp || (hp === best.hp && d < best.d) : d < best.d)
+      ) {
+        best = { id: foe.id, d, hp };
+      }
     }
     return best?.id ?? null;
   }
@@ -182,6 +208,10 @@ export function bindStarterCombat(
       nearId: nearId(),
       lastResult,
       outcome,
+      priority,
+      damage: strikeDamage,
+      gold,
+      wave: encounters?.state().phaseIndex ?? 0,
     };
   }
 
@@ -214,17 +244,27 @@ export function bindStarterCombat(
     } else {
       title.setText(snap.outcome === 'complete' ? 'HELD' : snap.outcome === 'failed' ? 'BREACHED' : 'HOLD');
       status.setText(
-        `base ${snap.baseHealth}  ·  foes ${snap.foesAlive}${snap.nearId ? `  ·  near ${snap.nearId}` : ''}${
-          snap.lastResult ? `  ·  ${snap.lastResult}` : ''
-        }${snap.outcome !== 'playing' ? `  ·  ${snap.outcome}` : ''}`,
+        `base ${snap.baseHealth}  ·  foes ${snap.foesAlive}  ·  dmg ${snap.damage}  ·  ${snap.priority}${
+          snap.nearId ? `  ·  near ${snap.nearId}` : ''
+        }${snap.lastResult ? `  ·  ${snap.lastResult}` : ''}${snap.outcome !== 'playing' ? `  ·  ${snap.outcome}` : ''}`,
       );
-      hint.setText(snap.outcome === 'playing' ? 'STOP RAIDERS   J STRIKES' : snap.outcome === 'complete' ? 'HELD' : 'BREACHED');
+      hint.setText(
+        snap.outcome === 'playing' ? 'J STRIKES  ·  K UPGRADES  ·  L CYCLES PRIORITY' : snap.outcome === 'complete' ? 'HELD' : 'BREACHED',
+      );
     }
   }
 
   function finish(): void {
     if (outcome !== 'playing') return;
     if (living().length === 0) {
+      if (mode === 'hold' && encounters && !waveStarted) {
+        const id = encounters.definitionIds()[0];
+        if (id) encounters.start(id);
+        waveStarted = true;
+        lastResult = 'wave-2';
+        return;
+      }
+      if (mode === 'hold' && encounters && !encounters.state().completed) return;
       outcome = 'complete';
       lastResult = 'cleared';
       context.audio.playCue('ui.confirm');
@@ -266,16 +306,61 @@ export function bindStarterCombat(
         paint();
         return 'miss';
       }
-      combat.damage(id, 1, nowMs);
+      combat.damage(id, strikeDamage, nowMs);
       lastResult = combat.get(id).current > 0 ? 'hit' : `kill-${id}`;
       finish();
       context.audio.playCue('ui.confirm');
       paint();
       return 'hit';
     },
+    upgrade(): boolean {
+      if (disposed || outcome !== 'playing' || gold < 20) {
+        lastResult = 'upgrade-rejected';
+        paint();
+        return false;
+      }
+      gold -= 20;
+      strikeDamage += 1;
+      targeting?.upgrade(targeting.lineup()[0] ?? 'tower');
+      lastResult = 'upgraded';
+      context.audio.playCue('ui.confirm');
+      paint();
+      return true;
+    },
+    cyclePriority(): void {
+      if (disposed || outcome !== 'playing') return;
+      priority = priority === 'nearest' ? 'lowest' : 'nearest';
+      lastResult = `priority-${priority}`;
+      paint();
+    },
     tick(deltaMs: number): void {
       if (disposed || outcome !== 'playing') return;
       nowMs += deltaMs;
+      if (mode === 'hold' && encounters && waveStarted) {
+        const tick = encounters.update(deltaMs, {
+          aimAt: () => [1, 0],
+          healthFraction: (id) => (combat.has(id) ? combat.get(id).current / combat.get(id).max : 0),
+          flag: () => false,
+          originOf: (id) => {
+            const live = foes.find((foe) => foe.id === id);
+            return live ? [live.x, live.y] : null;
+          },
+          bossOrigin: () => [BASE_POS.x, BASE_POS.y],
+          viewport: () => context.definition.viewport,
+        });
+        for (const spawn of tick.spawns) {
+          foes.push({ id: spawn.requestId, label: 'RAIDER', x: spawn.x, y: spawn.y });
+          ensure(combat, spawn.requestId, spawn.health);
+          ids.push(spawn.requestId);
+          if (hud) {
+            const sprite = scene.add.rectangle(spawn.x, spawn.y, 36, 36, FOE_COLOR, 0.95).setStrokeStyle(2, 0xffffff, 0.9).setDepth(20);
+            foeSprites.push({ id: spawn.requestId, sprite });
+          }
+        }
+        for (const foe of foes) {
+          if (combat.has(foe.id) && combat.get(foe.id).current <= 0) encounters.reportDeath(foe.id);
+        }
+      }
       if (mode === 'hold') {
         const step = MARCH_SPEED * (deltaMs / 1000);
         for (const foe of living()) {
@@ -304,6 +389,7 @@ export function bindStarterCombat(
           }
         }
       }
+      finish();
       paint();
     },
     snapshot,

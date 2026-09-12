@@ -22,6 +22,18 @@
       "config": {}
     },
     {
+      "packId": "sw2d.encounters",
+      "config": {}
+    },
+    {
+      "packId": "sw2d.targeting",
+      "config": {}
+    },
+    {
+      "packId": "sw2d.progression",
+      "config": {}
+    },
+    {
       "packId": "game.top-down-shell",
       "config": {}
     }

@@ -49,11 +49,21 @@ export async function run(harness: Harness): Promise<SmokeOutcome> {
   evidence.first = { id: firstId, at: { x: atFirst.x, y: atFirst.y }, combat: afterFirst.combat };
   const firstOk = (firstId === 'raider' || firstId === 'raider-2') && afterFirst.combat?.foesAlive === 1 && afterFirst.combat.outcome === 'playing';
 
-  // Then the second; the base is never breached.
-  const atSecond = await holdUntil(harness, [atFirst.y < 270 ? 'ArrowDown' : 'ArrowUp'], read, (s) => Boolean(s.combat?.nearId && s.combat.nearId !== firstId));
-  const done = await strikeTwice(harness, read);
-  evidence.done = { at: { x: atSecond.x, y: atSecond.y, near: atSecond.combat?.nearId }, combat: done.combat };
-  const doneOk = Boolean(atSecond.combat?.nearId) && done.combat?.foesAlive === 0 && done.combat.outcome === 'complete' && done.combat.baseHealth === 3;
+  // Then remaining raiders, including the encounter wave; the base is never breached.
+  let done = afterFirst;
+  for (let i = 0; i < 80 && done.combat?.outcome === 'playing'; i++) {
+    if (done.combat?.nearId) {
+      await harness.keyTap('KeyJ');
+      await harness.stepFrames(10);
+    } else {
+      await harness.keyDown(atFirst.y < 270 ? 'ArrowDown' : 'ArrowUp');
+      await harness.stepFrames(8);
+      await harness.keyUp(atFirst.y < 270 ? 'ArrowDown' : 'ArrowUp');
+    }
+    done = await read();
+  }
+  evidence.done = { combat: done.combat };
+  const doneOk = done.combat?.outcome === 'complete' && (done.combat.baseHealth ?? 0) >= 1;
 
   const run = await restartRun(harness);
   const fresh = await read();

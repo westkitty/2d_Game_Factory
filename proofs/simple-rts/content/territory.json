@@ -1,6 +1,11 @@
 {
   "schemaVersion": 1,
   "mode": "occupy",
+  "factions": [
+    "player",
+    "red"
+  ],
+  "victoryScore": 2,
   "zones": [
     {
       "id": "zone-a",

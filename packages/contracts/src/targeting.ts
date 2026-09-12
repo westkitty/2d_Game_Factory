@@ -73,4 +73,7 @@ export interface TargetingService {
   placedCount(): number;
   placementRejections(): number;
   upgradeRejections(): number;
+  /** Restrict which player-team actors participate. Null/empty restores all. */
+  setLineup(ids: readonly string[]): void;
+  lineup(): readonly string[];
 }

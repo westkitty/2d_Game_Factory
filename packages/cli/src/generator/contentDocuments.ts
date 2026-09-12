@@ -135,7 +135,7 @@ export function generateWeaponCatalog(hasWeaponsPack: boolean, hasEncountersPack
  * content/encounters.json - an EncounterCatalog (capability program Phase 4).
  * Always emitted; empty unless the preset installs `sw2d.encounters`.
  */
-export type EncounterStarterKind = 'skirmish' | 'swarm' | 'platform' | 'boss-rush' | 'bullet-hell' | 'gallery' | 'rail' | 'shmup-h' | 'shmup-v' | 'none';
+export type EncounterStarterKind = 'skirmish' | 'swarm' | 'platform' | 'boss-rush' | 'bullet-hell' | 'gallery' | 'rail' | 'shmup-h' | 'shmup-v' | 'lane' | 'hold' | 'none';
 
 export function generateEncounterCatalog(hasEncountersPack: boolean, options: { readonly escalate?: boolean; readonly kind?: EncounterStarterKind } = {}): Record<string, unknown> {
   if (!hasEncountersPack) return { schemaVersion: 1, encounters: [] };
@@ -143,6 +143,48 @@ export function generateEncounterCatalog(hasEncountersPack: boolean, options: { 
   // Survivor-like (Final Product Completion Wave 2): every loop of the same
   // content is a bigger, tougher, faster wave - the reusable escalation the
   // encounters pack applies from this document.
+  if (kind === 'lane') {
+    return {
+      schemaVersion: 1,
+      archetypes: { runner: { motion: 'ground', speed: 70 } },
+      encounters: [
+        {
+          id: 'starter-lane',
+          phases: [
+            {
+              id: 'wave-1',
+              spawns: [{ archetype: 'runner', count: 2, at: { kind: 'point', x: 128, y: 256 }, intervalMs: 700, health: 2 }],
+              completeWhen: { kind: 'spawns-cleared' },
+            },
+            {
+              id: 'wave-2',
+              spawns: [{ archetype: 'runner', count: 2, at: { kind: 'point', x: 128, y: 256 }, intervalMs: 500, health: 2 }],
+              completeWhen: { kind: 'spawns-cleared' },
+            },
+          ],
+        },
+      ],
+    };
+  }
+  if (kind === 'hold') {
+    return {
+      schemaVersion: 1,
+      escalation: { countPerWave: 1, healthScalePerWave: 0.2, speedScalePerWave: 0.1, maxWaves: 3 },
+      archetypes: { raider: { motion: 'chase', speed: 40 } },
+      encounters: [
+        {
+          id: 'starter-hold',
+          phases: [
+            {
+              id: 'raid',
+              spawns: [{ archetype: 'raider', count: 2, at: { kind: 'point', x: 160, y: 270 }, intervalMs: 800, health: 2 }],
+              completeWhen: { kind: 'spawns-cleared' },
+            },
+          ],
+        },
+      ],
+    };
+  }
   if (kind === 'swarm') {
     return {
       schemaVersion: 1,
@@ -1410,6 +1452,8 @@ export function generateTerritoryCatalog(kind: 'stand' | 'occupy' | 'none'): Rec
   return {
     schemaVersion: 1,
     mode: kind,
+    factions: ['player', 'red'],
+    victoryScore: 2,
     zones: [
       { id: 'zone-a', x: 280, y: 270, radius: 72, holdMs: 400 },
       { id: 'zone-b', x: 700, y: 270, radius: 72, holdMs: 400 },
@@ -1587,6 +1631,8 @@ export function generateTargetingCatalog(kind: 'tower' | 'auto' | 'range' | 'non
       mode: 'auto',
       actors: [
         { id: 'fox', x: 260, y: 270, range: 520, damage: 1, cooldownMs: 280, team: 'player', health: 2 },
+        { id: 'bear', x: 260, y: 270, range: 480, damage: 1, cooldownMs: 420, team: 'player', health: 4 },
+        { id: 'owl', x: 260, y: 270, range: 560, damage: 2, cooldownMs: 220, team: 'player', health: 2 },
         { id: 'cpu', x: 700, y: 270, range: 520, damage: 1, cooldownMs: 400, team: 'enemy', health: 2 },
       ],
     };
@@ -1747,6 +1793,12 @@ export function generateUiCopy(options: {
           ? 'MOVE WASD/ARROWS  -  STRIKE J/X'
           : has('sw2d.stage-scroll')
             ? 'MOVE WASD/ARROWS  -  FIRE J/X  -  CLEAR THE STAGE'
+            : presetId === 'base-defense'
+              ? 'MOVE WASD/ARROWS  -  STRIKE J/X  -  DEFEND THE BASE'
+            : presetId === 'simple-rts'
+              ? 'J SELECTS UNIT A  -  DRAG BOX-SELECTS  -  WASD MOVES'
+            : presetId === 'territory-control'
+              ? 'MOVE WASD/ARROWS  -  STAND IN BOTH ZONES'
             : has('sw2d.encounters')
               ? 'MOVE WASD/ARROWS  -  AIM WITH MOUSE  -  FIRE J/X  -  SURVIVE THE WAVES'
               : has('sw2d.weapons')
@@ -1789,11 +1841,11 @@ export function generateUiCopy(options: {
         : presetId === 'falling-block-puzzle'
           ? 'MOVE WASD/ARROWS  -  ENTER ROTATES  -  DROP K'
           : presetId === 'turn-based-tactics'
-            ? 'ARROWS MOVE  -  J SELECTS  -  REACH THE FLAG'
+            ? 'ARROWS MOVE  -  J SELECTS  -  ENTER ATTACKS'
           : presetId === 'maze-game'
             ? 'ARROWS WALK  -  REACH THE EXIT'
             : presetId === 'lane-defense'
-              ? 'ARROWS AIM  -  J BLOCKS  -  THE RUNNER REPATHS'
+              ? 'ARROWS AIM  -  J BLOCKS  -  DEFEND THE BASE'
           : presetId === 'tower-defense'
             ? 'CLICK OR ENTER PLACES  -  ARROWS PICK A PAD  -  K UPGRADES'
           : has('sw2d.puzzle-rules')

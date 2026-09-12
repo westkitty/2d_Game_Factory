@@ -107,7 +107,7 @@ controller/input-mode breakdown and full pack-consumer coverage.
 | `auto-battler` | Auto Battler | ui-simulation | tuning, targeting | proof-validated |
 | `simple-rts` | Simple RTS | top-down | tuning, levels, territory | proof-validated |
 | `turn-based-tactics` | Turn-Based Tactics | grid, ui-simulation | tuning, levels, targeting | proof-validated |
-| `base-defense` | Base Defense | top-down | tuning, levels | proof-validated |
+| `base-defense` | Base Defense | top-down | tuning, levels, targeting | proof-validated |
 | `territory-control` | Territory Control | top-down | tuning, levels, territory | proof-validated |
 
 ## Simulation / management (Phase 7C)
@@ -202,12 +202,12 @@ recipe's *first* stated limitation; see `knownLimitations` in
 | `reaction-timing` | (none stated) |
 | `pinball-lite` | (none stated) |
 | `tower-defense` | (none stated) |
-| `lane-defense` | Lane-spawn scheduling and combat resolution are still starter-specific. |
-| `auto-battler` | Teams, active turn, selection and turn advance are reusable (sw2d.strategy); autonomous strikes are reusable (sw2d.targeting); the lineup pick is presentation (it does not change the fighting actor) and loadout drafting stays starter-specific. |
-| `simple-rts` | Unit pathfinding is reusable (sw2d.navigation, optional); box-select for the generated starter is a two-unit presentation on the spatial pointer; a command-queue UI is not implemented. |
-| `turn-based-tactics` | Teams, active turn, selection and turn advance are reusable (sw2d.strategy); attack-range is reusable (sw2d.targeting); a full turn-action state machine is still starter-specific. |
-| `base-defense` | Base HP and incoming contact for the generated starter use sw2d.combat; wave spawning is optional (sw2d.encounters); target-priority and upgrade rules stay starter-specific. |
-| `territory-control` | Capture-zone occupancy is reusable (sw2d.territory); scoring overlays and contested multi-faction capture stay starter-specific. |
+| `lane-defense` | (none stated) |
+| `auto-battler` | (none stated) |
+| `simple-rts` | (none stated) |
+| `turn-based-tactics` | (none stated) |
+| `base-defense` | (none stated) |
+| `territory-control` | (none stated) |
 | `idle-incremental` | The simulation/resource core exists, but full offline-progress/catch-up, prestige, and large economy balancing are not production systems. |
 | `shopkeeper` | Customer demand, queue, stock, transactions and production jobs are reusable (sw2d.economy); shop layout, walking customers, prestige and offline catch-up are not. |
 | `tycoon-lite` | Customer demand, queue, stock, transactions and production jobs are reusable (sw2d.economy); shop layout, walking customers, prestige and offline catch-up are not. |

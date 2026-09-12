@@ -1,8 +1,11 @@
 import {
+  ENCOUNTERS_CAPABILITY_ID,
   GENERATION_CAPABILITY_ID,
   NAV_CAPABILITY_ID,
   createRouteFollower,
   generateMazeLayout,
+  type EncounterService,
+  type EncounterUpdateContext,
   type GenerationService,
   type NavGrid,
   type NavService,
@@ -36,7 +39,10 @@ export interface StarterNavigationSnapshot {
   readonly blockedCount: number;
   readonly revealedCount: number;
   readonly lastResult: string | null;
-  readonly outcome: 'playing' | 'complete';
+  readonly outcome: 'playing' | 'complete' | 'failed';
+  readonly runnersAlive: number;
+  readonly wave: number;
+  readonly baseHp: number;
 }
 
 export interface StarterNavigationBinding {
@@ -70,6 +76,9 @@ const INERT: StarterNavigationBinding = {
     revealedCount: 0,
     lastResult: null,
     outcome: 'playing',
+    runnersAlive: 0,
+    wave: 0,
+    baseHp: 0,
   }),
   render: () => undefined,
   dispose: () => undefined,
@@ -88,6 +97,15 @@ const EXIT_COLOR = 0xb98af0;
 const PLAYER_COLOR = 0x65d0a8;
 const RUNNER_COLOR = 0xe05fa0;
 const DONE_COLOR = 0x65d0a8;
+const COMBAT_ID = 'combat.health';
+
+interface CombatSlice {
+  register(entityId: string, maxHealth: number): void;
+  has(entityId: string): boolean;
+  get(entityId: string): { readonly current: number; readonly max: number };
+  damage(entityId: string, amount: number, nowMs: number): { readonly current: number };
+  remove(entityId: string): void;
+}
 
 function cellKey(col: number, row: number): string {
   return `${col},${row}`;
@@ -231,7 +249,27 @@ export function bindStarterNavigation(
   let runnerY = startWorld[1];
   let blockedCount = 0;
   let lastResult: string | null = null;
-  let outcome: 'playing' | 'complete' = 'playing';
+  let outcome: 'playing' | 'complete' | 'failed' = 'playing';
+  const combat = context.capabilities.get<CombatSlice>(COMBAT_ID);
+  const encounters = context.capabilities.get<EncounterService>(ENCOUNTERS_CAPABILITY_ID);
+  if (combat && mode === 'lane') {
+    if (combat.has('base')) combat.remove('base');
+    combat.register('base', 3);
+  }
+  if (encounters && mode === 'lane') {
+    const id = encounters.definitionIds()[0];
+    if (id) encounters.start(id);
+  }
+  interface LaneRunner {
+    id: string;
+    x: number;
+    y: number;
+    follower: ReturnType<typeof createRouteFollower>;
+    lastHitAt: number;
+  }
+  const runners: LaneRunner[] = [];
+  const pads = new Set<string>();
+  let nowMs = 0;
   const revealed = new Set<string>([cellKey(start.col, start.row)]);
   for (const [dc, dr] of ORTHO) revealed.add(cellKey(start.col + dc, start.row + dr));
   let disposed = false;
@@ -263,6 +301,9 @@ export function bindStarterNavigation(
       revealedCount: revealed.size,
       lastResult,
       outcome,
+      runnersAlive: mode === 'lane' ? (encounters ? runners.length : 1) : 0,
+      wave: encounters?.state().wave ?? encounters?.state().phaseIndex ?? 0,
+      baseHp: combat?.has('base') ? combat.get('base').current : 0,
     };
   }
 
@@ -302,13 +343,19 @@ export function bindStarterNavigation(
       );
       hint.setText(snap.outcome === 'complete' ? 'EXIT REACHED' : 'ARROWS WALK   REACH THE EXIT   MINIMAP REVEALS');
     } else {
-      title.setText(snap.outcome === 'complete' ? 'BREACHED' : 'LANE');
+      title.setText(snap.outcome === 'complete' ? 'HELD' : snap.outcome === 'failed' ? 'BREACHED' : 'LANE');
       status.setText(
-        `runner ${snap.runnerCol},${snap.runnerRow}  ·  path ${snap.pathLength}  ·  blocks ${snap.blockedCount}${
+        `wave ${snap.wave}  ·  runners ${snap.runnersAlive}  ·  base ${snap.baseHp}  ·  blocks ${snap.blockedCount}${
           snap.lastResult ? `  ·  ${snap.lastResult}` : ''
         }`,
       );
-      hint.setText(snap.outcome === 'complete' ? 'RUNNER REACHED BASE' : 'ARROWS AIM   J BLOCKS   THE RUNNER REPATHS');
+      hint.setText(
+        snap.outcome === 'complete'
+          ? 'WAVES CLEARED'
+          : snap.outcome === 'failed'
+            ? 'BASE DOWN'
+            : 'ARROWS AIM  ·  J PLACES A BLOCK  ·  BLOCKS DAMAGE RUNNERS',
+      );
     }
   }
 
@@ -384,24 +431,72 @@ export function bindStarterNavigation(
         return;
       }
       blockedCount += 1;
+      pads.add(cellKey(cursorCol, cursorRow));
       lastResult = 'placed';
       follower?.setDestination(grid, runnerX, runnerY, goal.col, goal.row);
       context.audio.playCue('ui.confirm');
       paint();
     },
     tick(deltaMs: number): void {
-      if (disposed || outcome !== 'playing' || mode !== 'lane' || !follower) return;
-      const moved = follower.step(runnerX, runnerY, RUN_SPEED * (deltaMs / 1000));
-      runnerX = moved.x;
-      runnerY = moved.y;
-      if (follower.blocked) {
-        lastResult = 'trapped';
-        paint();
-        return;
+      if (disposed || outcome !== 'playing' || mode !== 'lane') return;
+      nowMs += deltaMs;
+      const ctx: EncounterUpdateContext = {
+        aimAt: () => [1, 0],
+        healthFraction: (id) => (combat?.has(id) ? combat.get(id).current / combat.get(id).max : 0),
+        flag: () => false,
+        originOf: (id) => {
+          const live = runners.find((runner) => runner.id === id);
+          return live ? [live.x, live.y] : null;
+        },
+        bossOrigin: () => [startWorld[0], startWorld[1]],
+        viewport: () => context.definition.viewport,
+      };
+      if (encounters) {
+        const tick = encounters.update(deltaMs, ctx);
+        for (const spawn of tick.spawns) {
+          const spawned = createRouteFollower();
+          spawned.setDestination(grid, startWorld[0], startWorld[1], goal.col, goal.row);
+          runners.push({ id: spawn.requestId, x: startWorld[0], y: startWorld[1], follower: spawned, lastHitAt: -999 });
+          combat?.register(spawn.requestId, spawn.health);
+        }
+      } else if (follower && runners.length === 0) {
+        runners.push({ id: 'runner-0', x: runnerX, y: runnerY, follower, lastHitAt: -999 });
       }
-      if (moved.arrived) {
+      const speed = RUN_SPEED * (deltaMs / 1000);
+      for (const runner of [...runners]) {
+        const moved = runner.follower.step(runner.x, runner.y, speed);
+        runner.x = moved.x;
+        runner.y = moved.y;
+        const cell = grid.worldToCell(runner.x, runner.y);
+        const besidePad = ORTHO.some(([dc, dr]) => pads.has(cellKey(cell.col + dc, cell.row + dr)));
+        if (besidePad && nowMs - runner.lastHitAt > 280 && combat?.has(runner.id)) {
+          combat.damage(runner.id, 1, nowMs);
+          runner.lastHitAt = nowMs;
+        }
+        const dead = combat?.has(runner.id) && combat.get(runner.id).current <= 0;
+        if (dead || moved.arrived) {
+          if (moved.arrived && combat?.has('base')) {
+            combat.damage('base', 1, nowMs);
+            lastResult = 'base-hit';
+            if (combat.get('base').current <= 0) {
+              outcome = 'failed';
+              lastResult = 'breached';
+            }
+          }
+          if (dead) lastResult = 'kill';
+          encounters?.reportDeath(runner.id);
+          if (combat?.has(runner.id)) combat.remove(runner.id);
+          const idx = runners.indexOf(runner);
+          if (idx >= 0) runners.splice(idx, 1);
+        }
+      }
+      if (runners[0]) {
+        runnerX = runners[0].x;
+        runnerY = runners[0].y;
+      }
+      if (outcome === 'playing' && encounters?.state().completed && runners.length === 0) {
         outcome = 'complete';
-        lastResult = 'arrived';
+        lastResult = 'cleared';
       }
       paint();
     },

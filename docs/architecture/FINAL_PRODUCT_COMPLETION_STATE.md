@@ -18,12 +18,12 @@ file is the cursor.
 
 | field | value |
 |---|---|
-| branch SHA | (see git log; this checkpoint is Wave 5 L29/L30) |
-| waves completed | 3 + sanity repair + Wave 4 + Wave 5 L29/L30 |
-| limitations closed | 39 / 69 entries |
-| remaining machine-executable | 30 |
+| branch SHA | (see git log; this checkpoint is Wave 5 complete) |
+| waves completed | 3 + sanity repair + Wave 4 + Wave 5 |
+| limitations closed | 45 / 69 entries |
+| remaining machine-executable | 24 |
 | blockers | none |
-| next exact action | Wave 5 remainder: L31-L36 lane/battler/RTS/tactics/base/territory |
+| next exact action | Wave 6 simulation/economy (L37-L39), then creatures/colony (L40-L41) |
 
 ## Checkpoint log
 
@@ -158,3 +158,13 @@ Known leftover (not a Wave 1-3 product hole, not repaired here): `bindStarterPro
 - `sw2d.targeting` slots, placeCost, upgrade tiers. Pointer hover/click places or upgrades; keyboard cursor kept; miss-clicks rejected. Gold is targeting-owned from `startingGold`.
 - `qa:completion -- tower-defense` PASS (fresh factory). `qa:proof -- tower-defense match-puzzle maze-game falling-block-puzzle` 4/4 PASS.
 - `npm run limitations:extract`: **30** machine-executable remain (39/69 entries closed).
+
+### Wave 5 L31-L36 - strategy remainder
+- Lane-defense: encounters+combat required; `starter-lane` waves; pads damage runners; base HP; victory/fail.
+- Auto-battler: `setLineup` so FOX/BEAR/OWL actually fight.
+- Simple-RTS: 3 units, box-select, click-queue, hazard death drops selection; navigation required.
+- Tactics: select/move/spend/attack/end-turn/cpu strike.
+- Base-defense: K upgrade, Backspace priority, encounter wave 2.
+- Territory: player/red factions, contested decay, score, victoryScore.
+- `qa:completion` 6/6 PASS (base-defense needed a second-wave combat loop). `qa:proof` 6/6 PASS.
+- `npm run limitations:extract`: **24** machine-executable remain (45/69 entries closed). Wave 5 matrix rows are closed.

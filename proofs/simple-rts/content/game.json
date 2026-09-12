@@ -22,6 +22,18 @@
       "config": {}
     },
     {
+      "packId": "sw2d.navigation",
+      "config": {}
+    },
+    {
+      "packId": "sw2d.world",
+      "config": {}
+    },
+    {
+      "packId": "sw2d.world-entities",
+      "config": {}
+    },
+    {
       "packId": "game.top-down-shell",
       "config": {}
     }

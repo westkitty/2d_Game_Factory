@@ -46,6 +46,7 @@ class TargetingServiceImpl implements TargetingService {
   private occupants = new Map<string, string>();
   private placeRejects = 0;
   private upgradeRejects = 0;
+  private roster: readonly string[] | null = null;
 
   constructor(
     private readonly events: EventBus,
@@ -75,7 +76,7 @@ class TargetingServiceImpl implements TargetingService {
     if (!this.active() || this.current !== 'playing') return;
     if (this.catalog.mode === 'range') return;
     for (const actor of this.actors.values()) {
-      if (actor.hp <= 0 || actor.def.id === 'none') continue;
+      if (actor.hp <= 0 || actor.def.id === 'none' || !this.inLineup(actor)) continue;
       const targetId = this.pickTarget(actor.def.id);
       if (targetId) this.applyStrike(actor.def.id, targetId, nowMs);
     }
@@ -98,7 +99,7 @@ class TargetingServiceImpl implements TargetingService {
   }
 
   alive(team: 'player' | 'enemy'): number {
-    return [...this.actors.values()].filter((a) => a.def.team === team && a.hp > 0 && a.def.id !== 'none').length;
+    return [...this.actors.values()].filter((a) => a.def.team === team && a.hp > 0 && a.def.id !== 'none' && this.inLineup(a)).length;
   }
 
   health(actorId: string): number {
@@ -216,6 +217,15 @@ class TargetingServiceImpl implements TargetingService {
     return this.upgradeRejects;
   }
 
+  setLineup(ids: readonly string[]): void {
+    this.roster = [...ids];
+  }
+
+  lineup(): readonly string[] {
+    if (this.roster !== null) return this.roster;
+    return [...this.actors.values()].filter((a) => a.def.team === 'player' && a.def.id !== 'none').map((a) => a.def.id);
+  }
+
   private rebuild(): void {
     this.actors = new Map(
       this.catalog.actors.map((def) => [def.id, { def, x: def.x, y: def.y, hp: def.health, readyAt: 0, tier: 0 }]),
@@ -225,6 +235,7 @@ class TargetingServiceImpl implements TargetingService {
     this.occupants = new Map();
     this.placeRejects = 0;
     this.upgradeRejects = 0;
+    this.roster = null;
     for (const def of this.catalog.actors) {
       if (def.team !== 'player' || def.id === 'none') continue;
       const slot = this.slots().find((entry) => Math.hypot(entry.x - def.x, entry.y - def.y) <= entry.radius);
@@ -236,14 +247,20 @@ class TargetingServiceImpl implements TargetingService {
     return Math.hypot(attacker.x - target.x, attacker.y - target.y) <= attacker.def.range;
   }
 
+  private inLineup(actor: LiveActor): boolean {
+    if (this.roster === null || actor.def.team !== 'player') return true;
+    return this.roster.includes(actor.def.id);
+  }
+
   private pickTarget(attackerId: string): string | null {
     const attacker = this.actors.get(attackerId);
-    if (!attacker || attacker.hp <= 0) return null;
+    if (!attacker || attacker.hp <= 0 || !this.inLineup(attacker)) return null;
     let best: LiveActor | null = null;
     let bestD = Infinity;
     for (const other of this.actors.values()) {
       if (other.def.id === attackerId || other.def.id === 'none' || other.hp <= 0) continue;
       if (other.def.team === attacker.def.team) continue;
+      if (!this.inLineup(other)) continue;
       if (!this.inRange(attacker, other)) continue;
       const d = Math.hypot(attacker.x - other.x, attacker.y - other.y);
       if (d < bestD) {

@@ -68,6 +68,12 @@ export const COMPLETION_SPEC_MODULES: Readonly<Record<string, string>> = {
   'rhythm-action': 'rhythmAction',
   'reaction-timing': 'reactionTiming',
   'tower-defense': 'towerDefense',
+  'lane-defense': 'laneDefense',
+  'auto-battler': 'autoBattler',
+  'simple-rts': 'simpleRts',
+  'turn-based-tactics': 'turnBasedTactics',
+  'base-defense': 'baseDefense',
+  'territory-control': 'territoryControl',
 };
 
 interface Target {

@@ -963,6 +963,8 @@ describe('generated maze and lane-defense consume sw2d.navigation', () => {
     const laneJson = JSON.parse(laneFiles.get('content/game.json')!) as { systemPacks: Array<{ packId: string }> };
     expect(mazeJson.systemPacks.map((s) => s.packId)).toContain('sw2d.navigation');
     expect(laneJson.systemPacks.map((s) => s.packId)).toContain('sw2d.navigation');
+    expect(laneJson.systemPacks.map((s) => s.packId)).toContain('sw2d.encounters');
+    expect(laneJson.systemPacks.map((s) => s.packId)).toContain('sw2d.combat');
     expect(mazeFiles.get('src/game-specific/packConfig.ts')).toContain(
       "NAV_STARTER: 'maze' | 'lane' | null = 'maze'",
     );
@@ -978,7 +980,7 @@ describe('generated maze and lane-defense consume sw2d.navigation', () => {
     const mazeTheme = JSON.parse(mazeFiles.get('content/themes/default/theme.json')!) as { ui: { playHint: string } };
     const laneTheme = JSON.parse(laneFiles.get('content/themes/default/theme.json')!) as { ui: { playHint: string } };
     expect(mazeTheme.ui.playHint).toContain('REACH THE EXIT');
-    expect(laneTheme.ui.playHint).toContain('THE RUNNER REPATHS');
+    expect(laneTheme.ui.playHint).toContain('DEFEND THE BASE');
   });
 });
 

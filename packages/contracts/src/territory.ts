@@ -21,19 +21,32 @@ export interface TerritoryZoneDef {
   readonly holdMs: number;
 }
 
+export interface TerritoryOccupant {
+  readonly faction: string;
+  readonly x: number;
+  readonly y: number;
+}
+
 export interface TerritoryCatalog {
   readonly schemaVersion: number;
   readonly mode: TerritoryMode;
   readonly zones: readonly TerritoryZoneDef[];
+  readonly factions?: readonly string[];
+  readonly victoryScore?: number;
 }
 
 export interface TerritoryService {
   mode(): TerritoryMode;
   active(): boolean;
   setOccupant(x: number, y: number): void;
+  setOccupants(occupants: readonly TerritoryOccupant[]): void;
   tick(deltaMs: number): void;
   owned(): readonly string[];
+  owner(zoneId: string): string | null;
   holding(): string | null;
+  contested(): readonly string[];
+  progress(zoneId: string): number;
+  score(faction: string): number;
   lastResult(): string | null;
   outcome(): TerritoryOutcome;
   reset(): void;

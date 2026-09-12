@@ -232,6 +232,12 @@ describe('closed limitations stay closed (Final Product Completion program)', ()
     { id: 'reaction-timing', pattern: /a deterministic music-beat\/audio-synchronization system is not/, closedBy: 'L27 reaction rounds' },
     { id: 'tower-defense', pattern: /this starter uses the keyboard grid cursor/, closedBy: 'L29 pointer placement' },
     { id: 'tower-defense', pattern: /upgrade rules stay starter-specific/, closedBy: 'L30 targeting upgrades' },
+    { id: 'lane-defense', pattern: /Lane-spawn scheduling and combat resolution are still starter-specific/, closedBy: 'L31 lane waves + combat' },
+    { id: 'auto-battler', pattern: /the lineup pick is presentation/, closedBy: 'L32 targeting lineup' },
+    { id: 'simple-rts', pattern: /a command-queue UI is not implemented/, closedBy: 'L33 box-select + queue' },
+    { id: 'turn-based-tactics', pattern: /a full turn-action state machine is still starter-specific/, closedBy: 'L34 tactics actions' },
+    { id: 'base-defense', pattern: /target-priority and upgrade rules stay starter-specific/, closedBy: 'L35 hold waves + upgrades' },
+    { id: 'territory-control', pattern: /contested multi-faction capture stay starter-specific/, closedBy: 'L36 contested territory' },
   ];
 
   CLOSED.forEach(({ id, pattern, closedBy }) => {

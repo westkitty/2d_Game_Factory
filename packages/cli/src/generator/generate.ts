@@ -155,6 +155,10 @@ export function buildGameFiles(gameId: string, preset: PresetDefinition): Map<st
                       ? 'shmup-h'
                       : preset.id === 'vertical-shmup'
                         ? 'shmup-v'
+                        : preset.id === 'lane-defense'
+                          ? 'lane'
+                          : preset.id === 'base-defense'
+                            ? 'hold'
                         : 'skirmish',
       }),
       null,

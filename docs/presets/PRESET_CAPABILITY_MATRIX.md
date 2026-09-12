@@ -82,11 +82,11 @@ pack/controller selections were actually exercised through, and
 | id | required packs | optional packs | controller(s) | input modes | validation profile |
 |---|---|---|---|---|---|
 | `tower-defense` | world, world-entities, progression, combat, navigation, targeting | ai | grid, pointer | keyboard, pointer, touch | strategy-defense-recipe |
-| `lane-defense` | world, world-entities, progression, navigation | combat | grid, pointer | keyboard, pointer, touch | strategy-defense-recipe |
+| `lane-defense` | world, world-entities, progression, navigation, encounters, combat | - | grid, pointer | keyboard, pointer, touch | strategy-defense-recipe |
 | `auto-battler` | strategy, combat, ai, targeting | progression | ui-simulation | keyboard, touch | strategy-defense-recipe |
-| `simple-rts` | strategy, combat, territory | ai, world, world-entities, navigation | top-down | keyboard, touch | strategy-defense-recipe |
+| `simple-rts` | strategy, combat, territory, navigation, world, world-entities | ai | top-down | keyboard, touch | strategy-defense-recipe |
 | `turn-based-tactics` | strategy, combat, navigation, targeting | ai, world, world-entities | grid, ui-simulation | keyboard, touch | strategy-defense-recipe |
-| `base-defense` | world, world-entities, combat | ai, progression, encounters | top-down | keyboard, touch | strategy-defense-recipe |
+| `base-defense` | world, world-entities, combat, encounters, targeting, progression | ai | top-down | keyboard, touch | strategy-defense-recipe |
 | `territory-control` | world, world-entities, strategy, combat, territory | ai | top-down | keyboard, touch | strategy-defense-recipe |
 ## Simulation / management (Phase 7C)
 
@@ -129,11 +129,11 @@ pack/controller selections were actually exercised through, and
 
 | short id | real pack id | capability id | recipes requiring it | recipes referencing it (required or optional) |
 |---|---|---|---|---|
-| combat | `sw2d.combat` | `combat.health` | 20 | 26 |
+| combat | `sw2d.combat` | `combat.health` | 21 | 26 |
 | ai | `sw2d.ai` | `ai.state` | 5 | 15 |
-| world | `sw2d.world` | `world.state` | 31 | 44 |
-| world-entities | `sw2d.world-entities` | `world.entities` | 27 | 36 |
-| progression | `sw2d.progression` | `progression.state` | 11 | 26 |
+| world | `sw2d.world` | `world.state` | 32 | 44 |
+| world-entities | `sw2d.world-entities` | `world.entities` | 28 | 36 |
+| progression | `sw2d.progression` | `progression.state` | 12 | 26 |
 | arcade | `sw2d.arcade` | `arcade.score` | 17 | 41 |
 | puzzle | `sw2d.puzzle` | `puzzle.state` | 0 | 4 |
 | simulation | `sw2d.simulation` | `simulation.resources` | 9 | 10 |
@@ -141,8 +141,8 @@ pack/controller selections were actually exercised through, and
 | strategy | `sw2d.strategy` | `strategy.turns` | 4 | 4 |
 | items | `sw2d.items` | `items.state` | 3 | 3 |
 | weapons | `sw2d.weapons` | `combat.weapons` | 10 | 12 |
-| encounters | `sw2d.encounters` | `combat.encounters` | 9 | 11 |
-| navigation | `sw2d.navigation` | `world.navigation` | 4 | 8 |
+| encounters | `sw2d.encounters` | `combat.encounters` | 11 | 12 |
+| navigation | `sw2d.navigation` | `world.navigation` | 5 | 8 |
 | puzzle-rules | `sw2d.puzzle-rules` | `puzzle.rules` | 6 | 6 |
 | generation | `sw2d.generation` | `world.generation` | 6 | 6 |
 | world-graph | `sw2d.world-graph` | `world.graph` | 2 | 2 |
@@ -162,7 +162,7 @@ pack/controller selections were actually exercised through, and
 | pinball | `sw2d.pinball` | `arcade.table` | 1 | 1 |
 | camera | `sw2d.camera` | `world.camera` | 2 | 2 |
 | codex | `sw2d.codex` | `narrative.codex` | 2 | 2 |
-| targeting | `sw2d.targeting` | `combat.targeting` | 3 | 3 |
+| targeting | `sw2d.targeting` | `combat.targeting` | 4 | 4 |
 | pursuit | `sw2d.pursuit` | `movement.pursuit` | 3 | 3 |
 | runs | `sw2d.runs` | `progression.runs` | 2 | 2 |
 

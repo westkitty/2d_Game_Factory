@@ -62,13 +62,13 @@ with a small working placeholder to replace. Every other pack is configured as J
 ## Composition
 
 - Controller family/families: top-down
-- Required packs (enabled by default): sw2d.strategy, sw2d.combat, sw2d.territory
-- Optional packs (available, not enabled by default - add to content/game.json's systemPacks to use): sw2d.ai, sw2d.world, sw2d.world-entities, sw2d.navigation
+- Required packs (enabled by default): sw2d.strategy, sw2d.combat, sw2d.territory, sw2d.navigation, sw2d.world, sw2d.world-entities
+- Optional packs (available, not enabled by default - add to content/game.json's systemPacks to use): sw2d.ai
 - Content roles this preset expects: tuning, levels, territory
 
 ## Known preset limitations
 
-- Unit pathfinding is reusable (sw2d.navigation, optional); box-select for the generated starter is a two-unit presentation on the spatial pointer; a command-queue UI is not implemented.
+- (none stated)
 
 ## How to add a level
 
