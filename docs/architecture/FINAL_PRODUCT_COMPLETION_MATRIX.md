@@ -207,6 +207,8 @@ exceptions: physical hardware certification and the user-owned public-license ch
 - **Architecture:** `sw2d.items` held-item slot (`hold/useHeld`, use effects: `boost`, `projectile`), `bindStarterHeldItem` (item boxes, HUD, respawn), vehicle shell; second consumer endless-driving (L19).
 - **Journey:** drive through box → item held (HUD) → press use → effect (shell fired / boost) → consumed → box respawns → race still completes.
 - **Checkpoint:** Wave 4.
+- **Closed by:** `sw2d.items` `hold`/`useHeld` plus `vehicle.boost` effect; kart-racer requires `sw2d.items`; `content/items.json` ships `kart-shell` / `kart-boost`; `bindStarterKartItem` grants/holds on box overlap, PRIMARY consumes, fires a heading shell, respawns two boxes. Racing still owns finish. **Proof/test:** `items.test.ts` held-slot, `vehicles.test.ts` `triggerBoost`, generate tests, proof spec `kartRacer` (empty fire, pickup, consume, reacquire, race, restart). **Browser:** `qa:completion -- kart-racer` PASS; `qa:proof -- kart-racer` PASS.
+- **Status:** CLOSED (Wave 4).
 
 ### L19 - endless-driving item system / loop
 - **Source text:** "Arcade distance for the generated starter is game-specific presentation of sw2d.vehicles + sw2d.arcade; a reusable kart item-fire system is not."
@@ -474,7 +476,7 @@ exceptions: physical hardware certification and the user-owned public-license ch
 | L15 | gallery-shooter | 3 | CLOSED | wave 3 |
 | L16 | run-and-gun | 3 | CLOSED | wave 3 |
 | L17 | rail-shooter | 3 | CLOSED | wave 3 |
-| L18 | kart-racer | 4 | OPEN | |
+| L18 | kart-racer | 4 | CLOSED | wave 4 kart |
 | L19 | endless-driving | 4 | OPEN | |
 | L20 | boat-flight-racer | 4 | OPEN | |
 | L21 | match-puzzle, falling-block-puzzle | 4 | OPEN | |

@@ -44,8 +44,39 @@ export function generateGameManifest(input: GameManifestInput): Record<string, u
  * its effect through the reusable `sw2d.items` service. Other presets get an
  * empty catalog.
  */
-export function generateItemCatalog(hasItemsRole: boolean): Record<string, unknown> {
-  if (!hasItemsRole) return { schemaVersion: 1, items: [] };
+export function generateItemCatalog(kind: boolean | 'coin' | 'kart' | 'none' = 'none'): Record<string, unknown> {
+  const resolved = kind === true ? 'coin' : kind === false ? 'none' : kind;
+  if (resolved === 'none') return { schemaVersion: 1, items: [] };
+  if (resolved === 'kart') {
+    return {
+      schemaVersion: 1,
+      items: [
+        {
+          id: 'kart-shell',
+          displayName: 'Shell',
+          category: 'held',
+          tags: ['kart'],
+          stackable: false,
+          maxCount: 1,
+          consumable: true,
+          quantityPerGrant: 1,
+          metadata: { fire: 'shell' },
+        },
+        {
+          id: 'kart-boost',
+          displayName: 'Boost',
+          category: 'held',
+          tags: ['kart'],
+          stackable: false,
+          maxCount: 1,
+          consumable: true,
+          quantityPerGrant: 1,
+          effects: [{ kind: 'vehicle.boost' }],
+          metadata: { fire: 'boost' },
+        },
+      ],
+    };
+  }
   return {
     schemaVersion: 1,
     items: [

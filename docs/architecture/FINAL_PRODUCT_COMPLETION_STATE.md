@@ -19,11 +19,11 @@ file is the cursor.
 | field | value |
 |---|---|
 | branch SHA | (see git log; this checkpoint is the Wave 1-3 independent sanity repair) |
-| waves completed | 3 (inventory, platforming movement, combat / top-down, shooters) + independent sanity repair |
-| limitations closed | 22 / 69 entries (L01-L17; 17 / 52 distinct) |
-| remaining machine-executable | 47 (recomputed live: 47 entries / 35 distinct / 74 presets) |
+| waves completed | 3 + Wave 1-3 sanity repair + Wave 4 L18 kart held items |
+| limitations closed | 23 / 69 entries (L01-L18) |
+| remaining machine-executable | 46 (35→34 distinct; L18 closed) |
 | blockers | none |
-| next exact action | Wave 4: kart held items (L18/L19), boat/flight arcade (L20), puzzle boards (L21/L22), pinball (L23/L28), physics/escape puzzle grammar (L25/L46), maze (L26), rhythm audio clock + reaction (L27) |
+| next exact action | Wave 4 remainder: L19 endless-driving items, L20 boat/flight, L21/L22 puzzles, L23/L28 pinball, L25/L46 physics/escape, L26 maze, L27 rhythm/reaction |
 
 ## Checkpoint log
 
@@ -106,3 +106,11 @@ Inherited HEAD `df850f2` was clean (no uncommitted Wave 4). Local tree matched o
 - `npm run limitations:extract`: 47 remain (unchanged; no Wave 4 rows closed)
 
 Known leftover (not a Wave 1-3 product hole, not repaired here): `bindStarterProgression` survive mode still sets `outcome: 'complete'` at XP 6 as a surge milestone while the permadeath run continues (proof `survivorLike` asserts that). Dual HUD, not a second run authority. `ProjectilePool` remains the unpooled demo/proof path; generated games use `createProjectileRuntime`.
+
+### Wave 4 L18 - kart held items
+- `sw2d.items` gained `hold` / `useHeld` / `clearHeld` and a `vehicle.boost` effect; `VehicleService.triggerBoost()` applies it.
+- kart-racer requires `sw2d.items`; generated `content/items.json` ships `kart-shell` + `kart-boost`.
+- `bindStarterKartItem` grants/holds on box overlap, PRIMARY consumes, fires a heading shell, two boxes respawn. Race still owns completion.
+- `npm run typecheck` PASS; items/vehicles/generate/honesty tests PASS.
+- `npm run qa:proof -- kart-racer` PASS; `npm run qa:completion -- kart-racer` PASS (fresh factory, system Chrome).
+- `npm run limitations:extract`: **46** machine-executable remain.

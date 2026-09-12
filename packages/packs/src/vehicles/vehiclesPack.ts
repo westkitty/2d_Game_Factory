@@ -88,6 +88,15 @@ class VehicleServiceImpl implements VehicleService {
     this.#wraps = 0;
   }
 
+  triggerBoost(): boolean {
+    const def = this.#active;
+    if (!def) return false;
+    if (this.#boostMs > 0 || this.#cooldownMs > 0) return false;
+    this.#boostMs = def.boostDurationMs;
+    this.#cooldownMs = def.boostCooldownMs;
+    return true;
+  }
+
   /**
    * Ship profile (Final Product Completion Wave 3, matrix L14): Newtonian
    * momentum and rotational inertia. Steering is angular *acceleration*, so

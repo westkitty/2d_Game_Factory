@@ -26,6 +26,10 @@
       "config": {}
     },
     {
+      "packId": "sw2d.items",
+      "config": {}
+    },
+    {
       "packId": "game.vehicle-shell",
       "config": {}
     }

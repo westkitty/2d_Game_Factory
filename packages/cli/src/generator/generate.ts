@@ -114,7 +114,17 @@ export function buildGameFiles(gameId: string, preset: PresetDefinition): Map<st
   files.set('content/levels/main.json', JSON.stringify(generateTiledLevel(), null, 2) + '\n');
   files.set(
     'content/items.json',
-    JSON.stringify(generateItemCatalog(preset.requiredContentRoles.includes('items')), null, 2) + '\n',
+    JSON.stringify(
+      generateItemCatalog(
+        !preset.requiredContentRoles.includes('items')
+          ? 'none'
+          : preset.id === 'kart-racer' || preset.id === 'endless-driving'
+            ? 'kart'
+            : 'coin',
+      ),
+      null,
+      2,
+    ) + '\n',
   );
   files.set(
     'content/weapons.json',

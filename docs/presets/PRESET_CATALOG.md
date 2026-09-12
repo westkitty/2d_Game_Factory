@@ -78,7 +78,7 @@ controller/input-mode breakdown and full pack-consumer coverage.
 | id | display name | controller(s) | content roles | maturity |
 |---|---|---|---|---|
 | `top-down-racer` | Top-Down Racer | vehicle | tuning, levels, vehicles, races | proof-validated |
-| `kart-racer` | Kart Racer | vehicle | tuning, levels, vehicles, races | proof-validated |
+| `kart-racer` | Kart Racer | vehicle | tuning, levels, vehicles, races, items | proof-validated |
 | `time-trial-racer` | Time Trial Racer | vehicle | tuning, levels, vehicles, races | proof-validated |
 | `endless-driving` | Endless Driving | vehicle | tuning, generation, vehicles | proof-validated |
 | `boat-flight-racer` | Boat / Flight Racer | vehicle | tuning, levels, vehicles | proof-validated |
@@ -187,7 +187,7 @@ recipe's *first* stated limitation; see `knownLimitations` in
 | `run-and-gun` | (none stated) |
 | `rail-shooter` | (none stated) |
 | `top-down-racer` | (none stated) |
-| `kart-racer` | Holding and firing a kart item on demand (a shell, an on-use boost pickup) is game-specific code; item boxes grant canonical sw2d.items entries (Phase 2), and drift / handling are the reusable sw2d.vehicles kart profile. |
+| `kart-racer` | (none stated) |
 | `time-trial-racer` | (none stated) |
 | `endless-driving` | Arcade distance for the generated starter is game-specific presentation of sw2d.vehicles + sw2d.arcade; a reusable kart item-fire system is not. |
 | `boat-flight-racer` | The boat and flight profiles are bounded arcade handling (momentum, drag, lateral grip, and for flight a 2D altitude band) - not fluid or aerodynamic simulation. |

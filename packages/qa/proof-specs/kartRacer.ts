@@ -103,9 +103,13 @@ export async function run(harness: Harness): Promise<SmokeOutcome> {
   await harness.stepFrames(4);
   const fired = await read();
   evidence.fired = fired.kartItem;
-  const fireOk = fired.kartItem?.lastResult === 'fired' && fired.kartItem.fired === 1 && !fired.kartItem.held && fired.kartItem.outcome === 'complete';
+  const fireOk = fired.kartItem?.lastResult === 'fired' && fired.kartItem.fired === 1 && !fired.kartItem.held && fired.kartItem.outcome === 'playing';
 
   // Steering (kart profile) reaches the second checkpoint: ordered checkpoints advance.
+  // A second item box sits on that leg so the held slot can be reacquired after consume.
+  const reacquired = await holdUntil(harness, ['ArrowUp'], read, (s) => s.kartItem?.held === true, 120, 3);
+  evidence.reacquired = reacquired.kartItem;
+  const reacquireOk = reacquired.kartItem?.held === true && reacquired.kartItem.fired === 1;
   const passedCp2 = await driveTo(harness, read, 'cp-2');
   evidence.cp2 = { expected: passedCp2.expectedCheckpoint, x: passedCp2.vehicle?.x, y: passedCp2.vehicle?.y };
   const cp2Ok = passedCp2.expectedCheckpoint === 'cp-3';
@@ -115,6 +119,6 @@ export async function run(harness: Harness): Promise<SmokeOutcome> {
   evidence.restart = { ...run, race: fresh.race?.phase, expected: fresh.expectedCheckpoint, kartItem: fresh.kartItem };
   const restartOk = run.after === run.before + 1 && fresh.race?.phase === 'idle' && fresh.kartItem?.fired === 0 && !fresh.kartItem?.held;
 
-  const passed = startedOk && emptyOk && raceOk && pickOk && cp1Ok && fireOk && cp2Ok && restartOk;
-  return { passed, details: { ...evidence, startedOk, emptyOk, raceOk, pickOk, cp1Ok, fireOk, cp2Ok, restartOk } };
+  const passed = startedOk && emptyOk && raceOk && pickOk && cp1Ok && fireOk && reacquireOk && cp2Ok && restartOk;
+  return { passed, details: { ...evidence, startedOk, emptyOk, raceOk, pickOk, cp1Ok, fireOk, reacquireOk, cp2Ok, restartOk } };
 }

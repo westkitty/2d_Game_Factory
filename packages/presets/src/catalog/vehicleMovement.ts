@@ -35,14 +35,14 @@ export const VEHICLE_MOVEMENT_PRESETS: readonly PresetDefinition[] = [
     displayName: 'Kart Racer',
     family: 'vehicle-movement',
     controllerFamilies: ['vehicle'],
-    requiredSystemPacks: [pack(PACK_IDS.world), pack(PACK_IDS.worldEntities), pack(PACK_IDS.vehicles), pack(PACK_IDS.racing)],
-    optionalSystemPacks: [pack(PACK_IDS.arcade), pack(PACK_IDS.items)],
-    requiredContentRoles: ['tuning', 'levels', 'vehicles', 'races'],
+    requiredSystemPacks: [pack(PACK_IDS.world), pack(PACK_IDS.worldEntities), pack(PACK_IDS.vehicles), pack(PACK_IDS.racing), pack(PACK_IDS.items)],
+    optionalSystemPacks: [pack(PACK_IDS.arcade)],
+    requiredContentRoles: ['tuning', 'levels', 'vehicles', 'races', 'items'],
     validationProfile: VALIDATION_PROFILES.vehicleMovement,
     vehicleProfile: 'kart',
-    knownLimitations: [
-      'Holding and firing a kart item on demand (a shell, an on-use boost pickup) is game-specific code; item boxes grant canonical sw2d.items entries (Phase 2), and drift / handling are the reusable sw2d.vehicles kart profile.',
-    ],
+    // Final Product Completion Wave 4 (matrix L18): item boxes grant a
+    // canonical sw2d.items held slot; J consumes it (shell / boost).
+    knownLimitations: [],
   }),
 
   definePreset({

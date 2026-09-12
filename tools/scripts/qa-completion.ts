@@ -55,6 +55,8 @@ export const COMPLETION_SPEC_MODULES: Readonly<Record<string, string>> = {
   'vertical-shmup': 'verticalShmup',
   'asteroids-shooter': 'asteroidsShooter',
   'bullet-hell': 'bulletHell',
+  // Wave 4 - vehicles / puzzle / arcade
+  'kart-racer': 'kartRacer',
 };
 
 interface Target {

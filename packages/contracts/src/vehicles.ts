@@ -114,6 +114,11 @@ export interface VehicleService {
   state(): VehicleState;
   /** Reset the active vehicle to its spawn, boost cooldown cleared. */
   reset(): void;
+  /**
+   * Start a boost from an item/use, independent of `intent.boostPressed`.
+   * No-op (returns false) when no vehicle is loaded or a boost/cooldown is already running.
+   */
+  triggerBoost(): boolean;
 }
 
 export class UnknownVehicleError extends Error {

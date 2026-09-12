@@ -1,21 +1,26 @@
+import type { ItemsService, VehicleService } from '@sw2d/contracts';
+import { ITEMS_CAPABILITY_ID, VEHICLE_MOTION_CAPABILITY_ID } from '@sw2d/contracts';
 import { accentStyle, headingStyle, mutedStyle } from '../scenes/theme.ts';
 import type { SceneContext } from '../scenes/SceneContext.ts';
 
 /**
- * Bind the generated vehicle shell to on-demand kart item-fire
- * (Category-C Wave 29).
+ * Bind the generated vehicle shell to the reusable sw2d.items held slot
+ * (Final Product Completion Wave 4, matrix L18 / L19).
  *
- * Inert unless packConfig names the kart item starter. Pickup and fire are
- * game-specific presentation — not a reusable item-fire pack. Overlay kart
- * kits stay local. Racing still owns checkpoints/laps.
+ * Inert unless packConfig names the kart item starter *and* items.state is
+ * installed with a live catalog. Pickup grants + holds one catalog item;
+ * PRIMARY consumes it through `useHeld` (boost effect and/or a heading
+ * shell). The box respawns. Racing still owns checkpoints/laps.
  */
 
 export interface StarterKartItemSnapshot {
   readonly active: boolean;
   readonly held: boolean;
+  readonly heldId: string | null;
   readonly fired: number;
   readonly boxX: number;
   readonly boxY: number;
+  readonly boxReady: boolean;
   readonly lastResult: string | null;
   readonly outcome: 'playing' | 'complete';
 }
@@ -36,9 +41,11 @@ const INERT: StarterKartItemBinding = {
   snapshot: () => ({
     active: false,
     held: false,
+    heldId: null,
     fired: 0,
     boxX: 0,
     boxY: 0,
+    boxReady: false,
     lastResult: null,
     outcome: 'playing',
   }),
@@ -46,15 +53,29 @@ const INERT: StarterKartItemBinding = {
   dispose: () => undefined,
 };
 
-const BOX = { x: 420, y: 440, radius: 56 };
+const BOXES = [
+  { x: 420, y: 440, radius: 56 },
+  { x: 760, y: 280, radius: 56 },
+] as const;
 const BOX_COLOR = 0xf0c274;
 const SHELL_COLOR = 0xe05fa0;
+const BOX_RESPAWN_MS = 1800;
 
 export function bindStarterKartItem(
   context: SceneContext,
-  options?: { readonly mode?: 'item' | null; readonly hud?: boolean },
+  options?: { readonly mode?: 'item' | null; readonly hud?: boolean; readonly itemId?: string },
 ): StarterKartItemBinding {
   if (options?.mode !== 'item') return INERT;
+  if (!context.capabilities.has(ITEMS_CAPABILITY_ID)) return INERT;
+  const items = context.capabilities.require<ItemsService>(ITEMS_CAPABILITY_ID);
+  const itemId = options.itemId ?? (items.lookup('kart-shell') ? 'kart-shell' : items.definitionIds()[0] ?? '');
+  if (!itemId || !items.lookup(itemId)) return INERT;
+  const vehicles = context.capabilities.has(VEHICLE_MOTION_CAPABILITY_ID)
+    ? context.capabilities.require<VehicleService>(VEHICLE_MOTION_CAPABILITY_ID)
+    : null;
+
+  items.clearHeld();
+  if (items.count(itemId) > 0) items.remove(itemId, items.count(itemId));
 
   const hud = options?.hud !== false;
   const scene = context.scene;
@@ -63,17 +84,15 @@ export function bindStarterKartItem(
   const title = hud ? scene.add.text(width * 0.5, 28, '', headingStyle(20)).setOrigin(0.5).setScrollFactor(0).setDepth(50) : null;
   const status = hud ? scene.add.text(width * 0.5, 54, '', mutedStyle(14)).setOrigin(0.5).setScrollFactor(0).setDepth(50) : null;
   const hint = hud ? scene.add.text(width * 0.5, height - 28, '', accentStyle(14)).setOrigin(0.5).setScrollFactor(0).setDepth(50) : null;
-  const boxSprite = hud
-    ? scene.add.rectangle(BOX.x, BOX.y, 36, 36, BOX_COLOR, 0.95).setStrokeStyle(2, 0xffffff, 0.9).setDepth(18)
-    : null;
+  const boxSprites = hud
+    ? BOXES.map((box) => scene.add.rectangle(box.x, box.y, 36, 36, BOX_COLOR, 0.95).setStrokeStyle(2, 0xffffff, 0.9).setDepth(18))
+    : [];
   const shellSprite = hud
-    ? scene.add.circle(BOX.x, BOX.y, 10, SHELL_COLOR, 0.95).setStrokeStyle(2, 0xffffff, 0.8).setDepth(21).setVisible(false)
+    ? scene.add.circle(BOXES[0].x, BOXES[0].y, 10, SHELL_COLOR, 0.95).setStrokeStyle(2, 0xffffff, 0.8).setDepth(21).setVisible(false)
     : null;
 
-  let held = false;
   let fired = 0;
   let lastResult: string | null = null;
-  let outcome: 'playing' | 'complete' = 'playing';
   let kartX = 160;
   let kartY = 440;
   let kartHeading = 0;
@@ -82,36 +101,40 @@ export function bindStarterKartItem(
   let shellVx = 0;
   let shellVy = 0;
   let shellLive = false;
+  const boxReady = BOXES.map(() => true);
+  const boxCooldownMs = BOXES.map(() => 0);
   let disposed = false;
 
   function snapshot(): StarterKartItemSnapshot {
+    const readyIndex = boxReady.findIndex((ready) => ready);
+    const shown = BOXES[readyIndex] ?? BOXES[0];
     return {
       active: true,
-      held,
+      held: items.held() === itemId,
+      heldId: items.held(),
       fired,
-      boxX: BOX.x,
-      boxY: BOX.y,
+      boxX: shown.x,
+      boxY: shown.y,
+      boxReady: boxReady.some(Boolean),
       lastResult,
-      outcome,
+      outcome: 'playing',
     };
   }
 
   function paint(): void {
     const snap = snapshot();
-    if (boxSprite) {
-      boxSprite.setVisible(!held && snap.outcome === 'playing');
-      boxSprite.setFillStyle(BOX_COLOR, 0.95);
-    }
+    for (let i = 0; i < boxSprites.length; i++) boxSprites[i]?.setVisible(boxReady[i]!);
     if (shellSprite) {
       shellSprite.setVisible(shellLive);
       if (shellLive) shellSprite.setPosition(shellX, shellY);
     }
     if (!title || !status || !hint) return;
-    title.setText(snap.outcome === 'complete' ? 'FIRED' : 'KART');
+    const def = items.lookup(itemId);
+    title.setText('KART');
     status.setText(
-      `${snap.held ? 'SHELL READY' : 'EMPTY'}  ·  fired ${snap.fired}${snap.lastResult ? `  ·  ${snap.lastResult}` : ''}`,
+      `${snap.held ? (def?.displayName ?? 'ITEM').toUpperCase() + ' READY' : 'EMPTY'}  ·  used ${snap.fired}${snap.lastResult ? `  ·  ${snap.lastResult}` : ''}`,
     );
-    hint.setText(snap.outcome === 'playing' ? (snap.held ? 'J FIRES THE SHELL' : 'DRIVE THROUGH THE BOX') : 'FIRED');
+    hint.setText(snap.held ? 'J USES THE HELD ITEM' : snap.boxReady ? 'DRIVE THROUGH A BOX' : 'BOX RESPAWNING');
   }
 
   paint();
@@ -123,10 +146,21 @@ export function bindStarterKartItem(
       kartX = x;
       kartY = y;
       kartHeading = heading;
-      if (!held && outcome === 'playing' && Math.hypot(x - BOX.x, y - BOX.y) <= BOX.radius) {
-        held = true;
-        lastResult = 'pickup';
-        context.audio.playCue('ui.confirm');
+      for (let i = 0; i < BOXES.length; i++) {
+        if (boxCooldownMs[i]! > 0) {
+          boxCooldownMs[i] = Math.max(0, boxCooldownMs[i]! - 16);
+          if (boxCooldownMs[i] === 0) boxReady[i] = true;
+        }
+        const box = BOXES[i]!;
+        if (boxReady[i] && items.held() === null && Math.hypot(x - box.x, y - box.y) <= box.radius) {
+          items.grant(itemId, 1);
+          if (items.hold(itemId)) {
+            boxReady[i] = false;
+            boxCooldownMs[i] = BOX_RESPAWN_MS;
+            lastResult = 'pickup';
+            context.audio.playCue('ui.confirm');
+          }
+        }
       }
       if (shellLive) {
         shellX += shellVx;
@@ -136,21 +170,31 @@ export function bindStarterKartItem(
       paint();
     },
     fire() {
-      if (disposed || outcome !== 'playing') return 'already';
-      if (!held) {
+      if (disposed) return 'already';
+      if (items.held() !== itemId) {
         lastResult = 'empty';
         paint();
         return 'empty';
       }
-      held = false;
+      const used = items.lookup(itemId);
+      const result = items.useHeld(1);
+      if (!result.consumed) {
+        lastResult = 'empty';
+        paint();
+        return 'empty';
+      }
       fired += 1;
       lastResult = 'fired';
-      outcome = 'complete';
-      shellLive = true;
-      shellX = kartX;
-      shellY = kartY;
-      shellVx = Math.cos(kartHeading) * 14;
-      shellVy = Math.sin(kartHeading) * 14;
+      const fireKind = typeof used?.metadata?.fire === 'string' ? used.metadata.fire : 'shell';
+      if (fireKind === 'boost') {
+        vehicles?.triggerBoost();
+      } else {
+        shellLive = true;
+        shellX = kartX;
+        shellY = kartY;
+        shellVx = Math.cos(kartHeading) * 14;
+        shellVy = Math.sin(kartHeading) * 14;
+      }
       context.audio.playCue('ui.confirm');
       paint();
       return 'fired';
@@ -160,11 +204,12 @@ export function bindStarterKartItem(
     dispose(): void {
       if (disposed) return;
       disposed = true;
+      items.clearHeld();
       try {
         title?.destroy();
         status?.destroy();
         hint?.destroy();
-        boxSprite?.destroy();
+        for (const sprite of boxSprites) sprite.destroy();
         shellSprite?.destroy();
       } catch {
         /* scene already tearing down */

@@ -1203,6 +1203,10 @@ describe('generated endless-driving and boat-flight consume vehicle presentation
     );
     expect(kartFiles.get('src/game-specific/packConfig.ts')).toContain("KART_STARTER: 'item' | null = 'item'");
     expect(roadFiles.get('src/game-specific/packConfig.ts')).toContain("KART_STARTER: 'item' | null = null");
+    expect(kart.requiredSystemPacks.map((s) => s.packId)).toContain('sw2d.items');
+    const kartItems = JSON.parse(kartFiles.get('content/items.json')!) as { items: Array<{ id: string; metadata?: { fire?: string } }> };
+    expect(kartItems.items.map((item) => item.id)).toEqual(expect.arrayContaining(['kart-shell', 'kart-boost']));
+    expect(kartItems.items.find((item) => item.id === 'kart-shell')?.metadata?.fire).toBe('shell');
     const roadTheme = JSON.parse(roadFiles.get('content/themes/default/theme.json')!) as { ui: { playHint: string } };
     const craftTheme = JSON.parse(craftFiles.get('content/themes/default/theme.json')!) as { ui: { playHint: string } };
     expect(roadTheme.ui.playHint).toContain('BANK DISTANCE');

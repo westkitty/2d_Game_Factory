@@ -191,6 +191,32 @@ describe('sw2d.items - effects', () => {
   });
 });
 
+describe('sw2d.items - held slot (Final Product Completion Wave 4)', () => {
+  it('hold requires inventory; useHeld consumes and clears the slot', () => {
+    const items = svc(makeContext({ catalog: CATALOG, withPacks: ['world'] }));
+    expect(items.held()).toBeNull();
+    expect(items.hold('key')).toBe(false);
+    expect(items.useHeld().consumed).toBe(false);
+    items.grant('key');
+    expect(items.hold('key')).toBe(true);
+    expect(items.held()).toBe('key');
+    const used = items.useHeld();
+    expect(used.consumed).toBe(true);
+    expect(used.itemId).toBe('key');
+    expect(items.held()).toBeNull();
+    expect(items.count('key')).toBe(0);
+  });
+
+  it('clearHeld drops the slot without consuming', () => {
+    const items = svc(makeContext({ catalog: CATALOG }));
+    items.grant('key');
+    items.hold('key');
+    items.clearHeld();
+    expect(items.held()).toBeNull();
+    expect(items.count('key')).toBe(1);
+  });
+});
+
 describe('sw2d.items - persistence', () => {
   it('inventory counts round-trip through the save store across a reinstall', () => {
     const saves = new FakeSaveStore();
