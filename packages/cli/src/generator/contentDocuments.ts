@@ -509,7 +509,7 @@ export function generatePuzzleRulesDoc(
  * dungeons, road-chain for driving), so its generated shell builds the
  * playable world from a deterministic seed - same seed, identical layout.
  */
-export function generateGenerationDoc(kind: 'segment-chain' | 'room-graph' | 'road-chain' | 'none'): Record<string, unknown> {
+export function generateGenerationDoc(kind: 'segment-chain' | 'room-graph' | 'road-chain' | 'maze' | 'none'): Record<string, unknown> {
   if (kind === 'segment-chain') {
     return {
       schemaVersion: 1,
@@ -569,6 +569,13 @@ export function generateGenerationDoc(kind: 'segment-chain' | 'room-graph' | 'ro
           ],
         },
       ],
+    };
+  }
+  if (kind === 'maze') {
+    return {
+      schemaVersion: 1,
+      seed: 1337,
+      generators: [{ id: 'main', kind: 'maze', cols: 17, rows: 11 }],
     };
   }
   return { schemaVersion: 1, seed: 0, generators: [] };

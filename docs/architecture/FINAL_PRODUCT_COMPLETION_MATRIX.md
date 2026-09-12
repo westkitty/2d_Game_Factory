@@ -273,6 +273,8 @@ exceptions: physical hardware certification and the user-owned public-license ch
 - **Architecture:** `sw2d.generation` `maze` kind (seeded perfect maze), `bindStarterNavigation` maze mode: fog-of-war reveal, minimap overlay, entrance/exit, completion, regenerate (new seed) on restart.
 - **Journey:** fog hides maze → walk reveals → minimap grows → exit → `complete` → restart regenerates.
 - **Checkpoint:** Wave 4.
+- **Closed by:** `generateMazeLayout` recursive backtracker; maze-game requires `sw2d.generation`; fog reveals walked cells; minimap of revealed walkable cells; exit reachable. **Proof/test:** proof spec `mazeGame` (generation installed, path exists, wall reject, walk to exit, fog grows, restart). **Browser:** PASS.
+- **Status:** CLOSED (Wave 4).
 
 ### L27 - rhythm audio clock / reaction timing
 - **Source text:** "Visual reaction cues and beat windows are reusable (sw2d.timing); a deterministic music-beat/audio-synchronization system is not."
@@ -494,7 +496,7 @@ exceptions: physical hardware certification and the user-owned public-license ch
 | L23 | breakout, pong | 4 | CLOSED | wave 4 pinball |
 | L24 | pong, local-party-game | 9 | OPEN | |
 | L25 | physics-puzzle, escape-room | 4 | OPEN | |
-| L26 | maze-game | 4 | OPEN | |
+| L26 | maze-game | 4 | CLOSED | wave 4 maze |
 | L27 | rhythm-action, reaction-timing | 4 | OPEN | |
 | L28 | pinball-lite | 4 | CLOSED | wave 4 pinball |
 | L29 | tower-defense | 5 | OPEN | |

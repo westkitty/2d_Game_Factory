@@ -1,5 +1,12 @@
 {
   "schemaVersion": 1,
-  "seed": 0,
-  "generators": []
+  "seed": 1337,
+  "generators": [
+    {
+      "id": "main",
+      "kind": "maze",
+      "cols": 17,
+      "rows": 11
+    }
+  ]
 }

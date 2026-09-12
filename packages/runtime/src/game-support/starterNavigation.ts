@@ -1,4 +1,12 @@
-import { NAV_CAPABILITY_ID, createRouteFollower, type NavGrid, type NavService } from '@sw2d/contracts';
+import {
+  GENERATION_CAPABILITY_ID,
+  NAV_CAPABILITY_ID,
+  createRouteFollower,
+  generateMazeLayout,
+  type GenerationService,
+  type NavGrid,
+  type NavService,
+} from '@sw2d/contracts';
 import { accentStyle, headingStyle, mutedStyle } from '../scenes/theme.ts';
 import type { SceneContext } from '../scenes/SceneContext.ts';
 
@@ -26,6 +34,7 @@ export interface StarterNavigationSnapshot {
   readonly exitRow: number;
   readonly pathLength: number;
   readonly blockedCount: number;
+  readonly revealedCount: number;
   readonly lastResult: string | null;
   readonly outcome: 'playing' | 'complete';
 }
@@ -58,6 +67,7 @@ const INERT: StarterNavigationBinding = {
     exitRow: 0,
     pathLength: 0,
     blockedCount: 0,
+    revealedCount: 0,
     lastResult: null,
     outcome: 'playing',
   }),
@@ -68,8 +78,6 @@ const INERT: StarterNavigationBinding = {
 const COLS = 30;
 const ROWS = 17;
 const CELL = 32;
-const MAZE_START = { col: 4, row: 8 };
-const MAZE_EXIT = { col: 12, row: 8 };
 const LANE_START = { col: 4, row: 8 };
 const LANE_GOAL = { col: 16, row: 8 };
 const LANE_CURSOR = { col: 10, row: 8 };
@@ -85,17 +93,14 @@ function cellKey(col: number, row: number): string {
   return `${col},${row}`;
 }
 
-function mazeWalkable(): Set<string> {
-  const out = new Set<string>();
-  const add = (col: number, row: number): void => {
-    out.add(cellKey(col, row));
-  };
-  for (let col = 4; col <= 6; col++) add(col, 8);
-  for (let row = 8; row <= 10; row++) add(6, row);
-  for (let col = 6; col <= 10; col++) add(col, 10);
-  for (let row = 8; row <= 10; row++) add(10, row);
-  for (let col = 10; col <= 12; col++) add(col, 8);
-  return out;
+function mazeLayout(context: SceneContext): ReturnType<typeof generateMazeLayout> {
+  let seed: unknown = 1337;
+  if (context.capabilities.has(GENERATION_CAPABILITY_ID)) {
+    const gen = context.capabilities.require<GenerationService>(GENERATION_CAPABILITY_ID);
+    const id = gen.availableGenerators()[0];
+    if (id) seed = gen.generate(id).manifest.seed;
+  }
+  return generateMazeLayout(17, 11, seed);
 }
 
 function laneWalkable(): Set<string> {
@@ -114,10 +119,10 @@ function laneWalkable(): Set<string> {
   return out;
 }
 
-function blockedFrom(walkable: Set<string>): Array<readonly [number, number]> {
+function blockedFrom(walkable: Set<string>, cols: number, rows: number): Array<readonly [number, number]> {
   const blocked: Array<readonly [number, number]> = [];
-  for (let row = 0; row < ROWS; row++) {
-    for (let col = 0; col < COLS; col++) {
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
       if (!walkable.has(cellKey(col, row))) blocked.push([col, row]);
     }
   }
@@ -140,18 +145,21 @@ export function bindStarterNavigation(
   if (!context.capabilities.has(NAV_CAPABILITY_ID)) return INERT;
   const nav = context.capabilities.require<NavService>(NAV_CAPABILITY_ID);
 
-  const walkable = mode === 'maze' ? mazeWalkable() : laneWalkable();
+  const maze = mode === 'maze' ? mazeLayout(context) : null;
+  const walkable = maze ? new Set(maze.walkable) : laneWalkable();
+  const gridCols = maze ? 17 : COLS;
+  const gridRows = maze ? 11 : ROWS;
   const gridId = mode === 'maze' ? 'starter-maze' : 'starter-lane';
   nav.remove(gridId);
   const grid: NavGrid = nav.defineGrid(gridId, {
-    cols: COLS,
-    rows: ROWS,
+    cols: gridCols,
+    rows: gridRows,
     cellSize: CELL,
-    blocked: blockedFrom(walkable),
+    blocked: blockedFrom(walkable, gridCols, gridRows),
   });
 
-  const start = mode === 'maze' ? MAZE_START : LANE_START;
-  const goal = mode === 'maze' ? MAZE_EXIT : LANE_GOAL;
+  const start = maze ? maze.start : LANE_START;
+  const goal = maze ? maze.exit : LANE_GOAL;
   const follower = mode === 'lane' ? createRouteFollower() : null;
   const startWorld = grid.cellToWorld(start.col, start.row);
   if (follower) {
@@ -166,24 +174,33 @@ export function bindStarterNavigation(
   const status = hud ? scene.add.text(width * 0.5, 54, '', mutedStyle(14)).setOrigin(0.5).setScrollFactor(0).setDepth(50) : null;
   const hint = hud ? scene.add.text(width * 0.5, height - 28, '', accentStyle(14)).setOrigin(0.5).setScrollFactor(0).setDepth(50) : null;
 
-  const tiles: { destroy(): void }[] = [];
+  const tiles: { destroy(): void; setVisible(v: boolean): unknown }[] = [];
+  const tileKeys: string[] = [];
   if (hud) {
     const drawn = new Set<string>();
     for (const key of walkable) {
       const [col, row] = key.split(',').map(Number) as [number, number];
       const [x, y] = grid.cellToWorld(col, row);
       tiles.push(scene.add.rectangle(x, y, 28, 28, FLOOR_COLOR, 0.95).setStrokeStyle(1, 0x384054, 0.9).setDepth(10));
+      tileKeys.push(key);
       drawn.add(key);
       for (const [dc, dr] of ORTHO) {
         const nCol = col + dc;
         const nRow = row + dr;
         const nKey = cellKey(nCol, nRow);
         if (drawn.has(nKey) || walkable.has(nKey)) continue;
-        if (nCol < 0 || nRow < 0 || nCol >= COLS || nRow >= ROWS) continue;
+        if (nCol < 0 || nRow < 0 || nCol >= gridCols || nRow >= gridRows) continue;
         const [wx, wy] = grid.cellToWorld(nCol, nRow);
         tiles.push(scene.add.rectangle(wx, wy, 28, 28, WALL_COLOR, 0.95).setStrokeStyle(1, 0x0b0d13, 0.9).setDepth(9));
+        tileKeys.push(nKey);
         drawn.add(nKey);
       }
+    }
+  }
+  const mini: { destroy(): void; setVisible(v: boolean): unknown; setPosition(x: number, y: number): unknown }[] = [];
+  if (hud && mode === 'maze') {
+    for (let i = 0; i < 80; i++) {
+      mini.push(scene.add.rectangle(width - 120, 80, 4, 4, 0x65d0a8, 0.9).setScrollFactor(0).setDepth(60).setVisible(false));
     }
   }
 
@@ -215,6 +232,8 @@ export function bindStarterNavigation(
   let blockedCount = 0;
   let lastResult: string | null = null;
   let outcome: 'playing' | 'complete' = 'playing';
+  const revealed = new Set<string>([cellKey(start.col, start.row)]);
+  for (const [dc, dr] of ORTHO) revealed.add(cellKey(start.col + dc, start.row + dr));
   let disposed = false;
 
   function livePathLength(): number {
@@ -241,6 +260,7 @@ export function bindStarterNavigation(
       exitRow: goal.row,
       pathLength: livePathLength(),
       blockedCount,
+      revealedCount: revealed.size,
       lastResult,
       outcome,
     };
@@ -249,9 +269,22 @@ export function bindStarterNavigation(
   function paint(): void {
     const snap = snapshot();
     if (mode === 'maze') {
+      for (let i = 0; i < tiles.length; i++) tiles[i]?.setVisible(revealed.has(tileKeys[i]!));
+      let miniIndex = 0;
+      for (const key of revealed) {
+        if (!walkable.has(key) || miniIndex >= mini.length) continue;
+        const [col, row] = key.split(',').map(Number) as [number, number];
+        const mark = mini[miniIndex]!;
+        mark.setVisible(true);
+        mark.setPosition(width - 150 + col * 6, 72 + row * 6);
+        miniIndex += 1;
+      }
+      for (; miniIndex < mini.length; miniIndex++) mini[miniIndex]!.setVisible(false);
       const [x, y] = grid.cellToWorld(playerCol, playerRow);
       actorMark?.setPosition(x, y);
       actorMark?.setFillStyle(snap.outcome === 'complete' ? DONE_COLOR : PLAYER_COLOR, 0.95);
+      exitMark?.setVisible(revealed.has(cellKey(goal.col, goal.row)));
+      exitLabel?.setVisible(revealed.has(cellKey(goal.col, goal.row)));
     } else {
       actorMark?.setPosition(runnerX, runnerY);
       actorMark?.setFillStyle(snap.outcome === 'complete' ? DONE_COLOR : RUNNER_COLOR, 0.95);
@@ -263,11 +296,11 @@ export function bindStarterNavigation(
     if (mode === 'maze') {
       title.setText(snap.outcome === 'complete' ? 'ESCAPED' : 'MAZE');
       status.setText(
-        `cell ${snap.playerCol},${snap.playerRow}  ·  path ${snap.pathLength}${
+        `cell ${snap.playerCol},${snap.playerRow}  ·  path ${snap.pathLength}  ·  fog ${snap.revealedCount}${
           snap.lastResult ? `  ·  ${snap.lastResult}` : ''
         }`,
       );
-      hint.setText(snap.outcome === 'complete' ? 'EXIT REACHED' : 'ARROWS WALK   REACH THE EXIT');
+      hint.setText(snap.outcome === 'complete' ? 'EXIT REACHED' : 'ARROWS WALK   REACH THE EXIT   MINIMAP REVEALS');
     } else {
       title.setText(snap.outcome === 'complete' ? 'BREACHED' : 'LANE');
       status.setText(
@@ -298,6 +331,8 @@ export function bindStarterNavigation(
         playerCol = nextCol;
         playerRow = nextRow;
         lastResult = 'moved';
+        revealed.add(cellKey(playerCol, playerRow));
+        for (const [adc, adr] of ORTHO) revealed.add(cellKey(playerCol + adc, playerRow + adr));
         if (playerCol === goal.col && playerRow === goal.row) {
           outcome = 'complete';
           lastResult = 'escaped';
@@ -384,6 +419,7 @@ export function bindStarterNavigation(
         actorMark?.destroy();
         cursorMark?.destroy();
         for (const tile of tiles) tile.destroy();
+        for (const mark of mini) mark.destroy();
       } catch {
         /* scene already tearing down */
       }

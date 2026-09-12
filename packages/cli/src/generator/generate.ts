@@ -188,11 +188,13 @@ export function buildGameFiles(gameId: string, preset: PresetDefinition): Map<st
     JSON.stringify(
       generateGenerationDoc(
         requiredPackIds.includes('sw2d.generation')
-          ? preset.controllerFamilies[0] === 'vehicle'
-            ? 'road-chain'
-            : preset.controllerFamilies[0] === 'top-down' || preset.controllerFamilies[0] === 'grid'
-              ? 'room-graph'
-              : 'segment-chain'
+          ? preset.id === 'maze-game'
+            ? 'maze'
+            : preset.controllerFamilies[0] === 'vehicle'
+              ? 'road-chain'
+              : preset.controllerFamilies[0] === 'top-down' || preset.controllerFamilies[0] === 'grid'
+                ? 'room-graph'
+                : 'segment-chain'
           : 'none',
       ),
       null,

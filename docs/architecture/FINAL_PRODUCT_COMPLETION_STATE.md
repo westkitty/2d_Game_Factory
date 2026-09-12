@@ -19,11 +19,11 @@ file is the cursor.
 | field | value |
 |---|---|
 | branch SHA | (see git log; this checkpoint is the Wave 1-3 independent sanity repair) |
-| waves completed | 3 + sanity repair + Wave 4 L18/L19/L21/L22/L23/L28 |
-| limitations closed | 30 / 69 entries |
-| remaining machine-executable | 39 |
+| waves completed | 3 + sanity repair + Wave 4 L18/L19/L21/L22/L23/L26/L28 |
+| limitations closed | 31 / 69 entries |
+| remaining machine-executable | 38 |
 | blockers | none |
-| next exact action | Wave 4 remainder: L20 boat/flight, L25/L46 physics/escape, L26 maze, L27 rhythm/reaction |
+| next exact action | Wave 4 remainder: L20 boat/flight, L25/L46 physics/escape, L27 rhythm/reaction — then Waves 5-9 |
 
 ## Checkpoint log
 
@@ -129,3 +129,8 @@ Known leftover (not a Wave 1-3 product hole, not repaired here): `bindStarterPro
 - Table drains consume balls (default 3); zero is `game-over`. Launch/plunger wired. Breakout/pong no longer claim a missing pinball table.
 - `qa:completion -- pinball-lite` PASS; `qa:proof -- pinball-lite` PASS.
 - `npm run limitations:extract`: **39** remain.
+
+### Wave 4 L26 - maze generation / fog / minimap
+- Seeded perfect maze (`generateMazeLayout`), fog-of-war, minimap. maze-game requires `sw2d.generation`.
+- `qa:completion -- maze-game` PASS; `qa:proof -- maze-game` PASS.
+- `npm run limitations:extract`: **38** remain.

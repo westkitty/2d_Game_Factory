@@ -203,7 +203,14 @@ export interface RoadChainConfig {
   readonly difficulty?: number;
 }
 
-export type GeneratorConfig = SegmentChainConfig | RoomGraphConfig | RoadChainConfig;
+export interface MazeConfig {
+  readonly kind: 'maze';
+  readonly id?: string;
+  readonly cols: number;
+  readonly rows: number;
+}
+
+export type GeneratorConfig = SegmentChainConfig | RoomGraphConfig | RoadChainConfig | MazeConfig;
 export type GeneratorKind = GeneratorConfig['kind'];
 
 export interface GenerationDoc {
@@ -718,6 +725,85 @@ export function generateRoadChain(
   };
 }
 
+/** Carve a perfect maze (recursive backtracker) on an odd grid. Always has a walkable entrance and exit. */
+export function generateMazeLayout(
+  cols: number,
+  rows: number,
+  seed: unknown,
+): { readonly walkable: ReadonlySet<string>; readonly start: { col: number; row: number }; readonly exit: { col: number; row: number } } {
+  const rng = createRng(seed);
+  const oddCols = Math.max(5, cols % 2 === 1 ? cols : cols - 1);
+  const oddRows = Math.max(5, rows % 2 === 1 ? rows : rows - 1);
+  const key = (c: number, r: number): string => `${c},${r}`;
+  const walkable = new Set<string>();
+  const start = { col: 1, row: 1 };
+  walkable.add(key(start.col, start.row));
+  const stack = [start];
+  const dirs = [
+    [2, 0],
+    [-2, 0],
+    [0, 2],
+    [0, -2],
+  ] as const;
+  while (stack.length > 0) {
+    const cur = stack[stack.length - 1]!;
+    const options = dirs
+      .map(([dc, dr]) => ({ col: cur.col + dc, row: cur.row + dr, dc, dr }))
+      .filter((n) => n.col >= 1 && n.row >= 1 && n.col <= oddCols - 2 && n.row <= oddRows - 2 && !walkable.has(key(n.col, n.row)));
+    if (options.length === 0) {
+      stack.pop();
+      continue;
+    }
+    const next = options[rng.nextInt(options.length)]!;
+    walkable.add(key(cur.col + next.dc / 2, cur.row + next.dr / 2));
+    walkable.add(key(next.col, next.row));
+    stack.push({ col: next.col, row: next.row });
+  }
+  const exit = { col: oddCols - 2, row: oddRows - 2 };
+  if (!walkable.has(key(exit.col, exit.row))) {
+    let col = exit.col;
+    let row = exit.row;
+    while (!walkable.has(key(col, row)) && col > 1) {
+      walkable.add(key(col, row));
+      col -= 1;
+    }
+    walkable.add(key(col, row));
+  }
+  return { walkable, start, exit };
+}
+
+function generateMazeChain(config: MazeConfig, seed: unknown, levelId: string): GenerationResult {
+  const cols = Math.max(5, config.cols);
+  const rows = Math.max(5, config.rows);
+  const layout = generateMazeLayout(cols, rows, seed);
+  const cell = 32;
+  const solids: NormalizedSolid[] = [];
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
+      if (layout.walkable.has(`${col},${row}`)) continue;
+      solids.push({ x: col * cell, y: row * cell, width: cell, height: cell });
+    }
+  }
+  const start = layout.start;
+  const exit = layout.exit;
+  const output: NormalizedLevel = {
+    ...EMPTY_LEVEL(levelId),
+    mapWidth: cols,
+    mapHeight: rows,
+    solids,
+    objects: [
+      { id: 1, class: 'PlayerSpawn', name: 'spawn', x: start.col * cell, y: start.row * cell, width: cell, height: cell, properties: {} },
+      { id: 2, class: 'Exit', name: 'exit', x: exit.col * cell, y: exit.row * cell, width: cell, height: cell, properties: {} },
+    ],
+  };
+  const valid = layout.walkable.has(`${start.col},${start.row}`) && layout.walkable.has(`${exit.col},${exit.row}`);
+  return {
+    output,
+    manifest: manifestFor(normalizeSeed(seed), 'maze', config.id ?? levelId, ['maze'], { cols, rows }, 0),
+    validation: { valid, errors: valid ? [] : ['maze missing entrance or exit'] },
+  };
+}
+
 /** Dispatch on kind. */
 export function runGenerator(
   config: { readonly id: string } & GeneratorConfig,
@@ -732,6 +818,8 @@ export function runGenerator(
       return generateRoomGraph(config, seed, levelId, overrides);
     case 'road-chain':
       return generateRoadChain(config, seed, levelId, overrides);
+    case 'maze':
+      return generateMazeChain(config, seed, levelId);
   }
 }
 
@@ -743,7 +831,7 @@ export function validateGenerationResult(result: GenerationResult): GenerationVa
   if (result.manifest.kind !== 'road-chain' && !level.objects.some((o) => o.class === 'PlayerSpawn')) {
     errors.push('no player spawn');
   }
-  if (result.manifest.kind === 'room-graph') {
+  if (result.manifest.kind === 'room-graph' || result.manifest.kind === 'maze') {
     if (!level.objects.some((o) => o.class === 'Exit')) errors.push('no exit object');
   }
   return { valid: errors.length === 0, errors };

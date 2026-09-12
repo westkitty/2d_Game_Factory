@@ -73,7 +73,7 @@ pack/controller selections were actually exercised through, and
 | `breakout` | arcade, ball-paddle | - | top-down | keyboard, touch | puzzle-arcade-recipe |
 | `pong` | arcade, ball-paddle, local-play | - | top-down | keyboard, touch | puzzle-arcade-recipe |
 | `physics-puzzle` | puzzle | - | pointer | keyboard, pointer, touch | puzzle-arcade-recipe |
-| `maze-game` | world, world-entities, navigation | arcade | grid | keyboard, touch | puzzle-arcade-recipe |
+| `maze-game` | world, world-entities, navigation, generation | arcade | grid | keyboard, touch | puzzle-arcade-recipe |
 | `rhythm-action` | arcade, timing | - | ui-simulation | keyboard, touch | puzzle-arcade-recipe |
 | `reaction-timing` | arcade, timing | - | ui-simulation | keyboard, touch | puzzle-arcade-recipe |
 | `pinball-lite` | arcade, pinball | - | ui-simulation | keyboard, touch | puzzle-arcade-recipe |
@@ -144,7 +144,7 @@ pack/controller selections were actually exercised through, and
 | encounters | `sw2d.encounters` | `combat.encounters` | 9 | 11 |
 | navigation | `sw2d.navigation` | `world.navigation` | 4 | 8 |
 | puzzle-rules | `sw2d.puzzle-rules` | `puzzle.rules` | 4 | 4 |
-| generation | `sw2d.generation` | `world.generation` | 5 | 5 |
+| generation | `sw2d.generation` | `world.generation` | 6 | 6 |
 | world-graph | `sw2d.world-graph` | `world.graph` | 2 | 2 |
 | vehicles | `sw2d.vehicles` | `vehicle.motion` | 6 | 6 |
 | racing | `sw2d.racing` | `race.state` | 3 | 4 |
