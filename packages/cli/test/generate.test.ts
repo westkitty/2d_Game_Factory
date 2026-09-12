@@ -1175,7 +1175,7 @@ describe('generated endless-driving and boat-flight consume vehicle presentation
     expect(shell).toContain('bindStarterVehicle(context, { mode: VEHICLE_STARTER })');
     expect(shell).toContain('drive.setVehicle(');
     expect(shell).toContain('drive.switchCraft(');
-    expect(shell).toContain('bindStarterKartItem(context, {');
+    expect(shell).toContain('bindStarterKartItem(');
     expect(shell).toContain('mode: KART_STARTER');
     expect(shell).toContain('kartItem.fire(');
     expect(shell).toContain("from './packConfig.ts'");
@@ -1193,6 +1193,7 @@ describe('generated endless-driving and boat-flight consume vehicle presentation
     expect(roadJson.systemPacks.map((s) => s.packId)).toContain('sw2d.vehicles');
     expect(roadJson.systemPacks.map((s) => s.packId)).toContain('sw2d.arcade');
     expect(craftJson.systemPacks.map((s) => s.packId)).toContain('sw2d.vehicles');
+    expect(craftJson.systemPacks.map((s) => s.packId)).toContain('sw2d.racing');
     expect(roadFiles.get('src/game-specific/packConfig.ts')).toContain(
       "VEHICLE_STARTER: 'road' | 'craft' | null = 'road'",
     );

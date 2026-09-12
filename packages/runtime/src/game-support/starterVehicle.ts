@@ -1,5 +1,5 @@
-import type { VehicleService, VehicleState } from '@sw2d/contracts';
-import { VEHICLE_MOTION_CAPABILITY_ID } from '@sw2d/contracts';
+import type { RaceService, VehicleService, VehicleState } from '@sw2d/contracts';
+import { RACE_STATE_CAPABILITY_ID, VEHICLE_MOTION_CAPABILITY_ID } from '@sw2d/contracts';
 import { accentStyle, headingStyle, mutedStyle } from '../scenes/theme.ts';
 import type { SceneContext } from '../scenes/SceneContext.ts';
 
@@ -28,6 +28,8 @@ export interface StarterVehicleSnapshot {
   readonly score: number;
   readonly lastResult: string | null;
   readonly best: number;
+  readonly checkpoint: string | null;
+  readonly bank: number;
   readonly outcome: 'playing' | 'complete' | 'failed';
 }
 
@@ -61,6 +63,8 @@ const INERT: StarterVehicleBinding = {
     score: 0,
     lastResult: null,
     best: 0,
+    checkpoint: null,
+    bank: 0,
     outcome: 'playing',
   }),
   render: () => undefined,
@@ -79,6 +83,7 @@ const ALTITUDE_WIN = 80;
 const FLAG_COLOR = 0xb98af0;
 const CLEAR_COLOR = 0x65d0a8;
 const HAZARD = { x: 520, y: 168, radius: 34 };
+const CRAFT_HAZARD = { x: 820, y: 90, radius: 28 };
 const DRIVE_BEST_SLOT = 'drive-best';
 
 export function bindStarterVehicle(
@@ -110,10 +115,15 @@ export function bindStarterVehicle(
     hud && mode === 'craft'
       ? scene.add.rectangle(width * 0.5, 96, 48, 12, FLAG_COLOR, 0.95).setStrokeStyle(2, 0xffffff, 0.9).setDepth(20)
       : null;
+  const race = context.capabilities.has(RACE_STATE_CAPABILITY_ID)
+    ? context.capabilities.require<RaceService>(RACE_STATE_CAPABILITY_ID)
+    : null;
   const hazard =
     hud && mode === 'road'
       ? scene.add.circle(HAZARD.x, HAZARD.y, HAZARD.radius, 0xe0574f, 0.9).setStrokeStyle(2, 0xffffff, 0.8).setDepth(18)
-      : null;
+      : hud && mode === 'craft'
+        ? scene.add.circle(CRAFT_HAZARD.x, CRAFT_HAZARD.y, CRAFT_HAZARD.radius, 0xe0574f, 0.9).setStrokeStyle(2, 0xffffff, 0.8).setDepth(18)
+        : null;
 
   let x = START.x;
   let y = START.y;
@@ -145,6 +155,8 @@ export function bindStarterVehicle(
       score: arcade ? arcade.score() : 0,
       lastResult,
       best,
+      checkpoint: race?.expectedCheckpoint()?.id ?? null,
+      bank: Math.round(vehicles.state().lateralSpeed),
       outcome,
     };
   }
@@ -153,7 +165,8 @@ export function bindStarterVehicle(
     const snap = snapshot();
     if (marker) {
       marker.setFillStyle(snap.outcome === 'complete' ? CLEAR_COLOR : FLAG_COLOR, 0.95);
-      marker.setPosition(width * 0.5, 96 - Math.min(40, snap.altitude * 0.2));
+      marker.setPosition(width * 0.5 + Math.max(-40, Math.min(40, snap.bank * 0.4)), 96 - Math.min(40, snap.altitude * 0.2));
+      marker.setRotation(snap.bank * 0.02);
     }
     if (!title || !status || !hint) return;
     if (mode === 'road') {
@@ -170,15 +183,17 @@ export function bindStarterVehicle(
       title.setText(snap.outcome === 'complete' ? 'AIRBORNE' : snap.profile === 'flight' ? 'FLIGHT' : 'BOAT');
       status.setText(
         `alt ${snap.altitude}/${ALTITUDE_WIN}  ·  ${snap.profile ?? 'boat'}${
-          snap.lastResult ? `  ·  ${snap.lastResult}` : ''
-        }${snap.outcome !== 'playing' ? `  ·  ${snap.outcome}` : ''}`,
+          snap.checkpoint ? `  ·  ${snap.checkpoint}` : ''
+        }${snap.lastResult ? `  ·  ${snap.lastResult}` : ''}${snap.outcome !== 'playing' ? `  ·  ${snap.outcome}` : ''}`,
       );
       hint.setText(
         snap.outcome === 'playing'
           ? snap.profile === 'flight'
-            ? 'HOLD UP + SHIFT TO CLIMB'
-            : 'J SWITCHES TO FLIGHT'
-          : 'AIRBORNE',
+            ? 'HOLD UP + SHIFT TO CLIMB   AVOID THE BUOY'
+            : 'J SWITCHES TO FLIGHT   ENTER STARTS THE RACE'
+          : snap.outcome === 'failed'
+            ? 'HIT A BUOY'
+            : 'AIRBORNE',
       );
     }
   }
@@ -236,6 +251,13 @@ export function bindStarterVehicle(
     },
     tick(_deltaMs: number): void {
       if (disposed || outcome !== 'playing') return;
+      if (mode === 'craft') {
+        if (Math.hypot(x - CRAFT_HAZARD.x, y - CRAFT_HAZARD.y) <= CRAFT_HAZARD.radius + 16) {
+          outcome = 'failed';
+          lastResult = 'buoy';
+          context.audio.playCue('ui.cancel');
+        }
+      }
       if (mode === 'road' && arcade) {
         const gained = Math.floor((x - scoredX) / SCORE_UNIT);
         if (gained > 0) {

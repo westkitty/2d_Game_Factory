@@ -62,7 +62,7 @@ pack/controller selections were actually exercised through, and
 | `kart-racer` | world, world-entities, vehicles, racing, items | arcade | vehicle | keyboard, touch | vehicle-movement-recipe |
 | `time-trial-racer` | world, world-entities, arcade, vehicles, racing | - | vehicle | keyboard, touch | vehicle-movement-recipe |
 | `endless-driving` | arcade, generation, vehicles, items | world, world-entities | vehicle | keyboard, touch | vehicle-movement-recipe |
-| `boat-flight-racer` | world, world-entities, vehicles | arcade, racing | vehicle | keyboard, touch | vehicle-movement-recipe |
+| `boat-flight-racer` | world, world-entities, vehicles, racing | arcade | vehicle | keyboard, touch | vehicle-movement-recipe |
 ## Puzzle / arcade (Phase 7B)
 
 | id | required packs | optional packs | controller(s) | input modes | validation profile |
@@ -147,7 +147,7 @@ pack/controller selections were actually exercised through, and
 | generation | `sw2d.generation` | `world.generation` | 6 | 6 |
 | world-graph | `sw2d.world-graph` | `world.graph` | 2 | 2 |
 | vehicles | `sw2d.vehicles` | `vehicle.motion` | 6 | 6 |
-| racing | `sw2d.racing` | `race.state` | 3 | 4 |
+| racing | `sw2d.racing` | `race.state` | 4 | 4 |
 | economy | `sw2d.economy` | `simulation.economy` | 3 | 3 |
 | needs | `sw2d.needs` | `simulation.needs` | 3 | 3 |
 | dialogue | `sw2d.dialogue` | `narrative.dialogue` | 2 | 2 |

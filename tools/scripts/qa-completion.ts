@@ -62,6 +62,7 @@ export const COMPLETION_SPEC_MODULES: Readonly<Record<string, string>> = {
   'falling-block-puzzle': 'fallingBlockPuzzle',
   'pinball-lite': 'pinballLite',
   'maze-game': 'mazeGame',
+  'boat-flight-racer': 'boatFlightRacer',
 };
 
 interface Target {

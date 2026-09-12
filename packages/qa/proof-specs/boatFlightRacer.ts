@@ -10,12 +10,18 @@ interface Drive {
   readonly speed: number;
   readonly altitude: number;
   readonly lastResult: string | null;
+  readonly checkpoint: string | null;
+  readonly bank: number;
   readonly outcome: string;
+}
+interface Race {
+  readonly phase: string;
 }
 interface Shell {
   readonly x: number;
   readonly y: number;
   readonly drive?: Drive;
+  readonly race?: Race;
 }
 
 export async function run(harness: Harness): Promise<SmokeOutcome> {
@@ -25,7 +31,13 @@ export async function run(harness: Harness): Promise<SmokeOutcome> {
   const booted = await readSnapshot(harness);
   const initial = await read();
   evidence.initial = { x: initial.x, drive: initial.drive };
-  const startedOk = booted.installedPacks.includes('sw2d.vehicles') && initial.drive?.mode === 'craft' && initial.drive.profile === 'boat' && initial.drive.altitude === 0 && initial.drive.outcome === 'playing';
+  const startedOk =
+    booted.installedPacks.includes('sw2d.vehicles') &&
+    booted.installedPacks.includes('sw2d.racing') &&
+    initial.drive?.mode === 'craft' &&
+    initial.drive.profile === 'boat' &&
+    initial.drive.altitude === 0 &&
+    initial.drive.outcome === 'playing';
 
   // As a boat, throttle + climb never leaves the water.
   const boat = await holdUntil(harness, ['ArrowUp', 'ShiftLeft'], read, (s) => (s.drive?.speed ?? 0) > 20, 30, 4);

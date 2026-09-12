@@ -126,7 +126,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         const intent = vehicleController.read(context.input);
 
         if (raceSvc) {
-          if (!raceStarted && context.input.consumePress('CONFIRM')) {
+          if (!raceStarted && (VEHICLE_STARTER === 'craft' || context.input.consumePress('CONFIRM'))) {
             raceSvc.startRace();
             raceStarted = true;
           }

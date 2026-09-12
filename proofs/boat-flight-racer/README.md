@@ -62,13 +62,13 @@ with a small working placeholder to replace. Every other pack is configured as J
 ## Composition
 
 - Controller family/families: vehicle
-- Required packs (enabled by default): sw2d.world, sw2d.world-entities, sw2d.vehicles
-- Optional packs (available, not enabled by default - add to content/game.json's systemPacks to use): sw2d.arcade, sw2d.racing
-- Content roles this preset expects: tuning, levels, vehicles
+- Required packs (enabled by default): sw2d.world, sw2d.world-entities, sw2d.vehicles, sw2d.racing
+- Optional packs (available, not enabled by default - add to content/game.json's systemPacks to use): sw2d.arcade
+- Content roles this preset expects: tuning, levels, vehicles, races
 
 ## Known preset limitations
 
-- The boat and flight profiles are bounded arcade handling (momentum, drag, lateral grip, and for flight a 2D altitude band) - not fluid or aerodynamic simulation.
+- (none stated)
 
 ## How to add a level
 

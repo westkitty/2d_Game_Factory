@@ -19,11 +19,11 @@ file is the cursor.
 | field | value |
 |---|---|
 | branch SHA | (see git log; this checkpoint is the Wave 1-3 independent sanity repair) |
-| waves completed | 3 + sanity repair + Wave 4 L18/L19/L21/L22/L23/L26/L28 |
-| limitations closed | 31 / 69 entries |
-| remaining machine-executable | 38 |
+| waves completed | 3 + sanity repair + Wave 4 L18-L23/L26/L28 |
+| limitations closed | 32 / 69 entries |
+| remaining machine-executable | 37 |
 | blockers | none |
-| next exact action | Wave 4 remainder: L20 boat/flight, L25/L46 physics/escape, L27 rhythm/reaction — then Waves 5-9 |
+| next exact action | Wave 4 remainder: L25/L46 physics/escape grammar, L27 rhythm/reaction — then Waves 5-9 |
 
 ## Checkpoint log
 
@@ -134,3 +134,8 @@ Known leftover (not a Wave 1-3 product hole, not repaired here): `bindStarterPro
 - Seeded perfect maze (`generateMazeLayout`), fog-of-war, minimap. maze-game requires `sw2d.generation`.
 - `qa:completion -- maze-game` PASS; `qa:proof -- maze-game` PASS.
 - `npm run limitations:extract`: **38** remain.
+
+### Wave 4 L20 - boat/flight arcade
+- Racing required; auto-start; buoy hazard; bank visual; boat→flight→airborne complete.
+- `qa:completion -- boat-flight-racer` PASS; `qa:proof` PASS.
+- `npm run limitations:extract`: **37** remain.

@@ -225,6 +225,8 @@ exceptions: physical hardware certification and the user-owned public-license ch
 - **Architecture:** `bindStarterVehicle` craft mode finished: throttle/drag/turning/altitude/banking visual, buoys/hazards, checkpoints via `sw2d.racing` (required), race completion; the product never promised fluid/aero simulation.
 - **Journey:** boat → checkpoints → switch to flight → altitude band + bank → hazard → finish → `complete`.
 - **Checkpoint:** Wave 4.
+- **Closed by:** racing required; auto-start race; buoy hazard fail; bank visual from lateral speed; boat→flight switch; airborne complete. **Browser:** `qa:completion -- boat-flight-racer` PASS; `qa:proof` PASS.
+- **Status:** CLOSED (Wave 4).
 
 ## E. Puzzle / arcade
 
@@ -490,7 +492,7 @@ exceptions: physical hardware certification and the user-owned public-license ch
 | L17 | rail-shooter | 3 | CLOSED | wave 3 |
 | L18 | kart-racer | 4 | CLOSED | wave 4 kart |
 | L19 | endless-driving | 4 | CLOSED | wave 4 kart |
-| L20 | boat-flight-racer | 4 | OPEN | |
+| L20 | boat-flight-racer | 4 | CLOSED | wave 4 craft |
 | L21 | match-puzzle, falling-block-puzzle | 4 | CLOSED | wave 4 puzzle |
 | L22 | match-puzzle | 4 | CLOSED | wave 4 puzzle |
 | L23 | breakout, pong | 4 | CLOSED | wave 4 pinball |

@@ -224,6 +224,7 @@ describe('closed limitations stay closed (Final Product Completion program)', ()
     { id: 'pong', pattern: /a full pinball table is not/, closedBy: 'L23/L28 pinball table complete' },
     { id: 'pinball-lite', pattern: /Matter presentation stays on physics-toy/, closedBy: 'L28 pinball balls/drain/game-over' },
     { id: 'maze-game', pattern: /fog-of-war, minimap and authored maze generation are not/, closedBy: 'L26 maze generation + fog' },
+    { id: 'boat-flight-racer', pattern: /not fluid or aerodynamic simulation/, closedBy: 'L20 arcade boat/flight loop' },
   ];
 
   CLOSED.forEach(({ id, pattern, closedBy }) => {

@@ -81,7 +81,7 @@ controller/input-mode breakdown and full pack-consumer coverage.
 | `kart-racer` | Kart Racer | vehicle | tuning, levels, vehicles, races, items | proof-validated |
 | `time-trial-racer` | Time Trial Racer | vehicle | tuning, levels, vehicles, races | proof-validated |
 | `endless-driving` | Endless Driving | vehicle | tuning, generation, vehicles, items | proof-validated |
-| `boat-flight-racer` | Boat / Flight Racer | vehicle | tuning, levels, vehicles | proof-validated |
+| `boat-flight-racer` | Boat / Flight Racer | vehicle | tuning, levels, vehicles, races | proof-validated |
 
 ## Puzzle / arcade (Phase 7B)
 
@@ -190,7 +190,7 @@ recipe's *first* stated limitation; see `knownLimitations` in
 | `kart-racer` | (none stated) |
 | `time-trial-racer` | (none stated) |
 | `endless-driving` | (none stated) |
-| `boat-flight-racer` | The boat and flight profiles are bounded arcade handling (momentum, drag, lateral grip, and for flight a 2D altitude band) - not fluid or aerodynamic simulation. |
+| `boat-flight-racer` | (none stated) |
 | `sokoban` | (none stated) |
 | `match-puzzle` | (none stated) |
 | `falling-block-puzzle` | (none stated) |

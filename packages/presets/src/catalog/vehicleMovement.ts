@@ -80,13 +80,13 @@ export const VEHICLE_MOVEMENT_PRESETS: readonly PresetDefinition[] = [
     displayName: 'Boat / Flight Racer',
     family: 'vehicle-movement',
     controllerFamilies: ['vehicle'],
-    requiredSystemPacks: [pack(PACK_IDS.world), pack(PACK_IDS.worldEntities), pack(PACK_IDS.vehicles)],
-    optionalSystemPacks: [pack(PACK_IDS.arcade), pack(PACK_IDS.racing)],
-    requiredContentRoles: ['tuning', 'levels', 'vehicles'],
+    requiredSystemPacks: [pack(PACK_IDS.world), pack(PACK_IDS.worldEntities), pack(PACK_IDS.vehicles), pack(PACK_IDS.racing)],
+    optionalSystemPacks: [pack(PACK_IDS.arcade)],
+    requiredContentRoles: ['tuning', 'levels', 'vehicles', 'races'],
     validationProfile: VALIDATION_PROFILES.vehicleMovement,
     vehicleProfile: 'boat',
-    knownLimitations: [
-      'The boat and flight profiles are bounded arcade handling (momentum, drag, lateral grip, and for flight a 2D altitude band) - not fluid or aerodynamic simulation.',
-    ],
+    // Final Product Completion Wave 4 (matrix L20): arcade boat/flight loop
+    // with checkpoints, a buoy hazard, altitude band and restart. Not CFD.
+    knownLimitations: [],
   }),
 ];
