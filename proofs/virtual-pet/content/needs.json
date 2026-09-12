@@ -1,10 +1,48 @@
 {
   "schemaVersion": 1,
+  "persist": true,
   "mode": "companion",
   "subject": {
     "id": "buddy",
     "displayName": "Buddy"
   },
+  "creatures": [
+    {
+      "id": "buddy",
+      "displayName": "Buddy",
+      "x": 300,
+      "y": 300,
+      "speed": 100
+    }
+  ],
+  "decisionIntervalMs": 400,
+  "activities": [
+    {
+      "id": "seek-food",
+      "displayName": "Seeking food",
+      "needId": "hunger",
+      "below": 76,
+      "targetX": 720,
+      "targetY": 280,
+      "durationMs": 1000
+    },
+    {
+      "id": "seek-play",
+      "displayName": "Seeking play",
+      "needId": "happiness",
+      "below": 76,
+      "targetX": 260,
+      "targetY": 220,
+      "durationMs": 1000
+    },
+    {
+      "id": "wander",
+      "displayName": "Wandering",
+      "targetX": 500,
+      "targetY": 340,
+      "durationMs": 900
+    }
+  ],
   "needs": [
     {
       "id": "hunger",

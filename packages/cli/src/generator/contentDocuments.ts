@@ -889,7 +889,7 @@ export function generateEconomyCatalog(kind: 'shop' | 'kitchen' | 'factory' | 'n
  * content/simulation.json - a SimulationCatalog (Final Product Completion Wave 6).
  * Always emitted; empty unless the preset actually consumes idle/farm/shop-meta fields.
  */
-export function generateSimulationCatalog(kind: 'idle' | 'farm' | 'meta' | 'none'): Record<string, unknown> {
+export function generateSimulationCatalog(kind: 'idle' | 'farm' | 'colony' | 'meta' | 'none'): Record<string, unknown> {
   if (kind === 'idle') {
     return {
       schemaVersion: 1,
@@ -917,6 +917,15 @@ export function generateSimulationCatalog(kind: 'idle' | 'farm' | 'meta' | 'none
       harvestTarget: 3,
     };
   }
+  if (kind === 'colony') {
+    return {
+      schemaVersion: 1,
+      resources: [
+        { id: 'wood', amount: 0 },
+        { id: 'stone', amount: 0 },
+      ],
+    };
+  }
   if (kind === 'meta') {
     return {
       schemaVersion: 1,
@@ -935,7 +944,7 @@ export function generateSimulationCatalog(kind: 'idle' | 'farm' | 'meta' | 'none
  * modes match the three care consumers: creature (hunger/mood hold-to-win),
  * habitat (water/food longer hold, fail-below), companion (instant win, no fail).
  */
-export function generateNeedsCatalog(kind: 'creature' | 'habitat' | 'companion' | 'none'): Record<string, unknown> {
+export function generateNeedsCatalog(kind: 'creature' | 'habitat' | 'companion' | 'colony' | 'none'): Record<string, unknown> {
   const empty = {
     schemaVersion: 1,
     mode: 'creature',
@@ -948,8 +957,17 @@ export function generateNeedsCatalog(kind: 'creature' | 'habitat' | 'companion' 
   if (kind === 'creature') {
     return {
       schemaVersion: 1,
+      persist: true,
       mode: 'creature',
       subject: { id: 'pet', displayName: 'Pico' },
+      creatures: [{ id: 'pico', displayName: 'Pico', x: 180, y: 270, speed: 110 }],
+      decisionIntervalMs: 400,
+      activities: [
+        { id: 'seek-food', displayName: 'Seeking food', needId: 'hunger', below: 78, targetX: 760, targetY: 300, durationMs: 1200 },
+        { id: 'rest', displayName: 'Resting', needId: 'mood', below: 78, targetX: 240, targetY: 350, durationMs: 1200 },
+        { id: 'explore', displayName: 'Exploring', targetX: 520, targetY: 220, durationMs: 900 },
+        { id: 'play', displayName: 'Playing', targetX: 420, targetY: 360, durationMs: 900 },
+      ],
       needs: [
         { id: 'hunger', displayName: 'Hunger', value: 72, min: 0, max: 100, decayPerSecond: 2.8 },
         { id: 'mood', displayName: 'Mood', value: 72, min: 0, max: 100, decayPerSecond: 2.2 },
@@ -966,8 +984,25 @@ export function generateNeedsCatalog(kind: 'creature' | 'habitat' | 'companion' 
   if (kind === 'habitat') {
     return {
       schemaVersion: 1,
+      persist: true,
       mode: 'habitat',
       subject: { id: 'tank', displayName: 'Tank' },
+      creatures: [
+        { id: 'fin', displayName: 'Fin', x: 220, y: 220, speed: 75 },
+        { id: 'coral', displayName: 'Coral', x: 650, y: 300, speed: 65, needValues: { food: 70 } },
+        { id: 'dart', displayName: 'Dart', x: 420, y: 360, speed: 90, needValues: { water: 72 } },
+      ],
+      decisionIntervalMs: 500,
+      activities: [
+        { id: 'forage', displayName: 'Foraging', needId: 'food', below: 80, targetX: 470, targetY: 260, durationMs: 1200 },
+        { id: 'surface', displayName: 'Seeking clean water', needId: 'water', below: 80, targetX: 470, targetY: 140, durationMs: 1200 },
+        { id: 'school', displayName: 'Schooling', targetX: 470, targetY: 260, durationMs: 1000 },
+        { id: 'drift', displayName: 'Drifting', targetX: 650, targetY: 330, durationMs: 1000 },
+      ],
+      relationships: [
+        { a: 'fin', b: 'coral', affinity: 10, gainPerSecond: 2, max: 100 },
+        { a: 'coral', b: 'dart', affinity: 6, gainPerSecond: 1.5, max: 100 },
+      ],
       needs: [
         { id: 'water', displayName: 'Water', value: 78, min: 0, max: 100, decayPerSecond: 3 },
         { id: 'food', displayName: 'Food', value: 78, min: 0, max: 100, decayPerSecond: 3.5 },
@@ -980,10 +1015,46 @@ export function generateNeedsCatalog(kind: 'creature' | 'habitat' | 'companion' 
       loseBelow: 10,
     };
   }
+  if (kind === 'colony') {
+    return {
+      schemaVersion: 1,
+      mode: 'creature',
+      subject: { id: 'colony', displayName: 'Founders' },
+      creatures: [
+        { id: 'ada', displayName: 'Ada', x: 420, y: 360, speed: 150, needValues: { hunger: 76, rest: 84 } },
+        { id: 'bo', displayName: 'Bo', x: 470, y: 360, speed: 145, needValues: { hunger: 82, rest: 72 } },
+        { id: 'cy', displayName: 'Cy', x: 520, y: 360, speed: 140, needValues: { hunger: 88, rest: 80 } },
+      ],
+      needs: [
+        { id: 'hunger', displayName: 'Hunger', value: 80, min: 0, max: 100, decayPerSecond: 2 },
+        { id: 'rest', displayName: 'Rest', value: 80, min: 0, max: 100, decayPerSecond: 1.5 },
+      ],
+      actions: [
+        { id: 'meal', displayName: 'Meal', effects: [{ needId: 'hunger', delta: 25 }] },
+        { id: 'sleep', displayName: 'Sleep', effects: [{ needId: 'rest', delta: 25 }] },
+      ],
+      activities: [
+        { id: 'eat', displayName: 'Eating', needId: 'hunger', below: 35, targetX: 470, targetY: 390, durationMs: 800 },
+        { id: 'sleep', displayName: 'Sleeping', needId: 'rest', below: 35, targetX: 560, targetY: 390, durationMs: 800 },
+        { id: 'ready', displayName: 'Ready', targetX: 470, targetY: 340, durationMs: 800 },
+      ],
+      relationships: [{ a: 'ada', b: 'bo', affinity: 5, gainPerSecond: 0.2, max: 100 }],
+      decisionIntervalMs: 400,
+      win: { minValue: 0, holdMs: 999999, minActions: 999999 },
+    };
+  }
   return {
     schemaVersion: 1,
+    persist: true,
     mode: 'companion',
     subject: { id: 'buddy', displayName: 'Buddy' },
+    creatures: [{ id: 'buddy', displayName: 'Buddy', x: 300, y: 300, speed: 100 }],
+    decisionIntervalMs: 400,
+    activities: [
+      { id: 'seek-food', displayName: 'Seeking food', needId: 'hunger', below: 76, targetX: 720, targetY: 280, durationMs: 1000 },
+      { id: 'seek-play', displayName: 'Seeking play', needId: 'happiness', below: 76, targetX: 260, targetY: 220, durationMs: 1000 },
+      { id: 'wander', displayName: 'Wandering', targetX: 500, targetY: 340, durationMs: 900 },
+    ],
     needs: [
       { id: 'hunger', displayName: 'Hunger', value: 70, min: 0, max: 100, decayPerSecond: 3 },
       { id: 'happiness', displayName: 'Happiness', value: 70, min: 0, max: 100, decayPerSecond: 2.5 },
@@ -1939,7 +2010,9 @@ export function generateUiCopy(options: {
                 : 'POINT AT THINGS  -  CLICK TO ACT  -  PAUSE TO STOP';
       break;
     case 'ui-simulation':
-      playHint = has('sw2d.economy')
+      playHint = presetId === 'colony-lite'
+        ? 'ARROWS PICK A JOB  -  ENTER ASSIGNS OR BUILDS'
+        : has('sw2d.economy')
         ? 'ARROWS PICK  -  ENTER SERVES  -  K RESTOCKS OR COOKS'
         : has('sw2d.needs')
           ? 'J FEEDS  -  K PLAYS OR REFRESHES  -  KEEP NEEDS UP'
@@ -1955,9 +2028,7 @@ export function generateUiCopy(options: {
                   ? 'J GATHERS  -  K UPGRADES  -  BACKSPACE PRESTIGES'
                 : presetId === 'farming-lite'
                   ? 'ARROWS PICK A PLOT  -  ENTER PLANTS, WATERS, OR HARVESTS'
-                  : presetId === 'colony-lite'
-                    ? 'ARROWS PICK A JOB  -  ENTER ASSIGNS OR BUILDS'
-                    : presetId === 'interactive-fiction-hybrid'
+                  : presetId === 'interactive-fiction-hybrid'
                       ? 'ARROWS PICK A VERB  -  ENTER ACTS'
                       : presetId === 'fishing-game'
                         ? 'ENTER CASTS AND LANDS'

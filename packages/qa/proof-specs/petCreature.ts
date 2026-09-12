@@ -12,6 +12,8 @@ interface Needs {
   readonly outcome: string;
   readonly lastResult: string | null;
   readonly affinity: number;
+  readonly creatures: readonly { readonly x: number; readonly activityId: string | null; readonly decisions: number }[];
+  readonly loadOutcome: string;
 }
 interface Shell {
   readonly needs?: Needs;
@@ -23,23 +25,24 @@ export async function run(harness: Harness): Promise<SmokeOutcome> {
   await startPlay(harness);
   const booted = await readSnapshot(harness);
   const initial = (await read()).needs!;
-  evidence.initial = { mode: initial.mode, hunger: initial.needValues.hunger, mood: initial.needValues.mood };
-  const startedOk = booted.installedPacks.includes('sw2d.needs') && initial.active && initial.mode === 'creature' && initial.outcome === 'playing';
+  evidence.initial = { mode: initial.mode, hunger: initial.needValues.hunger, mood: initial.needValues.mood, creature: initial.creatures[0] };
+  const startedOk = booted.installedPacks.includes('sw2d.needs') && initial.active && initial.mode === 'creature' && initial.outcome === 'playing' && initial.creatures.length === 1 && initial.creatures[0]?.activityId !== null;
 
   // Meters decay on the simulation clock while nothing is pressed.
   await harness.stepFrames(30);
   const decayed = (await read()).needs!;
-  evidence.decayed = { hunger: decayed.needValues.hunger };
-  const decayOk = decayed.needValues.hunger! < initial.needValues.hunger!;
+  evidence.decayed = { hunger: decayed.needValues.hunger, creature: decayed.creatures[0] };
+  const decayOk = decayed.needValues.hunger! < initial.needValues.hunger! && decayed.creatures[0]!.x !== initial.creatures[0]!.x && decayed.creatures[0]!.decisions > initial.creatures[0]!.decisions && decayed.creatures[0]!.activityId === 'seek-food';
 
   // Feed raises hunger; spam feeding clamps at the meter ceiling.
   await harness.keyTap('KeyJ');
+  await harness.stepFrames(26);
   const fed = (await read()).needs!;
   for (let i = 0; i < 12; i++) await harness.keyTap('KeyJ');
   const spam = (await read()).needs!;
   evidence.fed = { hunger: fed.needValues.hunger, actions: fed.actionsTaken };
   evidence.spam = { hunger: spam.needValues.hunger, actions: spam.actionsTaken };
-  const feedOk = fed.needValues.hunger! > decayed.needValues.hunger! && fed.actionsTaken >= 1 && spam.needValues.hunger! <= 100;
+  const feedOk = fed.needValues.hunger! > decayed.needValues.hunger! && fed.actionsTaken >= 1 && fed.creatures[0]?.activityId !== 'seek-food' && spam.needValues.hunger! <= 100;
 
   // Play raises mood; the hold window then completes the care loop.
   await harness.keyTap('KeyK');

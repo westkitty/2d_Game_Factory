@@ -243,6 +243,10 @@ describe('closed limitations stay closed (Final Product Completion program)', ()
     { id: 'tycoon-lite', pattern: /shop layout, walking customers, prestige and offline catch-up are not/, closedBy: 'L38 economy layout + walking' },
     { id: 'restaurant', pattern: /shop layout, walking customers, prestige and offline catch-up are not/, closedBy: 'L38 economy layout + walking' },
     { id: 'farming-lite', pattern: /a plot-framework pack is not/, closedBy: 'L39 simulation plots' },
+    { id: 'pet-creature', pattern: /full creature behaviour AI, relationship graphs and colony assignment are not/, closedBy: 'L40 needs autonomy' },
+    { id: 'aquarium-terrarium', pattern: /full creature behaviour AI, relationship graphs and colony assignment are not/, closedBy: 'L40 needs autonomy' },
+    { id: 'virtual-pet', pattern: /full creature behaviour AI, relationship graphs and colony assignment are not/, closedBy: 'L40 needs persistence' },
+    { id: 'colony-lite', pattern: /needs, assignment AI and construction placement are not/, closedBy: 'L41 colony composition' },
   ];
 
   CLOSED.forEach(({ id, pattern, closedBy }) => {

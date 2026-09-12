@@ -253,7 +253,9 @@ export function buildGameFiles(gameId: string, preset: PresetDefinition): Map<st
             ? 'habitat'
             : preset.id === 'virtual-pet'
               ? 'companion'
-              : 'creature'
+              : preset.id === 'colony-lite'
+                ? 'colony'
+                : 'creature'
           : 'none',
       ),
       null,
@@ -440,6 +442,8 @@ export function buildGameFiles(gameId: string, preset: PresetDefinition): Map<st
           ? 'idle'
           : preset.id === 'farming-lite'
             ? 'farm'
+            : preset.id === 'colony-lite'
+              ? 'colony'
             : preset.id === 'shopkeeper' || preset.id === 'tycoon-lite' || preset.id === 'restaurant'
               ? 'meta'
               : 'none',

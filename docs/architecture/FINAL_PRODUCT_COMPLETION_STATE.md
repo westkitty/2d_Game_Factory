@@ -19,11 +19,11 @@ file is the cursor.
 | field | value |
 |---|---|
 | branch SHA | (see git log; this checkpoint is Wave 6 complete) |
-| waves completed | 3 + sanity repair + Wave 4 + Wave 5 + Wave 6 |
-| limitations closed | 50 / 69 entries |
-| remaining machine-executable | 19 |
+| waves completed | 3 + sanity repair + Wave 4 + Wave 5 + Wave 6 + Wave 7 |
+| limitations closed | 54 / 69 entries |
+| remaining machine-executable | 15 |
 | blockers | none |
-| next exact action | Wave 7 creatures/colony (L40-L41), then narrative (L42-L45) |
+| next exact action | Wave 8 narrative (L42-L45) |
 
 ## Checkpoint log
 
@@ -176,3 +176,12 @@ Known leftover (not a Wave 1-3 product hole, not repaired here): `bindStarterPro
 - Farming plots live in the simulation pack (`content/simulation.json`), not binder-only presentation.
 - `qa:completion` 5/5 PASS (idle, shopkeeper, tycoon-lite, restaurant, farming-lite). `qa:proof` 5/5 PASS.
 - `npm run limitations:extract`: **19** machine-executable remain (50/69 entries closed). Wave 6 matrix rows are closed.
+
+### Wave 7 L40-L41 - creature autonomy / relationships / colony
+- `sw2d.needs` now owns deterministic need-driven activity selection, bounded movement targets, multiple creatures, relationship affinity edges, and versioned game-local care persistence. Explicit run restart clears the care session; browser reload restores it.
+- Pet, aquarium and virtual-pet generated starters visibly move actors and show their current activity. Aquarium authors three creatures and two relationship edges; care changes later decisions.
+- Colony requires and composes the existing `sw2d.simulation`, `sw2d.needs` and `sw2d.navigation` owners. Three colonists are deterministically assigned by current need state and selected job priority, travel along navigation paths, gather wood/stone into the simulation ledger, pay construction cost, place/build the hall, complete, and can fail from neglected needs.
+- `npm run typecheck` PASS; focused needs/simulation/generation/honesty/schema tests PASS (5 files / 2,339 tests).
+- `npm run qa:completion -- pet-creature aquarium-terrarium virtual-pet colony-lite` 4/4 PASS (fresh factory output, system Chrome).
+- `npm run qa:proof -- pet-creature aquarium-terrarium virtual-pet colony-lite` 4/4 PASS.
+- `npm run limitations:extract`: **15** machine-executable remain (54/69 entries closed). Wave 7 matrix rows are closed.

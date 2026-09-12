@@ -55,7 +55,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     let confirmed = false;
 
     const economy = bindStarterEconomy(context);
-    const needs = bindStarterNeeds(context);
+    const needs = SIMULATION_STARTER === 'colony' ? null : bindStarterNeeds(context);
     const dialogue = bindStarterDialogue(context);
     const seats = bindStarterLocalPlay(context);
     const clock = bindStarterTiming(context);
@@ -78,7 +78,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         })()
       : null;
 
-    const label = economy.active || needs.active || dialogue.active || seats.active || clock.active || jobs.active || story.active || arcade.active || turns.active || physicsPlay.active
+    const label = economy.active || needs?.active || dialogue.active || seats.active || clock.active || jobs.active || story.active || arcade.active || turns.active || physicsPlay.active
       ? null
       : scene.add
           .text(width * 0.5, height * 0.5, '', mutedStyle(20))
@@ -96,7 +96,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       selectionIndex,
       confirmed,
       ...(economy.active ? { economy: economy.snapshot() } : {}),
-      ...(needs.active ? { needs: needs.snapshot() } : {}),
+      ...(needs?.active ? { needs: needs.snapshot() } : {}),
       ...(dialogue.active ? { dialogue: dialogue.snapshot() } : {}),
       ...(seats.active ? { localPlay: seats.snapshot() } : {}),
       ...(clock.active ? { timing: clock.snapshot() } : {}),
@@ -125,9 +125,11 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
           economy.render();
           return;
         }
-        if (needs.active) {
-          if (intent.navigateLeftPressed || intent.navigateUpPressed) needs.select(-1);
-          else if (intent.navigateRightPressed || intent.navigateDownPressed) needs.select(1);
+        if (needs?.active) {
+          if (intent.navigateUpPressed) needs.selectCreature(-1);
+          else if (intent.navigateDownPressed) needs.selectCreature(1);
+          else if (intent.navigateLeftPressed) needs.select(-1);
+          else if (intent.navigateRightPressed) needs.select(1);
           if (intent.confirmPressed) needs.act();
           if (intent.primaryPressed) needs.actByIndex(0);
           if (context.input.justPressed('SECONDARY_ACTION')) needs.actByIndex(1);
@@ -220,7 +222,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         disposed = true;
         debugHandle.dispose();
         economy.dispose();
-        needs.dispose();
+        needs?.dispose();
         dialogue.dispose();
         seats.dispose();
         clock.dispose();

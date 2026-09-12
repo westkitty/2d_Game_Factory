@@ -20,7 +20,23 @@
     },
     "win": { "$ref": "#/definitions/win" },
     "loseBelow": { "type": "number" },
-    "affinity": { "type": "number" }
+    "affinity": { "type": "number" },
+    "persist": { "type": "boolean" },
+    "decisionIntervalMs": { "type": "number", "exclusiveMinimum": 0 },
+    "creatures": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/definitions/creature" }
+    },
+    "activities": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/definitions/activity" }
+    },
+    "relationships": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/relationship" }
+    }
   },
   "definitions": {
     "subject": {
@@ -30,6 +46,48 @@
       "properties": {
         "id": { "type": "string", "minLength": 1 },
         "displayName": { "type": "string", "minLength": 1 }
+      }
+    },
+    "creature": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "displayName", "x", "y"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "displayName": { "type": "string", "minLength": 1 },
+        "x": { "type": "number" },
+        "y": { "type": "number" },
+        "speed": { "type": "number", "minimum": 0 },
+        "needValues": {
+          "type": "object",
+          "additionalProperties": { "type": "number" }
+        }
+      }
+    },
+    "activity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "displayName", "targetX", "targetY", "durationMs"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "displayName": { "type": "string", "minLength": 1 },
+        "needId": { "type": "string", "minLength": 1 },
+        "below": { "type": "number" },
+        "targetX": { "type": "number" },
+        "targetY": { "type": "number" },
+        "durationMs": { "type": "number", "exclusiveMinimum": 0 }
+      }
+    },
+    "relationship": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["a", "b", "affinity"],
+      "properties": {
+        "a": { "type": "string", "minLength": 1 },
+        "b": { "type": "string", "minLength": 1 },
+        "affinity": { "type": "number" },
+        "gainPerSecond": { "type": "number", "minimum": 0 },
+        "max": { "type": "number" }
       }
     },
     "need": {

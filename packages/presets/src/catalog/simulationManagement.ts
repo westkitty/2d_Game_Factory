@@ -1,6 +1,6 @@
 import type { PresetDefinition } from '@sw2d/contracts';
 import { PACK_IDS } from '@sw2d/packs/ids';
-import { LIMITATIONS, VALIDATION_PROFILES, definePreset, pack } from '../shared.ts';
+import { VALIDATION_PROFILES, definePreset, pack } from '../shared.ts';
 
 /**
  * Family G - Simulation / management (recipes 50-57).
@@ -91,7 +91,7 @@ export const SIMULATION_MANAGEMENT_PRESETS: readonly PresetDefinition[] = [
     optionalSystemPacks: [pack(PACK_IDS.world)],
     requiredContentRoles: ['tuning', 'needs'],
     validationProfile: VALIDATION_PROFILES.simulationManagement,
-    knownLimitations: [LIMITATIONS.creatureSimulation],
+    knownLimitations: [],
   }),
 
   definePreset({
@@ -100,13 +100,11 @@ export const SIMULATION_MANAGEMENT_PRESETS: readonly PresetDefinition[] = [
     displayName: 'Colony Lite',
     family: 'simulation-management',
     controllerFamilies: ['ui-simulation'],
-    requiredSystemPacks: [pack(PACK_IDS.simulation), pack(PACK_IDS.world)],
-    optionalSystemPacks: [pack(PACK_IDS.progression), pack(PACK_IDS.navigation)],
-    requiredContentRoles: ['tuning'],
+    requiredSystemPacks: [pack(PACK_IDS.simulation), pack(PACK_IDS.world), pack(PACK_IDS.needs), pack(PACK_IDS.navigation)],
+    optionalSystemPacks: [pack(PACK_IDS.progression)],
+    requiredContentRoles: ['tuning', 'needs'],
     validationProfile: VALIDATION_PROFILES.simulationManagement,
-    knownLimitations: [
-      'Resource ledger and timed jobs are reusable (sw2d.simulation); colonist pathfinding is reusable (sw2d.navigation, optional); needs, assignment AI and construction placement are not.',
-    ],
+    knownLimitations: [],
   }),
 
   definePreset({
@@ -132,6 +130,6 @@ export const SIMULATION_MANAGEMENT_PRESETS: readonly PresetDefinition[] = [
     optionalSystemPacks: [pack(PACK_IDS.progression)],
     requiredContentRoles: ['tuning', 'needs'],
     validationProfile: VALIDATION_PROFILES.simulationManagement,
-    knownLimitations: [LIMITATIONS.creatureSimulation],
+    knownLimitations: [],
   }),
 ];

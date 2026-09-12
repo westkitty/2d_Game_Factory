@@ -72,7 +72,7 @@ export const PARTY_TOY_WEIRD_PRESETS: readonly PresetDefinition[] = [
     optionalSystemPacks: [pack(PACK_IDS.world)],
     requiredContentRoles: ['tuning', 'needs'],
     validationProfile: VALIDATION_PROFILES.partyToyWeird,
-    knownLimitations: [LIMITATIONS.creatureSimulation],
+    knownLimitations: [],
   }),
 
   definePreset({

@@ -1,10 +1,55 @@
 {
   "schemaVersion": 1,
+  "persist": true,
   "mode": "creature",
   "subject": {
     "id": "pet",
     "displayName": "Pico"
   },
+  "creatures": [
+    {
+      "id": "pico",
+      "displayName": "Pico",
+      "x": 180,
+      "y": 270,
+      "speed": 110
+    }
+  ],
+  "decisionIntervalMs": 400,
+  "activities": [
+    {
+      "id": "seek-food",
+      "displayName": "Seeking food",
+      "needId": "hunger",
+      "below": 78,
+      "targetX": 760,
+      "targetY": 300,
+      "durationMs": 1200
+    },
+    {
+      "id": "rest",
+      "displayName": "Resting",
+      "needId": "mood",
+      "below": 78,
+      "targetX": 240,
+      "targetY": 350,
+      "durationMs": 1200
+    },
+    {
+      "id": "explore",
+      "displayName": "Exploring",
+      "targetX": 520,
+      "targetY": 220,
+      "durationMs": 900
+    },
+    {
+      "id": "play",
+      "displayName": "Playing",
+      "targetX": 420,
+      "targetY": 360,
+      "durationMs": 900
+    }
+  ],
   "needs": [
     {
       "id": "hunger",

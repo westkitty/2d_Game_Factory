@@ -79,6 +79,10 @@ export const COMPLETION_SPEC_MODULES: Readonly<Record<string, string>> = {
   'tycoon-lite': 'tycoonLite',
   restaurant: 'restaurant',
   'farming-lite': 'farmingLite',
+  'pet-creature': 'petCreature',
+  'aquarium-terrarium': 'aquariumTerrarium',
+  'virtual-pet': 'virtualPet',
+  'colony-lite': 'colonyLite',
 };
 
 interface Target {

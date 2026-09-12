@@ -18,6 +18,14 @@
       "config": {}
     },
     {
+      "packId": "sw2d.needs",
+      "config": {}
+    },
+    {
+      "packId": "sw2d.navigation",
+      "config": {}
+    },
+    {
       "packId": "game.ui-simulation-shell",
       "config": {}
     }

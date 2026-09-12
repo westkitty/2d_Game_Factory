@@ -400,12 +400,16 @@ exceptions: physical hardware certification and the user-owned public-license ch
 - **Presets:** `pet-creature`, `aquarium-terrarium`, `virtual-pet`
 - **Architecture:** `sw2d.needs` autonomous behaviour (activity choice from needs), multiple creatures, relationship affinity graph; persistent care state; colony assignment in L41.
 - **Checkpoint:** Wave 7.
+- **Closed by:** `sw2d.needs` deterministic activity rules, multiple actor state, movement targets, relationship graph, and versioned local persistence. Pet care changes the next decision; aquarium authors three moving creatures and two affinity edges; virtual-pet reload restores care state and explicit restart clears it. **Proof/test:** needs unit tests plus generated completion and proof journeys for all three presets. **Browser:** PASS.
+- **Status:** CLOSED (Wave 7).
 
 ### L41 - colony needs / assignment / construction
 - **Source text:** "Resource ledger and timed jobs are reusable (sw2d.simulation); colonist pathfinding is reusable (sw2d.navigation, optional); needs, assignment AI and construction placement are not."
 - **Presets:** `colony-lite`
 - **Architecture:** `bindStarterSimulation` colony mode on `sw2d.needs` (required) + `sw2d.navigation` (required): colonists with needs, job assignment, pathing, construction placement, resources, completion/failure.
 - **Checkpoint:** Wave 7.
+- **Closed by:** colony-lite requires `sw2d.needs` and `sw2d.navigation` and composes them with `sw2d.simulation`: three colonists expose needs, deterministic healthiest-idle assignment honors wood/stone/build priority, route followers travel to job sites, the canonical ledger receives resources and pays 2 wood + 1 stone for the hall, and construction has complete/fail/restart behavior. **Proof/test:** focused generation/honesty tests and fresh generated plus committed proof journeys, including cost refusal, path length/movement, both resources, construction, neglect failure, and restart. **Browser:** PASS.
+- **Status:** CLOSED (Wave 7).
 
 ## H. Narrative
 
@@ -540,8 +544,8 @@ exceptions: physical hardware certification and the user-owned public-license ch
 | L37 | idle-incremental | 6 | CLOSED | wave 6 simulation |
 | L38 | shopkeeper, tycoon-lite, restaurant | 6 | CLOSED | wave 6 economy layout |
 | L39 | farming-lite | 6 | CLOSED | wave 6 plots |
-| L40 | pet-creature, aquarium-terrarium, virtual-pet | 7 | OPEN | |
-| L41 | colony-lite | 7 | OPEN | |
+| L40 | pet-creature, aquarium-terrarium, virtual-pet | 7 | CLOSED | wave 7 |
+| L41 | colony-lite | 7 | CLOSED | wave 7 |
 | L42 | visual-novel, point-and-click | 8 | OPEN | |
 | L43 | interactive-fiction-hybrid | 8 | OPEN | |
 | L44 | investigation-game | 8 | OPEN | |
