@@ -13,7 +13,7 @@
 
 import { findSystemChrome } from '@sw2d/qa';
 import { JourneyFailure, startWorkbenchSession, type WorkbenchSession } from './harness.ts';
-import { wbBoot001, wbDerive001, wbImage001, wbReimport001, wbReopen001, wbSeed001 } from './journeys/core.ts';
+import { resetProject, wbBoot001, wbDerive001, wbImage001, wbReimport001, wbReopen001, wbSeed001 } from './journeys/core.ts';
 import { wbMulti001, wbOverlap001, wbScene001, wbSheet001 } from './journeys/editing.ts';
 import { wbBatch001, wbBuild001, wbProvenance001, wbRemix001, wbResponsive001, wbSecurity001 } from './journeys/pipeline.ts';
 
@@ -46,6 +46,15 @@ const JOURNEYS: readonly Journey[] = [
   { id: 'WB-SECURITY-001', title: 'the local host is loopback-only with a narrow, non-executable API', run: wbSecurity001 },
   { id: 'WB-RESPONSIVE-001', title: 'the workbench holds together at three viewports', run: wbResponsive001 },
 ];
+
+const SCRATCH_GAME_IDS = [
+  'qa-image-game',
+  'qa-bulk-game',
+  'qa-sheet-game',
+  'qa-provenance-game',
+  'qa-remix-game',
+  'qa-batch-game',
+] as const;
 
 interface Outcome {
   readonly id: string;
@@ -95,6 +104,7 @@ async function main(): Promise<number> {
     }
   } finally {
     await session.close();
+    for (const gameId of SCRATCH_GAME_IDS) resetProject(gameId);
   }
 
   const passed = outcomes.filter((outcome) => outcome.passed).length;
