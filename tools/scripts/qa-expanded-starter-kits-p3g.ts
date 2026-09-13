@@ -152,10 +152,11 @@ async function localPartyRun(harness: Harness): Promise<SmokeOutcome> {
   const initial = await shell(harness);
   await harness.keyTap('KeyJ'); await harness.stepFrames(2);
   const first = await shell(harness);
-  for (let i = 0; i < 5; i++) { await harness.keyTap('KeyJ'); await harness.stepFrames(2); }
+  for (let i = 0; i < 7; i++) { await harness.keyTap('KeyJ'); await harness.stepFrames(2); }
   const finished = await shell(harness);
   const passed = initial.panelRoleSource === 'ui.panel' && initial.buttonRoleSource === 'ui.button' && initial.currentPlayer === 0 &&
-    first.currentPlayer === 1 && first.partyScores[0]! > 0 && finished.partyTurns === 6 && finished.partyScores.every((score) => score > 0) &&
+    initial.partyScores.length === 4 && first.currentPlayer === 1 && first.partyScores[0]! > 0 && first.partyScores.slice(1).every((score) => score === 0) &&
+    finished.partyTurns === 8 && finished.partyScores.length === 4 && finished.partyScores.every((score) => score > 0) &&
     finished.winner !== null && finished.outcome === 'complete' && finished.lastAction === 'party-turn';
   return { passed, details: { initial, first, finished } };
 }
