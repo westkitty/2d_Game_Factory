@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "order": "rotate",
+  "rounds": [
+    {
+      "id": "signal",
+      "kind": "react",
+      "countdownMs": 400,
+      "durationMs": 650,
+      "target": 1,
+      "score": 40
+    },
+    {
+      "id": "scramble",
+      "kind": "mash",
+      "countdownMs": 250,
+      "durationMs": 1200,
+      "target": 4,
+      "score": 60
+    },
+    {
+      "id": "steady",
+      "kind": "hold",
+      "countdownMs": 250,
+      "durationMs": 900,
+      "target": 500,
+      "score": 70
+    },
+    {
+      "id": "switch",
+      "kind": "alternate",
+      "countdownMs": 250,
+      "durationMs": 1400,
+      "target": 4,
+      "score": 80
+    }
+  ]
+}

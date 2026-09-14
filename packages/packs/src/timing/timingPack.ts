@@ -1,15 +1,15 @@
 /**
- * Visual timing pack (Category-C capability program, Wave 10).
+ * Timing pack (Category-C Wave 10, Final Product Completion Wave 4 L27).
  *
- * Renderer-neutral reaction-test and beat-window state. Overlay-matching
- * audio-sync is deliberately out of contract: this is a visual metronome
- * plus a deterministic delay cue. Empty catalogs stay inert.
+ * Reaction mode is a visual delay cue independent of music. Rhythm mode
+ * samples the AudioBus transport (AudioContext.currentTime) for beat
+ * positions and early/perfect/late/miss judgements. Empty catalogs stay inert.
  *
- * Bounded modes: reaction (one-shot delay, too-early miss) and rhythm
- * (periodic visual beats). Not folded into `sw2d.arcade`.
+ * Not folded into `sw2d.arcade`.
  */
 
 import type {
+  AudioBus,
   EventBus,
   GameContext,
   InstalledSystemPack,
@@ -43,10 +43,14 @@ class TimingServiceImpl implements TimingService {
   private latency: number | null = null;
   private phaseState: TimingPhase = 'wait';
   private current: TimingOutcome = 'playing';
+  private frozen = false;
+  private audioOrigin = 0;
+  private useAudioClock = false;
 
   constructor(
     private readonly events: EventBus,
     private readonly catalog: TimingCatalog,
+    private readonly audio: AudioBus | null,
   ) {}
 
   mode(): TimingMode {
@@ -63,10 +67,14 @@ class TimingServiceImpl implements TimingService {
   }
 
   tick(deltaMs: number): void {
-    if (!this.active() || this.current !== 'playing') return;
-    const dt = Math.max(0, deltaMs);
-    if (dt === 0) return;
-    this.elapsed += dt;
+    if (!this.active() || this.current !== 'playing' || this.frozen) return;
+    if (this.useAudioClock && this.audio) {
+      this.elapsed = Math.max(0, (this.audio.now() - this.audioOrigin) * 1000 - this.audio.outputLatency() * 1000);
+    } else {
+      const dt = Math.max(0, deltaMs);
+      if (dt === 0) return;
+      this.elapsed += dt;
+    }
     if (this.catalog.mode === 'reaction') this.tickReaction();
     else this.tickRhythm();
   }
@@ -142,6 +150,30 @@ class TimingServiceImpl implements TimingService {
     this.latency = null;
     this.phaseState = 'wait';
     this.current = 'playing';
+    this.frozen = false;
+    this.audio?.cancelScheduled();
+    this.useAudioClock = this.catalog.mode === 'rhythm' && this.audio?.unlockState === 'unlocked' && this.audio.now() >= 0;
+    this.audioOrigin = this.useAudioClock && this.audio ? this.audio.now() : 0;
+    if (this.useAudioClock) this.scheduleBeats();
+  }
+
+  pause(): void {
+    this.frozen = true;
+    this.audio?.pauseClock();
+  }
+
+  resume(): void {
+    this.frozen = false;
+    this.audio?.resumeClock();
+  }
+
+  private scheduleBeats(): void {
+    const rhythm = this.catalog.rhythm;
+    if (!this.audio || !rhythm) return;
+    for (let i = 0; i < rhythm.beats; i++) {
+      const when = this.audioOrigin + (rhythm.offsetMs + i * rhythm.periodMs) / 1000;
+      this.audio.scheduleTone(when, i % 4 === 0 ? 988 : 784);
+    }
   }
 
   private currentDelay(): number | null {
@@ -221,14 +253,17 @@ class TimingServiceImpl implements TimingService {
     const beatTime = this.beatTime(this.beat);
     if (beatTime === null) return;
     const delta = this.elapsed - beatTime;
-    if (Math.abs(delta) <= this.catalog.windowMs) {
-      this.latency = Math.abs(delta);
-      this.noteHit();
+    const abs = Math.abs(delta);
+    if (abs <= this.catalog.windowMs) {
+      this.latency = abs;
+      const perfect = this.catalog.windowMs * 0.35;
+      const judgement = abs <= perfect ? 'perfect' : delta < 0 ? 'early' : 'late';
+      this.noteHit(judgement);
       this.beat += 1;
       this.maybeFinish();
       return;
     }
-    this.latency = Math.abs(delta);
+    this.latency = abs;
     this.noteMiss('miss');
     if (this.elapsed > beatTime - this.catalog.windowMs) {
       this.beat += 1;
@@ -236,10 +271,10 @@ class TimingServiceImpl implements TimingService {
     this.maybeFinish();
   }
 
-  private noteHit(): void {
+  private noteHit(result = 'hit'): void {
     this.hitCount += 1;
-    this.last = 'hit';
-    this.events.emit('timing:hit', { hits: this.hitCount, lastResult: 'hit' });
+    this.last = result;
+    this.events.emit('timing:hit', { hits: this.hitCount, lastResult: result });
   }
 
   private noteMiss(reason: string): void {
@@ -274,7 +309,8 @@ export const timingPack: SystemPackDefinition<undefined, GameContext> = {
 
   install(context: GameContext): InstalledSystemPack {
     const catalog = (context.content?.data?.['timing']?.value as TimingCatalog | undefined) ?? EMPTY_CATALOG;
-    const service = new TimingServiceImpl(context.events, catalog);
+    const service = new TimingServiceImpl(context.events, catalog, context.audio ?? null);
+    service.reset();
     const handle = context.capabilities.provide(CAPABILITY_IDS.timing, service);
     return {
       id: PACK_IDS.timing,

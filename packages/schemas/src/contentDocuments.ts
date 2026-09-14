@@ -49,6 +49,12 @@ export const CONTENT_DOCUMENTS: Readonly<Record<string, ContentDocumentRegistryE
   camera: { schemaName: 'camera-catalog' },
   codex: { schemaName: 'codex-catalog' },
   targeting: { schemaName: 'targeting-catalog' },
+  pursuit: { schemaName: 'pursuit-catalog' },
+  runs: { schemaName: 'runs-catalog' },
+  simulation: { schemaName: 'simulation-catalog' },
+  microgames: { schemaName: 'microgame-catalog' },
+  fishing: { schemaName: 'fishing-catalog' },
+  cooking: { schemaName: 'cooking-catalog' },
 };
 
 export type ContentDocumentName = keyof typeof CONTENT_DOCUMENTS;

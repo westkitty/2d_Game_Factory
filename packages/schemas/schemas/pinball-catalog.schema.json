@@ -75,6 +75,7 @@
       }
     },
     "drainY": { "type": "number" },
-    "winScore": { "type": "number", "minimum": 0 }
+    "winScore": { "type": "number", "minimum": 0 },
+    "balls": { "type": "integer", "minimum": 1 }
   }
 }

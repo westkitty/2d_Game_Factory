@@ -8,6 +8,7 @@ import {
   type Disposable,
   type InputDeviceAdapter,
   type InputSourceId,
+  type GamepadSeatState,
 } from '@sw2d/contracts';
 
 const IDLE_STATE: ActionState = {
@@ -37,6 +38,7 @@ function zeroed(): Record<ActionId, number> {
  */
 export class ActionInputHost implements ActionInput, ActionSink, Disposable {
   #raw = zeroed();
+  #rawBySource = new Map<InputSourceId, Record<ActionId, number>>();
   #peak = zeroed();
   #current = zeroed();
   #previous = zeroed();
@@ -76,7 +78,12 @@ export class ActionInputHost implements ActionInput, ActionSink, Disposable {
 
   setActionValue(action: ActionId, value: number, source: InputSourceId): void {
     const clamped = value <= 0 ? 0 : value >= 1 ? 1 : value;
-    this.#raw[action] = clamped;
+    let values = this.#rawBySource.get(source);
+    if (!values) {
+      values = zeroed();
+      this.#rawBySource.set(source, values);
+    }
+    values[action] = clamped;
     if (clamped > 0) {
       this.#sources.set(action, source);
       if (clamped > this.#peak[action]) this.#peak[action] = clamped;
@@ -90,6 +97,16 @@ export class ActionInputHost implements ActionInput, ActionSink, Disposable {
   update(): void {
     for (const adapter of this.#adapters) adapter.poll?.();
     for (const action of ACTION_IDS) {
+      let raw = 0;
+      let source: InputSourceId | null = null;
+      for (const [candidateSource, values] of this.#rawBySource) {
+        if (values[action] > raw) {
+          raw = values[action];
+          source = candidateSource;
+        }
+      }
+      this.#raw[action] = raw;
+      if (source) this.#sources.set(action, source);
       this.#previous[action] = this.#current[action];
       const latched = this.#peak[action];
       this.#current[action] = latched > this.#raw[action] ? latched : this.#raw[action];
@@ -100,6 +117,7 @@ export class ActionInputHost implements ActionInput, ActionSink, Disposable {
   /** Zero all input. Used when the window loses focus so keys cannot stick down. */
   clear(): void {
     this.#raw = zeroed();
+    this.#rawBySource.clear();
     this.#peak = zeroed();
   }
 
@@ -144,6 +162,18 @@ export class ActionInputHost implements ActionInput, ActionSink, Disposable {
 
   values(): Readonly<Record<ActionId, number>> {
     return { ...this.#current };
+  }
+
+  gamepadSeats(): readonly GamepadSeatState[] {
+    return this.#adapters.flatMap((adapter) => adapter.gamepadSeats?.() ?? []);
+  }
+
+  gamepadAxis(seat: number, axis: 'horizontal' | 'vertical' | 'aim-horizontal' | 'aim-vertical'): number {
+    for (const adapter of this.#adapters) {
+      const value = adapter.gamepadAxis?.(seat, axis);
+      if (value !== undefined) return value;
+    }
+    return 0;
   }
 
   dispose(): void {

@@ -1,16 +1,16 @@
 # Proof Contract — escape-room
 
-Frozen before implementation. Category-C Wave 12 (existing `sw2d.puzzle` code seam, ADR-0039) - two linked hotspots on the pointer shell.
+Final Product Completion Wave 4 L25/L46 — inspect hotspots on the pointer shell, rules in `content/puzzles.json`.
 
 ## Preset
 
-`escape-room` (`packages/presets/src/catalog/narrativeExploration.ts`) — controller family `pointer (+ ui-simulation)`, required packs **`sw2d.puzzle`** (`configSource: 'code'`, `escape-locks`). Content roles tuning.
+`escape-room` (`packages/presets/src/catalog/narrativeExploration.ts`) — controller family `pointer (+ ui-simulation)`, required packs **`sw2d.puzzle-rules`** (`escape` kind). Content roles tuning, puzzles.
 
-Generated via `npm run sw2d -- new proof-escape-room --preset escape-room` (the canonical factory, unmodified - the Category-C shells consume the capability directly, so no `src/game-specific/` customization was needed).
+Generated via `npm run sw2d -- new proof-escape-room --preset escape-room` (the canonical factory, unmodified).
 
 ## Reusable capability exercised
 
-- `sw2d.puzzle` code seam: `escape-locks` - the lock is `locked` until the note is inspected, then the key opens it; ADR-0018 spatial pointer clicks resolve the hotspots.
+- `sw2d.puzzle-rules` `escape` kind: authored interactables, flag gates and completion; ADR-0018 spatial pointer clicks issue `inspect` ops.
 
 ## Terminal success/failure oracle
 
@@ -19,7 +19,7 @@ Generated via `npm run sw2d -- new proof-escape-room --preset escape-room` (the 
 
 ## Defining journey (automated, real-browser, deterministic frame stepping)
 
-1. Start; kind `escape-locks`; nothing found.
+1. Start; kind `escape`; nothing found.
 2. Click the lock (480,280) -> `locked`.
 3. Click the note (240,280) -> `note true`; click again -> unchanged.
 4. Click the lock -> `key true`, `solved`.
@@ -27,5 +27,5 @@ Generated via `npm run sw2d -- new proof-escape-room --preset escape-room` (the 
 
 ## Acceptance
 
-- An escape-room grammar beyond authored hotspots is not this seam (catalog limitation).
+- The inspect/flag grammar is content (`content/puzzles.json`); no TypeScript placeholder.
 - Zero console errors, zero external requests.

@@ -34,6 +34,14 @@ describe('sw2d.vehicles', () => {
     expect(svc.definitionIds()).toEqual(['boat', 'car', 'kart']);
   });
 
+  it('triggerBoost starts a boost independent of intent and respects cooldown', () => {
+    const svc = makeService(CAT);
+    svc.load('kart', { x: 0, y: 0, heading: 0 });
+    expect(svc.triggerBoost()).toBe(true);
+    expect(svc.state().boosting).toBe(true);
+    expect(svc.triggerBoost()).toBe(false);
+  });
+
   it('throttle accelerates forward; brake then reverse; speeds clamp', () => {
     const svc = makeService(CAT);
     svc.load('car', { x: 0, y: 0, heading: 0 });

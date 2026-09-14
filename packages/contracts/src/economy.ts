@@ -59,6 +59,31 @@ export interface EconomySpawn {
   readonly maxQueue: number;
 }
 
+export interface EconomyPoint {
+  readonly x: number;
+  readonly y: number;
+}
+
+export interface EconomyLayout {
+  readonly entrance: EconomyPoint;
+  readonly counter: EconomyPoint;
+  readonly exit: EconomyPoint;
+  readonly queueSlots: readonly EconomyPoint[];
+  readonly seats?: readonly EconomyPoint[];
+  readonly walkSpeed?: number;
+}
+
+export type EconomyWalkerPhase = 'enter' | 'wait' | 'seat' | 'leave';
+
+export interface EconomyWalker {
+  readonly instanceId: string;
+  readonly displayName: string;
+  readonly goodId: string;
+  readonly x: number;
+  readonly y: number;
+  readonly phase: EconomyWalkerPhase;
+}
+
 /** The validated `content/economy.json` document. */
 export interface EconomyCatalog {
   readonly schemaVersion: number;
@@ -70,6 +95,8 @@ export interface EconomyCatalog {
   readonly spawn: EconomySpawn;
   /** Factory mode: serve automatically when the requested good is in stock. */
   readonly autoSell?: boolean;
+  readonly layout?: EconomyLayout;
+  readonly persist?: boolean;
 }
 
 export interface QueuedCustomer {
@@ -79,6 +106,9 @@ export interface QueuedCustomer {
   readonly goodId: string;
   readonly pay: number;
   readonly remainingMs: number;
+  readonly x?: number;
+  readonly y?: number;
+  readonly phase?: EconomyWalkerPhase;
 }
 
 export interface EconomyProduction {
@@ -129,6 +159,10 @@ export interface EconomyService {
   secondary(): EconomySecondaryResult;
   producing(): EconomyProduction | null;
   lastResult(): string | null;
+  layout(): EconomyLayout | null;
+  walkers(): readonly EconomyWalker[];
+  payMultiplier(): number;
+  setPayMultiplier(multiplier: number): void;
 }
 
 export class UnknownEconomyGoodError extends Error {

@@ -62,13 +62,13 @@ with a small working placeholder to replace. Every other pack is configured as J
 ## Composition
 
 - Controller family/families: vehicle
-- Required packs (enabled by default): sw2d.arcade, sw2d.generation, sw2d.vehicles
+- Required packs (enabled by default): sw2d.arcade, sw2d.generation, sw2d.vehicles, sw2d.items
 - Optional packs (available, not enabled by default - add to content/game.json's systemPacks to use): sw2d.world, sw2d.world-entities
-- Content roles this preset expects: tuning, generation, vehicles
+- Content roles this preset expects: tuning, generation, vehicles, items
 
 ## Known preset limitations
 
-- Arcade distance for the generated starter is game-specific presentation of sw2d.vehicles + sw2d.arcade; a reusable kart item-fire system is not.
+- (none stated)
 
 ## How to add a level
 

@@ -24,6 +24,10 @@ export interface StarterStageScrollSnapshot {
   readonly lastHit: string | null;
   readonly outcome: string;
   readonly hazardsVisible: number;
+  readonly layers: readonly { readonly id: string; readonly offset: number; readonly speedFactor: number }[];
+  readonly currentSpeed: number;
+  readonly crossOffset: number;
+  readonly railLeg: number;
 }
 
 export interface StarterStageScrollBinding {
@@ -55,6 +59,10 @@ const INERT: StarterStageScrollBinding = {
     lastHit: null,
     outcome: 'playing',
     hazardsVisible: 0,
+    layers: [],
+    currentSpeed: 0,
+    crossOffset: 0,
+    railLeg: -1,
   }),
   render: () => undefined,
   mode: () => null,
@@ -88,6 +96,20 @@ export function bindStarterStageScroll(context: SceneContext, options?: { readon
     tiles.push({ sprite });
     sprites.push(sprite);
   }
+  // Parallax planes (Final Product Completion Wave 3): one row / column of
+  // tiles per authored layer, moved at the layer's own offset.
+  const layerTiles: { id: string; sprites: { setPosition(x: number, y: number): unknown; destroy(): void }[]; count: number }[] = [];
+  for (const layer of stage.layers()) {
+    const span = stage.mode() === 'vertical' ? height : width;
+    const count = Math.ceil(span / layer.spacing) + 2;
+    const layerSprites: { setPosition(x: number, y: number): unknown; destroy(): void }[] = [];
+    for (let i = 0; i < count; i++) {
+      const sprite = scene.add.image(0, 0, platformKey).setDisplaySize(layer.size, layer.size).setAlpha(layer.alpha).setDepth(layer.speedFactor >= 1 ? 3 : 0).setScrollFactor(0);
+      layerSprites.push(sprite);
+      sprites.push(sprite);
+    }
+    layerTiles.push({ id: layer.id, sprites: layerSprites, count });
+  }
   const hazardSprites: { id: string; sprite: { setPosition(x: number, y: number): unknown; setVisible(v: boolean): unknown; destroy(): void } }[] = [];
   for (const hazard of stage.hazards()) {
     const sprite = scene.add.image(hazard.x, hazard.y, hazardKey).setDisplaySize(hazard.radius * 2, hazard.radius * 2).setDepth(4).setScrollFactor(0);
@@ -110,6 +132,10 @@ export function bindStarterStageScroll(context: SceneContext, options?: { readon
       lastHit: stage.lastHit(),
       outcome: stage.outcome(),
       hazardsVisible: stage.hazards().filter((hazard) => hazard.visible).length,
+      layers: stage.layers().map((l) => ({ id: l.id, offset: Math.round(l.offset), speedFactor: l.speedFactor })),
+      currentSpeed: Math.round(stage.currentSpeed()),
+      crossOffset: Math.round(stage.crossOffset()),
+      railLeg: stage.railLeg(),
     };
   }
 
@@ -124,6 +150,20 @@ export function bindStarterStageScroll(context: SceneContext, options?: { readon
         tiles[i]!.sprite.setPosition(x, 48 + (i % 4) * 140);
       }
     }
+    for (const layer of stage.layers()) {
+      const tiles = layerTiles.find((t) => t.id === layer.id);
+      if (!tiles) continue;
+      const span = tiles.count * layer.spacing;
+      for (let i = 0; i < tiles.count; i++) {
+        if (stage.mode() === 'vertical') {
+          const y = ((i * layer.spacing + layer.offset) % span + span) % span - layer.spacing;
+          tiles.sprites[i]!.setPosition(layer.cross + (i % 2) * 40, y);
+        } else {
+          const x = ((i * layer.spacing - layer.offset) % span + span) % span - layer.spacing;
+          tiles.sprites[i]!.setPosition(x, layer.cross + (i % 2) * 24);
+        }
+      }
+    }
     for (const entry of hazardSprites) {
       const live = stage.hazards().find((hazard) => hazard.id === entry.id);
       entry.sprite.setVisible(live?.visible ?? false);
@@ -132,8 +172,9 @@ export function bindStarterStageScroll(context: SceneContext, options?: { readon
     if (!title || !status || !hint) return;
     title.setText(stage.mode() === 'vertical' ? 'VERTICAL' : 'HORIZONTAL');
     const pct = Math.round(stage.progress() * 100);
+    const leg = stage.railLeg();
     status.setText(
-      `stage ${pct}%  ·  offset ${Math.round(stage.offset())}${stage.lastHit() ? `  ·  hit ${stage.lastHit()}` : ''}${stage.outcome() !== 'playing' ? `  ·  ${stage.outcome().toUpperCase()}` : ''}`,
+      `stage ${pct}%  ·  offset ${Math.round(stage.offset())}${leg >= 0 ? `  ·  leg ${leg + 1} @${Math.round(stage.currentSpeed())}px/s` : ''}${stage.lastHit() ? `  ·  hit ${stage.lastHit()}` : ''}${stage.outcome() !== 'playing' ? `  ·  ${stage.outcome().toUpperCase()}` : ''}`,
     );
     hint.setText('MOVE WASD/ARROWS   FIRE J/X   CLEAR THE STAGE');
   }

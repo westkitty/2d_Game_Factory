@@ -2,31 +2,28 @@
   "schemaVersion": 1,
   "vehicles": [
     {
-      "id": "starter-car",
-      "profile": "car",
-      "acceleration": 520,
-      "braking": 780,
-      "reverseAcceleration": 260,
-      "maxForwardSpeed": 340,
-      "maxReverseSpeed": 120,
-      "steeringRate": 2.6,
-      "speedSensitiveSteering": 0.5,
-      "drag": 0.7,
-      "lateralGrip": 0.9,
-      "traction": 0.85,
-      "driftFactor": 0.15,
-      "boostForce": 320,
-      "boostDurationMs": 900,
-      "boostCooldownMs": 2600,
-      "surfaceModifiers": {
-        "dirt": {
-          "traction": 0.7,
-          "maxSpeed": 0.9
-        },
-        "ice": {
-          "traction": 0.35,
-          "steering": 0.8
-        }
+      "id": "starter-ship",
+      "profile": "ship",
+      "acceleration": 240,
+      "braking": 160,
+      "reverseAcceleration": 160,
+      "maxForwardSpeed": 320,
+      "maxReverseSpeed": 320,
+      "steeringRate": 0,
+      "speedSensitiveSteering": 0,
+      "drag": 0.82,
+      "lateralGrip": 0,
+      "traction": 0,
+      "driftFactor": 0,
+      "boostForce": 260,
+      "boostDurationMs": 600,
+      "boostCooldownMs": 2400,
+      "angularAcceleration": 9,
+      "angularDamping": 0.08,
+      "wrap": {
+        "width": 960,
+        "height": 540,
+        "margin": 24
       }
     }
   ]

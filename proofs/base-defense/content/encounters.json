@@ -1,4 +1,41 @@
 {
   "schemaVersion": 1,
-  "encounters": []
+  "escalation": {
+    "countPerWave": 1,
+    "healthScalePerWave": 0.2,
+    "speedScalePerWave": 0.1,
+    "maxWaves": 3
+  },
+  "archetypes": {
+    "raider": {
+      "motion": "chase",
+      "speed": 40
+    }
+  },
+  "encounters": [
+    {
+      "id": "starter-hold",
+      "phases": [
+        {
+          "id": "raid",
+          "spawns": [
+            {
+              "archetype": "raider",
+              "count": 2,
+              "at": {
+                "kind": "point",
+                "x": 160,
+                "y": 270
+              },
+              "intervalMs": 800,
+              "health": 2
+            }
+          ],
+          "completeWhen": {
+            "kind": "spawns-cleared"
+          }
+        }
+      ]
+    }
+  ]
 }

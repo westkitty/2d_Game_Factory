@@ -44,6 +44,54 @@ export interface DialogueNodeDef {
   /** Applied when the node is entered. */
   readonly setFlag?: string;
   readonly choices?: readonly DialogueChoiceDef[];
+  readonly sceneId?: string;
+  readonly speakerId?: string;
+}
+
+export interface DialogueSpeakerDef {
+  readonly id: string;
+  readonly displayName: string;
+  readonly portrait: string;
+  readonly position: 'left' | 'center' | 'right';
+  readonly color?: string;
+}
+
+export interface DialogueSceneDef {
+  readonly id: string;
+  readonly title: string;
+  readonly background: string;
+  readonly backgroundImage?: string;
+}
+
+export interface NarrativeParserObjectDef {
+  readonly id: string;
+  readonly nouns: readonly string[];
+  readonly aliases?: readonly string[];
+}
+
+export interface NarrativeParserCommandDef {
+  readonly id: string;
+  readonly verb: string;
+  readonly aliases?: readonly string[];
+  readonly objectId?: string;
+  readonly indirectObjectId?: string;
+  readonly requireFlags?: readonly string[];
+  readonly forbidFlags?: readonly string[];
+  readonly setFlags?: readonly string[];
+  readonly clearFlags?: readonly string[];
+  readonly nodeId: string;
+  readonly text: string;
+  readonly ending?: string;
+}
+
+export interface NarrativeParserDef {
+  readonly startNodeId: string;
+  readonly prompt: string;
+  readonly objects: readonly NarrativeParserObjectDef[];
+  readonly commands: readonly NarrativeParserCommandDef[];
+  readonly unknownVerb: string;
+  readonly unknownObject: string;
+  readonly blocked: string;
 }
 
 export interface DialogueConversationDef {
@@ -68,6 +116,10 @@ export interface DialogueCatalog {
   readonly startConversationId?: string;
   readonly conversations: readonly DialogueConversationDef[];
   readonly hotspots?: readonly DialogueHotspotDef[];
+  readonly speakers?: readonly DialogueSpeakerDef[];
+  readonly scenes?: readonly DialogueSceneDef[];
+  /** Optional content-authored command grammar consumed by sw2d.narrative. */
+  readonly parser?: NarrativeParserDef;
 }
 
 export interface DialogueChoiceState {
@@ -133,6 +185,7 @@ export interface DialogueService {
   step(): number;
   lastResult(): string | null;
   hotspots(): readonly DialogueHotspotState[];
+  presentation(): { readonly scene: DialogueSceneDef | null; readonly speaker: DialogueSpeakerDef | null };
   /** Restore catalog initials (a new reading). */
   reset(): void;
 }

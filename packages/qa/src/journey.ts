@@ -18,6 +18,13 @@ export async function startPlay(harness: Harness, settleFrames = 8): Promise<voi
   await harness.stepFrames(settleFrames);
 }
 
+/** Wall-clock wait. Used when a journey must advance AudioContext.currentTime. */
+export async function waitWall(ms: number): Promise<void> {
+  await new Promise<void>((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
+
 /** Step the deterministic clock until `predicate` holds or the budget runs out; returns the last state read. */
 export async function waitUntil<T>(
   harness: Harness,

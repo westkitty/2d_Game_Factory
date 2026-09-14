@@ -14,33 +14,58 @@
       "x": 420,
       "y": 160,
       "radius": 17,
-      "health": 2
+      "health": 3,
+      "speed": 45
     },
     {
       "id": "foe-1",
       "x": 560,
       "y": 270,
       "radius": 17,
-      "health": 2
+      "health": 3,
+      "speed": 40
     },
     {
       "id": "foe-2",
       "x": 420,
       "y": 380,
       "radius": 17,
-      "health": 2
+      "health": 3,
+      "speed": 45
     }
   ],
   "strike": {
     "range": 145,
     "damage": 1,
-    "cooldownMs": 0,
+    "cooldownMs": 120,
     "knockback": 8,
     "stunMs": 80
   },
   "contact": {
     "range": 34,
     "damage": 1,
-    "cooldownMs": 650
-  }
+    "cooldownMs": 650,
+    "stunMs": 240
+  },
+  "combo": {
+    "steps": [
+      {
+        "damage": 1,
+        "knockback": 8,
+        "stunMs": 90
+      },
+      {
+        "damage": 1,
+        "knockback": 10,
+        "stunMs": 110
+      },
+      {
+        "damage": 2,
+        "knockback": 30,
+        "stunMs": 300
+      }
+    ],
+    "windowMs": 700
+  },
+  "arcDeg": 120
 }

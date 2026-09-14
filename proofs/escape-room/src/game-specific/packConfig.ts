@@ -6,27 +6,12 @@
  * JSON stay in content/game.json; nothing here overrides those.
  */
 
-/** Escape-room state: inspect the note, then the key. */
-export interface PlaceholderPuzzleState {
-  readonly kind: 'escape-locks';
-  readonly note: boolean;
-  readonly key: boolean;
-}
-
 export const PACK_CONFIG: Readonly<Record<string, unknown>> = {
-  /**
-   * sw2d.puzzle is code-configured: its config is two functions, so it can
-   * never live in content/game.json. The generated pointer shell registers
-   * two linked hotspots and calls apply() as they unlock.
-   */
-  'sw2d.puzzle': {
-    createInitialState: (): PlaceholderPuzzleState => ({ kind: 'escape-locks', note: false, key: false }),
-    isSolved: (state: PlaceholderPuzzleState): boolean => state.note && state.key,
-  },
+  // This preset selects no code-configured pack.
 };
 
 /** Category-C Wave 13: farm vs colony presentation of sw2d.simulation. Null otherwise. */
-export const SIMULATION_STARTER: 'farm' | 'colony' | null = null;
+export const SIMULATION_STARTER: 'idle' | 'farm' | 'colony' | null = null;
 
 /** Category-C Wave 14: fiction vs case presentation of sw2d.narrative. Null otherwise. */
 export const NARRATIVE_STARTER: 'fiction' | 'case' | null = null;
@@ -75,3 +60,12 @@ export const KART_STARTER: 'item' | null = null;
 
 /** Category-C Wave 31: closing-wall pursuit. Null otherwise. */
 export const CHASE_STARTER: 'pursuit' | null = null;
+
+/** Final Product Completion Wave 2: room-graph dungeon (crawl) vs roguelite run (rogue). Null otherwise. */
+export const DUNGEON_STARTER: 'crawl' | 'rogue' | null = null;
+
+/** Final Product Completion Wave 3: pointer target shooter - fixed gallery vs camera rail. Null otherwise. */
+export const GALLERY_STARTER: 'gallery' | 'rail' | null = null;
+
+/** Final Product Completion Wave 3: the Asteroids rock field on the vehicle shell. Null otherwise. */
+export const ASTEROIDS_STARTER: 'field' | null = null;

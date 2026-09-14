@@ -19,13 +19,17 @@ Generated via `npm run sw2d -- new proof-asteroids-shooter --preset asteroids-sh
 
 ## Defining journey (automated, real-browser, deterministic frame stepping)
 
-1. Start; `sw2d.weapons` + `sw2d.combat` installed; `sidearm`; `projectilesSpawned 0`; speed 0.
-2. Hold Left 10 frames -> angle changed, speed 0.
-3. Hold Up 20 frames -> speed > 8, moved > 8 px; release -> speed falls below half.
-4. PRIMARY -> `projectilesSpawned >= 1`, live >= 1; PRIMARY ×4 -> spawned < 5; wait -> live 0.
-5. Restart: `projectilesSpawned 0`, speed 0.
+Final Product Completion Wave 3 (matrix L13 / L14): the `sw2d.vehicles` `ship` profile (rotational inertia, momentum, wrap-around) and the generated vehicle shell's rock field (`bindStarterAsteroids`).
+
+1. Start; `sw2d.vehicles` + `sw2d.arcade` installed; mode `field`; wave 1 with 4 large rocks; 3 lives; speed 0.
+2. Tap Right for 8 frames -> `angularVelocity > 0.5`; 10 frames later still turning (`heading` advanced) -> damping settles it below 0.05.
+3. Hold Up 30 frames -> `speed > 60`; release 30 frames -> still coasting above half that speed and decaying.
+4. Hold Up until `vehicle.wraps >= 1` -> the ship is back inside the play area.
+5. Hold PRIMARY with a slow spin until a large rock splits -> `splits >= 1`, `destroyed >= 1`, `score >= 20`, two medium rocks, rocks have wrapped (`asteroids.wraps >= 1`).
+6. Thrust around the field -> `lives < 3`; keep going -> `failed`, `lives 0`, `ship lost`.
+7. Restart: `playing`, 3 lives, `score 0`, 4 large rocks.
 
 ## Acceptance
 
-- Drifting rock fields and wrap-around collision stay game-specific (catalog limitation) - this proof proves steer-and-fire, not a rock field.
+- Rock field, drift, wrap, projectile collision, splitting, scoring, ship collision, lives, waves and fail/restart are the generated game's real loop; the ship's rotational inertia is the reusable `sw2d.vehicles` `ship` profile - no catalog limitation remains.
 - Zero console errors, zero external requests.

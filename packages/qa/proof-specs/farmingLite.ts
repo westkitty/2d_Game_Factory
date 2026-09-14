@@ -27,11 +27,15 @@ export async function run(harness: Harness): Promise<SmokeOutcome> {
   evidence.initial = { mode: initial.mode, crops: initial.crops, plots: initial.plots.map((p) => p.phase) };
   const startedOk = booted.installedPacks.includes('sw2d.simulation') && initial.mode === 'farm' && initial.crops === 0 && initial.plots[0]?.phase === 'empty';
 
-  // Plant plot 0: it grows on the simulation clock as a real sw2d.simulation job, then ripens.
+  // Plant plot 0: it is dry until watered, then grows on the pack clock.
   await harness.keyTap('Enter');
   const planted = await sim();
-  evidence.planted = { last: planted.lastResult, phase: planted.plots[0]?.phase, jobs: planted.jobCount };
-  const plantOk = planted.lastResult === 'planted' && planted.plots[0]?.phase === 'growing' && planted.jobCount >= 1;
+  evidence.planted = { last: planted.lastResult, phase: planted.plots[0]?.phase };
+  const plantOk = planted.lastResult === 'planted' && planted.plots[0]?.phase === 'dry';
+  await harness.keyTap('Enter');
+  const watered = await sim();
+  evidence.watered = { last: watered.lastResult, phase: watered.plots[0]?.phase };
+  const waterOk = watered.lastResult === 'watered' && watered.plots[0]?.phase === 'growing';
   // Harvesting while still growing is refused.
   await harness.keyTap('Enter');
   const tooEarly = await sim();
@@ -42,9 +46,10 @@ export async function run(harness: Harness): Promise<SmokeOutcome> {
   evidence.harvested = { ripe: ripe.plots[0]?.phase, crops: harvested.crops, last: harvested.lastResult };
   const harvestOk = ripe.plots[0]?.phase === 'ripe' && harvested.crops === 1 && harvested.lastResult === 'harvested';
 
-  // Plots 1 and 2 complete the quota.
+  // Plots 1 and 2 complete the quota: plant, water, harvest.
   for (const plot of [1, 2]) {
     await harness.keyTap('ArrowRight');
+    await harness.keyTap('Enter');
     await harness.keyTap('Enter');
     await waitUntil(harness, read, (s) => s.simulation?.plots[plot]?.phase === 'ripe', 60, 5);
     await harness.keyTap('Enter');
@@ -58,6 +63,6 @@ export async function run(harness: Harness): Promise<SmokeOutcome> {
   evidence.restart = { ...run, crops: fresh.crops, outcome: fresh.outcome, plots: fresh.plots.map((p) => p.phase) };
   const restartOk = run.after === run.before + 1 && fresh.crops === 0 && fresh.outcome === 'playing' && fresh.plots.every((p) => p.phase === 'empty');
 
-  const passed = startedOk && plantOk && earlyOk && harvestOk && doneOk && restartOk;
-  return { passed, details: { ...evidence, startedOk, plantOk, earlyOk, harvestOk, doneOk, restartOk } };
+  const passed = startedOk && plantOk && waterOk && earlyOk && harvestOk && doneOk && restartOk;
+  return { passed, details: { ...evidence, startedOk, plantOk, waterOk, earlyOk, harvestOk, doneOk, restartOk } };
 }

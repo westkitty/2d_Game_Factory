@@ -19,13 +19,16 @@ Generated via `npm run sw2d -- new proof-action-adventure --preset action-advent
 
 ## Defining journey (automated, real-browser, deterministic frame stepping)
 
-1. Start; `sw2d.melee` installed; mode `skirmish`; `foesAlive 1`; `playerHealth 5`.
-2. Strike -> not `hit`, `foesAlive 1`.
-3. Hold Right to x >= 350; strike -> `hit`, `foesAlive 1`, `playing`.
-4. Strike ×2 -> `foesAlive 0`, `hit`, `complete`, health > 0.
-5. Restart: `foesAlive 1`, `playing`, x back to start.
+Final Product Completion Wave 2 (matrix L04): the elite foe pursues the player; strikes chain through `content/melee.json`'s combo steps inside the window; strikes are directional (facing arc); a contact hit stuns the player and resets the chain.
+
+1. Start; `sw2d.melee` installed; mode `skirmish`; `foesAlive 1`; `playerHealth 5`; no target in range.
+2. Strike -> `miss`, chain 0.
+3. Wait until the foe walks into range (`targetId 'foe-0'`); strike ×3 (each past the 120 ms cooldown) -> `hit-1`, `hit-2`, `hit-3`, `bestCombo 3`, `foesAlive 0`, `complete`.
+4. Restart: `foesAlive 1`, `bestCombo 0`. Wait for the foe; hold AIM_LEFT (Numpad4) and strike -> `miss`, no target (facing away); hold AIM_RIGHT (Numpad6) and strike -> `hit-1`.
+5. Wait 50 frames -> chain 0 (window closed); strike -> `hit-1` again.
+6. Wait until the foe lands a contact hit -> health < 5, `stunned`; strike -> `stunned`, chain 0.
 
 ## Acceptance
 
-- Combo strings, directional attacks and targeting UI are not this pack (catalog limitation).
+- Combo chains, directional (facing-arc) strikes, foe pursuit, hit-stun interruption and the targeting reticle are the reusable `sw2d.melee` grammar - no catalog limitation remains.
 - Zero console errors, zero external requests.

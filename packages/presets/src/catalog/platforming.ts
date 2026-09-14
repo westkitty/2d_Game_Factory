@@ -1,6 +1,6 @@
 import type { PresetDefinition } from '@sw2d/contracts';
 import { PACK_IDS } from '@sw2d/packs/ids';
-import { LIMITATIONS, VALIDATION_PROFILES, definePreset, pack } from '../shared.ts';
+import { VALIDATION_PROFILES, definePreset, pack } from '../shared.ts';
 
 /**
  * Family A - Platforming (recipes 1-10).
@@ -37,11 +37,14 @@ export const PLATFORMING_PRESETS: readonly PresetDefinition[] = [
     displayName: 'Chase Platformer',
     family: 'platforming',
     controllerFamilies: ['platform'],
-    requiredSystemPacks: [pack(PACK_IDS.world), pack(PACK_IDS.worldEntities)],
+    requiredSystemPacks: [pack(PACK_IDS.world), pack(PACK_IDS.worldEntities), pack(PACK_IDS.pursuit)],
     optionalSystemPacks: [pack(PACK_IDS.combat), pack(PACK_IDS.arcade)],
-    requiredContentRoles: ['tuning', 'levels'],
+    requiredContentRoles: ['tuning', 'levels', 'pursuit'],
     validationProfile: VALIDATION_PROFILES.platform,
-    knownLimitations: [LIMITATIONS.chasePressure],
+    // Final Product Completion Wave 1 (matrix L01): the closing wall is the
+    // reusable sw2d.pursuit capability (`wall` mode) from content/pursuit.json,
+    // shared with the runner presets' trailing chaser.
+    knownLimitations: [],
   }),
 
   definePreset({
@@ -50,16 +53,17 @@ export const PLATFORMING_PRESETS: readonly PresetDefinition[] = [
     displayName: 'Endless Runner',
     family: 'platforming',
     controllerFamilies: ['platform'],
-    requiredSystemPacks: [pack(PACK_IDS.arcade), pack(PACK_IDS.generation)],
+    requiredSystemPacks: [pack(PACK_IDS.arcade), pack(PACK_IDS.generation), pack(PACK_IDS.pursuit)],
     optionalSystemPacks: [pack(PACK_IDS.world), pack(PACK_IDS.worldEntities)],
-    requiredContentRoles: ['tuning', 'levels', 'generation'],
+    requiredContentRoles: ['tuning', 'levels', 'generation', 'pursuit'],
     validationProfile: VALIDATION_PROFILES.platform,
     // Phase 7 (ADR-0024): the level is a deterministic seeded segment chain from
     // content/generation.json, driven by the reusable sw2d.generation capability.
     // Category-C Wave 22: generated starter auto-runs an authored gap strip.
-    knownLimitations: [
-      'Auto-run and the starter gap for the generated starter are game-specific presentation; a reusable climbing or chase-pressure system is not.',
-    ],
+    // Final Product Completion Wave 1 (matrix L02): the runner's defining
+    // pressure is the reusable sw2d.pursuit chaser from content/pursuit.json -
+    // it trails the runner and closes while the runner stumbles on hazards.
+    knownLimitations: [],
   }),
 
   definePreset({
@@ -72,7 +76,10 @@ export const PLATFORMING_PRESETS: readonly PresetDefinition[] = [
     optionalSystemPacks: [pack(PACK_IDS.arcade)],
     requiredContentRoles: ['tuning', 'levels', 'wall'],
     validationProfile: VALIDATION_PROFILES.platform,
-    knownLimitations: [LIMITATIONS.climbingMechanics],
+    // Final Product Completion Wave 1 (matrix L03): ledge grab / climb-up /
+    // drop / hang-jump and the slide-jump-ledge state machine are the reusable
+    // sw2d.wall grammar, authored as ledges in content/wall.json.
+    knownLimitations: [],
   }),
 
   definePreset({
@@ -112,15 +119,16 @@ export const PLATFORMING_PRESETS: readonly PresetDefinition[] = [
     displayName: 'Auto Runner',
     family: 'platforming',
     controllerFamilies: ['platform'],
-    requiredSystemPacks: [pack(PACK_IDS.arcade), pack(PACK_IDS.generation)],
+    requiredSystemPacks: [pack(PACK_IDS.arcade), pack(PACK_IDS.generation), pack(PACK_IDS.pursuit)],
     optionalSystemPacks: [pack(PACK_IDS.world), pack(PACK_IDS.worldEntities)],
-    requiredContentRoles: ['tuning', 'levels', 'generation'],
+    requiredContentRoles: ['tuning', 'levels', 'generation', 'pursuit'],
     validationProfile: VALIDATION_PROFILES.platform,
     // Phase 7 (ADR-0024): deterministic seeded segment chain via sw2d.generation.
     // Category-C Wave 22: generated starter auto-runs an authored gap strip.
-    knownLimitations: [
-      'Auto-run and the starter gap for the generated starter are game-specific presentation; a reusable climbing or chase-pressure system is not.',
-    ],
+    // Final Product Completion Wave 1 (matrix L02): the runner's defining
+    // pressure is the reusable sw2d.pursuit chaser from content/pursuit.json -
+    // it trails the runner and closes while the runner stumbles on hazards.
+    knownLimitations: [],
   }),
 
   definePreset({
@@ -133,7 +141,10 @@ export const PLATFORMING_PRESETS: readonly PresetDefinition[] = [
     optionalSystemPacks: [pack(PACK_IDS.arcade)],
     requiredContentRoles: ['tuning', 'levels', 'wall'],
     validationProfile: VALIDATION_PROFILES.platform,
-    knownLimitations: [LIMITATIONS.climbingMechanics],
+    // Final Product Completion Wave 1 (matrix L03): ledge grab / climb-up /
+    // drop / hang-jump and the slide-jump-ledge state machine are the reusable
+    // sw2d.wall grammar, authored as ledges in content/wall.json.
+    knownLimitations: [],
   }),
 
   definePreset({

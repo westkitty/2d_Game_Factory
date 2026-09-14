@@ -28,7 +28,7 @@ const TABLE = generatePinballCatalog('table') as unknown as PinballCatalog;
 const FRAME_MS = 16.67;
 
 describe('generated pinball-lite table', () => {
-  it('never completes on its own: with no flips the ball drains, resets and scores nothing over 20 s', () => {
+  it('never completes on its own: with no flips the ball drains, consumes balls, and game-overs at zero', () => {
     const table = install(TABLE);
     let drains = 0;
     let previous: string | null = null;
@@ -38,8 +38,10 @@ describe('generated pinball-lite table', () => {
       if (last === 'drain' && previous !== 'drain') drains += 1;
       previous = last;
     }
-    expect(table.outcome()).toBe('playing');
+    expect(table.outcome()).toBe('failed');
+    expect(table.lastResult()).toBe('game-over');
     expect(table.score()).toBe(0);
+    expect(table.ballsRemaining()).toBe(0);
     expect(drains).toBeGreaterThanOrEqual(1);
   });
 

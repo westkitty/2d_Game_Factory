@@ -34,6 +34,8 @@ export interface PinballCatalog {
   readonly goal?: { readonly x: number; readonly y: number; readonly radius: number };
   readonly drainY: number;
   readonly winScore: number;
+  /** Table balls / lives. Drain consumes one; 0 ends the game. Default 3 for table. */
+  readonly balls?: number;
 }
 
 export interface PinballService {
@@ -45,6 +47,7 @@ export interface PinballService {
   ballX(): number;
   ballY(): number;
   score(): number;
+  ballsRemaining(): number;
   lastResult(): string | null;
   outcome(): PinballOutcome;
   reset(): void;

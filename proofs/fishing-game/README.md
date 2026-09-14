@@ -68,7 +68,7 @@ with a small working placeholder to replace. Every other pack is configured as J
 
 ## Known preset limitations
 
-- Score, combo, lives and elapsed are reusable (sw2d.arcade); a reusable casting/line/tension/fish behavior system and an ingredient/recipe/action-sequence cooking system are not.
+- (none stated)
 
 ## How to add a level
 

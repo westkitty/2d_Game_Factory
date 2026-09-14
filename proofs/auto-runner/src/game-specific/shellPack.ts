@@ -5,6 +5,7 @@ import {
   bindCollectiblePickups,
   bindLevelObjectives,
   bindStarterChase,
+  bindStarterEncounters,
   bindStarterParkour,
   bindStarterRun,
   bindStarterWeapon,
@@ -131,15 +132,21 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     // Checkpoint / Hazard / Collectible / Exit objects become a real
     // checkpoint-respawn, hazard-reset, collect-then-exit loop through
     // sw2d.world. Only on the plain walk-and-jump path - the auto-run,
-    // parkour and chase starters author their own strips. Inert without
-    // sw2d.world. When sw2d.items owns the collectibles, the exit waits for
-    // every pickup instead.
+    // parkour and chase starters author their own strips, and a world graph
+    // owns the right edge as a room transition. Inert without sw2d.world.
+    // When sw2d.items owns the collectibles, the exit waits for every pickup.
     const objectives =
-      run.active || parkour.active || chase.active
+      run.active || parkour.active || chase.active || context.capabilities.has(WORLD_GRAPH_CAPABILITY_ID)
         ? bindLevelObjectives(context, player, undefined)
         : bindLevelObjectives(context, player, level, { exitRequires: () => pickups.remaining() === 0 });
-    // Weapons (capability program Phase 3). Inert unless sw2d.weapons is installed.
-    const weapon = bindStarterWeapon(context);
+    // Encounters (Final Product Completion Wave 3, matrix L16): when sw2d.combat +
+    // sw2d.weapons + sw2d.encounters are installed, content/encounters.json
+    // drives real waves on the platform strip - `ground` archetypes walk the
+    // solids under gravity, shooters hold and fire. Inert otherwise.
+    const battle = bindStarterEncounters(context, player, { walls: ground, gravity: tuning.gravity, enemySpeed: 70 });
+    // Weapons (capability program Phase 3). Inert unless sw2d.weapons is
+    // installed; the battle owns the weapon when it is active.
+    const weapon = battle.active ? null : bindStarterWeapon(context);
     // Data-driven puzzle rules (capability program Phase 6). Inert unless
     // sw2d.puzzle-rules is installed; then SECONDARY_ACTION toggles the next
     // switch and CANCEL undoes, all through the reusable service - the
@@ -191,14 +198,25 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       onGround: player.body.blocked.down,
       items: pickups.inventory(),
       pickupsRemaining: pickups.remaining(),
-      weapon: weapon.snapshot(),
+      weapon: weapon?.snapshot() ?? null,
+      ...(battle.active ? { battle: battle.snapshot() } : {}),
       ...(objectives.active ? { objectives: objectives.snapshot() } : {}),
       ...(puzzle ? { puzzle: puzzle.snapshot(), solved: puzzle.isSolved() } : {}),
       ...(run.active ? { run: run.snapshot() } : {}),
       ...(parkour.active ? { parkour: parkour.snapshot() } : {}),
       ...(chase.active ? { chase: chase.snapshot() } : {}),
       ...(wallsCap?.active()
-        ? { wall: { sliding: wallsCap.sliding(), wallId: wallsCap.wallId(), lastResult: wallsCap.lastResult(), outcome: wallsCap.outcome() } }
+        ? {
+            wall: {
+              sliding: wallsCap.sliding(),
+              wallId: wallsCap.wallId(),
+              state: wallsCap.state(),
+              ledgeId: wallsCap.ledgeId(),
+              ledges: wallsCap.ledgeStats(),
+              lastResult: wallsCap.lastResult(),
+              outcome: wallsCap.outcome(),
+            },
+          }
         : {}),
       ...(generationManifest ? { generation: generationManifest } : {}),
       ...(worldGraph
@@ -222,6 +240,10 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
           player.setVelocity(0, 0);
         } else if (chase.active && chase.snapshot().outcome !== 'playing') {
           player.setVelocity(0, 0);
+        } else if (run.active && run.stumbling()) {
+          // Tripped on a hazard: the reusable pursuit chaser closes the gap
+          // while the runner is held still (Final Product Completion Wave 1).
+          player.setVelocityX(0);
         } else if (run.active) {
           player.setVelocityX(260);
           player.setFlipX(false);
@@ -235,8 +257,10 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
             facing = intent.moveAxis < 0 ? -1 : 1;
           }
         }
-        weapon.update(deltaMs, nowMs);
-        if (intent.primaryPressed) weapon.fire(nowMs, facing, 0, { x: player.x, y: player.y });
+        weapon?.update(deltaMs, nowMs);
+        battle.update(deltaMs, nowMs);
+        const firing = intent.primaryPressed || (battle.active && context.input.isDown('PRIMARY_ACTION'));
+        if (firing) (weapon ?? battle).fire(nowMs, facing, 0, { x: player.x, y: player.y });
         if (objectives.active) {
           objectives.tick(deltaMs);
           objectives.render();
@@ -257,17 +281,49 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
             if (conn) rooms.requestTransition(conn.id);
           }
         }
-        if (wallsCap?.active() && parkour.active && parkour.snapshot().outcome === 'playing') {
-          wallsCap.setPlayer(player.x, player.y, player.body.velocity.x, player.body.velocity.y, player.body.blocked.down);
-          wallsCap.setHoldX(intent.moveAxis);
+        // Wall / ledge grammar (sw2d.wall): slide, wall-jump, ledge grab,
+        // climb-up (UP), drop (DOWN) and hang-jump are one state machine
+        // owned by the reusable service; this shell only pins the body
+        // while the service says the player is hanging or climbing.
+        const wallPlaying = wallsCap?.active() === true && (!parkour.active || parkour.snapshot().outcome === 'playing');
+        if (wallsCap && wallPlaying) {
+          const pinnedBefore = wallsCap.pinned();
+          if (!pinnedBefore) {
+            wallsCap.setPlayer(player.x, player.y, player.body.velocity.x, player.body.velocity.y, player.body.blocked.down);
+            wallsCap.setHoldX(intent.moveAxis);
+          } else {
+            if (context.input.consumePress('MOVE_UP')) wallsCap.climb();
+            else if (context.input.consumePress('MOVE_DOWN')) wallsCap.drop();
+          }
           wallsCap.tick(deltaMs);
-          if (wallsCap.sliding()) {
+          const pinned = wallsCap.pinned();
+          if (pinned) {
+            // Hanging / climbing: the service owns the position. The Arcade
+            // body is switched off so the platform edge cannot push the
+            // hanging body around frame to frame.
+            player.body.enable = false;
+            player.setPosition(pinned.x, pinned.y);
+          } else if (!player.body.enable) {
+            // Just left a hang/climb: hand the body back to physics at the
+            // position the service resolved (the ledge top after a climb,
+            // the hang point after a drop / hang-jump).
+            player.body.enable = true;
+            player.body.reset(wallsCap.x(), wallsCap.y());
+            player.body.setAllowGravity(true);
+          } else if (wallsCap.sliding()) {
             player.setVelocityY(Math.min(player.body.velocity.y, wallsCap.vy()));
           }
         }
         const wallKick =
-          intent.jumpPressed && wallsCap?.active() && wallsCap.sliding() ? wallsCap.jump() : null;
+          intent.jumpPressed && wallsCap?.active() && wallPlaying && (wallsCap.sliding() || wallsCap.state() === 'ledge-hang')
+            ? wallsCap.jump()
+            : null;
         if (wallKick) {
+          if (!player.body.enable) {
+            player.body.enable = true;
+            player.body.reset(wallsCap!.x(), wallsCap!.y());
+            player.body.setAllowGravity(true);
+          }
           player.setVelocity(wallKick.vx, wallKick.vy);
           context.audio.playCue('ui.confirm');
           if (parkour.active) parkour.jumped();
@@ -310,7 +366,8 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         debugHandle.dispose();
         pickups.dispose();
         objectives.dispose();
-        weapon.dispose();
+        weapon?.dispose();
+        battle.dispose();
         run.dispose();
         parkour.dispose();
         chase.dispose();

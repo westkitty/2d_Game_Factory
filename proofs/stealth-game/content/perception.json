@@ -15,7 +15,26 @@
       "fovDeg": 50,
       "range": 220,
       "suspicionRisePerSecond": 2,
-      "suspicionDecayPerSecond": 0.5
+      "suspicionDecayPerSecond": 0.5,
+      "patrol": {
+        "waypoints": [
+          {
+            "x": 520,
+            "y": 270
+          },
+          {
+            "x": 700,
+            "y": 270
+          }
+        ],
+        "speed": 60,
+        "waitMs": 700
+      },
+      "chaseSpeed": 90,
+      "catchRadius": 24,
+      "memoryMs": 1200,
+      "investigateMs": 1500,
+      "takedownRadius": 40
     }
   ],
   "cover": [

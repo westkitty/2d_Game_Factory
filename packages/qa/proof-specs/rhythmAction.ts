@@ -1,5 +1,5 @@
 import type { Harness } from '../src/harness.ts';
-import { restartRun, shellReader, startPlay, waitUntil } from '../src/journey.ts';
+import { restartRun, shellReader, startPlay, waitUntil, waitWall } from '../src/journey.ts';
 import { readSnapshot } from '../src/snapshot.ts';
 import type { SmokeOutcome } from '../src/smokeRunner.ts';
 
@@ -22,16 +22,22 @@ export async function run(harness: Harness): Promise<SmokeOutcome> {
   const read = shellReader<Shell>(harness, 'game.ui-simulation-shell');
   const t = async () => (await read()).timing!;
   const evidence: Record<string, unknown> = {};
-  await startPlay(harness, 24);
+  await startPlay(harness, 4);
   const booted = await readSnapshot(harness);
   const initial = await t();
   evidence.initial = initial;
   const startedOk = booted.installedPacks.includes('sw2d.timing') && initial.active && initial.mode === 'rhythm' && initial.hits === 0 && initial.outcome === 'playing';
 
-  // Hit three consecutive beat windows; each lands inside an open window.
+  // Hit three consecutive beat windows. Rhythm samples AudioContext.currentTime,
+  // so the harness must let wall-clock advance (stepFrames alone does not).
   const hits: { window: boolean; hits: number; cue: number; last: string | null }[] = [];
   for (let i = 0; i < 3; i++) {
-    const open = (await waitUntil(harness, read, (s) => s.timing?.windowOpen === true, 60, 2)).timing!;
+    let open = await t();
+    for (let step = 0; step < 200 && !open.windowOpen; step++) {
+      await waitWall(20);
+      await harness.stepFrames(1);
+      open = await t();
+    }
     await harness.keyTap('Enter');
     await harness.stepFrames(3);
     const after = await t();

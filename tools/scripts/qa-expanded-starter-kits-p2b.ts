@@ -75,12 +75,20 @@ async function attack(harness: Harness, times: number): Promise<void> {
   }
 }
 
+async function comboAttack(harness: Harness): Promise<void> {
+  for (let hit = 0; hit < 3; hit++) {
+    await harness.keyTap('KeyX');
+    await harness.stepFrames(6);
+  }
+}
+
 async function actionAdventureRun(harness: Harness): Promise<SmokeOutcome> {
   type S = { x: number; y: number; objectiveCollected: boolean; enemiesRemaining: number; playerHealth: number; lastAction: string; outcome: string };
   await start(harness);
   const initial = await shell<S>(harness);
   const approach = await holdUntil<S>(harness, 'ArrowRight', (state) => state.x >= 350, 60, 4);
-  await attack(harness, 3);
+  await harness.stepFrames(30);
+  await comboAttack(harness);
   const cleared = await shell<S>(harness);
   await holdUntil<S>(harness, 'ArrowUp', (state) => state.y <= 185, 50, 4);
   const objective = await holdUntil<S>(harness, 'ArrowRight', (state) => state.objectiveCollected, 80, 4);
@@ -101,31 +109,32 @@ async function actionAdventureRun(harness: Harness): Promise<SmokeOutcome> {
 }
 
 async function arenaCombatRun(harness: Harness): Promise<SmokeOutcome> {
-  type S = { x: number; y: number; enemiesRemaining: number; playerHealth: number; lastAction: string; outcome: string };
+  type Melee = { targetId: string | null; bestCombo: number; outcome: string };
+  type S = { enemiesRemaining: number; playerHealth: number; outcome: string; melee?: Melee };
   await start(harness);
   const initial = await shell<S>(harness);
 
-  await holdUntil<S>(harness, 'ArrowUp', (state) => state.y <= 175, 50, 4);
-  await holdUntil<S>(harness, 'ArrowRight', (state) => state.x >= 330, 50, 4);
-  await attack(harness, 2);
-  const first = await shell<S>(harness);
-
-  await holdUntil<S>(harness, 'ArrowDown', (state) => state.y >= 265, 45, 4);
-  await holdUntil<S>(harness, 'ArrowRight', (state) => state.x >= 455, 45, 4);
-  await attack(harness, 2);
-  const second = await shell<S>(harness);
-
-  await attack(harness, 2);
-  const victory = await waitUntil<S>(harness, (state) => state.outcome === 'victory', 20, 3);
+  const chains: { target: string | null; enemiesRemaining: number }[] = [];
+  let victory = initial;
+  for (let round = 0; round < 6 && victory.outcome === 'playing'; round++) {
+    victory = await waitUntil<S>(harness, (state) => state.melee?.targetId !== null || state.outcome !== 'playing', 200, 3);
+    const target = victory.melee?.targetId ?? null;
+    if (target === null) break;
+    await harness.stepFrames(30);
+    await comboAttack(harness);
+    victory = await shell<S>(harness);
+    chains.push({ target, enemiesRemaining: victory.enemiesRemaining });
+  }
 
   const passed =
     initial.enemiesRemaining === 3 &&
-    first.enemiesRemaining === 2 &&
-    second.enemiesRemaining === 1 &&
+    chains.length >= 3 &&
+    chains.every((chain) => chain.target !== null) &&
     victory.enemiesRemaining === 0 &&
     victory.playerHealth > 0 &&
-    victory.outcome === 'victory';
-  return { passed, details: { initial, first, second, victory } };
+    victory.outcome === 'victory' &&
+    victory.melee?.bestCombo === 3;
+  return { passed, details: { initial, chains, victory } };
 }
 
 async function dungeonCrawlerRun(harness: Harness): Promise<SmokeOutcome> {

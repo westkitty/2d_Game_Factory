@@ -1,15 +1,18 @@
 import type Phaser from 'phaser';
+import { PURSUIT_CAPABILITY_ID, type PursuitService } from '@sw2d/contracts';
 import { accentStyle, headingStyle, mutedStyle } from '../scenes/theme.ts';
 import type { SceneContext } from '../scenes/SceneContext.ts';
 
 /**
- * Bind the generated platform shell to closing-wall pursuit
- * (Category-C Wave 31).
+ * Bind the generated platform shell to the reusable pursuit capability in
+ * `wall` mode - a closing wall the player must outrun to the escape line
+ * (Category-C Wave 31; rebuilt on `sw2d.pursuit` by the Final Product
+ * Completion program, Wave 1 - matrix L01).
  *
- * Inert unless packConfig names the chase starter. Player-controlled run to
- * FLAG ahead of a closing wall — not auto-run (Wave 22), not parkour (Wave 27),
- * not a reusable chase/pursuit-pressure pack. Overlay chase-platformer stays
- * the frozen-proof kit and is not remanufactured.
+ * Inert unless packConfig names the chase starter *and* `sw2d.pursuit` is
+ * installed with a live catalog. The wall's speed, catch distance and escape
+ * line come from `content/pursuit.json`; this file owns only the floor strip,
+ * the flag and the HUD.
  */
 
 export type ChaseStarterMode = 'pursuit';
@@ -20,6 +23,7 @@ export interface StarterChaseSnapshot {
   readonly x: number;
   readonly y: number;
   readonly wallX: number;
+  readonly gap: number;
   readonly onGround: boolean;
   readonly jumps: number;
   readonly lastResult: string | null;
@@ -52,6 +56,7 @@ const INERT: StarterChaseBinding = {
     x: 0,
     y: 0,
     wallX: 0,
+    gap: 0,
     onGround: false,
     jumps: 0,
     lastResult: null,
@@ -64,11 +69,6 @@ const INERT: StarterChaseBinding = {
 
 const START_X = 100;
 const START_Y = 458;
-const FLAG_X = 820;
-const FAIL_Y = 520;
-const WALL_START = -40;
-const WALL_SPEED = 72;
-const WALL_CATCH = 16;
 const FLAG_COLOR = 0xb98af0;
 const CLEAR_COLOR = 0x65d0a8;
 const WALL_COLOR = 0xe0574f;
@@ -79,11 +79,16 @@ export function bindStarterChase(
 ): StarterChaseBinding {
   const mode = options?.mode ?? null;
   if (mode !== 'pursuit') return INERT;
+  if (!context.capabilities.has(PURSUIT_CAPABILITY_ID)) return INERT;
+  const pursuit = context.capabilities.require<PursuitService>(PURSUIT_CAPABILITY_ID);
+  if (!pursuit.active()) return INERT;
+  pursuit.reset();
 
   const hud = options?.hud !== false;
   const scene = context.scene;
   const { width, height } = context.definition.viewport;
   const platformKey = context.assets.resolve('platform');
+  const flagX = pursuit.escapeX() ?? width - 140;
 
   const floors = scene.physics.add.staticGroup();
   const floor = floors.create(width * 0.5, 500, platformKey) as {
@@ -97,31 +102,31 @@ export function bindStarterChase(
   const status = hud ? scene.add.text(width * 0.5, 54, '', mutedStyle(14)).setOrigin(0.5).setScrollFactor(0).setDepth(50) : null;
   const hint = hud ? scene.add.text(width * 0.5, height - 28, '', accentStyle(14)).setOrigin(0.5).setScrollFactor(0).setDepth(50) : null;
   const flag = hud
-    ? scene.add.rectangle(FLAG_X, 458, 22, 44, FLAG_COLOR, 0.95).setStrokeStyle(2, 0xffffff, 0.9).setDepth(20)
+    ? scene.add.rectangle(flagX, 458, 22, 44, FLAG_COLOR, 0.95).setStrokeStyle(2, 0xffffff, 0.9).setDepth(20)
     : null;
   const wallSprite = hud
-    ? scene.add.rectangle(WALL_START, height * 0.5, 28, height, WALL_COLOR, 0.7).setStrokeStyle(2, 0xffffff, 0.6).setDepth(22)
+    ? scene.add.rectangle(pursuit.pursuerX(), height * 0.5, 28, height, WALL_COLOR, 0.7).setStrokeStyle(2, 0xffffff, 0.6).setDepth(22)
     : null;
 
   let x = START_X;
   let y = START_Y;
-  let wallX = WALL_START;
   let onGround = true;
   let jumps = 0;
-  let lastResult: string | null = null;
-  let outcome: 'playing' | 'complete' | 'failed' = 'playing';
+  let jumpResult: string | null = null;
   let disposed = false;
 
   function snapshot(): StarterChaseSnapshot {
+    const outcome = pursuit.outcome();
     return {
       active: true,
       mode,
       x: Math.round(x),
       y: Math.round(y),
-      wallX: Math.round(wallX),
+      wallX: Math.round(pursuit.pursuerX()),
+      gap: Math.round(pursuit.gap()),
       onGround,
       jumps,
-      lastResult,
+      lastResult: pursuit.lastResult() ?? jumpResult,
       outcome,
     };
   }
@@ -132,31 +137,10 @@ export function bindStarterChase(
     if (flag) flag.setFillStyle(snap.outcome === 'complete' ? CLEAR_COLOR : FLAG_COLOR, 0.95);
     if (!title || !status || !hint) return;
     title.setText(snap.outcome === 'complete' ? 'ESCAPED' : snap.outcome === 'failed' ? 'CAUGHT' : 'CHASE');
-    status.setText(
-      `x ${snap.x}  ·  wall ${snap.wallX}${snap.lastResult ? `  ·  ${snap.lastResult}` : ''}`,
-    );
+    status.setText(`x ${snap.x}  ·  wall ${snap.wallX}  ·  gap ${snap.gap}${snap.lastResult ? `  ·  ${snap.lastResult}` : ''}`);
     hint.setText(
       snap.outcome === 'playing' ? 'OUTRUN THE WALL   REACH THE FLAG' : snap.outcome === 'complete' ? 'ESCAPED' : 'CAUGHT',
     );
-  }
-
-  function finish(): void {
-    if (outcome !== 'playing') return;
-    if (y > FAIL_Y) {
-      outcome = 'failed';
-      lastResult = 'fell';
-      return;
-    }
-    if (wallX + WALL_CATCH >= x) {
-      outcome = 'failed';
-      lastResult = 'caught';
-      return;
-    }
-    if (x >= FLAG_X && onGround) {
-      outcome = 'complete';
-      lastResult = 'escaped';
-      context.audio.playCue('ui.confirm');
-    }
   }
 
   paint();
@@ -170,16 +154,17 @@ export function bindStarterChase(
       x = nextX;
       y = nextY;
       onGround = grounded;
+      pursuit.setPlayer(nextX, nextY, grounded);
     },
     jumped(): void {
-      if (disposed || outcome !== 'playing') return;
+      if (disposed || pursuit.outcome() !== 'playing') return;
       jumps += 1;
-      lastResult = 'jump';
+      jumpResult = 'jump';
     },
     tick(deltaMs: number): void {
-      if (disposed || outcome !== 'playing') return;
-      wallX += WALL_SPEED * (deltaMs / 1000);
-      finish();
+      if (disposed || pursuit.outcome() !== 'playing') return;
+      pursuit.tick(deltaMs);
+      if (pursuit.outcome() === 'complete') context.audio.playCue('ui.confirm');
       paint();
     },
     snapshot,

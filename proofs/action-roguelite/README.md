@@ -62,13 +62,13 @@ with a small working placeholder to replace. Every other pack is configured as J
 ## Composition
 
 - Controller family/families: top-down
-- Required packs (enabled by default): sw2d.combat, sw2d.progression, sw2d.generation
-- Optional packs (available, not enabled by default - add to content/game.json's systemPacks to use): sw2d.ai, sw2d.world, sw2d.world-entities
-- Content roles this preset expects: tuning, levels, generation
+- Required packs (enabled by default): sw2d.combat, sw2d.progression, sw2d.generation, sw2d.ai, sw2d.runs
+- Optional packs (available, not enabled by default - add to content/game.json's systemPacks to use): sw2d.world, sw2d.world-entities
+- Content roles this preset expects: tuning, levels, generation, runs
 
 ## Known preset limitations
 
-- In-run currency, XP, items and unlock flags for the generated starter use sw2d.progression; run-based permadeath and between-run loadouts are not a reusable capability.
+- (none stated)
 
 ## How to add a level
 

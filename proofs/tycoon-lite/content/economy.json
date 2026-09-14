@@ -38,5 +38,30 @@
     "firstDelayMs": 400,
     "intervalMs": 1800,
     "maxQueue": 3
+  },
+  "layout": {
+    "entrance": {
+      "x": 80,
+      "y": 420
+    },
+    "counter": {
+      "x": 520,
+      "y": 220
+    },
+    "exit": {
+      "x": 880,
+      "y": 420
+    },
+    "queueSlots": [
+      {
+        "x": 400,
+        "y": 300
+      },
+      {
+        "x": 320,
+        "y": 300
+      }
+    ],
+    "walkSpeed": 620
   }
 }

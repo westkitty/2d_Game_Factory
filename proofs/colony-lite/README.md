@@ -62,13 +62,13 @@ with a small working placeholder to replace. Every other pack is configured as J
 ## Composition
 
 - Controller family/families: ui-simulation
-- Required packs (enabled by default): sw2d.simulation, sw2d.world
-- Optional packs (available, not enabled by default - add to content/game.json's systemPacks to use): sw2d.progression, sw2d.navigation
-- Content roles this preset expects: tuning
+- Required packs (enabled by default): sw2d.simulation, sw2d.world, sw2d.needs, sw2d.navigation
+- Optional packs (available, not enabled by default - add to content/game.json's systemPacks to use): sw2d.progression
+- Content roles this preset expects: tuning, needs
 
 ## Known preset limitations
 
-- Resource ledger and timed jobs are reusable (sw2d.simulation); colonist pathfinding is reusable (sw2d.navigation, optional); needs, assignment AI and construction placement are not.
+- (none stated)
 
 ## How to add a level
 

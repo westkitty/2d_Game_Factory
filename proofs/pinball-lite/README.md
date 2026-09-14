@@ -68,7 +68,7 @@ with a small working placeholder to replace. Every other pack is configured as J
 
 ## Known preset limitations
 
-- Flippers, bumpers and bumper-score are reusable (sw2d.pinball); Matter presentation stays on physics-toy.
+- (none stated)
 
 ## How to add a level
 

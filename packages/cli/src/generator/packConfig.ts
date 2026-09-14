@@ -62,45 +62,6 @@ export function requiresCodePackConfig(preset: PresetDefinition): boolean {
   return preset.requiredSystemPacks.some((selection) => CODE_CONFIGURED_PACK_IDS.has(selection.packId));
 }
 
-const PHYSICS_PREAMBLE = `/** Physics-puzzle state: solved when the Matter ball rests in the goal. */
-export interface PlaceholderPuzzleState {
-  readonly kind: 'physics-goal';
-  readonly inGoal: boolean;
-}
-
-`;
-
-const PHYSICS_ENTRY = `  /**
-   * sw2d.puzzle is code-configured: its config is two functions, so it can
-   * never live in content/game.json. The generated pointer shell nudges a
-   * Matter ball and calls apply() when it crosses the goal.
-   */
-  'sw2d.puzzle': {
-    createInitialState: (): PlaceholderPuzzleState => ({ kind: 'physics-goal', inGoal: false }),
-    isSolved: (state: PlaceholderPuzzleState): boolean => state.inGoal,
-  },
-`;
-
-const ESCAPE_PREAMBLE = `/** Escape-room state: inspect the note, then the key. */
-export interface PlaceholderPuzzleState {
-  readonly kind: 'escape-locks';
-  readonly note: boolean;
-  readonly key: boolean;
-}
-
-`;
-
-const ESCAPE_ENTRY = `  /**
-   * sw2d.puzzle is code-configured: its config is two functions, so it can
-   * never live in content/game.json. The generated pointer shell registers
-   * two linked hotspots and calls apply() as they unlock.
-   */
-  'sw2d.puzzle': {
-    createInitialState: (): PlaceholderPuzzleState => ({ kind: 'escape-locks', note: false, key: false }),
-    isSolved: (state: PlaceholderPuzzleState): boolean => state.note && state.key,
-  },
-`;
-
 const FALLBACK_PREAMBLE = `/** Replace with this game's real puzzle state. */
 export interface PlaceholderPuzzleState {
   readonly moves: number;
@@ -129,24 +90,17 @@ const FALLBACK_ENTRY = `  /**
  */
 export function generatePackConfig(preset: PresetDefinition): string {
   const needsPuzzle = requiresCodePackConfig(preset);
-  const variant = !needsPuzzle
-    ? 'none'
-    : preset.id === 'escape-room'
-      ? 'escape'
-      : preset.id === 'physics-puzzle'
-        ? 'physics'
-        : 'fallback';
-  const preamble = variant === 'physics' ? PHYSICS_PREAMBLE : variant === 'escape' ? ESCAPE_PREAMBLE : variant === 'fallback' ? FALLBACK_PREAMBLE : '';
-  const entry =
-    variant === 'physics'
-      ? PHYSICS_ENTRY
-      : variant === 'escape'
-        ? ESCAPE_ENTRY
-        : variant === 'fallback'
-          ? FALLBACK_ENTRY
-          : '  // This preset selects no code-configured pack.';
+  const variant = needsPuzzle ? 'fallback' : 'none';
+  const preamble = variant === 'fallback' ? FALLBACK_PREAMBLE : '';
+  const entry = variant === 'fallback' ? FALLBACK_ENTRY : '  // This preset selects no code-configured pack.';
   const simulationStarter =
-    preset.id === 'farming-lite' ? "'farm'" : preset.id === 'colony-lite' ? "'colony'" : 'null';
+    preset.id === 'idle-incremental'
+      ? "'idle'"
+      : preset.id === 'farming-lite'
+        ? "'farm'"
+        : preset.id === 'colony-lite'
+          ? "'colony'"
+          : 'null';
   const narrativeStarter =
     preset.id === 'interactive-fiction-hybrid' ? "'fiction'" : preset.id === 'investigation-game' ? "'case'" : 'null';
   const arcadeStarter =
@@ -159,15 +113,15 @@ export function generatePackConfig(preset: PresetDefinition): string {
           : 'null';
   const pointerStarter =
     preset.id === 'drawing-game' ? "'draw'" : preset.id === 'dress-up-character-toy' ? "'wardrobe'" : 'null';
-  const progressionStarter =
-    preset.id === 'survivor-like' ? "'survive'" : preset.id === 'action-roguelite' ? "'run'" : 'null';
+  const progressionStarter = preset.id === 'survivor-like' ? "'survive'" : 'null';
   const strategyStarter =
     preset.id === 'turn-based-tactics' ? "'tactics'" : preset.id === 'auto-battler' ? "'battler'" : 'null';
   const navStarter = preset.id === 'maze-game' ? "'maze'" : preset.id === 'lane-defense' ? "'lane'" : 'null';
   const toyStarter =
     preset.id === 'photography-game' ? "'photo'" : preset.id === 'sandbox-playground' ? "'sandbox'" : 'null';
-  const combatStarter =
-    preset.id === 'dungeon-crawler' ? "'room'" : preset.id === 'base-defense' ? "'hold'" : 'null';
+  const combatStarter = preset.id === 'base-defense' ? "'hold'" : 'null';
+  const dungeonStarter =
+    preset.id === 'dungeon-crawler' ? "'crawl'" : preset.id === 'action-roguelite' ? "'rogue'" : 'null';
   const runStarter =
     preset.id === 'auto-runner' ? "'course'" : preset.id === 'endless-runner' ? "'endless'" : 'null';
   const vehicleStarter =
@@ -176,11 +130,12 @@ export function generatePackConfig(preset: PresetDefinition): string {
     preset.id === 'physics-toy' ? "'toy'" : preset.id === 'pinball-lite' ? "'table'" : 'null';
   const commandStarter =
     preset.id === 'simple-rts' ? "'rts'" : preset.id === 'territory-control' ? "'zone'" : 'null';
-  const lookStarter =
-    preset.id === 'museum-exhibit' ? "'museum'" : preset.id === 'rail-shooter' ? "'rail'" : 'null';
+  const lookStarter = preset.id === 'museum-exhibit' ? "'museum'" : 'null';
+  const galleryStarter = preset.id === 'gallery-shooter' ? "'gallery'" : preset.id === 'rail-shooter' ? "'rail'" : 'null';
+  const asteroidsStarter = preset.id === 'asteroids-shooter' ? "'field'" : 'null';
   const parkourStarter =
     preset.id === 'precision-platformer' ? "'precision'" : preset.id === 'climbing-game' ? "'climb'" : 'null';
-  const kartStarter = preset.id === 'kart-racer' ? "'item'" : 'null';
+  const kartStarter = preset.id === 'kart-racer' || preset.id === 'endless-driving' ? "'item'" : 'null';
   const chaseStarter = preset.id === 'chase-platformer' ? "'pursuit'" : 'null';
   return [
     '/**',
@@ -197,7 +152,7 @@ export function generatePackConfig(preset: PresetDefinition): string {
     '};',
     '',
     '/** Category-C Wave 13: farm vs colony presentation of sw2d.simulation. Null otherwise. */',
-    `export const SIMULATION_STARTER: 'farm' | 'colony' | null = ${simulationStarter};`,
+    `export const SIMULATION_STARTER: 'idle' | 'farm' | 'colony' | null = ${simulationStarter};`,
     '',
     '/** Category-C Wave 14: fiction vs case presentation of sw2d.narrative. Null otherwise. */',
     `export const NARRATIVE_STARTER: 'fiction' | 'case' | null = ${narrativeStarter};`,
@@ -246,6 +201,15 @@ export function generatePackConfig(preset: PresetDefinition): string {
     '',
     '/** Category-C Wave 31: closing-wall pursuit. Null otherwise. */',
     `export const CHASE_STARTER: 'pursuit' | null = ${chaseStarter};`,
+    '',
+    '/** Final Product Completion Wave 2: room-graph dungeon (crawl) vs roguelite run (rogue). Null otherwise. */',
+    `export const DUNGEON_STARTER: 'crawl' | 'rogue' | null = ${dungeonStarter};`,
+    '',
+    '/** Final Product Completion Wave 3: pointer target shooter - fixed gallery vs camera rail. Null otherwise. */',
+    `export const GALLERY_STARTER: 'gallery' | 'rail' | null = ${galleryStarter};`,
+    '',
+    '/** Final Product Completion Wave 3: the Asteroids rock field on the vehicle shell. Null otherwise. */',
+    `export const ASTEROIDS_STARTER: 'field' | null = ${asteroidsStarter};`,
     '',
   ]
     .filter((line, index, all) => !(line === '' && all[index - 1] === ''))

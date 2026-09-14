@@ -1,4 +1,91 @@
 {
   "schemaVersion": 1,
-  "encounters": []
+  "archetypes": {
+    "drone": {
+      "motion": "approach",
+      "speed": 55,
+      "score": 5,
+      "size": 30
+    },
+    "hunter": {
+      "motion": "approach",
+      "speed": 85,
+      "score": 15,
+      "size": 34
+    }
+  },
+  "sequence": {
+    "encounterIds": [
+      "leg-1",
+      "leg-2"
+    ],
+    "transitionMs": 700
+  },
+  "encounters": [
+    {
+      "id": "leg-1",
+      "phases": [
+        {
+          "id": "drones",
+          "spawns": [
+            {
+              "archetype": "drone",
+              "count": 4,
+              "at": {
+                "kind": "formation",
+                "shape": "line",
+                "x": 480,
+                "y": 110,
+                "spacing": 170
+              },
+              "intervalMs": 350,
+              "health": 10
+            }
+          ],
+          "completeWhen": {
+            "kind": "spawns-cleared"
+          }
+        }
+      ]
+    },
+    {
+      "id": "leg-2",
+      "phases": [
+        {
+          "id": "hunters",
+          "spawns": [
+            {
+              "archetype": "drone",
+              "count": 3,
+              "at": {
+                "kind": "formation",
+                "shape": "v",
+                "x": 480,
+                "y": 100,
+                "spacing": 160
+              },
+              "intervalMs": 300,
+              "health": 10
+            },
+            {
+              "archetype": "hunter",
+              "count": 2,
+              "at": {
+                "kind": "formation",
+                "shape": "line",
+                "x": 480,
+                "y": 60,
+                "spacing": 400
+              },
+              "startDelayMs": 900,
+              "health": 20
+            }
+          ],
+          "completeWhen": {
+            "kind": "spawns-cleared"
+          }
+        }
+      ]
+    }
+  ]
 }

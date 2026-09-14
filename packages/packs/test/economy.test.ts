@@ -278,4 +278,39 @@ describe('sw2d.economy - lifecycle', () => {
     expect(economy.serve().reason).toBe('no-customer');
     expect(economy.goods()).toEqual([]);
   });
+
+  it('layout customers walk from the entrance before they become servable', () => {
+    const events = new FakeEventBus();
+    const capabilities = new FakeCapabilityRegistry();
+    const catalog: EconomyCatalog = {
+      ...SHOP,
+      spawn: { firstDelayMs: 0, intervalMs: 1000, maxQueue: 1 },
+      layout: {
+        entrance: { x: 0, y: 0 },
+        counter: { x: 100, y: 0 },
+        exit: { x: 200, y: 0 },
+        queueSlots: [{ x: 100, y: 0 }],
+        walkSpeed: 100,
+      },
+    };
+    const ctx = {
+      events,
+      capabilities,
+      content: { data: { economy: { schemaId: 'x', valid: true, value: catalog } } },
+    } as unknown as GameContext;
+    const installed = economyPack.install(ctx, undefined);
+    const economy = capabilities.require<EconomyService>(ECONOMY_CAPABILITY_ID);
+    installed.update?.(10);
+    expect(economy.queue()).toHaveLength(0);
+    expect(economy.walkers()[0]?.phase).toBe('enter');
+    expect(economy.walkers()[0]?.x).toBeGreaterThan(0);
+    expect(economy.serve().reason).toBe('no-customer');
+    installed.update?.(2000);
+    expect(economy.queue()).toHaveLength(1);
+    expect(economy.walkers()[0]?.phase).toBe('wait');
+    economy.setPayMultiplier(2);
+    expect(economy.serve().ok).toBe(true);
+    expect(economy.cash()).toBe(20);
+    expect(economy.walkers()[0]?.phase).toBe('leave');
+  });
 });

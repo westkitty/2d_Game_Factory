@@ -62,6 +62,6 @@
       "items": { "type": "string" }
     },
     "physicsProfile": { "enum": ["matter"] },
-    "vehicleProfile": { "enum": ["car", "kart", "boat", "flight"] }
+    "vehicleProfile": { "enum": ["car", "kart", "boat", "flight", "ship"] }
   }
 }

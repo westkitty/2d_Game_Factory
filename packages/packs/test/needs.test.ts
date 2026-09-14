@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { validateContentBundleData } from '@sw2d/schemas';
-import type { GameContext, NeedsCatalog, NeedsService } from '@sw2d/contracts';
+import type { GameContext, NeedsCatalog, NeedsService, SaveLoadOutcome, SaveSlotOptions, SaveStore, VersionedRecord } from '@sw2d/contracts';
 import { NEEDS_CAPABILITY_ID } from '@sw2d/contracts';
 import { CAPABILITY_IDS } from '../src/ids.ts';
 import { needsPack } from '../src/needs/needsPack.ts';
@@ -54,12 +54,24 @@ const COMPANION: NeedsCatalog = {
   win: { minValue: 85, holdMs: 0, minActions: 2 },
 };
 
-function install(catalog?: NeedsCatalog) {
+class MemorySaves implements SaveStore {
+  readonly namespace = 'needs-test';
+  readonly store = new Map<string, unknown>();
+  load<T extends VersionedRecord>(slot: string, options: SaveSlotOptions<T>): { value: T; outcome: SaveLoadOutcome } {
+    const value = this.store.get(slot) as T | undefined;
+    return value ? { value, outcome: 'loaded' } : { value: options.createDefault(), outcome: 'default' };
+  }
+  save<T extends VersionedRecord>(slot: string, value: T): void { this.store.set(slot, structuredClone(value)); }
+  clear(slot: string): void { this.store.delete(slot); }
+}
+
+function install(catalog?: NeedsCatalog, saves?: SaveStore) {
   const events = new FakeEventBus();
   const capabilities = new FakeCapabilityRegistry();
   const ctx = {
     events,
     capabilities,
+    ...(saves ? { saves } : {}),
     content: catalog ? { data: { needs: { schemaId: 'x', valid: true, value: catalog } } } : { data: {} },
   } as unknown as GameContext;
   const installed = needsPack.install(ctx, undefined);
@@ -274,5 +286,47 @@ describe('sw2d.needs - lifecycle', () => {
     const { needs } = install(CREATURE);
     expect(needs.act('dance')).toEqual({ ok: false, reason: 'unknown-action', actionId: 'dance' });
     expect(needs.need('hunger')).toBe(72);
+  });
+
+  it('chooses bounded activities from need state, moves actors, and advances relationships', () => {
+    const catalog: NeedsCatalog = {
+      ...CREATURE,
+      creatures: [
+        { id: 'pico', displayName: 'Pico', x: 0, y: 0, speed: 100, needValues: { hunger: 40, mood: 90 } },
+        { id: 'moss', displayName: 'Moss', x: 10, y: 0, speed: 100, needValues: { hunger: 90, mood: 90 } },
+      ],
+      activities: [
+        { id: 'food', displayName: 'Food', needId: 'hunger', below: 50, targetX: 100, targetY: 0, durationMs: 1000 },
+        { id: 'play', displayName: 'Play', targetX: 0, targetY: 100, durationMs: 1000 },
+      ],
+      relationships: [{ a: 'pico', b: 'moss', affinity: 2, gainPerSecond: 3, max: 10 }],
+      decisionIntervalMs: 100,
+    };
+    const { installed, needs } = install(catalog);
+    expect(needs.creatures()[0]?.activityId).toBe('food');
+    installed.update?.(100);
+    expect(needs.creatures()[0]?.x).toBeGreaterThan(0);
+    expect(needs.relationships()[0]?.affinity).toBeGreaterThan(2);
+    needs.act('feed');
+    installed.update?.(100);
+    expect(needs.creatures()[0]?.activityId).toBe('play');
+  });
+
+  it('persists care state across reinstall and clears it on an explicit run restart', () => {
+    const saves = new MemorySaves();
+    const catalog: NeedsCatalog = { ...CREATURE, persist: true, creatures: [{ id: 'pico', displayName: 'Pico', x: 10, y: 20 }] };
+    const first = install(catalog, saves);
+    first.needs.act('feed');
+    first.installed.update?.(600);
+    const fed = first.needs.need('hunger');
+    first.installed.dispose();
+    const second = install(catalog, saves);
+    expect(second.needs.loadOutcome()).toBe('loaded');
+    expect(second.needs.actionsTaken()).toBe(1);
+    expect(second.needs.need('hunger')).toBeCloseTo(fed, 5);
+    second.events.emit('run:restarted', { runIndex: 2 });
+    expect(second.needs.actionsTaken()).toBe(0);
+    expect(second.needs.need('hunger')).toBe(72);
+    expect(saves.store.has('needs')).toBe(false);
   });
 });

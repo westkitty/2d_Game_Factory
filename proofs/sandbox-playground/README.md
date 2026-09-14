@@ -68,7 +68,7 @@ with a small working placeholder to replace. Every other pack is configured as J
 
 ## Known preset limitations
 
-- Block, ball and crate stamps, plus pick-up/move/delete, for the generated starter use interaction click (ADR-0018); a generalized authoring/editing sandbox pack is not.
+- (none stated)
 
 ## How to add a level
 

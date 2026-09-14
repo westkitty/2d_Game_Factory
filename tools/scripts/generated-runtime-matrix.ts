@@ -80,13 +80,33 @@ export function deriveSignatures(): readonly Signature[] {
     }));
 }
 
-/** Signature representatives, plus every `sw2d.puzzle` preset a representative did not already pick. */
+/**
+ * Signature representatives plus config-reading coverage.
+ *
+ * `sw2d.puzzle` is now an optional custom-code seam rather than a default
+ * catalog requirement. Exercise that supported option by promoting it on a
+ * cloned recipe that already declares it optional; the canonical recipe remains unchanged and its
+ * empty-pack signature is still tested separately.
+ */
 export function deriveTargets(): readonly PresetDefinition[] {
   const signatures = deriveSignatures();
   const chosen = new Map<string, PresetDefinition>(signatures.map((s) => [s.representative.id, s.representative]));
   for (const preset of PRESETS) {
     if (preset.requiredSystemPacks.some((s) => s.packId === 'sw2d.puzzle') && !chosen.has(preset.id)) {
       chosen.set(preset.id, preset);
+    }
+  }
+  if (![...chosen.values()].some((preset) => preset.requiredSystemPacks.some((selection) => selection.packId === 'sw2d.puzzle'))) {
+    const source = PRESETS.find((preset) => preset.optionalSystemPacks.some((selection) => selection.packId === 'sw2d.puzzle'));
+    const puzzle = source?.optionalSystemPacks.find((selection) => selection.packId === 'sw2d.puzzle');
+    if (source && puzzle) {
+      chosen.set(`${source.id}-puzzle-code-seam`, {
+        ...source,
+        id: `${source.id}-puzzle-code-seam`,
+        displayName: `${source.displayName} Puzzle Code Seam`,
+        requiredSystemPacks: [...source.requiredSystemPacks, puzzle],
+        optionalSystemPacks: source.optionalSystemPacks.filter((selection) => selection.packId !== 'sw2d.puzzle'),
+      });
     }
   }
   return [...chosen.values()];

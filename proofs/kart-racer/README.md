@@ -62,13 +62,13 @@ with a small working placeholder to replace. Every other pack is configured as J
 ## Composition
 
 - Controller family/families: vehicle
-- Required packs (enabled by default): sw2d.world, sw2d.world-entities, sw2d.vehicles, sw2d.racing
-- Optional packs (available, not enabled by default - add to content/game.json's systemPacks to use): sw2d.arcade, sw2d.items
-- Content roles this preset expects: tuning, levels, vehicles, races
+- Required packs (enabled by default): sw2d.world, sw2d.world-entities, sw2d.vehicles, sw2d.racing, sw2d.items
+- Optional packs (available, not enabled by default - add to content/game.json's systemPacks to use): sw2d.arcade
+- Content roles this preset expects: tuning, levels, vehicles, races, items
 
 ## Known preset limitations
 
-- Holding and firing a kart item on demand (a shell, an on-use boost pickup) is game-specific code; item boxes grant canonical sw2d.items entries (Phase 2), and drift / handling are the reusable sw2d.vehicles kart profile.
+- (none stated)
 
 ## How to add a level
 

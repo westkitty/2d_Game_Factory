@@ -11,6 +11,9 @@ interface Toy {
   readonly nearId: string | null;
   readonly lastResult: string | null;
   readonly outcome: string;
+  readonly totalScore: number;
+  readonly lastScore: number;
+  readonly lastExposure: number;
 }
 interface Shell {
   readonly x: number;
@@ -42,7 +45,7 @@ export async function run(harness: Harness): Promise<SmokeOutcome> {
   await harness.stepFrames(4);
   const birdAgain = (await read()).toy!;
   evidence.bird = { x: atBird.x, toy: bird, again: birdAgain.captured.length };
-  const birdOk = atBird.toy?.nearId === 'bird' && bird.lastResult === 'shot-bird' && bird.captured.includes('bird') && bird.shots === 1 && bird.outcome === 'playing' && birdAgain.captured.length === 1;
+  const birdOk = atBird.toy?.nearId === 'bird' && bird.lastResult?.startsWith('shot-bird-') === true && bird.lastScore > 0 && bird.lastExposure > 0 && bird.captured.includes('bird') && bird.shots === 1 && bird.outcome === 'playing' && birdAgain.captured.length === 1;
 
   // The tree completes the album.
   const atTree = await holdUntil(harness, ['ArrowRight'], read, (s) => s.toy?.nearId === 'tree');
@@ -50,7 +53,7 @@ export async function run(harness: Harness): Promise<SmokeOutcome> {
   await harness.stepFrames(4);
   const done = (await read()).toy!;
   evidence.done = { x: atTree.x, toy: done };
-  const doneOk = done.lastResult === 'shot-tree' && done.captured.includes('tree') && done.captured.length === 2 && done.outcome === 'complete';
+  const doneOk = done.lastResult?.startsWith('shot-tree-') === true && done.totalScore >= 120 && done.captured.includes('tree') && done.captured.length === 2 && done.outcome === 'complete';
 
   const run = await restartRun(harness);
   const fresh = await read();

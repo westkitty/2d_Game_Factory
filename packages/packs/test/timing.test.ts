@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { validateContentBundleData } from '@sw2d/schemas';
-import type { GameContext, TimingCatalog, TimingService } from '@sw2d/contracts';
+import type { AudioBus, GameContext, TimingCatalog, TimingService } from '@sw2d/contracts';
 import { TIMING_CAPABILITY_ID } from '@sw2d/contracts';
 import { CAPABILITY_IDS } from '../src/ids.ts';
 import { timingPack } from '../src/timing/timingPack.ts';
@@ -24,12 +24,51 @@ const RHYTHM: TimingCatalog = {
   rhythm: { periodMs: 500, offsetMs: 700, beats: 8 },
 };
 
-function install(catalog?: TimingCatalog) {
+function fakeAudio(start = 0): AudioBus & { time: number } {
+  const bus = {
+    time: start,
+    hold: null as number | null,
+    accum: 0,
+    unlockState: 'unlocked' as const,
+    now(): number {
+      return (this.hold ?? this.time) - this.accum;
+    },
+    outputLatency: () => 0,
+    pauseClock(): void {
+      if (this.hold === null) this.hold = this.time;
+    },
+    resumeClock(): void {
+      if (this.hold !== null) {
+        this.accum += Math.max(0, this.time - this.hold);
+        this.hold = null;
+      }
+    },
+    scheduleTone(): void {
+      /* no-op */
+    },
+    cancelScheduled(): void {
+      /* no-op */
+    },
+    playCue(): void {
+      /* no-op */
+    },
+    applySettings(): void {
+      /* no-op */
+    },
+    dispose(): void {
+      /* no-op */
+    },
+  };
+  return bus;
+}
+
+function install(catalog?: TimingCatalog, audio?: AudioBus) {
   const events = new FakeEventBus();
   const capabilities = new FakeCapabilityRegistry();
   const ctx = {
     events,
     capabilities,
+    audio,
     content: catalog ? { data: { timing: { schemaId: 'x', valid: true, value: catalog } } } : { data: {} },
   } as unknown as GameContext;
   const installed = timingPack.install(ctx, undefined);
@@ -127,9 +166,10 @@ describe('sw2d.timing - rhythm', () => {
     expect(clock.windowOpen()).toBe(false);
     clock.tick(1);
     expect(clock.windowOpen()).toBe(true);
+    clock.tick(120);
     clock.hit();
     expect(clock.hits()).toBe(1);
-    expect(clock.lastResult()).toBe('hit');
+    expect(clock.lastResult()).toBe('perfect');
     expect(clock.outcome()).toBe('playing');
   });
 
@@ -213,5 +253,53 @@ describe('sw2d.timing - lifecycle', () => {
     clock.hit();
     expect(clock.outcome()).toBe('failed');
     expect(clock.phase()).toBe('failed');
+  });
+
+  it('pause freezes reaction elapsed across ticks', () => {
+    const { clock } = install(REACTION);
+    clock.tick(100);
+    clock.pause();
+    clock.tick(800);
+    expect(clock.phase()).toBe('wait');
+    clock.resume();
+    clock.tick(600);
+    expect(clock.phase()).toBe('go');
+  });
+});
+
+describe('sw2d.timing - audio transport rhythm', () => {
+  it('samples AudioBus.now for beat positions and grades perfect/early/late', () => {
+    const audio = fakeAudio(0);
+    const { clock } = install(RHYTHM, audio);
+    audio.time = 0.7;
+    clock.tick(0);
+    expect(clock.windowOpen()).toBe(true);
+    clock.hit();
+    expect(clock.lastResult()).toBe('perfect');
+    audio.time = 0.7 + 0.5 - 0.08;
+    clock.tick(0);
+    clock.hit();
+    expect(clock.lastResult()).toBe('early');
+    audio.time = 0.7 + 1.0 + 0.08;
+    clock.tick(0);
+    clock.hit();
+    expect(clock.lastResult()).toBe('late');
+    expect(clock.hits()).toBe(3);
+    expect(clock.outcome()).toBe('complete');
+  });
+
+  it('pause/resume keeps the audio-origin beat phase', () => {
+    const audio = fakeAudio(0);
+    const { clock } = install(RHYTHM, audio);
+    audio.time = 0.7;
+    clock.tick(0);
+    expect(clock.windowOpen()).toBe(true);
+    clock.pause();
+    audio.time = 2.5;
+    clock.tick(0);
+    expect(clock.windowOpen()).toBe(true);
+    clock.resume();
+    clock.tick(0);
+    expect(clock.windowOpen()).toBe(true);
   });
 });

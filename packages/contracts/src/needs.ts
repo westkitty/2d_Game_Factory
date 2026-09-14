@@ -55,6 +55,33 @@ export interface NeedsSubject {
   readonly displayName: string;
 }
 
+export interface NeedsCreatureDefinition extends NeedsSubject {
+  readonly x: number;
+  readonly y: number;
+  readonly speed?: number;
+  /** Per-creature initial overrides keyed by need id. */
+  readonly needValues?: Readonly<Record<string, number>>;
+}
+
+export interface NeedsActivityDefinition {
+  readonly id: string;
+  readonly displayName: string;
+  /** When present, this activity is chosen while this need is below `below`. */
+  readonly needId?: string;
+  readonly below?: number;
+  readonly targetX: number;
+  readonly targetY: number;
+  readonly durationMs: number;
+}
+
+export interface NeedsRelationshipDefinition {
+  readonly a: string;
+  readonly b: string;
+  readonly affinity: number;
+  readonly gainPerSecond?: number;
+  readonly max?: number;
+}
+
 /** The validated `content/needs.json` document. */
 export interface NeedsCatalog {
   readonly schemaVersion: number;
@@ -66,6 +93,14 @@ export interface NeedsCatalog {
   /** Fail when any need is at or below this. Omit for no fail. */
   readonly loseBelow?: number;
   readonly affinity?: number;
+  /** Optional autonomous actors. Omit for the legacy single subject. */
+  readonly creatures?: readonly NeedsCreatureDefinition[];
+  /** Deterministic, bounded activity rules. Rules with a needId are evaluated before fallback rules. */
+  readonly activities?: readonly NeedsActivityDefinition[];
+  readonly relationships?: readonly NeedsRelationshipDefinition[];
+  readonly decisionIntervalMs?: number;
+  /** Persist care/autonomy state in the game-local save store. */
+  readonly persist?: boolean;
 }
 
 export interface NeedState {
@@ -74,6 +109,23 @@ export interface NeedState {
   readonly value: number;
   readonly min: number;
   readonly max: number;
+}
+
+export interface NeedsCreatureState extends NeedsSubject {
+  readonly x: number;
+  readonly y: number;
+  readonly targetX: number;
+  readonly targetY: number;
+  readonly activityId: string | null;
+  readonly activityName: string | null;
+  readonly decisions: number;
+  readonly needs: readonly NeedState[];
+}
+
+export interface NeedsRelationshipState {
+  readonly a: string;
+  readonly b: string;
+  readonly affinity: number;
 }
 
 export type NeedsActReason = 'acted' | 'unknown-action' | 'not-playing' | 'no-actions';
@@ -92,6 +144,10 @@ export interface NeedsService {
   needs(): readonly NeedState[];
   need(id: string): number;
   actions(): readonly NeedAction[];
+  creatures(): readonly NeedsCreatureState[];
+  relationships(): readonly NeedsRelationshipState[];
+  selectedCreatureIndex(): number;
+  selectCreatureByDelta(delta: number): number;
   selectedIndex(): number;
   selectByDelta(delta: number): number;
   /** Apply `actionId`, or the currently selected action when omitted. */
@@ -102,6 +158,7 @@ export interface NeedsService {
   actionsTaken(): number;
   outcome(): NeedsOutcome;
   lastResult(): string | null;
+  loadOutcome(): string;
   /** Restore catalog initials (a new care session). */
   reset(): void;
 }

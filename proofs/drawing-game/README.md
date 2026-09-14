@@ -68,7 +68,7 @@ with a small working placeholder to replace. Every other pack is configured as J
 
 ## Known preset limitations
 
-- Stroke polylines for the generated starter are captured through the spatial pointer (ADR-0018); pressure, layers, export and a reusable drawing-canvas system are not.
+- (none stated)
 
 ## How to add a level
 

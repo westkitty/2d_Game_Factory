@@ -21,6 +21,7 @@ class FakePointer implements SpatialPointerInput {
     source: 'mouse',
     inside: true,
     active: true,
+    pressure: 0,
     dragging: false,
     dragStartWorldX: 0,
     dragStartWorldY: 0,

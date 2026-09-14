@@ -23,7 +23,13 @@ export interface StarterCommandSnapshot {
   readonly unitY: number;
   readonly unit2X: number;
   readonly unit2Y: number;
+  readonly unit3X: number;
+  readonly unit3Y: number;
+  readonly queued: number;
+  readonly alive: number;
   readonly owned: number;
+  readonly contested: number;
+  readonly score: number;
   readonly lastResult: string | null;
   readonly outcome: 'playing' | 'complete';
 }
@@ -58,7 +64,13 @@ const INERT: StarterCommandBinding = {
     unitY: 0,
     unit2X: 0,
     unit2Y: 0,
+    unit3X: 0,
+    unit3Y: 0,
+    queued: 0,
+    alive: 0,
     owned: 0,
+    contested: 0,
+    score: 0,
     lastResult: null,
     outcome: 'playing',
   }),
@@ -68,6 +80,8 @@ const INERT: StarterCommandBinding = {
 
 const UNIT_A = { x: 200, y: 270 };
 const UNIT_B = { x: 200, y: 400 };
+const UNIT_C = { x: 200, y: 500 };
+const HAZARD = { x: 80, y: 80 };
 const FLAG = { x: 820, y: 270 };
 const ZONE_A = { x: 280, y: 270 };
 const ZONE_B = { x: 700, y: 270 };
@@ -108,6 +122,18 @@ export function bindStarterCommand(
     hud && mode === 'rts'
       ? scene.add.rectangle(UNIT_B.x, UNIT_B.y, 36, 36, UNIT_B_COLOR, 0.95).setStrokeStyle(2, 0xffffff, 0.9).setDepth(20)
       : null;
+  const unitCSprite =
+    hud && mode === 'rts'
+      ? scene.add.rectangle(UNIT_C.x, UNIT_C.y, 36, 36, 0xf0c274, 0.95).setStrokeStyle(2, 0xffffff, 0.9).setDepth(20)
+      : null;
+  const hazardSprite =
+    hud && mode === 'rts'
+      ? scene.add.rectangle(HAZARD.x, HAZARD.y, 28, 28, 0xe0574f, 0.8).setStrokeStyle(2, 0xffffff, 0.6).setDepth(18)
+      : null;
+  const redSprite =
+    hud && mode === 'zone'
+      ? scene.add.rectangle(700, 80, 28, 28, 0xe0574f, 0.95).setStrokeStyle(2, 0xffffff, 0.9).setDepth(20)
+      : null;
   const flagSprite =
     hud && mode === 'rts'
       ? scene.add.rectangle(FLAG.x, FLAG.y, 22, 44, FLAG_COLOR, 0.95).setStrokeStyle(2, 0xffffff, 0.9).setDepth(18)
@@ -121,10 +147,20 @@ export function bindStarterCommand(
       ? scene.add.circle(ZONE_B.x, ZONE_B.y, ZONE_R, ZONE_COLOR, 0.35).setStrokeStyle(2, 0xffffff, 0.8).setDepth(18)
       : null;
 
-  const units = [
-    { x: start.x, y: start.y, selected: false },
-    { x: UNIT_B.x, y: UNIT_B.y, selected: false },
+  interface CommandUnit {
+    x: number;
+    y: number;
+    selected: boolean;
+    alive: boolean;
+    queue: { x: number; y: number }[];
+  }
+  const units: CommandUnit[] = [
+    { x: start.x, y: start.y, selected: false, alive: true, queue: [] },
+    { x: UNIT_B.x, y: UNIT_B.y, selected: false, alive: true, queue: [] },
+    { x: UNIT_C.x, y: UNIT_C.y, selected: false, alive: true, queue: [] },
   ];
+  let redX = 700;
+  let redY = 80;
   let moveX = 0;
   let moveY = 0;
   let holdA = 0;
@@ -133,6 +169,7 @@ export function bindStarterCommand(
   let ownedB = false;
   let lastResult: string | null = null;
   let outcome: 'playing' | 'complete' = 'playing';
+  let nowMs = 0;
   let disposed = false;
   let dragStart: { x: number; y: number } | null = null;
   const boxSprite =
@@ -141,17 +178,24 @@ export function bindStarterCommand(
       : null;
 
   function snapshot(): StarterCommandSnapshot {
-    const selectedCount = units.filter((unit) => unit.selected).length;
+    const live = units.filter((unit) => unit.alive);
+    const selectedCount = live.filter((unit) => unit.selected).length;
     return {
       active: true,
       mode,
-      selected: units[0]!.selected,
+      selected: units[0]!.selected && units[0]!.alive,
       selectedCount,
       unitX: Math.round(units[0]!.x),
       unitY: Math.round(units[0]!.y),
       unit2X: Math.round(units[1]!.x),
       unit2Y: Math.round(units[1]!.y),
+      unit3X: Math.round(units[2]!.x),
+      unit3Y: Math.round(units[2]!.y),
+      queued: live.reduce((sum, unit) => sum + unit.queue.length, 0),
+      alive: live.length,
       owned: (ownedA ? 1 : 0) + (ownedB ? 1 : 0),
+      contested: territory?.contested().length ?? 0,
+      score: territory?.score('player') ?? 0,
       lastResult,
       outcome,
     };
@@ -160,9 +204,12 @@ export function bindStarterCommand(
   function paint(): void {
     const snap = snapshot();
     unitASprite?.setPosition(units[0]!.x, units[0]!.y);
-    unitASprite?.setStrokeStyle(units[0]!.selected ? 4 : 2, 0xffffff, 0.95);
+    unitASprite?.setStrokeStyle(units[0]!.selected ? 4 : 2, 0xffffff, units[0]!.alive ? 0.95 : 0.3);
     unitBSprite?.setPosition(units[1]!.x, units[1]!.y);
-    unitBSprite?.setStrokeStyle(units[1]!.selected ? 4 : 2, 0xffffff, 0.95);
+    unitBSprite?.setStrokeStyle(units[1]!.selected ? 4 : 2, 0xffffff, units[1]!.alive ? 0.95 : 0.3);
+    unitCSprite?.setPosition(units[2]!.x, units[2]!.y);
+    unitCSprite?.setStrokeStyle(units[2]!.selected ? 4 : 2, 0xffffff, units[2]!.alive ? 0.95 : 0.3);
+    redSprite?.setPosition(redX, redY);
     if (flagSprite) flagSprite.setFillStyle(snap.outcome === 'complete' ? CLEAR_COLOR : FLAG_COLOR, 0.95);
     zoneASprite?.setFillStyle(ownedA ? CLEAR_COLOR : ZONE_COLOR, ownedA ? 0.7 : 0.35);
     zoneBSprite?.setFillStyle(ownedB ? CLEAR_COLOR : ZONE_COLOR, ownedB ? 0.7 : 0.35);
@@ -177,14 +224,16 @@ export function bindStarterCommand(
       hint.setText(
         snap.outcome === 'playing'
           ? snap.selectedCount > 0
-            ? 'WASD MOVES SELECTED UNITS'
-            : 'J SELECTS UNIT A   DRAG BOX-SELECTS'
+            ? 'WASD OR CLICK-MOVE  ·  SHIFT QUEUES'
+            : 'J / CLICK SELECTS  ·  DRAG BOX-SELECTS'
           : 'SEIZED',
       );
     } else {
       title.setText(snap.outcome === 'complete' ? 'OWNED' : 'ZONES');
-      status.setText(`owned ${snap.owned}/2${snap.lastResult ? `  ·  ${snap.lastResult}` : ''}`);
-      hint.setText(snap.outcome === 'playing' ? 'STAND IN BOTH ZONES' : 'OWNED');
+      status.setText(
+        `owned ${snap.owned}/2  ·  score ${snap.score}  ·  contested ${snap.contested}${snap.lastResult ? `  ·  ${snap.lastResult}` : ''}`,
+      );
+      hint.setText(snap.outcome === 'playing' ? 'STAND IN ZONES  ·  RED CONTESTS' : 'OWNED');
     }
   }
 
@@ -214,6 +263,11 @@ export function bindStarterCommand(
     startY: () => start.y,
     select() {
       if (disposed || mode !== 'rts' || outcome !== 'playing') return 'already';
+      if (!units[0]!.alive) {
+        lastResult = 'dead';
+        paint();
+        return 'already';
+      }
       if (units[0]!.selected) {
         lastResult = 'already';
         paint();
@@ -237,14 +291,40 @@ export function bindStarterCommand(
     },
     tick(deltaMs: number): void {
       if (disposed || outcome !== 'playing') return;
+      nowMs += deltaMs;
       if (mode === 'rts') {
         const step = UNIT_SPEED * (deltaMs / 1000);
         for (const unit of units) {
-          if (!unit.selected) continue;
-          unit.x = Math.max(24, Math.min(width - 24, unit.x + moveX * step));
-          unit.y = Math.max(24, Math.min(height - 24, unit.y + moveY * step));
+          if (!unit.alive) {
+            unit.selected = false;
+            unit.queue = [];
+            continue;
+          }
+          if (dist(unit.x, unit.y, HAZARD.x, HAZARD.y) <= 22) {
+            unit.alive = false;
+            unit.selected = false;
+            unit.queue = [];
+            lastResult = 'dead';
+            continue;
+          }
+          if (unit.selected) {
+            unit.x = Math.max(24, Math.min(width - 24, unit.x + moveX * step));
+            unit.y = Math.max(24, Math.min(height - 24, unit.y + moveY * step));
+          }
+          const waypoint = unit.queue[0];
+          if (waypoint) {
+            const dx = waypoint.x - unit.x;
+            const dy = waypoint.y - unit.y;
+            const d = Math.hypot(dx, dy);
+            if (d <= 8) unit.queue.shift();
+            else {
+              unit.x += (dx / d) * step;
+              unit.y += (dy / d) * step;
+            }
+            lastResult = 'queued';
+          }
         }
-        if ((moveX !== 0 || moveY !== 0) && units.some((unit) => unit.selected)) lastResult = 'move';
+        if ((moveX !== 0 || moveY !== 0) && units.some((unit) => unit.selected && unit.alive)) lastResult = 'move';
         const ptr = context.spatialPointer.state;
         if (ptr.justPressed) dragStart = { x: ptr.worldX, y: ptr.worldY };
         if (dragStart && ptr.down) {
@@ -262,6 +342,7 @@ export function bindStarterCommand(
           if (wide) {
             let boxed = 0;
             for (const unit of units) {
+              if (!unit.alive) continue;
               if (unit.x >= minX && unit.x <= maxX && unit.y >= minY && unit.y <= maxY) {
                 unit.selected = true;
                 boxed += 1;
@@ -271,13 +352,40 @@ export function bindStarterCommand(
               lastResult = 'boxed';
               context.audio.playCue('ui.confirm');
             }
+          } else {
+            const hit = units.find((unit) => unit.alive && dist(unit.x, unit.y, ptr.worldX, ptr.worldY) <= 22);
+            const additive = context.input.isDown('SECONDARY_ACTION');
+            if (hit) {
+              if (!additive) for (const unit of units) unit.selected = false;
+              hit.selected = true;
+              lastResult = 'selected';
+            } else {
+              for (const unit of units) {
+                if (!unit.selected || !unit.alive) continue;
+                if (additive) unit.queue.push({ x: ptr.worldX, y: ptr.worldY });
+                else unit.queue = [{ x: ptr.worldX, y: ptr.worldY }];
+              }
+              if (units.some((unit) => unit.selected && unit.alive)) lastResult = 'queued';
+            }
           }
           dragStart = null;
           boxSprite?.setVisible(false);
         }
       }
       if (mode === 'zone' && territory?.active()) {
-        territory.setOccupant(units[0]!.x, units[0]!.y);
+        if (nowMs > 1600) {
+          const dx = ZONE_A.x - redX;
+          const dy = ZONE_A.y - redY;
+          const d = Math.hypot(dx, dy);
+          if (d > 4) {
+            redX += (dx / d) * 40 * (deltaMs / 1000);
+            redY += (dy / d) * 40 * (deltaMs / 1000);
+          }
+        }
+        territory.setOccupants([
+          { faction: 'player', x: units[0]!.x, y: units[0]!.y },
+          { faction: 'red', x: redX, y: redY },
+        ]);
         territory.tick(deltaMs);
         ownedA = territory.owned().includes('zone-a');
         ownedB = territory.owned().includes('zone-b');
@@ -318,6 +426,9 @@ export function bindStarterCommand(
         hint?.destroy();
         unitASprite?.destroy();
         unitBSprite?.destroy();
+        unitCSprite?.destroy();
+        hazardSprite?.destroy();
+        redSprite?.destroy();
         flagSprite?.destroy();
         zoneASprite?.destroy();
         zoneBSprite?.destroy();

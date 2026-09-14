@@ -27,6 +27,14 @@ export interface StarterToySnapshot {
   readonly stamps: number;
   readonly held: 'block' | 'ball' | 'crate' | null;
   readonly moved: number;
+  readonly duplicated: number;
+  readonly edited: number;
+  readonly undoDepth: number;
+  readonly redoDepth: number;
+  readonly persisted: boolean;
+  readonly totalScore: number;
+  readonly lastScore: number;
+  readonly lastExposure: number;
   readonly nearId: string | null;
   readonly lastResult: string | null;
   readonly outcome: 'playing' | 'complete';
@@ -40,6 +48,10 @@ export interface StarterToyBinding {
   select(delta: number): void;
   act(): void;
   remove(): void;
+  duplicate(): void;
+  edit(): void;
+  undo(): void;
+  redo(): void;
   snapshot(): StarterToySnapshot;
   render(): void;
   dispose(): void;
@@ -53,6 +65,10 @@ const INERT: StarterToyBinding = {
   select: () => undefined,
   act: () => undefined,
   remove: () => undefined,
+  duplicate: () => undefined,
+  edit: () => undefined,
+  undo: () => undefined,
+  redo: () => undefined,
   snapshot: () => ({
     active: false,
     mode: null,
@@ -65,6 +81,14 @@ const INERT: StarterToyBinding = {
     stamps: 0,
     held: null,
     moved: 0,
+    duplicated: 0,
+    edited: 0,
+    undoDepth: 0,
+    redoDepth: 0,
+    persisted: false,
+    totalScore: 0,
+    lastScore: 0,
+    lastExposure: 0,
     nearId: null,
     lastResult: null,
     outcome: 'playing',
@@ -98,6 +122,7 @@ interface Stamp {
   readonly kind: 'block' | 'ball' | 'crate';
   x: number;
   y: number;
+  color: number;
   handle: { dispose(): void };
   readonly sprite: {
     setPosition(x: number, y: number): unknown;
@@ -107,6 +132,10 @@ interface Stamp {
   };
   readonly label: { setPosition(x: number, y: number): unknown; destroy(): void };
 }
+
+interface StampData { readonly id: string; readonly kind: 'block' | 'ball' | 'crate'; readonly x: number; readonly y: number; readonly color: number }
+interface SandboxSave { readonly schemaVersion: 1; readonly stamps: readonly StampData[] }
+const SANDBOX_SLOT = 'starter-sandbox';
 
 function wrap(index: number, length: number): number {
   return ((index % length) + length) % length;
@@ -146,6 +175,14 @@ export function bindStarterToy(
   let nextStamp = 0;
   let heldId: string | null = null;
   let moved = 0;
+  let duplicated = 0;
+  let edited = 0;
+  let persisted = false;
+  let lastScore = 0;
+  let lastExposure = 0;
+  let totalScore = 0;
+  const undoStack: StampData[][] = [];
+  const redoStack: StampData[][] = [];
 
   if (hud && mode === 'photo') {
     for (const subject of SUBJECTS) {
@@ -205,6 +242,14 @@ export function bindStarterToy(
       stamps: stamps.length,
       held: stamps.find((stamp) => stamp.id === heldId)?.kind ?? null,
       moved,
+      duplicated,
+      edited,
+      undoDepth: undoStack.length,
+      redoDepth: redoStack.length,
+      persisted,
+      totalScore,
+      lastScore,
+      lastExposure,
       nearId: nearId(),
       lastResult,
       outcome,
@@ -212,10 +257,10 @@ export function bindStarterToy(
   }
 
   function finishIfReady(): void {
-    if (mode === 'photo' && captured.size >= SUBJECTS.length) outcome = 'complete';
+    if (mode === 'photo' && captured.size >= SUBJECTS.length && totalScore >= 120) outcome = 'complete';
     if (mode === 'sandbox') {
       const snap = snapshot();
-      if (snap.blocks >= 1 && snap.balls >= 1) outcome = 'complete';
+      if (snap.blocks >= 1 && snap.balls >= 1 && snap.crates >= 1 && moved >= 1 && duplicated >= 1 && edited >= 1) outcome = 'complete';
     }
   }
 
@@ -246,7 +291,7 @@ export function bindStarterToy(
     if (mode === 'photo') {
       title.setText(snap.outcome === 'complete' ? 'CAPTURED' : 'PHOTO');
       status.setText(
-        `shots ${snap.shots}/${SUBJECTS.length}${snap.nearId ? `  ·  near ${snap.nearId}` : ''}${
+        `shots ${snap.shots}/${SUBJECTS.length}  ·  score ${snap.totalScore}${snap.nearId ? `  ·  near ${snap.nearId}` : ''}${
           snap.lastResult ? `  ·  ${snap.lastResult}` : ''
         }${snap.outcome === 'complete' ? '  ·  complete' : ''}`,
       );
@@ -256,7 +301,7 @@ export function bindStarterToy(
     } else {
       title.setText(snap.outcome === 'complete' ? 'BUILT' : 'SANDBOX');
       status.setText(
-        `block ${snap.blocks}  ·  ball ${snap.balls}  ·  crate ${snap.crates}${snap.lastResult ? `  ·  ${snap.lastResult}` : ''}${
+        `block ${snap.blocks}  ·  ball ${snap.balls}  ·  crate ${snap.crates}  ·  undo ${snap.undoDepth}${snap.lastResult ? `  ·  ${snap.lastResult}` : ''}${
           snap.outcome === 'complete' ? '  ·  complete' : ''
         }`,
       );
@@ -264,8 +309,8 @@ export function bindStarterToy(
         snap.outcome === 'complete'
           ? 'BUILT'
           : snap.held
-            ? 'CLICK STAGE TO MOVE   K DELETES'
-            : 'CLICK STAMPS   ARROWS PICK   CLICK OBJECT TO MOVE   K DELETES',
+            ? 'CLICK STAGE MOVE · E DUPLICATE · ENTER EDIT · K DELETE'
+            : 'CLICK STAMPS · ARROWS PICK · BACKSPACE UNDO · SHIFT REDO',
       );
     }
   }
@@ -280,17 +325,39 @@ export function bindStarterToy(
       return;
     }
     captured.add(id);
+    const subject = SUBJECTS.find((entry) => entry.id === id)!;
+    const distance = dist(playerX, playerY, subject.x, subject.y);
+    const focus = Math.max(0, 1 - distance / subject.radius);
+    lastExposure = id === 'bird' ? 0.9 : 0.75;
+    lastScore = Math.round(40 + focus * 35 + lastExposure * 25);
+    totalScore += lastScore;
     if (cam?.active() && cam.mode() === 'frame') {
       cam.setFrame(playerX, playerY);
       cam.capture();
     }
-    lastResult = `shot-${id}`;
+    lastResult = `shot-${id}-${lastScore}`;
     finishIfReady();
     if (captured.size >= SUBJECTS.length) context.audio.playCue('ui.confirm');
   }
 
   function stampColor(kind: 'block' | 'ball' | 'crate'): number {
     return kind === 'block' ? BLOCK_COLOR : kind === 'ball' ? BALL_COLOR : CRATE_COLOR;
+  }
+
+  function data(): StampData[] {
+    return stamps.map(({ id, kind, x, y, color }) => ({ id, kind, x, y, color }));
+  }
+
+  function persist(): void {
+    if (mode !== 'sandbox') return;
+    context.saves.save<SandboxSave>(SANDBOX_SLOT, { schemaVersion: 1, stamps: data() });
+    persisted = true;
+  }
+
+  function checkpoint(): void {
+    undoStack.push(data());
+    if (undoStack.length > 20) undoStack.shift();
+    redoStack.length = 0;
   }
 
   function destroyStampAt(index: number): 'block' | 'ball' | 'crate' | null {
@@ -308,18 +375,19 @@ export function bindStarterToy(
     return stamp.kind;
   }
 
-  function placeStamp(kind: 'block' | 'ball' | 'crate', x: number, y: number): void {
+  function placeStamp(kind: 'block' | 'ball' | 'crate', x: number, y: number, restored?: StampData): void {
     if (stamps.length >= MAX_STAMPS) {
       lastResult = 'full';
       return;
     }
-    const id = `${kind}-${nextStamp++}`;
+    const id = restored?.id ?? `${kind}-${nextStamp++}`;
+    const color = restored?.color ?? stampColor(kind);
     const sprite = scene.add
-      .rectangle(x, y, kind === 'block' ? 48 : 40, kind === 'block' ? 48 : 40, stampColor(kind), 0.95)
+      .rectangle(x, y, kind === 'block' ? 48 : 40, kind === 'block' ? 48 : 40, color, 0.95)
       .setStrokeStyle(2, 0xffffff, 0.9)
       .setDepth(15);
     const label = scene.add.text(x, y, kind === 'block' ? 'B' : kind === 'ball' ? 'O' : 'C', mutedStyle(12)).setOrigin(0.5).setDepth(16);
-    const stamp: Stamp = { id, kind, x, y, handle: { dispose: () => undefined }, sprite, label };
+    const stamp: Stamp = { id, kind, x, y, color, handle: { dispose: () => undefined }, sprite, label };
     stamp.handle = context.interaction.register({
       id,
       priority: 1,
@@ -335,6 +403,14 @@ export function bindStarterToy(
     lastResult = `stamp-${kind}`;
     finishIfReady();
     if (outcome === 'complete') context.audio.playCue('ui.confirm');
+    if (!restored) persist();
+  }
+
+  function restore(next: readonly StampData[]): void {
+    while (stamps.length > 0) destroyStampAt(stamps.length - 1);
+    heldId = null;
+    for (const entry of next) placeStamp(entry.kind, entry.x, entry.y, entry);
+    persist();
   }
 
   if (mode === 'photo') {
@@ -362,6 +438,7 @@ export function bindStarterToy(
           if (heldId) {
             const stamp = stamps.find((entry) => entry.id === heldId);
             if (stamp) {
+              checkpoint();
               stamp.x = info.worldX;
               stamp.y = info.worldY;
               stamp.sprite.setPosition(stamp.x, stamp.y);
@@ -369,10 +446,12 @@ export function bindStarterToy(
               moved += 1;
               lastResult = `move-${stamp.kind}`;
               heldId = null;
+              persist();
               paint();
               return;
             }
           }
+          checkpoint();
           placeStamp(selectedKind(), info.worldX, info.worldY);
           paint();
         },
@@ -393,6 +472,17 @@ export function bindStarterToy(
           },
         }),
       );
+    }
+  }
+
+  if (mode === 'sandbox') {
+    const loaded = context.saves.load<SandboxSave>(SANDBOX_SLOT, {
+      currentVersion: 1,
+      createDefault: () => ({ schemaVersion: 1, stamps: [] }),
+    });
+    if (loaded.value.stamps.length > 0) {
+      for (const entry of loaded.value.stamps) placeStamp(entry.kind, entry.x, entry.y, entry);
+      persisted = loaded.outcome === 'loaded';
     }
   }
 
@@ -424,6 +514,7 @@ export function bindStarterToy(
       const index = heldId
         ? stamps.findIndex((stamp) => stamp.id === heldId)
         : stamps.length - 1;
+      checkpoint();
       const kind = destroyStampAt(index);
       if (!kind) {
         lastResult = 'empty';
@@ -431,7 +522,31 @@ export function bindStarterToy(
         return;
       }
       lastResult = `remove-${kind}`;
+      persist();
       paint();
+    },
+    duplicate(): void {
+      if (disposed || mode !== 'sandbox') return;
+      const source = heldId ? stamps.find((stamp) => stamp.id === heldId) : stamps[stamps.length - 1];
+      if (!source) { lastResult = 'nothing-to-duplicate'; paint(); return; }
+      checkpoint(); duplicated += 1; placeStamp(source.kind, source.x + 42, source.y + 42); lastResult = `duplicate-${source.kind}`; heldId = null; finishIfReady(); paint();
+    },
+    edit(): void {
+      if (disposed || mode !== 'sandbox') return;
+      const stamp = heldId ? stamps.find((entry) => entry.id === heldId) : stamps[stamps.length - 1];
+      if (!stamp) { lastResult = 'nothing-to-edit'; paint(); return; }
+      checkpoint(); stamp.color = stamp.color === SHOT_COLOR ? stampColor(stamp.kind) : SHOT_COLOR; stamp.sprite.setFillStyle(stamp.color, 0.95);
+      edited += 1; lastResult = `edit-${stamp.kind}`; persist(); finishIfReady(); paint();
+    },
+    undo(): void {
+      if (disposed || mode !== 'sandbox') return;
+      const previous = undoStack.pop(); if (!previous) { lastResult = 'nothing-to-undo'; paint(); return; }
+      redoStack.push(data()); restore(previous); outcome = 'playing'; lastResult = 'undo'; paint();
+    },
+    redo(): void {
+      if (disposed || mode !== 'sandbox') return;
+      const next = redoStack.pop(); if (!next) { lastResult = 'nothing-to-redo'; paint(); return; }
+      undoStack.push(data()); restore(next); lastResult = 'redo'; finishIfReady(); paint();
     },
     snapshot,
     render: paint,

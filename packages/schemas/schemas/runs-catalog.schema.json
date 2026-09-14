@@ -1,0 +1,40 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:sw2d:schema:content-runs-catalog:v1",
+  "title": "RunsCatalog",
+  "description": "Mirrors @sw2d/contracts RunsCatalog (runs.ts). Validated as a ContentBundle.data document (document name 'runs'). Run lifecycle exchange rates and the between-run unlocks bought with banked meta currency.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "mode", "metaPerXp", "metaPerKill", "metaPerWave", "metaPerCurrency", "metaPerClear", "unlocks"],
+  "properties": {
+    "schemaVersion": { "type": "integer", "minimum": 1 },
+    "mode": { "type": "string", "enum": ["survive", "roguelite"] },
+    "metaPerXp": { "type": "number", "minimum": 0 },
+    "metaPerKill": { "type": "number", "minimum": 0 },
+    "metaPerWave": { "type": "number", "minimum": 0 },
+    "metaPerCurrency": { "type": "number", "minimum": 0 },
+    "metaPerClear": { "type": "number", "minimum": 0 },
+    "unlocks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "label", "cost", "effect"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "label": { "type": "string", "minLength": 1 },
+          "cost": { "type": "number", "minimum": 0 },
+          "effect": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["kind", "value"],
+            "properties": {
+              "kind": { "type": "string", "enum": ["max-health", "damage", "speed", "start-currency", "start-xp"] },
+              "value": { "type": "number" }
+            }
+          }
+        }
+      }
+    }
+  }
+}

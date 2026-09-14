@@ -1,10 +1,10 @@
 /**
  * Local multiplayer seats pack (Category-C capability program, Wave 7).
  *
- * Renderer-neutral input ownership for one keyboard. Hotseat owns turns and
+ * Renderer-neutral input ownership for keyboard plus assigned gamepads. Hotseat owns turns and
  * scores; versus only publishes per-seat axes so `sw2d.ball-paddle` can drive
  * a human opponent instead of lerp AI. Empty catalogs (fewer than two
- * players) stay inert. Not netcode, not gamepads, not split-screen.
+ * players) stay inert. Presentation and optional net transport remain outside.
  */
 
 import type {
@@ -36,6 +36,7 @@ const EMPTY_CATALOG: LocalPlayCatalog = {
 
 class LocalPlayServiceImpl implements LocalPlayService {
   private held = new Set<string>();
+  private padAxes: number[] = [];
   private seat = 0;
   private points: number[];
   private turnCount = 0;
@@ -63,13 +64,18 @@ class LocalPlayServiceImpl implements LocalPlayService {
     this.held = new Set(codes);
   }
 
+  setGamepadAxes(axes: readonly number[]): void {
+    this.padAxes = [...axes];
+  }
+
   axis(playerIndex: number): number {
     const player = this.catalog.players[playerIndex];
     if (!player) return 0;
     const pos = (player.positive ?? []).some((code) => this.held.has(code));
     const neg = (player.negative ?? []).some((code) => this.held.has(code));
-    if (pos === neg) return 0;
-    return pos ? 1 : -1;
+    const keyboard = pos === neg ? 0 : pos ? 1 : -1;
+    const gamepad = this.padAxes[playerIndex] ?? 0;
+    return Math.abs(gamepad) > Math.abs(keyboard) ? gamepad : keyboard;
   }
 
   currentPlayer(): number {
@@ -105,12 +111,11 @@ class LocalPlayServiceImpl implements LocalPlayService {
     this.turnCount += 1;
     this.last = 'party-turn';
     this.events.emit('localPlay:acted', { playerIndex: this.seat, turns: this.turnCount });
-    this.seat = this.seat === 0 ? 1 : 0;
+    this.seat = (this.seat + 1) % this.catalog.players.length;
     this.events.emit('localPlay:turnChanged', { playerIndex: this.seat, turns: this.turnCount });
     if (this.turnCount >= this.catalog.hotseat.turns) {
-      const p1 = this.points[0] ?? 0;
-      const p2 = this.points[1] ?? 0;
-      this.champ = p1 === p2 ? 0 : p1 > p2 ? 0 : 1;
+      const best = Math.max(...this.points);
+      this.champ = this.points.findIndex((score) => score === best);
       this.current = 'complete';
       this.events.emit('localPlay:completed', { winner: this.champ });
     }
@@ -118,6 +123,7 @@ class LocalPlayServiceImpl implements LocalPlayService {
 
   reset(): void {
     this.held = new Set();
+    this.padAxes = [];
     this.seat = 0;
     this.points = this.catalog.players.map(() => 0);
     this.turnCount = 0;

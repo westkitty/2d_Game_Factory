@@ -35,6 +35,11 @@ type AudioContextCtor = new () => AudioContext;
  * does not exist. Music routing is wired but silent in Phase 1; a theme supplies
  * the source later.
  */
+interface ScheduledTone {
+  readonly oscillator: OscillatorNode;
+  readonly envelope: GainNode;
+}
+
 export class WebAudioBus implements AudioBus {
   #context: AudioContext | null = null;
   #master: GainNode | null = null;
@@ -43,6 +48,9 @@ export class WebAudioBus implements AudioBus {
   #state: AudioUnlockState = 'locked';
   #settings: GameSettings | null = null;
   #disposed = false;
+  #pausedAt: number | null = null;
+  #pauseAccum = 0;
+  #scheduled: ScheduledTone[] = [];
 
   get unlockState(): AudioUnlockState {
     return this.#state;
@@ -121,9 +129,74 @@ export class WebAudioBus implements AudioBus {
     oscillator.stop(now + spec.durationMs / 1000 + 0.02);
   }
 
+  now(): number {
+    if (this.#disposed || this.#state !== 'unlocked' || !this.#context) return 0;
+    if (this.#pausedAt !== null) return Math.max(0, this.#pausedAt - this.#pauseAccum);
+    return Math.max(0, this.#context.currentTime - this.#pauseAccum);
+  }
+
+  outputLatency(): number {
+    if (this.#disposed || this.#state !== 'unlocked' || !this.#context) return 0;
+    const ctx = this.#context as AudioContext & { outputLatency?: number; baseLatency?: number };
+    return Math.max(0, ctx.outputLatency ?? ctx.baseLatency ?? 0);
+  }
+
+  pauseClock(): void {
+    if (this.#disposed || this.#state !== 'unlocked' || !this.#context || this.#pausedAt !== null) return;
+    this.#pausedAt = this.#context.currentTime;
+    void this.#context.suspend().catch(() => undefined);
+  }
+
+  resumeClock(): void {
+    if (this.#disposed || this.#state !== 'unlocked' || !this.#context || this.#pausedAt === null) return;
+    this.#pauseAccum += Math.max(0, this.#context.currentTime - this.#pausedAt);
+    this.#pausedAt = null;
+    void this.#context.resume().catch(() => undefined);
+  }
+
+  scheduleTone(whenSec: number, frequency = 880): void {
+    if (this.#disposed || this.#state !== 'unlocked') return;
+    const context = this.#context;
+    const destination = this.#sfx;
+    if (!context || !destination) return;
+    const startAt = Math.max(whenSec, context.currentTime + 0.01);
+    const oscillator = context.createOscillator();
+    const envelope = context.createGain();
+    oscillator.type = 'square';
+    oscillator.frequency.setValueAtTime(frequency, startAt);
+    envelope.gain.setValueAtTime(0, startAt);
+    envelope.gain.linearRampToValueAtTime(0.18, startAt + 0.004);
+    envelope.gain.exponentialRampToValueAtTime(0.0001, startAt + 0.06);
+    oscillator.connect(envelope);
+    envelope.connect(destination);
+    const entry: ScheduledTone = { oscillator, envelope };
+    oscillator.onended = () => {
+      oscillator.disconnect();
+      envelope.disconnect();
+      this.#scheduled = this.#scheduled.filter((tone) => tone !== entry);
+    };
+    oscillator.start(startAt);
+    oscillator.stop(startAt + 0.08);
+    this.#scheduled.push(entry);
+  }
+
+  cancelScheduled(): void {
+    for (const tone of this.#scheduled) {
+      try {
+        tone.oscillator.stop();
+        tone.oscillator.disconnect();
+        tone.envelope.disconnect();
+      } catch {
+        /* already stopped */
+      }
+    }
+    this.#scheduled = [];
+  }
+
   dispose(): void {
     if (this.#disposed) return;
     this.#disposed = true;
+    this.cancelScheduled();
     try {
       this.#music?.disconnect();
       this.#sfx?.disconnect();
@@ -136,5 +209,6 @@ export class WebAudioBus implements AudioBus {
     this.#master = null;
     this.#music = null;
     this.#sfx = null;
+    this.#pausedAt = null;
   }
 }

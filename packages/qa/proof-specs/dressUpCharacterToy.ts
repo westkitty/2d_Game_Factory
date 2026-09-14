@@ -7,6 +7,8 @@ interface PointerPlay {
   readonly active: boolean;
   readonly mode: string | null;
   readonly attached: readonly string[];
+  readonly authoredItems: readonly string[];
+  readonly persisted: boolean;
   readonly draggingId: string | null;
   readonly lastResult: string | null;
   readonly outcome: string;
@@ -40,7 +42,7 @@ export async function run(harness: Harness): Promise<SmokeOutcome> {
   const booted = await readSnapshot(harness);
   const initial = await pp();
   evidence.initial = initial;
-  const startedOk = booted.scene === 'sw2d.play' && initial.mode === 'wardrobe' && initial.attached.length === 0 && initial.outcome === 'playing';
+  const startedOk = booted.scene === 'sw2d.play' && booted.installedPacks.includes('sw2d.items') && initial.mode === 'wardrobe' && initial.authoredItems.length === 3 && initial.attached.length === 0 && initial.outcome === 'playing';
 
   // Dropping a garment away from the figure does not attach it.
   await dragFromTo(harness, 200, 160, 300, 460, read);
@@ -52,15 +54,19 @@ export async function run(harness: Harness): Promise<SmokeOutcome> {
   const hat = await pp();
   evidence.hat = { mid: midHat.draggingId, result: hat };
   const hatOk = midHat.draggingId === 'hat' && hat.lastResult === 'drop-hat' && hat.attached.includes('hat') && hat.attached.length === 1 && hat.outcome === 'playing';
+  await harness.keyTap('KeyE'); await harness.stepFrames(3);
+  const removed = await pp();
+  await dragFromTo(harness, 330, 160, 700, 200, read);
+  const crown = await pp();
   await dragFromTo(harness, 200, 340, 700, 300, read);
   const done = await pp();
-  evidence.done = done;
-  const doneOk = done.lastResult === 'drop-shirt' && done.attached.includes('shirt') && done.attached.length === 2 && done.outcome === 'complete';
+  evidence.done = { removed, crown, done };
+  const doneOk = removed.lastResult === 'remove-hat' && crown.attached.includes('crown') && !crown.attached.includes('hat') && done.lastResult === 'drop-shirt' && done.attached.includes('shirt') && done.attached.length === 2 && done.persisted && done.outcome === 'complete';
 
   const run = await restartRun(harness);
   const fresh = await pp();
   evidence.restart = { ...run, attached: fresh.attached, outcome: fresh.outcome };
-  const restartOk = run.after === run.before + 1 && fresh.attached.length === 0 && fresh.outcome === 'playing';
+  const restartOk = run.after === run.before + 1 && fresh.attached.includes('crown') && fresh.attached.includes('shirt') && fresh.persisted && fresh.outcome === 'complete';
 
   const passed = startedOk && missOk && hatOk && doneOk && restartOk;
   return { passed, details: { ...evidence, startedOk, missOk, hatOk, doneOk, restartOk } };

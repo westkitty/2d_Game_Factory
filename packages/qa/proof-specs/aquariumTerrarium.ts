@@ -11,6 +11,8 @@ interface Needs {
   readonly holdMs: number;
   readonly outcome: string;
   readonly lastResult: string | null;
+  readonly creatures: readonly { readonly x: number; readonly y: number; readonly activityId: string | null; readonly decisions: number }[];
+  readonly relationships: readonly { readonly a: string; readonly b: string; readonly affinity: number }[];
 }
 interface Shell {
   readonly needs?: Needs;
@@ -22,8 +24,11 @@ export async function run(harness: Harness): Promise<SmokeOutcome> {
   await startPlay(harness);
   const booted = await readSnapshot(harness);
   const initial = (await read()).needs!;
-  evidence.initial = { mode: initial.mode, water: initial.needValues.water, food: initial.needValues.food };
-  const startedOk = booted.installedPacks.includes('sw2d.needs') && initial.mode === 'habitat' && initial.outcome === 'playing';
+  evidence.initial = { mode: initial.mode, water: initial.needValues.water, food: initial.needValues.food, creatures: initial.creatures, relationships: initial.relationships };
+  const startedOk = booted.installedPacks.includes('sw2d.needs') && initial.mode === 'habitat' && initial.outcome === 'playing' && initial.creatures.length === 3 && initial.relationships.length === 2;
+  await harness.stepFrames(60);
+  const autonomous = (await read()).needs!;
+  const autonomyOk = autonomous.creatures.some((creature, index) => creature.x !== initial.creatures[index]?.x || creature.y !== initial.creatures[index]?.y) && autonomous.creatures.every((creature) => creature.decisions > 0) && autonomous.relationships.some((relationship, index) => relationship.affinity > (initial.relationships[index]?.affinity ?? 0));
 
   // Feed and refresh the water: two distinct care actions on two meters.
   await harness.keyTap('KeyJ');
@@ -47,6 +52,6 @@ export async function run(harness: Harness): Promise<SmokeOutcome> {
   // Fresh meters start above the completion floor, so the hold clock is already running - but only for the settle frames.
   const restartOk = run.after === run.before + 1 && fresh.outcome === 'playing' && fresh.holdMs < 1000 && fresh.actionsTaken === 0;
 
-  const passed = startedOk && careOk && earlyOk && completeOk && restartOk;
-  return { passed, details: { ...evidence, startedOk, careOk, earlyOk, completeOk, restartOk } };
+  const passed = startedOk && autonomyOk && careOk && earlyOk && completeOk && restartOk;
+  return { passed, details: { ...evidence, startedOk, autonomyOk, careOk, earlyOk, completeOk, restartOk } };
 }

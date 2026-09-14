@@ -2,94 +2,262 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "urn:sw2d:schema:content-perception-catalog:v1",
   "title": "PerceptionCatalog",
-  "description": "Mirrors @sw2d/contracts PerceptionCatalog (perception.ts). Validated as a ContentBundle.data document (document name 'perception'). Bounded infiltrate/heist awareness - no patrol AI or takedowns.",
+  "description": "Mirrors @sw2d/contracts PerceptionCatalog (perception.ts). Validated as a ContentBundle.data document (document name 'perception'). FOV cones, occlusion, suspicion, noise, hiding, patrol routes and the stealth observer state machine (chase / investigate / return / takedown).",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schemaVersion", "mode", "start", "playerRadius", "hiddenMultiplier", "observers"],
+  "required": [
+    "schemaVersion",
+    "mode",
+    "start",
+    "playerRadius",
+    "hiddenMultiplier",
+    "observers"
+  ],
   "properties": {
-    "schemaVersion": { "type": "integer", "minimum": 1 },
-    "mode": { "type": "string", "enum": ["infiltrate", "heist"] },
-    "start": { "$ref": "#/definitions/vec" },
-    "playerRadius": { "type": "number", "minimum": 1 },
-    "hiddenMultiplier": { "type": "number", "minimum": 0, "maximum": 1 },
+    "schemaVersion": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "mode": {
+      "type": "string",
+      "enum": [
+        "infiltrate",
+        "heist"
+      ]
+    },
+    "start": {
+      "$ref": "#/definitions/vec"
+    },
+    "playerRadius": {
+      "type": "number",
+      "minimum": 1
+    },
+    "hiddenMultiplier": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
     "observers": {
       "type": "array",
-      "items": { "$ref": "#/definitions/observer" }
+      "items": {
+        "$ref": "#/definitions/observer"
+      }
     },
     "occluders": {
       "type": "array",
-      "items": { "$ref": "#/definitions/occluder" }
+      "items": {
+        "$ref": "#/definitions/occluder"
+      }
     },
     "cover": {
       "type": "array",
-      "items": { "$ref": "#/definitions/cover" }
+      "items": {
+        "$ref": "#/definitions/cover"
+      }
     },
     "objectives": {
       "type": "array",
-      "items": { "$ref": "#/definitions/marker" }
+      "items": {
+        "$ref": "#/definitions/marker"
+      }
     },
     "exits": {
       "type": "array",
-      "items": { "$ref": "#/definitions/marker" }
+      "items": {
+        "$ref": "#/definitions/marker"
+      }
     }
   },
   "definitions": {
     "vec": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["x", "y"],
+      "required": [
+        "x",
+        "y"
+      ],
       "properties": {
-        "x": { "type": "number" },
-        "y": { "type": "number" }
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        }
       }
     },
     "observer": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "x", "y", "facingDeg", "fovDeg", "range", "suspicionRisePerSecond", "suspicionDecayPerSecond"],
+      "required": [
+        "id",
+        "x",
+        "y",
+        "facingDeg",
+        "fovDeg",
+        "range",
+        "suspicionRisePerSecond",
+        "suspicionDecayPerSecond"
+      ],
       "properties": {
-        "id": { "type": "string", "minLength": 1 },
-        "x": { "type": "number" },
-        "y": { "type": "number" },
-        "facingDeg": { "type": "number" },
-        "fovDeg": { "type": "number", "exclusiveMinimum": 0, "maximum": 360 },
-        "range": { "type": "number", "exclusiveMinimum": 0 },
-        "suspicionRisePerSecond": { "type": "number", "minimum": 0 },
-        "suspicionDecayPerSecond": { "type": "number", "minimum": 0 }
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "facingDeg": {
+          "type": "number"
+        },
+        "fovDeg": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 360
+        },
+        "range": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "suspicionRisePerSecond": {
+          "type": "number",
+          "minimum": 0
+        },
+        "suspicionDecayPerSecond": {
+          "type": "number",
+          "minimum": 0
+        },
+        "patrol": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "waypoints",
+            "speed",
+            "waitMs"
+          ],
+          "properties": {
+            "waypoints": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "$ref": "#/definitions/vec"
+              }
+            },
+            "speed": {
+              "type": "number",
+              "minimum": 0
+            },
+            "waitMs": {
+              "type": "number",
+              "minimum": 0
+            }
+          }
+        },
+        "chaseSpeed": {
+          "type": "number",
+          "minimum": 0
+        },
+        "catchRadius": {
+          "type": "number",
+          "minimum": 0
+        },
+        "memoryMs": {
+          "type": "number",
+          "minimum": 0
+        },
+        "investigateMs": {
+          "type": "number",
+          "minimum": 0
+        },
+        "takedownRadius": {
+          "type": "number",
+          "minimum": 0
+        }
       }
     },
     "occluder": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "x", "y", "width", "height"],
+      "required": [
+        "id",
+        "x",
+        "y",
+        "width",
+        "height"
+      ],
       "properties": {
-        "id": { "type": "string", "minLength": 1 },
-        "x": { "type": "number" },
-        "y": { "type": "number" },
-        "width": { "type": "number", "exclusiveMinimum": 0 },
-        "height": { "type": "number", "exclusiveMinimum": 0 }
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "width": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "height": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
       }
     },
     "cover": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "x", "y", "radius"],
+      "required": [
+        "id",
+        "x",
+        "y",
+        "radius"
+      ],
       "properties": {
-        "id": { "type": "string", "minLength": 1 },
-        "x": { "type": "number" },
-        "y": { "type": "number" },
-        "radius": { "type": "number", "exclusiveMinimum": 0 }
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "radius": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
       }
     },
     "marker": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "x", "y", "radius"],
+      "required": [
+        "id",
+        "x",
+        "y",
+        "radius"
+      ],
       "properties": {
-        "id": { "type": "string", "minLength": 1 },
-        "x": { "type": "number" },
-        "y": { "type": "number" },
-        "radius": { "type": "number", "exclusiveMinimum": 0 }
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "radius": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
       }
     }
   }

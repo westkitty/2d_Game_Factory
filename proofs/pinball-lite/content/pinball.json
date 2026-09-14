@@ -56,5 +56,6 @@
     }
   ],
   "drainY": 530,
-  "winScore": 3
+  "winScore": 3,
+  "balls": 3
 }

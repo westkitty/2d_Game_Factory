@@ -111,8 +111,8 @@ directly), froze a `PROOF_CONTRACT.md`, and committed a real-browser spec under
 | `proofs/virtual-pet/` | `virtual-pet` | `sw2d.needs` (companion mode): complete on threshold after two acts | None | One act still `playing`; second act `complete`; post-complete acts inert; restart | PASS |
 | `proofs/visual-novel/` | `visual-novel` | `sw2d.dialogue` (novel mode): lines, a two-option choice, two branches, two endings | None | Choice at step 2; option 1 → `keep-the-secret` → `midnight-ending`; inert past the ending; restart; option 0 → `dawn-ending` | PASS |
 | `proofs/local-party-game/` | `local-party-game` | `sw2d.local-play` (hotseat mode): seat ownership passes per act | None | Seat 0 scores then seat 1; six acts decide a winner; inert after; restart | PASS |
-| `proofs/reaction-timing/` | `reaction-timing` | `sw2d.timing` (reaction mode): visual go-cue, hit window, latency | None | Early press not a hit; hit inside the window with numeric latency; second cue completes; restart | PASS |
-| `proofs/rhythm-action/` | `rhythm-action` | `sw2d.timing` (rhythm mode): repeating beat windows | None | Three presses each inside an open window; `complete`; restart | PASS |
+| `proofs/reaction-timing/` | `reaction-timing` | `sw2d.timing` (reaction mode): visual go-cue, hit window, latency, pause freeze | None | Early press not a hit; hit inside the window with numeric latency; second cue completes; restart | PASS |
+| `proofs/rhythm-action/` | `rhythm-action` | `sw2d.timing` (rhythm mode) on AudioBus transport: early/perfect/late/miss | Metronome clicks | Three presses each inside an open window; `complete`; restart | PASS |
 | `proofs/farming-lite/` | `farming-lite` | `sw2d.simulation` jobs as plots (`SIMULATION_STARTER 'farm'`) | Plot/crop presentation | Plant → `growing` (job queued); early harvest refused; ripe → harvest; three harvests `complete`; restart (all plots `empty`) | PASS |
 | `proofs/colony-lite/` | `colony-lite` | `sw2d.simulation` jobs as workers + construction (`'colony'`) | Worker/build presentation | Build refused (`need-materials`); assign worker (busy, re-assign refused); gather ×2; build → `built`; restart | PASS |
 | `proofs/interactive-fiction-hybrid/` | `interactive-fiction-hybrid` | `sw2d.narrative` flags/seen/choices (`NARRATIVE_STARTER 'fiction'`) | Menu verbs | TAKE `locked` before LOOK; LOOK sets flag + seen; TAKE ends `escaped`; restart | PASS |
@@ -147,8 +147,8 @@ directly), froze a `PROOF_CONTRACT.md`, and committed a real-browser spec under
 
 | Proof | Preset | Reusable capability exercised | Game-specific mechanics | Browser journey | Status |
 |---|---|---|---|---|---|
-| `proofs/physics-puzzle/` | `physics-puzzle` | `sw2d.puzzle` code seam (`physics-goal`) + Matter ball | Nudge presentation | Idle 60 frames never solves; one nudge lands the ball in the goal (`solved`, x ≥ 740); restart | PASS |
-| `proofs/escape-room/` | `escape-room` | `sw2d.puzzle` code seam (`escape-locks`) + ADR-0018 clicks | Two hotspots | Lock before note `locked`; note (idempotent); lock → key + `solved`; restart | PASS |
+| `proofs/physics-puzzle/` | `physics-puzzle` | `sw2d.puzzle-rules` `physics-goal` + Matter ball | Nudge / launch presentation | Idle 60 frames never solves; one nudge lands the ball in the goal (`solved`, x ≥ 740); restart | PASS |
+| `proofs/escape-room/` | `escape-room` | `sw2d.puzzle-rules` `escape` + ADR-0018 clicks | Inspect hotspots from content | Lock before note `locked`; note (idempotent); lock → key + `solved`; restart | PASS |
 | `proofs/drawing-game/` | `drawing-game` | ADR-0018 spatial-pointer drag (`POINTER_STARTER 'draw'`) | Stroke presentation | Tap is not a stroke; 320 px drag is one stroke ≥ 300; second completes; restart | PASS |
 | `proofs/dress-up-character-toy/` | `dress-up-character-toy` | ADR-0018 drag capture + drop-zone (`'wardrobe'`) | Wardrobe | Off-figure drop does not attach; mid-drag `draggingId 'hat'`; hat then shirt attach → `complete`; restart | PASS |
 | `proofs/sandbox-playground/` | `sandbox-playground` | ADR-0018 click stamps + pick/move/delete (`TOY_STARTER 'sandbox'`) | Authoring | Stamp → hold → move; remove then `empty`; re-stamp + ball → `complete`; restart | PASS |

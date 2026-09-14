@@ -90,6 +90,30 @@ describe('SpatialPointerHost - frame edges', () => {
     h.update();
     expect(h.state.source).toBe('pen');
   });
+
+  it('normalizes pressure and clears it on release', () => {
+    const h = host();
+    h.setPointerPressure(0.8);
+    h.setPointerButton(true, 'pen');
+    h.update();
+    expect(h.state.pressure).toBe(0.8);
+    h.setPointerButton(false, 'pen');
+    h.update();
+    expect(h.state.pressure).toBe(0);
+  });
+
+  it('cancels an outside contact without leaving the pointer stuck', () => {
+    const h = host();
+    h.setPointerInside(true);
+    h.setPointerButton(true, 'touch');
+    h.update();
+    const cancel = [...(root.handlers.get('pointercancel') ?? [])][0]!;
+    cancel({ button: 0, pointerType: 'touch', clientX: 10, clientY: 10, pressure: 0 });
+    h.update();
+    expect(h.state.justReleased).toBe(true);
+    expect(h.state.inside).toBe(false);
+    expect(h.state.pressure).toBe(0);
+  });
 });
 
 describe('SpatialPointerHost - screen/world conversion', () => {

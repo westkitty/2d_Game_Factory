@@ -13,6 +13,26 @@
       "health": 2
     },
     {
+      "id": "bear",
+      "x": 260,
+      "y": 270,
+      "range": 480,
+      "damage": 1,
+      "cooldownMs": 420,
+      "team": "player",
+      "health": 4
+    },
+    {
+      "id": "owl",
+      "x": 260,
+      "y": 270,
+      "range": 560,
+      "damage": 2,
+      "cooldownMs": 220,
+      "team": "player",
+      "health": 2
+    },
+    {
       "id": "cpu",
       "x": 700,
       "y": 270,

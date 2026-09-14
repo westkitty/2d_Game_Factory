@@ -22,6 +22,10 @@
       "config": {}
     },
     {
+      "packId": "sw2d.racing",
+      "config": {}
+    },
+    {
       "packId": "game.vehicle-shell",
       "config": {}
     }

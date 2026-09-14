@@ -18,6 +18,14 @@
       "config": {}
     },
     {
+      "packId": "sw2d.vehicles",
+      "config": {}
+    },
+    {
+      "packId": "sw2d.arcade",
+      "config": {}
+    },
+    {
       "packId": "game.vehicle-shell",
       "config": {}
     }

@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "mode": "horizontal",
   "speed": 180,
-  "length": 720,
+  "length": 1400,
   "viewport": {
     "width": 960,
     "height": 540
@@ -35,6 +35,49 @@
       "along": 640,
       "cross": 90,
       "radius": 18
+    }
+  ],
+  "layers": [
+    {
+      "id": "stars-far",
+      "speedFactor": 0.2,
+      "spacing": 160,
+      "size": 6,
+      "alpha": 0.25,
+      "cross": 80
+    },
+    {
+      "id": "ridge-mid",
+      "speedFactor": 0.5,
+      "spacing": 120,
+      "size": 14,
+      "alpha": 0.35,
+      "cross": 470
+    },
+    {
+      "id": "debris-near",
+      "speedFactor": 1.4,
+      "spacing": 200,
+      "size": 10,
+      "alpha": 0.6,
+      "cross": 250
+    }
+  ],
+  "rail": [
+    {
+      "from": 0,
+      "speed": 180,
+      "crossDrift": 0
+    },
+    {
+      "from": 480,
+      "speed": 120,
+      "crossDrift": 40
+    },
+    {
+      "from": 960,
+      "speed": 220,
+      "crossDrift": -40
     }
   ]
 }

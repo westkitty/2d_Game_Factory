@@ -19,12 +19,14 @@ Generated via `npm run sw2d -- new proof-arena-combat --preset arena-combat` (th
 
 ## Defining journey (automated, real-browser, deterministic frame stepping)
 
+Final Product Completion Wave 2 (matrix L04): three fodder foes converge on the player; each falls to a three-hit chain on whichever foe the targeting reticle names.
+
 1. Start; mode `arena`; `foesAlive 3`.
-2. Up to y <= 175, Right to x >= 330, strike ×2 -> `foesAlive 2`.
-3. Down to y >= 265, Right to x >= 455, strike ×2 -> `foesAlive 1`; strike ×2 -> `foesAlive 0`, `complete`, health > 0.
-4. Strike -> unchanged.
-5. Restart: `foesAlive 3`, `playing`.
+2. Hold ground facing right; whenever `targetId` names a foe, strike ×3 (past the cooldown) -> chains that reach `hit-3`; repeat until `foesAlive 0`, `complete`, health > 0, `bestCombo 3`.
+3. Strike -> unchanged.
+4. Restart: `foesAlive 3`, `playing`, `bestCombo 0`, `playerHealth 5`.
 
 ## Acceptance
 
+- Combo chains, directional strikes, foe pursuit and the targeting reticle are the reusable `sw2d.melee` grammar - no catalog limitation remains.
 - Zero console errors, zero external requests.

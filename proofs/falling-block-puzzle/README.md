@@ -68,7 +68,7 @@ with a small working placeholder to replace. Every other pack is configured as J
 
 ## Known preset limitations
 
-- Match-detection/cascade and falling-piece/line-clear are reusable (sw2d.puzzle-rules); pointer drag-swap, wall-kicks and overlay-local boards are not.
+- (none stated)
 
 ## How to add a level
 

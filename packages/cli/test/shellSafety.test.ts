@@ -35,6 +35,6 @@ describe('generated-shell gameplay safety pins (sweep C)', () => {
     const source = read('packages/runtime/src/game-support/starterEncounters.ts');
     const restartGate = source.match(/if \((.*)\) \{\s*\n\s*wavesCleared \+= 1;/);
     expect(restartGate, 'the survival-loop restart condition should exist').not.toBeNull();
-    expect(restartGate![1]).toBe('encounter.completed && enemies.size === 0');
+    expect(restartGate![1]).toBe('sequenceIds.length === 0 && encounter.completed && enemies.size === 0');
   });
 });

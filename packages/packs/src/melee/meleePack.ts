@@ -1,5 +1,8 @@
 /**
- * Melee strike / knockback / hit-stun pack (Category-C capability program, Wave 6).
+ * Melee strike / knockback / hit-stun / combo / directional pack
+ * (Category-C capability program, Wave 6; combo chain, facing arc, foe
+ * pursuit, player hit-stun and `target()` added by the Final Product
+ * Completion program, Wave 2 - matrix L04).
  *
  * Renderer-neutral close combat. Damage goes through `combat.health` so this
  * pack never becomes a second health authority. Overlay-matching constants
@@ -19,6 +22,7 @@ import type {
   MeleeMode,
   MeleeOutcome,
   MeleeService,
+  MeleeStrikeResult,
   SystemPackDefinition,
 } from '@sw2d/contracts';
 import { DuplicateMeleeIdError } from '@sw2d/contracts';
@@ -30,6 +34,7 @@ interface LiveFoe {
   x: number;
   y: number;
   radius: number;
+  speed: number;
   vx: number;
   vy: number;
   stunnedUntilMs: number;
@@ -57,9 +62,15 @@ const EMPTY_CATALOG: MeleeCatalog = {
 class MeleeServiceImpl implements MeleeService {
   private playerX: number;
   private playerY: number;
+  private faceX = 1;
+  private faceY = 0;
   private foeStates: LiveFoe[];
   private lastStrikeMs = -1_000_000;
   private lastContactMs = -1_000_000;
+  private lastHitMs = -1_000_000;
+  private chain = 0;
+  private best = 0;
+  private playerStunUntilMs = -1_000_000;
   private last: string | null = null;
   private current: MeleeOutcome = 'playing';
 
@@ -86,6 +97,43 @@ class MeleeServiceImpl implements MeleeService {
   setPlayer(x: number, y: number): void {
     this.playerX = x;
     this.playerY = y;
+  }
+
+  setFacing(dx: number, dy: number): void {
+    const len = Math.hypot(dx, dy);
+    if (len < 1e-6) return;
+    this.faceX = dx / len;
+    this.faceY = dy / len;
+  }
+
+  facing(): { readonly x: number; readonly y: number } {
+    return { x: this.faceX, y: this.faceY };
+  }
+
+  arcDeg(): number {
+    return this.catalog.arcDeg ?? 360;
+  }
+
+  target(): MeleeFoeState | null {
+    const foe = this.nearestLiving(this.catalog.strike.range, true);
+    return foe ? this.foes().find((f) => f.id === foe.id) ?? null : null;
+  }
+
+  comboStep(): number {
+    return this.chain;
+  }
+
+  comboWindowLeftMs(nowMs: number): number {
+    if (this.chain === 0 || !this.catalog.combo) return 0;
+    return Math.max(0, this.catalog.combo.windowMs - (nowMs - this.lastHitMs));
+  }
+
+  bestCombo(): number {
+    return this.best;
+  }
+
+  playerStunned(nowMs: number): boolean {
+    return nowMs < this.playerStunUntilMs;
   }
 
   player() {
@@ -128,29 +176,59 @@ class MeleeServiceImpl implements MeleeService {
   reset(): void {
     this.playerX = this.catalog.player.x;
     this.playerY = this.catalog.player.y;
+    this.faceX = 1;
+    this.faceY = 0;
     this.lastStrikeMs = -1_000_000;
     this.lastContactMs = -1_000_000;
+    this.lastHitMs = -1_000_000;
+    this.chain = 0;
+    this.best = 0;
+    this.playerStunUntilMs = -1_000_000;
     this.last = null;
     this.current = 'playing';
     this.unregisterFighters();
     this.registerFighters();
   }
 
-  strike(nowMs: number): 'hit' | 'miss' | 'cooldown' {
+  strike(nowMs: number): MeleeStrikeResult {
     if (!this.active() || this.current !== 'playing') return 'miss';
+    if (this.playerStunned(nowMs)) {
+      this.last = 'stunned';
+      return 'stunned';
+    }
     if (nowMs - this.lastStrikeMs < this.catalog.strike.cooldownMs) {
       this.last = 'cooldown';
       return 'cooldown';
     }
     this.lastStrikeMs = nowMs;
-    const target = this.nearestLiving(this.catalog.strike.range);
+    // The combo window closing between strikes resets the chain first.
+    if (this.catalog.combo && this.chain > 0 && nowMs - this.lastHitMs > this.catalog.combo.windowMs) {
+      this.chain = 0;
+      this.events.emit('melee:comboReset', { reason: 'window' });
+    }
+    const target = this.nearestLiving(this.catalog.strike.range, true);
     if (!target) {
+      if (this.chain > 0) this.events.emit('melee:comboReset', { reason: 'whiff' });
+      this.chain = 0;
       this.last = 'miss';
       this.events.emit('melee:missed', { attackerId: this.catalog.player.id });
       return 'miss';
     }
-    this.hitFoe(target, this.catalog.strike.damage, nowMs, this.catalog.strike.knockback, this.catalog.strike.stunMs);
-    this.last = 'hit';
+    const combo = this.catalog.combo;
+    const step = combo && combo.steps.length > 0 ? combo.steps[Math.min(this.chain, combo.steps.length - 1)]! : null;
+    const damage = step?.damage ?? this.catalog.strike.damage;
+    const knockback = step?.knockback ?? this.catalog.strike.knockback;
+    const stunMs = step?.stunMs ?? this.catalog.strike.stunMs;
+    this.hitFoe(target, damage, nowMs, knockback, stunMs);
+    this.lastHitMs = nowMs;
+    if (combo && combo.steps.length > 0) {
+      this.chain = this.chain >= combo.steps.length ? 1 : this.chain + 1;
+      if (this.chain > this.best) this.best = this.chain;
+      this.last = `hit-${this.chain}`;
+      this.events.emit('melee:combo', { step: this.chain, of: combo.steps.length, foeId: target.id });
+    } else {
+      this.last = 'hit';
+    }
     this.events.emit('melee:struck', { attackerId: this.catalog.player.id, foeId: target.id });
     this.refreshOutcome();
     return 'hit';
@@ -159,6 +237,10 @@ class MeleeServiceImpl implements MeleeService {
   tick(deltaMs: number, nowMs: number): void {
     if (!this.active() || this.current !== 'playing') return;
     const dt = Math.max(0, deltaMs);
+    if (this.catalog.combo && this.chain > 0 && nowMs - this.lastHitMs > this.catalog.combo.windowMs) {
+      this.chain = 0;
+      this.events.emit('melee:comboReset', { reason: 'window' });
+    }
     for (const foe of this.foeStates) {
       if (!(this.combat.has(foe.id) && this.combat.get(foe.id).current > 0)) continue;
       foe.x += foe.vx * (dt / 1000);
@@ -170,28 +252,57 @@ class MeleeServiceImpl implements MeleeService {
         foe.vx = 0;
         foe.vy = 0;
       }
+      // Pursuit: a foe with a speed closes on the player unless stunned or
+      // already in contact range.
+      if (foe.speed > 0 && nowMs >= foe.stunnedUntilMs) {
+        const dx = this.playerX - foe.x;
+        const dy = this.playerY - foe.y;
+        const dist = Math.hypot(dx, dy);
+        const stopAt = this.catalog.contact.range * 0.8;
+        if (dist > stopAt) {
+          const step = Math.min(foe.speed * (dt / 1000), dist - stopAt);
+          foe.x += (dx / dist) * step;
+          foe.y += (dy / dist) * step;
+        }
+      }
     }
-    const contact = this.nearestLiving(this.catalog.contact.range);
+    const contact = this.nearestLiving(this.catalog.contact.range, false, nowMs);
     if (contact && nowMs - this.lastContactMs >= this.catalog.contact.cooldownMs) {
       this.lastContactMs = nowMs;
       this.combat.damage(this.catalog.player.id, this.catalog.contact.damage, nowMs);
       this.combat.setInvulnerableFor(this.catalog.player.id, this.catalog.contact.cooldownMs, nowMs);
+      const stun = this.catalog.contact.stunMs ?? 0;
+      if (stun > 0) this.playerStunUntilMs = nowMs + stun;
+      if (this.chain > 0) this.events.emit('melee:comboReset', { reason: 'hit' });
+      this.chain = 0;
       this.last = 'contact';
       this.events.emit('melee:contact', { foeId: contact.id, health: this.playerHealth() });
     }
     this.refreshOutcome();
   }
 
-  private nearestLiving(maxDistance: number): LiveFoe | null {
+  /**
+   * Nearest living foe within `maxDistance`. With `inArc` the foe must also
+   * lie inside the facing cone (directional attacks); with `nowMs` a stunned
+   * foe is skipped (a stunned foe cannot deal contact damage).
+   */
+  private nearestLiving(maxDistance: number, inArc = false, nowMs?: number): LiveFoe | null {
     let best: LiveFoe | null = null;
     let bestDistance = maxDistance;
+    const halfArc = ((this.catalog.arcDeg ?? 360) / 2) * (Math.PI / 180);
     for (const foe of this.foeStates) {
       if (!(this.combat.has(foe.id) && this.combat.get(foe.id).current > 0)) continue;
-      const distance = Math.hypot(this.playerX - foe.x, this.playerY - foe.y);
-      if (distance < bestDistance) {
-        best = foe;
-        bestDistance = distance;
+      if (nowMs !== undefined && nowMs < foe.stunnedUntilMs) continue;
+      const dx = foe.x - this.playerX;
+      const dy = foe.y - this.playerY;
+      const distance = Math.hypot(dx, dy);
+      if (distance >= bestDistance) continue;
+      if (inArc && halfArc < Math.PI && distance > 1e-6) {
+        const cos = (dx * this.faceX + dy * this.faceY) / distance;
+        if (Math.acos(Math.max(-1, Math.min(1, cos))) > halfArc) continue;
       }
+      best = foe;
+      bestDistance = distance;
     }
     return best;
   }
@@ -224,7 +335,7 @@ class MeleeServiceImpl implements MeleeService {
     this.combat.register(this.catalog.player.id, this.catalog.player.health);
     this.foeStates = this.catalog.foes.map((foe) => {
       this.combat.register(foe.id, foe.health);
-      return { id: foe.id, x: foe.x, y: foe.y, radius: foe.radius, vx: 0, vy: 0, stunnedUntilMs: 0 };
+      return { id: foe.id, x: foe.x, y: foe.y, radius: foe.radius, speed: foe.speed ?? 0, vx: 0, vy: 0, stunnedUntilMs: 0 };
     });
   }
 
@@ -237,7 +348,7 @@ class MeleeServiceImpl implements MeleeService {
 
 export const meleePack: SystemPackDefinition<undefined, GameContext> = {
   id: PACK_IDS.melee,
-  version: '0.1.0',
+  version: '0.2.0',
   provides: [CAPABILITY_IDS.melee],
   dependencies: [CAPABILITY_IDS.combat],
 

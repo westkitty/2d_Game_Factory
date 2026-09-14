@@ -4,19 +4,24 @@ import { readSnapshot } from '../src/snapshot.ts';
 import type { SmokeOutcome } from '../src/smokeRunner.ts';
 
 interface Narrative {
-  readonly active: boolean;
   readonly mode: string | null;
   readonly nodeId: string | null;
-  readonly selectedVerb: string | null;
   readonly flags: readonly string[];
-  readonly seen: readonly string[];
   readonly choices: readonly string[];
   readonly lastResult: string | null;
   readonly ending: string | null;
   readonly outcome: string;
+  readonly transcript: readonly string[];
+  readonly lastCommand: string | null;
+  readonly inputVisible: boolean;
 }
-interface Shell {
-  readonly narrative?: Narrative;
+interface Shell { readonly narrative?: Narrative }
+
+async function command(harness: Harness, value: string): Promise<void> {
+  const input = harness.page.locator('[data-sw2d-narrative-command="true"]');
+  await input.fill(value);
+  await input.press('Enter');
+  await harness.stepFrames(2);
 }
 
 export async function run(harness: Harness): Promise<SmokeOutcome> {
@@ -27,34 +32,29 @@ export async function run(harness: Harness): Promise<SmokeOutcome> {
   const booted = await readSnapshot(harness);
   const initial = await n();
   evidence.initial = initial;
-  const startedOk = booted.installedPacks.includes('sw2d.narrative') && initial.mode === 'fiction' && initial.nodeId === 'start' && initial.selectedVerb === 'LOOK' && initial.outcome === 'playing';
+  const startedOk = booted.installedPacks.includes('sw2d.narrative') && initial.mode === 'fiction' && initial.nodeId === 'cabin' && initial.inputVisible && initial.outcome === 'playing';
 
-  // TAKE before LOOK is gated by a flag the story has not set yet.
-  await harness.keyTap('ArrowRight');
-  await harness.keyTap('Enter');
-  const locked = await n();
-  evidence.locked = { last: locked.lastResult, verb: locked.selectedVerb, node: locked.nodeId };
-  const lockedOk = locked.lastResult === 'locked' && locked.selectedVerb === 'TAKE' && locked.outcome === 'playing';
+  await command(harness, 'dance moon');
+  const unknown = await n();
+  await command(harness, 'take brass key');
+  const blocked = await n();
+  const rejectionOk = unknown.lastResult === 'unknown-verb' && blocked.lastResult === 'blocked' && blocked.outcome === 'playing';
 
-  // LOOK sets the flag, records the seen entry and moves the node.
-  await harness.keyTap('ArrowLeft');
-  await harness.keyTap('Enter');
+  await command(harness, 'look at crumpled note');
   const looked = await n();
-  evidence.looked = { last: looked.lastResult, flags: looked.flags, seen: looked.seen, node: looked.nodeId };
-  const lookOk = looked.lastResult === 'looked' && looked.flags.includes('saw-note') && looked.seen.includes('note') && looked.nodeId === 'looked';
-
-  // Now TAKE succeeds and ends the story with the recorded choice.
-  await harness.keyTap('ArrowRight');
-  await harness.keyTap('Enter');
+  await command(harness, 'take brass key');
+  const took = await n();
+  await command(harness, 'unlock door with brass key');
   const done = await n();
-  evidence.done = { last: done.lastResult, ending: done.ending, choices: done.choices, outcome: done.outcome };
-  const doneOk = done.lastResult === 'escaped' && done.ending === 'escaped' && done.choices.includes('take') && done.outcome === 'complete';
+  evidence.journey = { unknown, blocked, looked, took, done };
+  const grammarOk = looked.flags.includes('saw-note') && looked.lastCommand === 'look at crumpled note' && took.flags.includes('has-key');
+  const doneOk = done.lastResult === 'matched' && done.ending === 'escaped' && done.outcome === 'complete' && done.choices.includes('unlock-door') && done.transcript.length >= 5;
 
   const run = await restartRun(harness);
   const fresh = await n();
-  evidence.restart = { ...run, node: fresh.nodeId, flags: fresh.flags, ending: fresh.ending };
-  const restartOk = run.after === run.before + 1 && fresh.nodeId === 'start' && fresh.flags.length === 0 && fresh.ending === null;
+  evidence.restart = { ...run, fresh };
+  const restartOk = run.after === run.before + 1 && fresh.nodeId === 'cabin' && fresh.flags.length === 0 && fresh.ending === null && fresh.inputVisible;
 
-  const passed = startedOk && lockedOk && lookOk && doneOk && restartOk;
-  return { passed, details: { ...evidence, startedOk, lockedOk, lookOk, doneOk, restartOk } };
+  const passed = startedOk && rejectionOk && grammarOk && doneOk && restartOk;
+  return { passed, details: { ...evidence, startedOk, rejectionOk, grammarOk, doneOk, restartOk } };
 }

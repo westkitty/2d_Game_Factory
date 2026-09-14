@@ -73,9 +73,26 @@ export interface PhysicsGoalRules {
     /** Axis-aligned target zone in world units. */
     readonly zone: { readonly x: number; readonly y: number; readonly width: number; readonly height: number };
   }[];
+  readonly launchLimit?: number;
 }
 
-export type PuzzleRules = SokobanRules | SwitchRules | MatchRules | FallingBlockRules | PhysicsGoalRules;
+export interface EscapeInteractable {
+  readonly id: string;
+  readonly x: number;
+  readonly y: number;
+  readonly radius: number;
+  readonly label: string;
+  readonly requiresFlags?: readonly string[];
+  readonly setsFlags?: readonly string[];
+}
+
+export interface EscapeRules {
+  readonly kind: 'escape';
+  readonly interactables: readonly EscapeInteractable[];
+  readonly completeWhen: { readonly flags: readonly string[] };
+}
+
+export type PuzzleRules = SokobanRules | SwitchRules | MatchRules | FallingBlockRules | PhysicsGoalRules | EscapeRules;
 export type PuzzleKind = PuzzleRules['kind'];
 
 export interface PuzzleRulesDoc {
@@ -94,7 +111,9 @@ export type PuzzleOp =
   | { readonly kind: 'rotate' }
   | { readonly kind: 'tick' }
   | { readonly kind: 'hard-drop' }
-  | { readonly kind: 'report-entity'; readonly entityId: string; readonly x: number; readonly y: number };
+  | { readonly kind: 'report-entity'; readonly entityId: string; readonly x: number; readonly y: number }
+  | { readonly kind: 'inspect'; readonly id: string }
+  | { readonly kind: 'launch' };
 
 /** Renderer-neutral snapshot; shape varies by kind but is always plain data. */
 export interface PuzzleSnapshot {

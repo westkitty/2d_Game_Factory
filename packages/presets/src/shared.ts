@@ -41,12 +41,11 @@ export type ValidationProfileId = (typeof VALIDATION_PROFILES)[keyof typeof VALI
 export const ALL_VALIDATION_PROFILES: readonly ValidationProfileId[] = Object.values(VALIDATION_PROFILES);
 
 /**
- * Verified-supported input modes (OPERATIONAL_STATE.md: keyboard + DOM touch
- * both drive semantic input today). 'gamepad' is never included here -
- * feasibility is still unknown (OPERATIONAL_STATE.md "Unknown") and claiming
- * it would violate MASTER_PROJECT.md section 13's input-mode honesty rule.
+ * Verified software input modes. Physical-controller certification remains a
+ * human hardware gate, while synthetic standard-mapping coverage proves the
+ * runtime adapter and semantic routing.
  */
-export const BASE_INPUT_MODES: readonly InputMode[] = ['keyboard', 'touch'];
+export const BASE_INPUT_MODES: readonly InputMode[] = ['keyboard', 'touch', 'gamepad'];
 
 /**
  * For recipes whose controller family is `pointer`. `pointer` here means the
@@ -57,7 +56,7 @@ export const BASE_INPUT_MODES: readonly InputMode[] = ['keyboard', 'touch'];
  * consumes it; a recipe with a *further* spatial gap (drawing strokes,
  * wardrobe attachment, ...) still states that in its knownLimitations.
  */
-export const POINTER_INPUT_MODES: readonly InputMode[] = ['keyboard', 'pointer', 'touch'];
+export const POINTER_INPUT_MODES: readonly InputMode[] = ['keyboard', 'pointer', 'touch', 'gamepad'];
 
 /** Recorded, reused verbatim wherever more than one recipe shares the same real gap. Keeps wording from drifting across recipes that share a limitation. */
 export const LIMITATIONS = {
@@ -113,7 +112,7 @@ export interface PresetSpec {
   /** Capability program Phase 9: 'matter' opts the generated game into the Matter backend. */
   readonly physicsProfile?: 'matter';
   /** Capability program Phase 10: default vehicle profile the generated content/vehicles.json uses. */
-  readonly vehicleProfile?: 'car' | 'kart' | 'boat' | 'flight';
+  readonly vehicleProfile?: 'car' | 'kart' | 'boat' | 'flight' | 'ship';
   /** Defaults to 'recipe'. Only set to 'smoke-validated' once a real, committed browser smoke test passes (Phase 8's twelve demos) - never hand-waved. */
   readonly maturity?: PresetMaturity;
 }

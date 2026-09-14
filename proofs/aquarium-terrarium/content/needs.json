@@ -1,10 +1,91 @@
 {
   "schemaVersion": 1,
+  "persist": true,
   "mode": "habitat",
   "subject": {
     "id": "tank",
     "displayName": "Tank"
   },
+  "creatures": [
+    {
+      "id": "fin",
+      "displayName": "Fin",
+      "x": 220,
+      "y": 220,
+      "speed": 75
+    },
+    {
+      "id": "coral",
+      "displayName": "Coral",
+      "x": 650,
+      "y": 300,
+      "speed": 65,
+      "needValues": {
+        "food": 70
+      }
+    },
+    {
+      "id": "dart",
+      "displayName": "Dart",
+      "x": 420,
+      "y": 360,
+      "speed": 90,
+      "needValues": {
+        "water": 72
+      }
+    }
+  ],
+  "decisionIntervalMs": 500,
+  "activities": [
+    {
+      "id": "forage",
+      "displayName": "Foraging",
+      "needId": "food",
+      "below": 80,
+      "targetX": 470,
+      "targetY": 260,
+      "durationMs": 1200
+    },
+    {
+      "id": "surface",
+      "displayName": "Seeking clean water",
+      "needId": "water",
+      "below": 80,
+      "targetX": 470,
+      "targetY": 140,
+      "durationMs": 1200
+    },
+    {
+      "id": "school",
+      "displayName": "Schooling",
+      "targetX": 470,
+      "targetY": 260,
+      "durationMs": 1000
+    },
+    {
+      "id": "drift",
+      "displayName": "Drifting",
+      "targetX": 650,
+      "targetY": 330,
+      "durationMs": 1000
+    }
+  ],
+  "relationships": [
+    {
+      "a": "fin",
+      "b": "coral",
+      "affinity": 10,
+      "gainPerSecond": 2,
+      "max": 100
+    },
+    {
+      "a": "coral",
+      "b": "dart",
+      "affinity": 6,
+      "gainPerSecond": 1.5,
+      "max": 100
+    }
+  ],
   "needs": [
     {
       "id": "water",

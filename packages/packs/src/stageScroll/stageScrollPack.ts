@@ -17,6 +17,7 @@ import type {
   InstalledSystemPack,
   StageScrollCatalog,
   StageScrollHazardState,
+  StageScrollLayerState,
   StageScrollMode,
   StageScrollOutcome,
   StageScrollService,
@@ -49,6 +50,7 @@ const EMPTY_CATALOG: StageScrollCatalog = {
 
 class StageScrollServiceImpl implements StageScrollService {
   private scrolled = 0;
+  private cross = 0;
   private px: number;
   private py: number;
   private mx = 0;
@@ -82,10 +84,13 @@ class StageScrollServiceImpl implements StageScrollService {
     this.hit = null;
     if (!this.active() || this.current !== 'playing') return;
     const dt = Math.max(0, deltaMs);
-    const { player, speed, length } = this.catalog;
+    const { player, length } = this.catalog;
     this.px = clamp(this.px + this.mx * player.speed * (dt / 1000), player.minX, player.maxX);
     this.py = clamp(this.py + this.my * player.speed * (dt / 1000), player.minY, player.maxY);
+    const leg = this.activeLeg();
+    const speed = leg?.speed ?? this.catalog.speed;
     this.scrolled = Math.min(length, this.scrolled + speed * (dt / 1000));
+    if (leg) this.cross += leg.crossDrift * (dt / 1000);
     for (const hazard of this.hazards()) {
       if (!hazard.visible) continue;
       if (Math.hypot(this.px - hazard.x, this.py - hazard.y) < player.radius + hazard.radius) {
@@ -102,6 +107,38 @@ class StageScrollServiceImpl implements StageScrollService {
 
   offset(): number {
     return this.scrolled;
+  }
+
+  layers(): readonly StageScrollLayerState[] {
+    return (this.catalog.layers ?? []).map((layer) => ({
+      id: layer.id,
+      offset: this.scrolled * layer.speedFactor,
+      speedFactor: layer.speedFactor,
+      spacing: layer.spacing,
+      size: layer.size,
+      alpha: layer.alpha,
+      cross: layer.cross - this.cross * layer.speedFactor,
+    }));
+  }
+
+  currentSpeed(): number {
+    return this.activeLeg()?.speed ?? this.catalog.speed;
+  }
+
+  crossOffset(): number {
+    return this.cross;
+  }
+
+  railLeg(): number {
+    const rail = this.catalog.rail ?? [];
+    let index = -1;
+    for (let i = 0; i < rail.length; i++) if (this.scrolled >= rail[i]!.from) index = i;
+    return index;
+  }
+
+  private activeLeg(): { speed: number; crossDrift: number } | null {
+    const index = this.railLeg();
+    return index >= 0 ? this.catalog.rail![index]! : null;
   }
 
   progress(): number {
@@ -140,6 +177,7 @@ class StageScrollServiceImpl implements StageScrollService {
 
   reset(): void {
     this.scrolled = 0;
+    this.cross = 0;
     this.px = this.catalog.player.x;
     this.py = this.catalog.player.y;
     this.mx = 0;
@@ -150,15 +188,15 @@ class StageScrollServiceImpl implements StageScrollService {
 
   private hazardScreen(along: number, cross: number): { x: number; y: number } {
     if (this.catalog.mode === 'vertical') {
-      return { x: cross, y: this.scrolled - along };
+      return { x: cross - this.cross, y: this.scrolled - along };
     }
-    return { x: this.catalog.viewport.width - (this.scrolled - along), y: cross };
+    return { x: this.catalog.viewport.width - (this.scrolled - along), y: cross - this.cross };
   }
 }
 
 export const stageScrollPack: SystemPackDefinition<undefined, GameContext> = {
   id: PACK_IDS.stageScroll,
-  version: '0.1.0',
+  version: '0.2.0',
   provides: [CAPABILITY_IDS.stageScroll],
   dependencies: [],
 

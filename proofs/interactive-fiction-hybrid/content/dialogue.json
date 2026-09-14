@@ -1,5 +1,89 @@
 {
   "schemaVersion": 1,
   "mode": "novel",
-  "conversations": []
+  "conversations": [],
+  "parser": {
+    "startNodeId": "cabin",
+    "prompt": "What now?",
+    "objects": [
+      {
+        "id": "note",
+        "nouns": [
+          "note"
+        ],
+        "aliases": [
+          "crumpled note",
+          "paper"
+        ]
+      },
+      {
+        "id": "key",
+        "nouns": [
+          "key"
+        ],
+        "aliases": [
+          "brass key"
+        ]
+      },
+      {
+        "id": "door",
+        "nouns": [
+          "door"
+        ],
+        "aliases": [
+          "locked door"
+        ]
+      }
+    ],
+    "commands": [
+      {
+        "id": "look-note",
+        "verb": "look",
+        "aliases": [
+          "examine",
+          "inspect"
+        ],
+        "objectId": "note",
+        "setFlags": [
+          "saw-note"
+        ],
+        "nodeId": "note-seen",
+        "text": "The note says: the brass key is beneath the lamp."
+      },
+      {
+        "id": "take-key",
+        "verb": "take",
+        "aliases": [
+          "get"
+        ],
+        "objectId": "key",
+        "requireFlags": [
+          "saw-note"
+        ],
+        "setFlags": [
+          "has-key"
+        ],
+        "nodeId": "key-taken",
+        "text": "You take the brass key."
+      },
+      {
+        "id": "unlock-door",
+        "verb": "unlock",
+        "aliases": [
+          "open"
+        ],
+        "objectId": "door",
+        "indirectObjectId": "key",
+        "requireFlags": [
+          "has-key"
+        ],
+        "nodeId": "escaped",
+        "text": "The key turns. You step outside.",
+        "ending": "escaped"
+      }
+    ],
+    "unknownVerb": "Try LOOK, TAKE, or UNLOCK.",
+    "unknownObject": "You cannot identify that object here.",
+    "blocked": "That is not possible yet."
+  }
 }

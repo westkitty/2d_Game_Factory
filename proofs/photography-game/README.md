@@ -68,7 +68,7 @@ with a small working placeholder to replace. Every other pack is configured as J
 
 ## Known preset limitations
 
-- Subjects for the generated starter are captured through the spatial pointer (ADR-0018) when the player is in range; framing capture is reusable (sw2d.camera); pressure, exposure and a photography scoring overlay are not.
+- (none stated)
 
 ## How to add a level
 

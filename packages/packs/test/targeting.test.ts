@@ -72,6 +72,27 @@ describe('sw2d.targeting - tower', () => {
   });
 });
 
+describe('sw2d.targeting - lineup', () => {
+  it('only the selected combatant participates', () => {
+    const catalog: TargetingCatalog = {
+      schemaVersion: 1,
+      mode: 'auto',
+      actors: [
+        { id: 'fox', x: 260, y: 270, range: 520, damage: 1, cooldownMs: 0, team: 'player', health: 2 },
+        { id: 'bear', x: 260, y: 270, range: 520, damage: 1, cooldownMs: 0, team: 'player', health: 4 },
+        { id: 'cpu', x: 700, y: 270, range: 520, damage: 1, cooldownMs: 400, team: 'enemy', health: 1 },
+      ],
+    };
+    const { aim } = install(catalog);
+    aim.setLineup(['bear']);
+    expect(aim.lineup()).toEqual(['bear']);
+    aim.tick(16, 0);
+    expect(aim.health('bear')).toBeGreaterThan(0);
+    expect(aim.health('cpu')).toBe(0);
+    expect(aim.outcome()).toBe('complete');
+  });
+});
+
 describe('sw2d.targeting - auto', () => {
   it('two sides strike until one pool is gone', () => {
     const { aim } = install(AUTO);
@@ -111,6 +132,46 @@ describe('sw2d.targeting - range', () => {
     expect(aim.canStrike('scout', 'grunt')).toBe(true);
     expect(aim.strike('scout', 'grunt', 0)).toBe(true);
     expect(aim.outcome()).toBe('complete');
+  });
+});
+
+describe('sw2d.targeting - place and upgrade', () => {
+  const PLACE: TargetingCatalog = {
+    schemaVersion: 1,
+    mode: 'tower',
+    startingGold: 100,
+    placeCost: 40,
+    slots: [{ id: 'pad', x: 480, y: 200, radius: 36 }],
+    upgrades: [
+      { cost: 0, range: 400, damage: 10 },
+      { cost: 30, range: 480, damage: 20 },
+    ],
+    actors: [{ id: 'creep-a', x: 200, y: 180, range: 40, damage: 1, cooldownMs: 600, team: 'enemy', health: 2 }],
+  };
+
+  it('places on a valid pad, spends gold, and rejects a second place on the same pad', () => {
+    const { aim } = install(PLACE);
+    expect(aim.placeAt(10, 10)).toBe(false);
+    expect(aim.placementRejections()).toBe(1);
+    expect(aim.placeAt(480, 200)).toBe(true);
+    expect(aim.placedCount()).toBe(1);
+    expect(aim.gold()).toBe(60);
+    expect(aim.placeAt(480, 200)).toBe(false);
+    expect(aim.towerDamage(aim.occupant('pad')!)).toBe(10);
+  });
+
+  it('upgrades an owned tower from authored tiers', () => {
+    const { aim } = install(PLACE);
+    aim.placeAt(480, 200);
+    const id = aim.occupant('pad')!;
+    expect(aim.upgrade(id)).toBe(true);
+    expect(aim.towerDamage(id)).toBe(20);
+    expect(aim.gold()).toBe(30);
+    expect(aim.upgrade(id)).toBe(false);
+    expect(aim.upgradeRejections()).toBe(1);
+    aim.reset();
+    expect(aim.gold()).toBe(100);
+    expect(aim.placedCount()).toBe(0);
   });
 });
 

@@ -62,13 +62,13 @@ with a small working placeholder to replace. Every other pack is configured as J
 ## Composition
 
 - Controller family/families: top-down
-- Required packs (enabled by default): sw2d.world, sw2d.world-entities, sw2d.combat
-- Optional packs (available, not enabled by default - add to content/game.json's systemPacks to use): sw2d.ai, sw2d.progression, sw2d.encounters
-- Content roles this preset expects: tuning, levels
+- Required packs (enabled by default): sw2d.world, sw2d.world-entities, sw2d.combat, sw2d.encounters, sw2d.targeting, sw2d.progression
+- Optional packs (available, not enabled by default - add to content/game.json's systemPacks to use): sw2d.ai
+- Content roles this preset expects: tuning, levels, targeting
 
 ## Known preset limitations
 
-- Base HP and incoming contact for the generated starter use sw2d.combat; wave spawning is optional (sw2d.encounters); target-priority and upgrade rules stay starter-specific.
+- (none stated)
 
 ## How to add a level
 

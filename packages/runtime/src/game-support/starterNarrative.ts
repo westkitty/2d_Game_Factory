@@ -9,7 +9,8 @@ import type { SceneContext } from '../scenes/SceneContext.ts';
  * Inert unless the game installed the pack *and* the generated packConfig
  * names a fiction or case starter. The pack stays a node/flag/choice/seen
  * store — this file is presentation, not a parser or evidence-board.
- * Overlay IF / investigation kits stay local (P3-K).
+ * Fiction mode renders the catalog parser input; case mode renders the codex
+ * evidence board while those packs remain the state owners.
  */
 
 const NARRATIVE_CAPABILITY_ID = 'narrative.state';
@@ -30,6 +31,13 @@ export interface StarterNarrativeSnapshot {
   readonly lastResult: string | null;
   readonly ending: string | null;
   readonly outcome: 'playing' | 'complete';
+  readonly transcript: readonly string[];
+  readonly lastCommand: string | null;
+  readonly inputVisible: boolean;
+  readonly boardEntries: readonly { readonly id: string; readonly title: string; readonly unlocked: boolean }[];
+  readonly links: readonly (readonly [string, string])[];
+  readonly conclusion: string | null;
+  readonly invalidAttempts: number;
 }
 
 export interface StarterNarrativeBinding {
@@ -65,6 +73,13 @@ const INERT: StarterNarrativeBinding = {
     lastResult: null,
     ending: null,
     outcome: 'playing',
+    transcript: [],
+    lastCommand: null,
+    inputVisible: false,
+    boardEntries: [],
+    links: [],
+    conclusion: null,
+    invalidAttempts: 0,
   }),
   render: () => undefined,
   dispose: () => undefined,
@@ -80,12 +95,20 @@ interface NarrativeStore {
   hasSeen(entryId: string): boolean;
   seenEntries(): readonly string[];
   chosenChoices(): readonly string[];
+  parserActive(): boolean;
+  submit(command: string): { readonly ok: boolean; readonly reason: string; readonly text: string };
+  transcript(): readonly string[];
+  lastCommand(): string | null;
+  lastText(): string;
+  outcome(): 'playing' | 'complete';
+  ending(): string | null;
   reset(): void;
 }
 
 const FICTION_VERBS = ['LOOK', 'TAKE', 'LEAVE'] as const;
 const FICTION_START = 'start';
 const FLAG_SAW_NOTE = 'saw-note';
+const FLAG_HAS_KEY = 'has-key';
 const SEEN_NOTE = 'note';
 const START_X = 120;
 const START_Y = 270;
@@ -124,7 +147,7 @@ export function bindStarterNarrative(
   const codex = context.capabilities.get<CodexService>(CODEX_CAPABILITY_ID);
 
   narrative.reset();
-  narrative.goTo(mode === 'fiction' ? FICTION_START : 'scene');
+  if (mode !== 'fiction' || !narrative.parserActive()) narrative.goTo(mode === 'fiction' ? FICTION_START : 'scene');
 
   const hud = options?.hud !== false;
   const scene = context.scene;
@@ -141,9 +164,31 @@ export function bindStarterNarrative(
     : null;
   const status = hud ? scene.add.text(width * 0.5, height - 56, '', mutedStyle(14)).setOrigin(0.5).setScrollFactor(0).setDepth(50) : null;
   const hint = hud ? scene.add.text(width * 0.5, height - 28, '', accentStyle(14)).setOrigin(0.5).setScrollFactor(0).setDepth(50) : null;
+  const commandInput = hud && mode === 'fiction' && narrative.parserActive()
+    ? (() => {
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.placeholder = 'Type a command, e.g. LOOK AT NOTE';
+        input.setAttribute('aria-label', 'Story command');
+        input.dataset.sw2dNarrativeCommand = 'true';
+        Object.assign(input.style, {
+          position: 'fixed', left: '50%', bottom: '64px', transform: 'translateX(-50%)', width: 'min(720px, 75vw)',
+          padding: '12px 16px', zIndex: '9999', color: '#ffffff', background: '#111827', border: '2px solid #65d0a8',
+          font: '16px monospace', borderRadius: '6px',
+        });
+        (scene.game.canvas.parentElement ?? document.body).appendChild(input);
+        return input;
+      })()
+    : null;
 
   const markers: { setFillStyle(color: number, alpha?: number): unknown; destroy(): void }[] = [];
   const labels: { setText(value: string): unknown; destroy(): void }[] = [];
+  const evidenceLink = hud && mode === 'case'
+    ? scene.add.rectangle((CLUES[0].x + CLUES[1].x) * 0.5, CLUES[0].y, CLUES[1].x - CLUES[0].x, 4, SEEN_COLOR, 0).setDepth(15)
+    : null;
+  const conclusionText = hud && mode === 'case'
+    ? scene.add.text(width * 0.5, 116, '', accentStyle(15)).setOrigin(0.5).setDepth(51).setWordWrapWidth(width - 120)
+    : null;
   if (hud && mode === 'case') {
     for (const clue of CLUES) {
       markers.push(scene.add.rectangle(clue.x, clue.y, 36, 36, MARK_COLOR, 0.95).setStrokeStyle(2, 0xffffff, 0.9).setDepth(20));
@@ -176,16 +221,27 @@ export function bindStarterNarrative(
       active: true,
       mode,
       nodeId: narrative.currentNode(),
-      text: mode === 'fiction' ? fictionText(narrative.currentNode(), ending) : `${narrative.seenEntries().length}/${CLUES.length} clues`,
+      text: mode === 'fiction' ? (narrative.parserActive() ? narrative.lastText() : fictionText(narrative.currentNode(), ending)) : `${narrative.seenEntries().length}/${CLUES.length} clues`,
       selectedIndex,
       selectedVerb: verb,
-      flags: [...(narrative.hasFlag(FLAG_SAW_NOTE) ? [FLAG_SAW_NOTE] : []), ...(narrative.hasFlag('case-closed') ? ['case-closed'] : [])],
+      flags: [
+        ...(narrative.hasFlag(FLAG_SAW_NOTE) ? [FLAG_SAW_NOTE] : []),
+        ...(narrative.hasFlag(FLAG_HAS_KEY) ? [FLAG_HAS_KEY] : []),
+        ...(narrative.hasFlag('case-closed') ? ['case-closed'] : []),
+      ],
       seen: narrative.seenEntries(),
       choices: narrative.chosenChoices(),
       nearId: nearId(),
       lastResult,
-      ending,
-      outcome,
+      ending: narrative.parserActive() ? narrative.ending() : ending,
+      outcome: narrative.parserActive() ? narrative.outcome() : outcome,
+      transcript: narrative.transcript(),
+      lastCommand: narrative.lastCommand(),
+      inputVisible: Boolean(commandInput?.isConnected),
+      boardEntries: codex?.entries().map((entry) => ({ id: entry.id, title: entry.title, unlocked: codex.unlocked().includes(entry.id) })) ?? [],
+      links: codex?.links() ?? [],
+      conclusion: codex?.conclusion() ?? null,
+      invalidAttempts: codex?.invalidAttempts() ?? 0,
     };
   }
 
@@ -201,14 +257,16 @@ export function bindStarterNarrative(
       const ready = CLUES.every((clue) => narrative.hasSeen(clue.id));
       markers[CLUES.length]?.setFillStyle(snap.outcome === 'complete' ? SEEN_COLOR : ready ? MARK_COLOR : DESK_COLOR, 0.95);
       labels[CLUES.length]?.setText(snap.outcome === 'complete' ? 'CLOSED' : ready ? 'DEDUCE' : DESK.label);
+      evidenceLink?.setFillStyle(SEEN_COLOR, snap.links.length > 0 ? 0.9 : 0);
+      conclusionText?.setText(snap.conclusion ?? (snap.invalidAttempts > 0 ? 'That theory does not fit the evidence.' : ''));
     }
     if (!title || !body || !status || !hint) return;
     if (mode === 'fiction') {
-      title.setText(snap.outcome === 'complete' ? (snap.ending ?? 'COMPLETE').toUpperCase() : 'FICTION');
+      title.setText(snap.outcome === 'complete' ? (snap.ending ?? 'COMPLETE').toUpperCase() : narrative.parserActive() ? 'INTERACTIVE FICTION' : 'FICTION');
       const verbs = FICTION_VERBS.map((verb, index) => (index === selectedIndex ? `< ${verb} >` : verb)).join('   ');
-      body.setText(`${snap.text}\n\n${snap.outcome === 'complete' ? '' : verbs}`);
+      body.setText(narrative.parserActive() ? [...snap.transcript.slice(-4), snap.text].join('\n\n') : `${snap.text}\n\n${snap.outcome === 'complete' ? '' : verbs}`);
       status.setText(snap.lastResult ? `last: ${snap.lastResult}` : '');
-      hint.setText('ARROWS PICK A VERB   ENTER ACTS');
+      hint.setText(narrative.parserActive() ? 'TYPE A COMMAND   ENTER SUBMITS' : 'ARROWS PICK A VERB   ENTER ACTS');
     } else {
       title.setText(snap.outcome === 'complete' ? 'CASE CLOSED' : 'CASE');
       body.setText(`clues ${snap.seen.length}/${CLUES.length}${snap.nearId ? `  ·  near ${snap.nearId}` : ''}`);
@@ -224,6 +282,11 @@ export function bindStarterNarrative(
   }
 
   function actFiction(): void {
+    if (narrative.parserActive()) {
+      commandInput?.focus();
+      lastResult = 'type-command';
+      return;
+    }
     const verb = FICTION_VERBS[selectedIndex];
     if (!verb) return;
     if (verb === 'LOOK') {
@@ -261,7 +324,13 @@ export function bindStarterNarrative(
         lastResult = 'need-clues';
         return;
       }
-      if (codex?.active()) codex.deduce();
+      if (codex?.active()) {
+        const solved = codex.deduce(codex.invalidAttempts() === 0 ? 'false-lead' : 'window-route');
+        if (!solved) {
+          lastResult = codex.lastResult();
+          return;
+        }
+      }
       narrative.setFlag('case-closed', true);
       narrative.choose('deduce', 'closed');
       ending = 'closed';
@@ -280,6 +349,17 @@ export function bindStarterNarrative(
 
   paint();
 
+  const onCommand = (event: KeyboardEvent): void => {
+    if (event.key !== 'Enter' || !commandInput) return;
+    event.preventDefault();
+    event.stopPropagation();
+    const result = narrative.submit(commandInput.value);
+    lastResult = result.reason;
+    commandInput.value = '';
+    paint();
+  };
+  commandInput?.addEventListener('keydown', onCommand);
+
   return {
     active: true,
     startX: () => START_X,
@@ -290,7 +370,7 @@ export function bindStarterNarrative(
       playerY = y;
     },
     select(delta: number): void {
-      if (disposed || mode !== 'fiction' || outcome !== 'playing') return;
+      if (disposed || mode !== 'fiction' || outcome !== 'playing' || narrative.parserActive()) return;
       selectedIndex = wrap(selectedIndex + delta, FICTION_VERBS.length);
       paint();
     },
@@ -313,6 +393,10 @@ export function bindStarterNarrative(
         hint?.destroy();
         for (const marker of markers) marker.destroy();
         for (const label of labels) label.destroy();
+        evidenceLink?.destroy();
+        conclusionText?.destroy();
+        commandInput?.removeEventListener('keydown', onCommand);
+        commandInput?.remove();
       } catch {
         /* scene already tearing down */
       }

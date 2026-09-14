@@ -59,6 +59,18 @@ export interface ActionInput {
   /** Flat snapshot of analog values, for debug output and automated QA. */
   values(): Readonly<Record<ActionId, number>>;
   readonly bindings: ActionBindings;
+  /** Connected standard-mapping controllers, deterministically assigned to seats. */
+  gamepadSeats?(): readonly GamepadSeatState[];
+  /** Per-seat analog axis after deadzone normalization. */
+  gamepadAxis?(seat: number, axis: 'horizontal' | 'vertical' | 'aim-horizontal' | 'aim-vertical'): number;
+}
+
+export interface GamepadSeatState {
+  readonly seat: number;
+  readonly index: number;
+  readonly id: string;
+  readonly connected: boolean;
+  readonly mapping: string;
 }
 
 /** What an adapter writes into. Adapters never touch action edges themselves. */
@@ -78,4 +90,6 @@ export interface InputDeviceAdapter extends Disposable {
   applyBindings(bindings: ActionBindings): void;
   /** Optional per-frame polling hook for devices without events (e.g. gamepad). */
   poll?(): void;
+  gamepadSeats?(): readonly GamepadSeatState[];
+  gamepadAxis?(seat: number, axis: 'horizontal' | 'vertical' | 'aim-horizontal' | 'aim-vertical'): number;
 }

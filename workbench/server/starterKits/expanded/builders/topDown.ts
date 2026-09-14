@@ -392,6 +392,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       runResets,
       lastAction,
       elapsedMs: Math.round(elapsedMs),
+      ...(melee.active ? { melee: melee.snapshot() } : {}),
       ...(perception.active ? { perception: perception.snapshot() } : {}),
     }));
 

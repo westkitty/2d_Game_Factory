@@ -12,6 +12,10 @@ interface Narrative {
   readonly lastResult: string | null;
   readonly ending: string | null;
   readonly outcome: string;
+  readonly boardEntries: readonly { readonly id: string; readonly unlocked: boolean }[];
+  readonly links: readonly (readonly [string, string])[];
+  readonly conclusion: string | null;
+  readonly invalidAttempts: number;
 }
 interface Shell {
   readonly x: number;
@@ -52,19 +56,24 @@ export async function run(harness: Harness): Promise<SmokeOutcome> {
   evidence.photo = photo;
   const cluesOk = print.lastResult === 'inspected' && print.seen.includes('print') && printAgain.seen.length === 1 && photo.seen.includes('photo') && photo.seen.length === 2 && photo.outcome === 'playing';
 
-  // At the desk, deduce: the case closes with the deduce choice recorded.
+  // At the desk, reject one authored false lead, then solve from the same evidence board.
   await holdUntil(harness, ['ArrowRight'], read, (s) => s.narrative?.nearId === 'desk');
   await harness.keyTap('KeyJ');
   await harness.stepFrames(4);
+  const rejected = (await read()).narrative!;
+  await harness.keyTap('KeyJ');
+  await harness.stepFrames(4);
   const done = (await read()).narrative!;
+  evidence.rejected = rejected;
   evidence.done = done;
-  const doneOk = done.lastResult === 'deduced' && done.ending === 'closed' && done.choices.includes('deduce') && done.outcome === 'complete';
+  const rejectedOk = rejected.lastResult === 'invalid-deduction' && rejected.invalidAttempts === 1 && rejected.outcome === 'playing';
+  const doneOk = done.lastResult === 'deduced' && done.ending === 'closed' && done.choices.includes('deduce') && done.outcome === 'complete' && done.links.length === 1 && done.conclusion?.includes('window') === true && done.boardEntries.every((entry) => entry.unlocked);
 
   const run = await restartRun(harness);
   const fresh = await read();
   evidence.restart = { ...run, narrative: fresh.narrative };
   const restartOk = run.after === run.before + 1 && fresh.narrative?.seen.length === 0 && fresh.narrative.ending === null && fresh.narrative.outcome === 'playing';
 
-  const passed = startedOk && tooFarOk && cluesOk && doneOk && restartOk;
-  return { passed, details: { ...evidence, startedOk, tooFarOk, cluesOk, doneOk, restartOk } };
+  const passed = startedOk && tooFarOk && cluesOk && rejectedOk && doneOk && restartOk;
+  return { passed, details: { ...evidence, startedOk, tooFarOk, cluesOk, rejectedOk, doneOk, restartOk } };
 }

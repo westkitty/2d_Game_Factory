@@ -16,6 +16,7 @@ export { resolveInstallOrder, SystemPackResolutionError } from './core/resolveIn
 
 export { ActionInputHost } from './input/ActionInputHost.ts';
 export { KeyboardAdapter } from './input/KeyboardAdapter.ts';
+export { GamepadAdapter } from './input/GamepadAdapter.ts';
 export { PointerAdapter } from './input/PointerAdapter.ts';
 export { SpatialPointerHost, DRAG_THRESHOLD_PX } from './input/SpatialPointerHost.ts';
 export type { WorldResolver, CanvasSpaceResolver } from './input/SpatialPointerHost.ts';
@@ -112,6 +113,24 @@ export {
   type StarterToySnapshot,
   type ToyStarterMode,
 } from './game-support/starterToy.ts';
+export {
+  bindStarterAsteroids,
+  type StarterAsteroidsBinding,
+  type StarterAsteroidsSnapshot,
+  type AsteroidsStarterMode,
+} from './game-support/starterAsteroids.ts';
+export {
+  bindStarterGallery,
+  type StarterGalleryBinding,
+  type StarterGallerySnapshot,
+  type GalleryStarterMode,
+} from './game-support/starterGallery.ts';
+export {
+  bindStarterDungeon,
+  type StarterDungeonBinding,
+  type StarterDungeonSnapshot,
+  type DungeonStarterMode,
+} from './game-support/starterDungeon.ts';
 export {
   bindStarterCombat,
   type StarterCombatBinding,

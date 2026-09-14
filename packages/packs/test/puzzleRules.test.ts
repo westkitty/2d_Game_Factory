@@ -241,6 +241,28 @@ describe('falling-block engine', () => {
     expect(snap.solved).toBe(true);
   });
 
+  it('rotate against the left wall kicks the piece back in bounds', () => {
+    const { svc } = makeService({
+      schemaVersion: 1,
+      puzzles: [{
+        id: 'fb',
+        kind: 'falling-block',
+        width: 4,
+        height: 6,
+        pieces: [{ cells: [[0, 0], [0, 1]], spawnCol: 0 }],
+        sequence: [0],
+        objectiveLines: 9,
+      }],
+    });
+    svc.load('fb');
+    const before = svc.snapshot() as unknown as { active: { cells: readonly (readonly [number, number])[] } | null };
+    expect(before.active?.cells.some(([x]) => x < 0)).toBe(false);
+    const snap = svc.apply({ kind: 'rotate' }) as unknown as { active: { cells: readonly (readonly [number, number])[] } | null };
+    expect(snap.active).not.toBeNull();
+    expect(snap.active!.cells.every(([x, y]) => x >= 0 && x < 4 && y < 6)).toBe(true);
+    expect(snap.active!.cells).not.toEqual(before.active!.cells);
+  });
+
   it('tick eventually locks a piece at the floor', () => {
     const { svc } = makeService({
       schemaVersion: 1,
@@ -267,5 +289,55 @@ describe('physics-goal engine', () => {
     const snap = svc.apply({ kind: 'report-entity', entityId: 'ball', x: 120, y: 120 });
     expect(snap.solved).toBe(true);
     expect(snap.goalsMet).toBe(1);
+    expect(snap.inGoal).toBe(true);
+    expect(snap.moves).toBe(0);
+  });
+
+  it('fails when launches are exhausted without entering the zone', () => {
+    const { svc } = makeService({
+      schemaVersion: 1,
+      puzzles: [{
+        id: 'pg',
+        kind: 'physics-goal',
+        launchLimit: 2,
+        goals: [{ entityId: 'ball', zone: { x: 100, y: 100, width: 50, height: 50 } }],
+      }],
+    });
+    svc.load('pg');
+    svc.apply({ kind: 'launch' });
+    expect(svc.snapshot().failed).toBe(false);
+    svc.apply({ kind: 'launch' });
+    expect(svc.snapshot().failed).toBe(true);
+    expect(svc.isSolved()).toBe(false);
+    svc.reset();
+    expect(svc.snapshot().launches).toBe(0);
+    expect(svc.snapshot().failed).toBe(false);
+  });
+});
+
+describe('escape engine', () => {
+  const doc: PuzzleRulesDoc = {
+    schemaVersion: 1,
+    puzzles: [{
+      id: 'room',
+      kind: 'escape',
+      interactables: [
+        { id: 'note', x: 240, y: 280, radius: 28, label: 'note', setsFlags: ['note'] },
+        { id: 'key', x: 480, y: 280, radius: 28, label: 'key', requiresFlags: ['note'], setsFlags: ['key'] },
+        { id: 'door', x: 720, y: 280, radius: 28, label: 'door', requiresFlags: ['key'], setsFlags: ['escaped'] },
+      ],
+      completeWhen: { flags: ['key'] },
+    }],
+  };
+
+  it('gates inspects on required flags and completes when the authored flags are set', () => {
+    const { svc } = makeService(doc);
+    svc.load('room');
+    expect(svc.apply({ kind: 'inspect', id: 'key' }).key).toBe(false);
+    expect(svc.snapshot().moves).toBe(0);
+    expect(svc.apply({ kind: 'inspect', id: 'note' }).note).toBe(true);
+    expect(svc.apply({ kind: 'inspect', id: 'note' }).moves).toBe(1);
+    expect(svc.apply({ kind: 'inspect', id: 'key' }).solved).toBe(true);
+    expect(svc.snapshot().key).toBe(true);
   });
 });

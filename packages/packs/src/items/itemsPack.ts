@@ -27,6 +27,7 @@ import type { ProgressionService } from '../progression/progressionPack.ts';
 import type { ArcadeService } from '../arcade/arcadePack.ts';
 import type { SimulationService } from '../simulation/simulationPack.ts';
 import type { WorldService } from '../world/worldPack.ts';
+import type { VehicleService } from '../vehicles/vehiclesPack.ts';
 
 /**
  * Items pack: the one canonical data-driven item / effect / inventory model
@@ -66,6 +67,7 @@ class ItemsServiceImpl implements ItemsService {
   readonly #events: EventBus;
   readonly #capabilities: CapabilityRegistry;
   readonly #saves: SaveStore | undefined;
+  #held: string | null = null;
 
   constructor(
     events: EventBus,
@@ -143,6 +145,31 @@ class ItemsServiceImpl implements ItemsService {
     return { itemId, count: this.count(itemId), consumed: true, effects };
   }
 
+  held(): string | null {
+    return this.#held;
+  }
+
+  hold(itemId: string): boolean {
+    this.#require(itemId);
+    if (this.count(itemId) <= 0) return false;
+    this.#held = itemId;
+    return true;
+  }
+
+  useHeld(quantity?: number, effectContext?: ItemEffectContext): ItemConsumeResult {
+    if (!this.#held) {
+      return { itemId: '', count: 0, consumed: false, effects: { applied: [], skipped: [] } };
+    }
+    const itemId = this.#held;
+    const result = this.consume(itemId, quantity, effectContext);
+    if (result.consumed && this.count(itemId) <= 0) this.#held = null;
+    return result;
+  }
+
+  clearHeld(): void {
+    this.#held = null;
+  }
+
   applyEffects(effects: readonly EffectDefinition[], effectContext?: ItemEffectContext): ApplyEffectsResult {
     const applied: EffectKind[] = [];
     const skipped: SkippedEffect[] = [];
@@ -195,6 +222,9 @@ class ItemsServiceImpl implements ItemsService {
         break;
       case 'world.flag':
         this.#capabilities.require<WorldService>(capability).setFlag(effect.flag, effect.value);
+        break;
+      case 'vehicle.boost':
+        this.#capabilities.require<VehicleService>(capability).triggerBoost();
         break;
     }
     applied.push(effect.kind);

@@ -89,6 +89,19 @@ describe('sw2d.pinball - table', () => {
     second.table.tick(16);
     expect(second.table.outcome()).toBe('complete');
   });
+
+  it('table drains consume balls and game-over at zero', () => {
+    const { table } = install({ ...TABLE, balls: 2, ball: { x: 480, y: 540, radius: 14, vx: 0, vy: 4 } });
+    expect(table.ballsRemaining()).toBe(2);
+    table.tick(16);
+    expect(table.lastResult()).toBe('drain');
+    expect(table.ballsRemaining()).toBe(1);
+    expect(table.outcome()).toBe('playing');
+    table.tick(200);
+    expect(table.ballsRemaining()).toBe(0);
+    expect(table.outcome()).toBe('failed');
+    expect(table.lastResult()).toBe('game-over');
+  });
 });
 
 describe('sw2d.pinball - toy', () => {

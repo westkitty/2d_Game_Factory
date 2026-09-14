@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "mode": "chaser",
+  "startX": 100,
+  "speed": 0,
+  "catchDistance": 24,
+  "escapeX": 820,
+  "maxGap": 150,
+  "closeSpeed": 200,
+  "recoverSpeed": 40,
+  "stumbleMs": 520,
+  "failY": 510
+}

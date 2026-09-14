@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "urn:sw2d:schema:content-timing-catalog:v1",
   "title": "TimingCatalog",
-  "description": "Mirrors @sw2d/contracts TimingCatalog (timing.ts). Validated as a ContentBundle.data document (document name 'timing'). Visual reaction cues and beat windows - not audio-sync.",
+  "description": "Mirrors @sw2d/contracts TimingCatalog (timing.ts). Validated as a ContentBundle.data document (document name 'timing'). Reaction delays and rhythm beat windows; rhythm positions are sampled from the AudioBus transport.",
   "type": "object",
   "additionalProperties": false,
   "required": ["schemaVersion", "mode", "windowMs", "hitsToWin", "missesToFail"],

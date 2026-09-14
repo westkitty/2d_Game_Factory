@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "persist": true,
+  "resources": [
+    {
+      "id": "gold",
+      "amount": 0,
+      "ratePerSecond": 8
+    }
+  ],
+  "offline": {
+    "maxMs": 6000,
+    "discontinuityMs": 86400000
+  },
+  "prestige": {
+    "resourceId": "gold",
+    "cost": 16,
+    "multiplier": 2
+  }
+}

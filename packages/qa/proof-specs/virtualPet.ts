@@ -10,6 +10,8 @@ interface Needs {
   readonly actionsTaken: number;
   readonly outcome: string;
   readonly lastResult: string | null;
+  readonly creatures: readonly { readonly activityId: string | null; readonly decisions: number }[];
+  readonly loadOutcome: string;
 }
 interface Shell {
   readonly needs?: Needs;
@@ -29,6 +31,13 @@ export async function run(harness: Harness): Promise<SmokeOutcome> {
   const fed = (await read()).needs!;
   evidence.fed = { hunger: fed.needValues.hunger, outcome: fed.outcome, actions: fed.actionsTaken };
   const fedOk = fed.needValues.hunger! > initial.needValues.hunger! && fed.outcome === 'playing' && fed.actionsTaken === 1;
+
+  const url = harness.page.url();
+  await harness.gotoAndWaitForRuntime(url);
+  await startPlay(harness);
+  const reloaded = (await read()).needs!;
+  evidence.reloaded = { hunger: reloaded.needValues.hunger, actions: reloaded.actionsTaken, load: reloaded.loadOutcome, creature: reloaded.creatures[0] };
+  const persistenceOk = reloaded.loadOutcome === 'loaded' && reloaded.actionsTaken === 1 && reloaded.needValues.hunger! >= fed.needValues.hunger! - 2;
   await harness.keyTap('KeyK');
   const finished = (await read()).needs!;
   evidence.finished = { happiness: finished.needValues.happiness, actions: finished.actionsTaken, outcome: finished.outcome };
@@ -44,6 +53,6 @@ export async function run(harness: Harness): Promise<SmokeOutcome> {
   evidence.restart = { ...run, outcome: fresh.outcome, actions: fresh.actionsTaken };
   const restartOk = run.after === run.before + 1 && fresh.outcome === 'playing' && fresh.actionsTaken === 0;
 
-  const passed = startedOk && fedOk && finishedOk && inertOk && restartOk;
-  return { passed, details: { ...evidence, startedOk, fedOk, finishedOk, inertOk, restartOk } };
+  const passed = startedOk && fedOk && persistenceOk && finishedOk && inertOk && restartOk;
+  return { passed, details: { ...evidence, startedOk, fedOk, persistenceOk, finishedOk, inertOk, restartOk } };
 }

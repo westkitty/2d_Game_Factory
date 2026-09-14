@@ -29,10 +29,15 @@ export interface StarterStrategySnapshot {
   readonly unitCol: number;
   readonly unitRow: number;
   readonly fighter: string | null;
+  readonly combatant: string | null;
   readonly cpuHealth: number;
+  readonly scoutHp: number;
+  readonly gruntHp: number;
+  readonly moved: boolean;
+  readonly acted: boolean;
   readonly nearId: string | null;
   readonly lastResult: string | null;
-  readonly outcome: 'playing' | 'complete';
+  readonly outcome: 'playing' | 'complete' | 'failed';
 }
 
 export interface StarterStrategyBinding {
@@ -65,10 +70,15 @@ const INERT: StarterStrategyBinding = {
     unitCol: 0,
     unitRow: 0,
     fighter: null,
+    combatant: null,
     cpuHealth: 0,
+    scoutHp: 0,
+    gruntHp: 0,
+    moved: false,
+    acted: false,
     nearId: null,
     lastResult: null,
-    outcome: 'playing',
+    outcome: 'playing' as const,
   }),
   render: () => undefined,
   dispose: () => undefined,
@@ -146,6 +156,7 @@ export function bindStarterStrategy(
   // health while declaring victory (Category-C convergence bug). Only the
   // manual battler / tactics paths register the combat entity.
   const autoTargeting = mode === 'battler' && targeting?.active() === true && targeting.mode() === 'auto';
+  if (autoTargeting) targeting!.setLineup([]);
   const cpuMax = autoTargeting ? targeting!.health('cpu') : CPU_MAX;
   if (combat && !autoTargeting) {
     if (!combat.has('cpu')) combat.register('cpu', CPU_MAX);
@@ -205,12 +216,14 @@ export function bindStarterStrategy(
   let scoutRow = SCOUT.row;
   let selectedIndex = 0;
   let lastResult: string | null = null;
-  let outcome: 'playing' | 'complete' = 'playing';
+  let outcome: 'playing' | 'complete' | 'failed' = 'playing';
   let nowMs = 0;
   let cpuWait = 0;
   // Battler-auto: the lineup pick is a phase. The autonomous fight starts on
   // CONFIRM, not at install, so a player really gets to pick first.
   let fightStarted = false;
+  let scoutMoved = false;
+  let scoutActed = false;
   let disposed = false;
 
   function playerTurn(): boolean {
@@ -243,7 +256,12 @@ export function bindStarterStrategy(
       unitCol: scoutCol,
       unitRow: scoutRow,
       fighter: mode === 'battler' ? FIGHTERS[selectedIndex] ?? null : null,
+      combatant: autoTargeting && fightStarted ? targeting!.lineup()[0] ?? null : null,
       cpuHealth: cpuHealth(),
+      scoutHp: targeting?.health('scout') ?? 0,
+      gruntHp: targeting?.health('grunt') ?? 0,
+      moved: scoutMoved,
+      acted: scoutActed,
       nearId: nearId(),
       lastResult,
       outcome,
@@ -280,7 +298,13 @@ export function bindStarterStrategy(
             : ''
         }${snap.lastResult ? `  ·  ${snap.lastResult}` : ''}`,
       );
-      hint.setText(snap.outcome === 'complete' ? 'FLAG SEIZED' : 'ARROWS MOVE   J SELECTS   REACH THE FLAG');
+      hint.setText(
+        snap.outcome === 'complete'
+          ? 'FLAG SEIZED'
+          : snap.outcome === 'failed'
+            ? 'SCOUT DOWN'
+            : 'J SELECTS  ·  ARROWS MOVE  ·  ENTER ATTACKS OR ENDS',
+      );
     } else {
       title.setText(snap.outcome === 'complete' ? 'WON' : 'BATTLER');
       status.setText(
@@ -320,6 +344,11 @@ export function bindStarterStrategy(
       const dCol = dir === 'left' ? -1 : dir === 'right' ? 1 : 0;
       const dRow = dir === 'up' ? -1 : dir === 'down' ? 1 : 0;
       if (strategy.selected() === 'scout') {
+        if (scoutMoved) {
+          lastResult = 'spent';
+          paint();
+          return;
+        }
         const nextCol = clamp(scoutCol + dCol, MIN_COL, MAX_COL);
         const nextRow = clamp(scoutRow + dRow, MIN_ROW, MAX_ROW);
         if (nextCol === GRUNT.col && nextRow === GRUNT.row) {
@@ -331,6 +360,7 @@ export function bindStarterStrategy(
         scoutRow = nextRow;
         cursorCol = scoutCol;
         cursorRow = scoutRow;
+        scoutMoved = true;
         lastResult = 'moved';
         if (scoutCol === FLAG.col && scoutRow === FLAG.row) {
           strategy.advanceTurn();
@@ -357,8 +387,14 @@ export function bindStarterStrategy(
         return;
       }
       if (cursorCol === scoutCol && cursorRow === scoutRow) {
-        strategy.select('scout');
-        lastResult = 'selected';
+        if ((targeting?.health('scout') ?? 1) <= 0) {
+          lastResult = 'dead';
+        } else {
+          strategy.select('scout');
+          lastResult = 'selected';
+        }
+      } else if (cursorCol === GRUNT.col && cursorRow === GRUNT.row) {
+        lastResult = 'invalid';
       } else {
         lastResult = 'empty';
       }
@@ -369,6 +405,8 @@ export function bindStarterStrategy(
       if (disposed || outcome !== 'playing') return;
       if (autoTargeting) {
         if (!fightStarted) {
+          const id = FIGHTERS[selectedIndex]!.toLowerCase();
+          targeting!.setLineup([id]);
           fightStarted = true;
           lastResult = 'fight';
           context.audio.playCue('ui.confirm');
@@ -384,6 +422,22 @@ export function bindStarterStrategy(
           paint();
           return;
         }
+        if (strategy.selected() === 'scout' && cursorCol === GRUNT.col && cursorRow === GRUNT.row) {
+          if (scoutActed) {
+            lastResult = 'spent';
+          } else if ((targeting?.health('grunt') ?? 0) <= 0) {
+            lastResult = 'dead';
+          } else if (!targeting?.canStrike('scout', 'grunt')) {
+            lastResult = 'out-of-range';
+          } else {
+            targeting.strike('scout', 'grunt', nowMs);
+            scoutActed = true;
+            lastResult = targeting.health('grunt') <= 0 ? 'kill' : 'hit';
+            if (targeting.health('grunt') <= 0) outcome = 'complete';
+          }
+          paint();
+          return;
+        }
         if (strategy.selected() === null) {
           lastResult = 'no-unit';
           paint();
@@ -391,6 +445,8 @@ export function bindStarterStrategy(
         }
         strategy.deselect();
         strategy.advanceTurn();
+        scoutMoved = false;
+        scoutActed = false;
         cpuWait = 0;
         lastResult = 'ended';
         context.audio.playCue('ui.confirm');
@@ -437,7 +493,14 @@ export function bindStarterStrategy(
         cpuWait += deltaMs;
         if (cpuWait >= CPU_PASS_MS) {
           cpuWait = 0;
-          passCpu();
+          if (mode === 'tactics' && targeting?.canStrike('grunt', 'scout')) {
+            targeting.strike('grunt', 'scout', nowMs);
+            lastResult = targeting.health('scout') <= 0 ? 'scout-down' : 'cpu-hit';
+            if (targeting.health('scout') <= 0) outcome = 'failed';
+          }
+          if (outcome === 'playing') passCpu();
+          scoutMoved = false;
+          scoutActed = false;
           paint();
         }
       }

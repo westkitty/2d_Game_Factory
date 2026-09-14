@@ -1,0 +1,41 @@
+{
+  "schemaVersion": 1,
+  "ingredients": [
+    {
+      "id": "flour",
+      "label": "FLOUR"
+    },
+    {
+      "id": "egg",
+      "label": "EGG"
+    },
+    {
+      "id": "pan",
+      "label": "PAN"
+    }
+  ],
+  "recipes": [
+    {
+      "id": "flatcake",
+      "dish": "Golden Flatcake",
+      "score": 100,
+      "actions": [
+        {
+          "ingredientId": "flour",
+          "action": "measure",
+          "maxDelayMs": 2500
+        },
+        {
+          "ingredientId": "egg",
+          "action": "mix",
+          "maxDelayMs": 2500
+        },
+        {
+          "ingredientId": "pan",
+          "action": "cook",
+          "maxDelayMs": 2500
+        }
+      ]
+    }
+  ]
+}

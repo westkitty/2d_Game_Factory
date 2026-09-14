@@ -49,6 +49,9 @@ export const PACK_IDS = {
   camera: 'sw2d.camera',
   codex: 'sw2d.codex',
   targeting: 'sw2d.targeting',
+  /** Final Product Completion Wave 1: pursuit pressure (closing wall / trailing chaser). */
+  pursuit: 'sw2d.pursuit',
+  runs: 'sw2d.runs',
 } as const;
 
 export const CAPABILITY_IDS = {
@@ -111,4 +114,7 @@ export const CAPABILITY_IDS = {
   codex: 'narrative.codex',
   /** Category-C Wave 30: attack range, target select, autonomous strikes. */
   targeting: 'combat.targeting',
+  /** Final Product Completion Wave 1: pursuit pressure along the run axis. */
+  pursuit: 'movement.pursuit',
+  runs: 'progression.runs',
 } as const;

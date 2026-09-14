@@ -68,7 +68,7 @@ with a small working placeholder to replace. Every other pack is configured as J
 
 ## Known preset limitations
 
-- Nodes, flags, choices and seen entries are reusable (sw2d.narrative); a dedicated parser/text-command system and an evidence-board/deduction/linking system are not.
+- (none stated)
 
 ## How to add a level
 

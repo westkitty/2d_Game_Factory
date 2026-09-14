@@ -2,12 +2,15 @@ import type {
   EconomyCatalog,
   EconomyDemand,
   EconomyGood,
+  EconomyLayout,
   EconomyMode,
   EconomyProduction,
   EconomyRecipe,
   EconomySecondaryResult,
   EconomyServeResult,
   EconomyService,
+  EconomyWalker,
+  EconomyWalkerPhase,
   EventBus,
   GameContext,
   InstalledSystemPack,
@@ -42,6 +45,12 @@ interface MutableCustomer {
   readonly goodId: string;
   readonly pay: number;
   remainingMs: number;
+  x: number;
+  y: number;
+  phase: EconomyWalkerPhase;
+  targetX: number;
+  targetY: number;
+  seatIndex: number | null;
 }
 
 class EconomyServiceImpl implements EconomyService {
@@ -54,7 +63,10 @@ class EconomyServiceImpl implements EconomyService {
   readonly #recipesById = new Map<string, EconomyRecipe>();
   readonly #demand: EconomyDemand[] = [];
   readonly #spawn: { firstDelayMs: number; intervalMs: number; maxQueue: number };
+  readonly #layout: EconomyLayout | null;
+  readonly #walkSpeed: number;
   readonly #queue: MutableCustomer[] = [];
+  readonly #leaving: MutableCustomer[] = [];
   readonly #events: EventBus;
   #served = 0;
   #lost = 0;
@@ -64,6 +76,7 @@ class EconomyServiceImpl implements EconomyService {
   #untilNextSpawnMs: number;
   #production: { recipeId: string; remainingMs: number; totalMs: number } | null = null;
   #lastResult: string | null = null;
+  #payMultiplier = 1;
 
   constructor(events: EventBus, catalog: EconomyCatalog | undefined) {
     this.#events = events;
@@ -71,6 +84,8 @@ class EconomyServiceImpl implements EconomyService {
     this.#autoSell = catalog?.autoSell === true;
     this.#cash = catalog?.cash ?? 0;
     this.#spawn = catalog?.spawn ?? { firstDelayMs: 0, intervalMs: 1000, maxQueue: 0 };
+    this.#layout = catalog?.layout ?? null;
+    this.#walkSpeed = catalog?.layout?.walkSpeed ?? 560;
     this.#untilNextSpawnMs = this.#spawn.firstDelayMs;
     for (const good of catalog?.goods ?? []) {
       if (this.#goodsById.has(good.id)) throw new Error(`Duplicate economy good id "${good.id}" in content/economy.json.`);
@@ -113,14 +128,20 @@ class EconomyServiceImpl implements EconomyService {
   }
 
   queue(): readonly QueuedCustomer[] {
-    return this.#queue.map((c) => ({
-      instanceId: c.instanceId,
-      templateId: c.templateId,
-      displayName: c.displayName,
-      goodId: c.goodId,
-      pay: c.pay,
-      remainingMs: c.remainingMs,
-    }));
+    return this.#waiting().map((c) => {
+      const row: QueuedCustomer = {
+        instanceId: c.instanceId,
+        templateId: c.templateId,
+        displayName: c.displayName,
+        goodId: c.goodId,
+        pay: c.pay,
+        remainingMs: c.remainingMs,
+      };
+      if (this.#layout) {
+        return { ...row, x: c.x, y: c.y, phase: c.phase };
+      }
+      return row;
+    });
   }
 
   served(): number {
@@ -149,8 +170,31 @@ class EconomyServiceImpl implements EconomyService {
     return this.#selected;
   }
 
+  layout(): EconomyLayout | null {
+    return this.#layout;
+  }
+
+  walkers(): readonly EconomyWalker[] {
+    return [...this.#queue, ...this.#leaving].map((c) => ({
+      instanceId: c.instanceId,
+      displayName: c.displayName,
+      goodId: c.goodId,
+      x: c.x,
+      y: c.y,
+      phase: c.phase,
+    }));
+  }
+
+  payMultiplier(): number {
+    return this.#payMultiplier;
+  }
+
+  setPayMultiplier(multiplier: number): void {
+    this.#payMultiplier = Math.max(1, multiplier);
+  }
+
   serve(): EconomyServeResult {
-    const customer = this.#queue[0];
+    const customer = this.#waiting()[0];
     if (!customer) {
       this.#lastResult = 'no-customer';
       return { ok: false, reason: 'no-customer' };
@@ -229,7 +273,13 @@ class EconomyServiceImpl implements EconomyService {
     this.#tickProduction(dt);
     this.#tickQueue(dt);
     this.#tickSpawn(dt);
+    this.#tickWalk(dt);
     if (this.#autoSell) this.#tickAutoSell();
+  }
+
+  #waiting(): MutableCustomer[] {
+    if (!this.#layout) return this.#queue;
+    return this.#queue.filter((c) => c.phase === 'wait' || c.phase === 'seat');
   }
 
   #selectionPool(): readonly { id: string }[] {
@@ -247,8 +297,10 @@ class EconomyServiceImpl implements EconomyService {
       return { ok: false, reason: 'no-stock', customerId: customer.instanceId, goodId: good.id };
     }
     good.stock -= 1;
-    this.#cash += customer.pay;
-    this.#queue.shift();
+    this.#cash += customer.pay * this.#payMultiplier;
+    const index = this.#queue.indexOf(customer);
+    if (index >= 0) this.#queue.splice(index, 1);
+    this.#dismiss(customer);
     this.#served += 1;
     this.#lastResult = 'served';
     this.#events.emit('economy:served', {
@@ -278,10 +330,12 @@ class EconomyServiceImpl implements EconomyService {
   #tickQueue(dt: number): void {
     for (let i = this.#queue.length - 1; i >= 0; i--) {
       const customer = this.#queue[i]!;
+      if (this.#layout && customer.phase === 'enter') continue;
       customer.remainingMs = Math.max(0, customer.remainingMs - dt);
       if (customer.remainingMs > 0) continue;
       this.#queue.splice(i, 1);
       this.#lost += 1;
+      this.#dismiss(customer);
       this.#events.emit('economy:customerLeft', { customerId: customer.instanceId, reason: 'impatient' });
     }
   }
@@ -296,6 +350,9 @@ class EconomyServiceImpl implements EconomyService {
       const good = this.#goodsById.get(template.goodId);
       if (!good) continue;
       const instanceId = `c-${this.#spawned}`;
+      const slot = this.#layout?.queueSlots[Math.min(this.#queue.length, (this.#layout.queueSlots.length || 1) - 1)];
+      const start = this.#layout?.entrance ?? { x: 0, y: 0 };
+      const target = slot ?? this.#layout?.counter ?? start;
       this.#queue.push({
         instanceId,
         templateId: template.id,
@@ -303,6 +360,12 @@ class EconomyServiceImpl implements EconomyService {
         goodId: template.goodId,
         pay: template.pay ?? good.price,
         remainingMs: template.patienceMs,
+        x: start.x,
+        y: start.y,
+        phase: this.#layout ? 'enter' : 'wait',
+        targetX: target.x,
+        targetY: target.y,
+        seatIndex: null,
       });
       this.#events.emit('economy:customerArrived', { customerId: instanceId, goodId: template.goodId, queueLength: this.#queue.length });
     }
@@ -313,14 +376,60 @@ class EconomyServiceImpl implements EconomyService {
     // Serve every waiting customer whose good is in stock, front-first.
     // Bounded: at most the current queue length per tick so a restock storm
     // cannot loop forever.
-    let guard = this.#queue.length;
+    let guard = this.#waiting().length;
     while (guard-- > 0) {
-      const customer = this.#queue[0];
+      const customer = this.#waiting()[0];
       if (!customer) return;
       const good = this.#goodsById.get(customer.goodId);
       if (!good || good.stock <= 0) return;
       this.#settle(customer);
     }
+  }
+
+  #tickWalk(dt: number): void {
+    if (!this.#layout || dt <= 0) return;
+    const step = this.#walkSpeed * (dt / 1000);
+    for (const customer of [...this.#queue, ...this.#leaving]) {
+      const dx = customer.targetX - customer.x;
+      const dy = customer.targetY - customer.y;
+      const dist = Math.hypot(dx, dy);
+      if (dist <= step || dist === 0) {
+        customer.x = customer.targetX;
+        customer.y = customer.targetY;
+        this.#arrive(customer);
+        continue;
+      }
+      customer.x += (dx / dist) * step;
+      customer.y += (dy / dist) * step;
+    }
+  }
+
+  #arrive(customer: MutableCustomer): void {
+    if (customer.phase === 'leave') {
+      const index = this.#leaving.indexOf(customer);
+      if (index >= 0) this.#leaving.splice(index, 1);
+      return;
+    }
+    const seats = this.#layout?.seats;
+    if (customer.phase === 'enter' && seats && seats.length > 0) {
+      const taken = new Set(this.#queue.map((c) => c.seatIndex).filter((n): n is number => n !== null));
+      const seatIndex = seats.findIndex((_, i) => !taken.has(i));
+      const seat = seats[seatIndex] ?? seats[0]!;
+      customer.phase = 'seat';
+      customer.seatIndex = seatIndex >= 0 ? seatIndex : 0;
+      customer.targetX = seat.x;
+      customer.targetY = seat.y;
+      return;
+    }
+    if (customer.phase === 'enter') customer.phase = 'wait';
+  }
+
+  #dismiss(customer: MutableCustomer): void {
+    if (!this.#layout) return;
+    customer.phase = 'leave';
+    customer.targetX = this.#layout.exit.x;
+    customer.targetY = this.#layout.exit.y;
+    this.#leaving.push(customer);
   }
 }
 

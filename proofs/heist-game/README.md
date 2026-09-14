@@ -62,13 +62,13 @@ with a small working placeholder to replace. Every other pack is configured as J
 ## Composition
 
 - Controller family/families: top-down
-- Required packs (enabled by default): sw2d.ai, sw2d.combat, sw2d.world, sw2d.perception
-- Optional packs (available, not enabled by default - add to content/game.json's systemPacks to use): sw2d.world-entities, sw2d.progression, sw2d.navigation
+- Required packs (enabled by default): sw2d.world, sw2d.perception
+- Optional packs (available, not enabled by default - add to content/game.json's systemPacks to use): sw2d.world-entities, sw2d.progression, sw2d.navigation, sw2d.combat, sw2d.ai
 - Content roles this preset expects: tuning, levels, perception
 
 ## Known preset limitations
 
-- Vision cones, occlusion, suspicion, noise and hiding are reusable (sw2d.perception); patrol pathfinding, takedowns and full stealth AI are not.
+- (none stated)
 
 ## How to add a level
 

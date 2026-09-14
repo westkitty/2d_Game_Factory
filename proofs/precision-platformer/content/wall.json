@@ -23,5 +23,20 @@
     "y": 458,
     "radius": 36
   },
-  "failY": 520
+  "failY": 520,
+  "ledges": [
+    {
+      "id": "gap-ledge",
+      "x": 360,
+      "y": 480,
+      "side": "left",
+      "grabHalfWidth": 22,
+      "grabHalfHeight": 28
+    }
+  ],
+  "hangOffsetX": 14,
+  "hangOffsetY": 22,
+  "hangJumpVy": -400,
+  "climbMs": 180,
+  "regrabLockoutMs": 400
 }

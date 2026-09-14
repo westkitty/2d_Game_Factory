@@ -12,5 +12,37 @@
       "title": "Photo",
       "body": "A torn photograph of the hall."
     }
+  ],
+  "deductions": [
+    {
+      "id": "false-lead",
+      "requireEntries": [
+        "print",
+        "photo"
+      ],
+      "links": [
+        [
+          "print",
+          "photo"
+        ]
+      ],
+      "conclusion": "The groundskeeper acted alone.",
+      "valid": false
+    },
+    {
+      "id": "window-route",
+      "requireEntries": [
+        "print",
+        "photo"
+      ],
+      "links": [
+        [
+          "print",
+          "photo"
+        ]
+      ],
+      "conclusion": "The print and torn photo place the visitor at the window.",
+      "valid": true
+    }
   ]
 }

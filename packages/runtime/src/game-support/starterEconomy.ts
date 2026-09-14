@@ -1,4 +1,5 @@
 import { ECONOMY_CAPABILITY_ID, type EconomyService } from '@sw2d/contracts';
+import type { SimulationService } from '@sw2d/packs';
 import { accentStyle, headingStyle, mutedStyle } from '../scenes/theme.ts';
 import type { SceneContext } from '../scenes/SceneContext.ts';
 
@@ -25,6 +26,10 @@ export interface StarterEconomySnapshot {
   readonly producing: { recipeId: string; remainingMs: number } | null;
   readonly lastResult: string | null;
   readonly frontWant: string | null;
+  readonly walkers: readonly { id: string; x: number; y: number; phase: string }[];
+  readonly payMultiplier: number;
+  readonly prestigeLevel: number;
+  readonly gold: number;
 }
 
 export interface StarterEconomyBinding {
@@ -32,6 +37,7 @@ export interface StarterEconomyBinding {
   select(delta: number): void;
   serve(): void;
   secondary(): void;
+  prestige(): void;
   snapshot(): StarterEconomySnapshot;
   render(): void;
   dispose(): void;
@@ -42,6 +48,7 @@ const INERT: StarterEconomyBinding = {
   select: () => undefined,
   serve: () => undefined,
   secondary: () => undefined,
+  prestige: () => undefined,
   snapshot: () => ({
     active: false,
     mode: null,
@@ -56,6 +63,10 @@ const INERT: StarterEconomyBinding = {
     producing: null,
     lastResult: null,
     frontWant: null,
+    walkers: [],
+    payMultiplier: 1,
+    prestigeLevel: 0,
+    gold: 0,
   }),
   render: () => undefined,
   dispose: () => undefined,
@@ -64,9 +75,25 @@ const INERT: StarterEconomyBinding = {
 export function bindStarterEconomy(context: SceneContext, options?: { readonly hud?: boolean }): StarterEconomyBinding {
   if (!context.capabilities.has(ECONOMY_CAPABILITY_ID)) return INERT;
   const economy = context.capabilities.require<EconomyService>(ECONOMY_CAPABILITY_ID);
+  const simulation = context.capabilities.has('simulation.resources')
+    ? context.capabilities.require<SimulationService>('simulation.resources')
+    : null;
+  if (simulation) economy.setPayMultiplier(simulation.prestigeMultiplier());
   const hud = options?.hud !== false;
   const scene = context.scene;
   const { width, height } = context.definition.viewport;
+  const layout = economy.layout();
+  const fixtures: { destroy(): void }[] = [];
+  if (hud && layout) {
+    fixtures.push(scene.add.rectangle(layout.counter.x, layout.counter.y, 72, 36, 0x8a93a6, 0.95).setScrollFactor(0).setDepth(18));
+    for (const slot of layout.queueSlots) {
+      fixtures.push(scene.add.rectangle(slot.x, slot.y, 28, 28, 0x39415a, 0.9).setStrokeStyle(1, 0x8a93a6, 0.8).setScrollFactor(0).setDepth(18));
+    }
+    for (const seat of layout.seats ?? []) {
+      fixtures.push(scene.add.circle(seat.x, seat.y, 14, 0x4f9ee0, 0.85).setScrollFactor(0).setDepth(18));
+    }
+  }
+  const walkerDots: { setPosition(x: number, y: number): unknown; destroy(): void }[] = [];
 
   const title = hud ? scene.add.text(width * 0.5, 36, '', headingStyle(22)).setOrigin(0.5).setScrollFactor(0) : null;
   const body = hud
@@ -108,6 +135,10 @@ export function bindStarterEconomy(context: SceneContext, options?: { readonly h
       producing: producing ? { recipeId: producing.recipeId, remainingMs: Math.round(producing.remainingMs) } : null,
       lastResult: economy.lastResult(),
       frontWant: front?.goodId ?? null,
+      walkers: economy.walkers().map((w) => ({ id: w.instanceId, x: w.x, y: w.y, phase: w.phase })),
+      payMultiplier: economy.payMultiplier(),
+      prestigeLevel: simulation?.prestigeLevel() ?? 0,
+      gold: simulation?.resource('gold') ?? 0,
     };
   }
 
@@ -134,9 +165,16 @@ export function bindStarterEconomy(context: SceneContext, options?: { readonly h
       selectionLine = recipe ? `> ${recipe.displayName}  [${cook}]` : `> (no recipes)  [${cook}]`;
     }
 
+    const walkers = economy.walkers();
+    while (walkerDots.length < walkers.length) {
+      walkerDots.push(scene.add.circle(0, 0, 10, 0xf0c274, 1).setScrollFactor(0).setDepth(22));
+    }
+    while (walkerDots.length > walkers.length) walkerDots.pop()?.destroy();
+    walkers.forEach((walker, index) => walkerDots[index]?.setPosition(walker.x, walker.y));
+
     body.setText(
       [
-        `cash $${economy.cash()}   served ${economy.served()}   lost ${economy.lost()}`,
+        `cash $${economy.cash()}   served ${economy.served()}   lost ${economy.lost()}   x${economy.payMultiplier()}`,
         stockLine,
         `${waiting}${queueN > 1 ? `  +${queueN - 1} waiting` : ''}`,
         selectionLine,
@@ -147,10 +185,10 @@ export function bindStarterEconomy(context: SceneContext, options?: { readonly h
     status.setText(last ? `last: ${last}` : '');
     hint.setText(
       economy.mode() === 'shop'
-        ? 'ARROWS pick a good   ENTER serves   K restocks'
+        ? 'ARROWS pick a good   ENTER serves   K restocks   BACKSPACE prestige'
         : economy.mode() === 'kitchen'
-          ? 'ARROWS pick a recipe   K cooks   ENTER serves'
-          : 'ARROWS pick a recipe   K produces   customers buy when stocked',
+          ? 'ARROWS pick a recipe   K cooks   ENTER serves   BACKSPACE prestige'
+          : 'ARROWS pick a recipe   K produces   BACKSPACE prestige',
     );
   }
 
@@ -173,6 +211,13 @@ export function bindStarterEconomy(context: SceneContext, options?: { readonly h
       context.audio.playCue('ui.confirm');
       render();
     },
+    prestige(): void {
+      if (!simulation) return;
+      const result = simulation.prestige();
+      if (result.ok) economy.setPayMultiplier(result.multiplier);
+      context.audio.playCue('ui.confirm');
+      render();
+    },
     snapshot,
     render,
     dispose(): void {
@@ -183,6 +228,8 @@ export function bindStarterEconomy(context: SceneContext, options?: { readonly h
         body?.destroy();
         hint?.destroy();
         status?.destroy();
+        for (const fixture of fixtures) fixture.destroy();
+        for (const dot of walkerDots) dot.destroy();
       } catch {
         /* scene already tearing down */
       }

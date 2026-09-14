@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "mode": "wall",
+  "startX": 0,
+  "speed": 0,
+  "catchDistance": 0,
+  "escapeX": null,
+  "maxGap": 0,
+  "closeSpeed": 0,
+  "recoverSpeed": 0,
+  "stumbleMs": 0,
+  "failY": 0
+}

@@ -11,18 +11,12 @@ interface Nav {
   readonly exitCol: number;
   readonly exitRow: number;
   readonly pathLength: number;
+  readonly revealedCount: number;
   readonly lastResult: string | null;
   readonly outcome: string;
 }
 interface Shell {
   readonly navigation?: Nav;
-}
-
-async function walk(harness: Harness, codes: readonly string[]): Promise<void> {
-  for (const code of codes) {
-    await harness.keyTap(code);
-    await harness.stepFrames(2);
-  }
 }
 
 export async function run(harness: Harness): Promise<SmokeOutcome> {
@@ -33,33 +27,63 @@ export async function run(harness: Harness): Promise<SmokeOutcome> {
   const booted = await readSnapshot(harness);
   const initial = await n();
   evidence.initial = initial;
-  const startedOk = booted.installedPacks.includes('sw2d.navigation') && initial.mode === 'maze' && initial.playerCol === 4 && initial.playerRow === 8 && initial.exitCol === 12 && initial.exitRow === 8 && initial.pathLength === 13 && initial.outcome === 'playing';
+  const startedOk =
+    booted.installedPacks.includes('sw2d.navigation') &&
+    booted.installedPacks.includes('sw2d.generation') &&
+    initial.mode === 'maze' &&
+    initial.outcome === 'playing' &&
+    initial.pathLength > 1 &&
+    (initial.playerCol !== initial.exitCol || initial.playerRow !== initial.exitRow) &&
+    initial.revealedCount >= 1 &&
+    initial.revealedCount < 40;
 
-  // A wall blocks: the occupancy grid refuses the step and the player stays put.
-  await harness.keyTap('ArrowUp');
-  await harness.stepFrames(2);
-  const wall = await n();
-  evidence.wall = wall;
-  const wallOk = wall.lastResult === 'wall' && wall.playerCol === 4 && wall.playerRow === 8;
-  // The shortest-path hint shrinks as the player follows the corridor.
-  await walk(harness, ['ArrowRight', 'ArrowRight']);
-  const corner = await n();
-  evidence.corner = corner;
-  const cornerOk = corner.playerCol === 6 && corner.playerRow === 8 && corner.lastResult === 'moved' && corner.pathLength < initial.pathLength;
-  await walk(harness, ['ArrowDown', 'ArrowDown', 'ArrowRight', 'ArrowRight', 'ArrowRight', 'ArrowRight', 'ArrowUp', 'ArrowUp', 'ArrowRight', 'ArrowRight']);
+  const DIRS = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'] as const;
+  const beforeWall = await n();
+  let wallOk = false;
+  for (const code of DIRS) {
+    await harness.keyTap(code);
+    await harness.stepFrames(2);
+    const after = await n();
+    if (after.lastResult === 'wall' && after.playerCol === beforeWall.playerCol && after.playerRow === beforeWall.playerRow) {
+      wallOk = true;
+      break;
+    }
+  }
+  evidence.wall = await n();
+
+  for (let step = 0; step < 80; step++) {
+    const here = await n();
+    if (here.outcome === 'complete') break;
+    let moved = false;
+    for (const code of DIRS) {
+      const before = await n();
+      await harness.keyTap(code);
+      await harness.stepFrames(2);
+      const after = await n();
+      if (after.pathLength < before.pathLength || after.outcome === 'complete') {
+        moved = true;
+        break;
+      }
+      if (after.playerCol !== before.playerCol || after.playerRow !== before.playerRow) {
+        await harness.keyTap(code === 'ArrowUp' ? 'ArrowDown' : code === 'ArrowDown' ? 'ArrowUp' : code === 'ArrowLeft' ? 'ArrowRight' : 'ArrowLeft');
+        await harness.stepFrames(2);
+      }
+    }
+    if (!moved) break;
+  }
   const done = await n();
   evidence.done = done;
-  const doneOk = done.lastResult === 'escaped' && done.playerCol === 12 && done.playerRow === 8 && done.outcome === 'complete';
+  const doneOk = done.outcome === 'complete' && done.lastResult === 'escaped' && done.playerCol === done.exitCol && done.playerRow === done.exitRow && done.revealedCount > initial.revealedCount;
   await harness.keyTap('ArrowLeft');
   await harness.stepFrames(2);
   const after = await n();
-  const inertOk = after.playerCol === 12 && after.outcome === 'complete';
+  const inertOk = after.playerCol === done.playerCol && after.outcome === 'complete';
 
   const run = await restartRun(harness);
   const fresh = await n();
-  evidence.restart = { ...run, col: fresh.playerCol, row: fresh.playerRow, outcome: fresh.outcome };
-  const restartOk = run.after === run.before + 1 && fresh.playerCol === 4 && fresh.playerRow === 8 && fresh.outcome === 'playing';
+  evidence.restart = { ...run, col: fresh.playerCol, row: fresh.playerRow, outcome: fresh.outcome, revealed: fresh.revealedCount };
+  const restartOk = run.after === run.before + 1 && fresh.outcome === 'playing' && fresh.pathLength > 1 && fresh.revealedCount < 40;
 
-  const passed = startedOk && wallOk && cornerOk && doneOk && inertOk && restartOk;
-  return { passed, details: { ...evidence, startedOk, wallOk, cornerOk, doneOk, inertOk, restartOk } };
+  const passed = startedOk && wallOk && doneOk && inertOk && restartOk;
+  return { passed, details: { ...evidence, startedOk, wallOk, doneOk, inertOk, restartOk } };
 }

@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#", "$id": "urn:sw2d:schema:content-cooking-catalog:v1",
+  "type": "object", "additionalProperties": false, "required": ["schemaVersion", "ingredients", "recipes"],
+  "properties": {
+    "schemaVersion": { "type": "integer", "minimum": 1 },
+    "ingredients": { "type": "array", "items": { "$ref": "#/definitions/ingredient" } },
+    "recipes": { "type": "array", "items": { "$ref": "#/definitions/recipe" } }
+  },
+  "definitions": {
+    "ingredient": { "type": "object", "additionalProperties": false, "required": ["id", "label"], "properties": { "id": { "type": "string", "minLength": 1 }, "label": { "type": "string", "minLength": 1 } } },
+    "action": { "type": "object", "additionalProperties": false, "required": ["ingredientId", "action", "maxDelayMs"], "properties": { "ingredientId": { "type": "string", "minLength": 1 }, "action": { "type": "string", "minLength": 1 }, "maxDelayMs": { "type": "number", "exclusiveMinimum": 0 } } },
+    "recipe": { "type": "object", "additionalProperties": false, "required": ["id", "dish", "score", "actions"], "properties": { "id": { "type": "string", "minLength": 1 }, "dish": { "type": "string", "minLength": 1 }, "score": { "type": "integer", "minimum": 1 }, "actions": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/action" } } } }
+  }
+}

@@ -14,7 +14,9 @@ export const ENCOUNTERS_CAPABILITY_ID = 'combat.encounters';
 export type SpawnPoint =
   | { readonly kind: 'point'; readonly x: number; readonly y: number }
   | { readonly kind: 'rect'; readonly x: number; readonly y: number; readonly width: number; readonly height: number }
-  | { readonly kind: 'edge'; readonly edge: 'top' | 'bottom' | 'left' | 'right' };
+  | { readonly kind: 'edge'; readonly edge: 'top' | 'bottom' | 'left' | 'right' }
+  /** A formation (Final Product Completion Wave 3): members laid out in a shape around (x, y). */
+  | { readonly kind: 'formation'; readonly shape: 'line' | 'column' | 'v' | 'ring'; readonly x: number; readonly y: number; readonly spacing: number };
 
 /** A declarative bullet pattern. Produces fire directions; the projectile itself comes from a Phase 3 weapon. */
 export type FirePattern =
@@ -77,9 +79,58 @@ export interface EncounterDefinition {
   readonly bossEntityId?: string;
 }
 
+/**
+ * Wave escalation (Final Product Completion Wave 2 - matrix L06). When a
+ * consumer restarts the same encounter as wave N (0-based; `start(id,
+ * { wave })`), every spawn group's count grows by `countPerWave * N`
+ * (floored), spawn health scales by `1 + healthScalePerWave * N`, and the
+ * runtime reads `speedScalePerWave` to speed up enemy pursuit. `maxWaves`
+ * bounds the scaling (not the loop).
+ */
+export interface EncounterEscalation {
+  readonly countPerWave: number;
+  readonly healthScalePerWave: number;
+  readonly speedScalePerWave: number;
+  readonly maxWaves?: number;
+}
+
+/**
+ * Boss sequencing (Final Product Completion Wave 3 - matrix L10). An ordered
+ * list of encounter ids the consumer runs back to back; `transitionMs` is
+ * the readable gap between one boss falling and the next starting.
+ */
+export interface EncounterSequence {
+  readonly encounterIds: readonly string[];
+  readonly transitionMs: number;
+}
+
+/**
+ * Archetype behaviour (Final Product Completion Wave 3 - matrix L11 / L15 /
+ * L16 / L17). Renderer-neutral metadata the runtime bridge turns into motion:
+ *   - `chase`    - close on the player at `speed` (default for any archetype).
+ *   - `ground`   - a platformer walker: gravity, walks toward the player along x.
+ *   - `drift`    - gallery target: constant velocity, bounces off the play area.
+ *   - `approach` - rail target: moves toward the gun; reaching it is a miss.
+ *   - `hold`     - stands where it spawned (a turret).
+ */
+export interface EncounterArchetypeDef {
+  readonly motion: 'chase' | 'ground' | 'drift' | 'approach' | 'hold';
+  /** px/s. */
+  readonly speed: number;
+  /** drift: initial direction in degrees (0 = +x). */
+  readonly driftDeg?: number;
+  /** Score awarded through `arcade.score` when this archetype dies. */
+  readonly score?: number;
+  /** Display size hint for the runtime sprite. */
+  readonly size?: number;
+}
+
 export interface EncounterCatalog {
   readonly schemaVersion: number;
   readonly encounters: readonly EncounterDefinition[];
+  readonly escalation?: EncounterEscalation;
+  readonly sequence?: EncounterSequence;
+  readonly archetypes?: Readonly<Record<string, EncounterArchetypeDef>>;
 }
 
 // --- Runtime output --------------------------------------------------
@@ -120,6 +171,13 @@ export interface EncounterState {
   readonly elapsedInPhaseMs: number;
   readonly liveSpawnCount: number;
   readonly completed: boolean;
+  /** Escalation wave the running encounter was started as (0 = base). */
+  readonly wave: number;
+}
+
+export interface EncounterStartOptions {
+  /** Escalation wave (0-based). Ignored when the catalog has no escalation. */
+  readonly wave?: number;
 }
 
 /** State the service reads back from the game each `update()`. */
@@ -141,8 +199,13 @@ export interface EncounterUpdateContext {
 export interface EncounterService {
   lookup(id: string): EncounterDefinition | undefined;
   definitionIds(): readonly string[];
-  start(encounterId: string): void;
+  start(encounterId: string, options?: EncounterStartOptions): void;
   stop(): void;
+  escalation(): EncounterEscalation | null;
+  sequence(): EncounterSequence | null;
+  archetype(name: string): EncounterArchetypeDef | null;
+  /** Enemy speed multiplier for the running wave (1 with no escalation). */
+  speedScale(): number;
   update(deltaMs: number, context: EncounterUpdateContext): EncounterTick;
   /** Report that a spawned entity died. Drives `spawns-cleared`. */
   reportDeath(requestId: string): void;

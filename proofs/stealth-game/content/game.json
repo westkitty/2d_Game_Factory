@@ -10,14 +10,6 @@
   "bindings": {},
   "systemPacks": [
     {
-      "packId": "sw2d.ai",
-      "config": {}
-    },
-    {
-      "packId": "sw2d.combat",
-      "config": {}
-    },
-    {
       "packId": "sw2d.world",
       "config": {}
     },

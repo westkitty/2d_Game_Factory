@@ -27,6 +27,35 @@
           "health": { "type": "number", "exclusiveMinimum": 0 }
         }
       }
+    },
+    "startingGold": { "type": "integer", "minimum": 0 },
+    "placeCost": { "type": "integer", "minimum": 0 },
+    "slots": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "x", "y", "radius"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "x": { "type": "number" },
+          "y": { "type": "number" },
+          "radius": { "type": "number", "exclusiveMinimum": 0 }
+        }
+      }
+    },
+    "upgrades": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["cost", "range", "damage"],
+        "properties": {
+          "cost": { "type": "integer", "minimum": 0 },
+          "range": { "type": "number", "exclusiveMinimum": 0 },
+          "damage": { "type": "number", "exclusiveMinimum": 0 }
+        }
+      }
     }
   }
 }

@@ -240,38 +240,28 @@ describe('all 74 presets generate valid, token-free, schema-valid source', () =>
 /**
  * Phase 9 / Gate B. `content/game.json` can only ever hold JSON, so a pack
  * whose config is functions (`configSource: 'code'` - `sw2d.puzzle` today)
- * cannot be configured from there. Before this phase the generator wrote
- * `config: {}` for it anyway: all six presets requiring it produced games that
- * built cleanly and then threw `createInitialState is not a function` the
- * instant the player pressed CONFIRM, taking the shell pack down with them via
- * install rollback. The generated code seam replaces that silent falsehood.
+ * cannot be configured from there. Wave 4 L25/L46 moved physics-puzzle and
+ * escape-room onto `sw2d.puzzle-rules`, so no catalog preset currently
+ * *requires* the code seam. The generator still emits packConfig.ts for every
+ * game (starter stamps live there) and still refuses a `{}` JSON config if a
+ * future preset selects `sw2d.puzzle`.
  */
 describe('code-configured packs get a real code seam, never a false JSON config', () => {
   const puzzlePresets = PRESETS.filter((preset) =>
     preset.requiredSystemPacks.some((selection) => selection.packId === 'sw2d.puzzle'),
   );
 
-  it('the catalog still has presets requiring sw2d.puzzle (otherwise this suite is vacuous)', () => {
-    expect(puzzlePresets.length).toBeGreaterThan(0);
+  it('no catalog preset requires the sw2d.puzzle code seam', () => {
+    expect(puzzlePresets.map((preset) => preset.id)).toEqual([]);
   });
 
   for (const preset of PRESETS) {
-    const needsCodeConfig = puzzlePresets.includes(preset);
-
-    it(`${preset.id} generates src/game-specific/packConfig.ts${needsCodeConfig ? ' with a working puzzle seed' : ''}`, () => {
+    it(`${preset.id} generates src/game-specific/packConfig.ts without a TypeScript puzzle placeholder`, () => {
       const files = buildGameFiles('probe-game', preset);
       const packConfig = files.get('src/game-specific/packConfig.ts');
       expect(packConfig, preset.id).toBeDefined();
       expect(packConfig, preset.id).toContain('export const PACK_CONFIG');
-
-      if (needsCodeConfig) {
-        // A real, callable default - not a `{}` placeholder that crashes on install.
-        expect(packConfig, preset.id).toContain("'sw2d.puzzle'");
-        expect(packConfig, preset.id).toContain('createInitialState');
-        expect(packConfig, preset.id).toContain('isSolved');
-      } else {
-        expect(packConfig, preset.id).not.toContain('createInitialState');
-      }
+      expect(packConfig, preset.id).not.toContain('createInitialState');
     });
 
     it(`${preset.id}'s main.ts passes packConfig to createGame`, () => {
@@ -455,7 +445,7 @@ describe('generated ball-paddle games consume sw2d.ball-paddle', () => {
     expect(shell).toContain('table.tick(');
     expect(buildGameFiles('ball-paddle-probe', breakout).get('src/content.ts')).toContain("'ball-paddle': ballPaddleData");
     expect(buildGameFiles('ball-paddle-probe', breakout).get('src/main.ts')).toContain(
-      'ballPaddlePack, meleePack, localPlayPack, stageScrollPack, timingPack, wallPack, territoryPack, pinballPack, cameraPack, codexPack, targetingPack, GAME_SPECIFIC_PACK',
+      'ballPaddlePack, meleePack, localPlayPack, stageScrollPack, timingPack, wallPack, territoryPack, pinballPack, cameraPack, codexPack, targetingPack, pursuitPack, runsPack, GAME_SPECIFIC_PACK',
     );
   });
 
@@ -481,7 +471,7 @@ describe('generated melee games consume sw2d.melee', () => {
     expect(shell).toContain('melee.strike(');
     expect(buildGameFiles('melee-probe', adventure).get('src/content.ts')).toContain('melee: meleeData');
     expect(buildGameFiles('melee-probe', adventure).get('src/main.ts')).toContain(
-      'ballPaddlePack, meleePack, localPlayPack, stageScrollPack, timingPack, wallPack, territoryPack, pinballPack, cameraPack, codexPack, targetingPack, GAME_SPECIFIC_PACK',
+      'ballPaddlePack, meleePack, localPlayPack, stageScrollPack, timingPack, wallPack, territoryPack, pinballPack, cameraPack, codexPack, targetingPack, pursuitPack, runsPack, GAME_SPECIFIC_PACK',
     );
   });
 
@@ -506,7 +496,7 @@ describe('generated local-play games consume sw2d.local-play', () => {
     expect(shell).toContain('seats.act()');
     expect(buildGameFiles('local-play-probe', party).get('src/content.ts')).toContain("'local-play': localPlayData");
     expect(buildGameFiles('local-play-probe', party).get('src/main.ts')).toContain(
-      'ballPaddlePack, meleePack, localPlayPack, stageScrollPack, timingPack, wallPack, territoryPack, pinballPack, cameraPack, codexPack, targetingPack, GAME_SPECIFIC_PACK',
+      'ballPaddlePack, meleePack, localPlayPack, stageScrollPack, timingPack, wallPack, territoryPack, pinballPack, cameraPack, codexPack, targetingPack, pursuitPack, runsPack, GAME_SPECIFIC_PACK',
     );
   });
 
@@ -565,7 +555,7 @@ describe('generated timing games consume sw2d.timing', () => {
     expect(shell).toContain('clock.hit()');
     expect(buildGameFiles('timing-probe', reaction).get('src/content.ts')).toContain('timing: timingData');
     expect(buildGameFiles('timing-probe', reaction).get('src/main.ts')).toContain(
-      'ballPaddlePack, meleePack, localPlayPack, stageScrollPack, timingPack, wallPack, territoryPack, pinballPack, cameraPack, codexPack, targetingPack, GAME_SPECIFIC_PACK',
+      'ballPaddlePack, meleePack, localPlayPack, stageScrollPack, timingPack, wallPack, territoryPack, pinballPack, cameraPack, codexPack, targetingPack, pursuitPack, runsPack, GAME_SPECIFIC_PACK',
     );
   });
 
@@ -599,7 +589,7 @@ describe('generated stage-scroll games consume sw2d.stage-scroll', () => {
     expect(shell).toContain('stage.tick(');
     expect(buildGameFiles('stage-scroll-probe', shmup).get('src/content.ts')).toContain("'stage-scroll': stageScrollData");
     expect(buildGameFiles('stage-scroll-probe', shmup).get('src/main.ts')).toContain(
-      'ballPaddlePack, meleePack, localPlayPack, stageScrollPack, timingPack, wallPack, territoryPack, pinballPack, cameraPack, codexPack, targetingPack, GAME_SPECIFIC_PACK',
+      'ballPaddlePack, meleePack, localPlayPack, stageScrollPack, timingPack, wallPack, territoryPack, pinballPack, cameraPack, codexPack, targetingPack, pursuitPack, runsPack, GAME_SPECIFIC_PACK',
     );
   });
 
@@ -646,7 +636,8 @@ describe('generated vehicle and pointer shooters consume sw2d.weapons', () => {
     const shell = buildGameFiles('weapons-probe', asteroids).get('src/game-specific/shellPack.ts')!;
     expect(shell).toContain('bindStarterWeapon(context)');
     expect(shell).toContain("justPressed('PRIMARY_ACTION')");
-    expect(shell).toContain('weapon.fire(');
+    // Final Product Completion Wave 3: the rock field owns the weapon when active.
+    expect(shell).toContain('(weapon ?? rocks).fire(');
     expect(buildGameFiles('weapons-probe', asteroids).get('src/content.ts')).toContain('weapons: weaponsData');
   });
 
@@ -654,7 +645,9 @@ describe('generated vehicle and pointer shooters consume sw2d.weapons', () => {
     const gallery = PRESETS.find((candidate) => candidate.id === 'gallery-shooter')!;
     const shell = buildGameFiles('weapons-probe', gallery).get('src/game-specific/shellPack.ts')!;
     expect(shell).toContain('bindStarterWeapon(context)');
-    expect(shell).toContain('weapon.fire(');
+    // Final Product Completion Wave 3: the gallery owns the weapon when active.
+    expect(shell).toContain('weapon?.fire(');
+    expect(shell).toContain('gallery.fireAt(');
     expect(shell).toContain('context.spatialPointer.state');
   });
 
@@ -671,13 +664,13 @@ describe('generated vehicle and pointer shooters consume sw2d.weapons', () => {
     }
   });
 
-  it('rail-shooter does not enable sw2d.weapons (rail-camera leftover, not a second shooting adapter)', () => {
+  it('rail-shooter enables sw2d.weapons and fires the catalog weapon from the rail (Final Product Completion Wave 3, L17)', () => {
     const rail = PRESETS.find((candidate) => candidate.id === 'rail-shooter')!;
     const files = buildGameFiles('weapons-probe', rail);
     const gameJson = JSON.parse(files.get('content/game.json')!) as { systemPacks: Array<{ packId: string }> };
-    expect(gameJson.systemPacks.map((s) => s.packId)).not.toContain('sw2d.weapons');
+    expect(gameJson.systemPacks.map((s) => s.packId)).toContain('sw2d.weapons');
     const theme = JSON.parse(files.get('content/themes/default/theme.json')!) as { ui: { playHint: string } };
-    expect(theme.ui.playHint).not.toContain('FIRE');
+    expect(theme.ui.playHint).toContain('FIRE');
   });
 });
 
@@ -702,12 +695,12 @@ describe('generated ui-simulation farm and colony consume sw2d.simulation', () =
     const colonyJson = JSON.parse(colonyFiles.get('content/game.json')!) as { systemPacks: Array<{ packId: string }> };
     expect(farmJson.systemPacks.map((s) => s.packId)).toContain('sw2d.simulation');
     expect(colonyJson.systemPacks.map((s) => s.packId)).toContain('sw2d.simulation');
-    expect(farmFiles.get('src/game-specific/packConfig.ts')).toContain("SIMULATION_STARTER: 'farm' | 'colony' | null = 'farm'");
-    expect(colonyFiles.get('src/game-specific/packConfig.ts')).toContain("SIMULATION_STARTER: 'farm' | 'colony' | null = 'colony'");
-    expect(shopFiles.get('src/game-specific/packConfig.ts')).toContain("SIMULATION_STARTER: 'farm' | 'colony' | null = null");
+    expect(farmFiles.get('src/game-specific/packConfig.ts')).toContain("SIMULATION_STARTER: 'idle' | 'farm' | 'colony' | null = 'farm'");
+    expect(colonyFiles.get('src/game-specific/packConfig.ts')).toContain("SIMULATION_STARTER: 'idle' | 'farm' | 'colony' | null = 'colony'");
+    expect(shopFiles.get('src/game-specific/packConfig.ts')).toContain("SIMULATION_STARTER: 'idle' | 'farm' | 'colony' | null = null");
     const farmTheme = JSON.parse(farmFiles.get('content/themes/default/theme.json')!) as { ui: { playHint: string } };
     const colonyTheme = JSON.parse(colonyFiles.get('content/themes/default/theme.json')!) as { ui: { playHint: string } };
-    expect(farmTheme.ui.playHint).toContain('ENTER PLANTS OR HARVESTS');
+    expect(farmTheme.ui.playHint).toContain('ENTER PLANTS, WATERS, OR HARVESTS');
     expect(colonyTheme.ui.playHint).toContain('ENTER ASSIGNS OR BUILDS');
   });
 });
@@ -849,7 +842,7 @@ describe('generated top-down survivor and roguelite consume sw2d.progression', (
   it('the generated top-down shell binds bindStarterProgression', () => {
     const survivor = PRESETS.find((candidate) => candidate.id === 'survivor-like')!;
     const shell = buildGameFiles('progression-probe', survivor).get('src/game-specific/shellPack.ts')!;
-    expect(shell).toContain('bindStarterProgression(context, { mode: PROGRESSION_STARTER })');
+    expect(shell).toContain('bindStarterProgression(context, { mode: PROGRESSION_STARTER, battle })');
     expect(shell).toContain('meta.tick(');
     expect(shell).toContain('meta.act()');
     expect(shell).toContain("from './packConfig.ts'");
@@ -872,15 +865,19 @@ describe('generated top-down survivor and roguelite consume sw2d.progression', (
     expect(survivorFiles.get('src/game-specific/packConfig.ts')).toContain(
       "PROGRESSION_STARTER: 'survive' | 'run' | null = 'survive'",
     );
+    // Final Product Completion Wave 2: the roguelite is a dungeon run (DUNGEON_STARTER 'rogue').
     expect(runFiles.get('src/game-specific/packConfig.ts')).toContain(
-      "PROGRESSION_STARTER: 'survive' | 'run' | null = 'run'",
+      "PROGRESSION_STARTER: 'survive' | 'run' | null = null",
     );
+    expect(runFiles.get('src/game-specific/packConfig.ts')).toContain("DUNGEON_STARTER: 'crawl' | 'rogue' | null = 'rogue'");
     expect(dungeonFiles.get('src/game-specific/packConfig.ts')).toContain(
       "PROGRESSION_STARTER: 'survive' | 'run' | null = null",
     );
+    expect(dungeonFiles.get('src/game-specific/packConfig.ts')).toContain("DUNGEON_STARTER: 'crawl' | 'rogue' | null = 'crawl'");
     expect(twinFiles.get('src/game-specific/packConfig.ts')).toContain(
       "PROGRESSION_STARTER: 'survive' | 'run' | null = null",
     );
+    expect(twinFiles.get('src/game-specific/packConfig.ts')).toContain("DUNGEON_STARTER: 'crawl' | 'rogue' | null = null");
     const survivorTheme = JSON.parse(survivorFiles.get('content/themes/default/theme.json')!) as { ui: { playHint: string } };
     const runTheme = JSON.parse(runFiles.get('content/themes/default/theme.json')!) as { ui: { playHint: string } };
     expect(survivorTheme.ui.playHint).toContain('SURVIVE THE WAVES');
@@ -966,6 +963,8 @@ describe('generated maze and lane-defense consume sw2d.navigation', () => {
     const laneJson = JSON.parse(laneFiles.get('content/game.json')!) as { systemPacks: Array<{ packId: string }> };
     expect(mazeJson.systemPacks.map((s) => s.packId)).toContain('sw2d.navigation');
     expect(laneJson.systemPacks.map((s) => s.packId)).toContain('sw2d.navigation');
+    expect(laneJson.systemPacks.map((s) => s.packId)).toContain('sw2d.encounters');
+    expect(laneJson.systemPacks.map((s) => s.packId)).toContain('sw2d.combat');
     expect(mazeFiles.get('src/game-specific/packConfig.ts')).toContain(
       "NAV_STARTER: 'maze' | 'lane' | null = 'maze'",
     );
@@ -981,7 +980,7 @@ describe('generated maze and lane-defense consume sw2d.navigation', () => {
     const mazeTheme = JSON.parse(mazeFiles.get('content/themes/default/theme.json')!) as { ui: { playHint: string } };
     const laneTheme = JSON.parse(laneFiles.get('content/themes/default/theme.json')!) as { ui: { playHint: string } };
     expect(mazeTheme.ui.playHint).toContain('REACH THE EXIT');
-    expect(laneTheme.ui.playHint).toContain('THE RUNNER REPATHS');
+    expect(laneTheme.ui.playHint).toContain('DEFEND THE BASE');
   });
 });
 
@@ -1056,9 +1055,9 @@ describe('generated dungeon and base-defense consume sw2d.combat', () => {
     const baseJson = JSON.parse(baseFiles.get('content/game.json')!) as { systemPacks: Array<{ packId: string }> };
     expect(dungeonJson.systemPacks.map((s) => s.packId)).toContain('sw2d.combat');
     expect(baseJson.systemPacks.map((s) => s.packId)).toContain('sw2d.combat');
-    expect(dungeonFiles.get('src/game-specific/packConfig.ts')).toContain(
-      "COMBAT_STARTER: 'room' | 'hold' | null = 'room'",
-    );
+    // Final Product Completion Wave 2: the dungeon is DUNGEON_STARTER 'crawl'; COMBAT_STARTER keeps hold only.
+    expect(dungeonFiles.get('src/game-specific/packConfig.ts')).toContain("COMBAT_STARTER: 'room' | 'hold' | null = null");
+    expect(dungeonFiles.get('src/game-specific/packConfig.ts')).toContain("DUNGEON_STARTER: 'crawl' | 'rogue' | null = 'crawl'");
     expect(baseFiles.get('src/game-specific/packConfig.ts')).toContain(
       "COMBAT_STARTER: 'room' | 'hold' | null = 'hold'",
     );
@@ -1108,30 +1107,41 @@ describe('generated auto-runner and endless-runner consume auto-run presentation
   });
 });
 
-describe('generated pointer puzzles consume sw2d.puzzle', () => {
-  it('the generated pointer shell presents physics-goal and escape-locks on puzzle.state', () => {
+describe('generated pointer puzzles consume sw2d.puzzle-rules', () => {
+  it('the generated pointer shell presents physics-goal and escape on puzzle.rules', () => {
     const physics = PRESETS.find((candidate) => candidate.id === 'physics-puzzle')!;
     const shell = buildGameFiles('puzzle-seam-probe', physics).get('src/game-specific/shellPack.ts')!;
-    expect(shell).toContain("context.capabilities.get<CodePuzzleService>('puzzle.state')");
+    expect(shell).toContain('context.capabilities.get<PuzzleRulesService>(PUZZLE_RULES_CAPABILITY_ID)');
     expect(shell).toContain("'physics-goal'");
-    expect(shell).toContain("'escape-locks'");
-    expect(shell).toContain('puzzle.apply(');
+    expect(shell).toContain("'escape'");
+    expect(shell).toContain("puzzle.apply({ kind: 'inspect'");
+    expect(shell).toContain("puzzle.apply({ kind: 'launch' })");
+    expect(shell).toContain("puzzle.apply({ kind: 'report-entity'");
     expect(shell).toContain('physics.setVelocity(');
+    expect(shell).not.toContain('puzzle.state');
+    expect(shell).not.toContain('escape-locks');
+    expect(shell).not.toContain('createInitialState');
   });
 
-  it('physics-puzzle and escape-room enable sw2d.puzzle with different code-seam states', () => {
+  it('physics-puzzle and escape-room enable sw2d.puzzle-rules with authored content, not a code seam', () => {
     const physics = PRESETS.find((candidate) => candidate.id === 'physics-puzzle')!;
     const escape = PRESETS.find((candidate) => candidate.id === 'escape-room')!;
     const physicsFiles = buildGameFiles('puzzle-seam-probe', physics);
     const escapeFiles = buildGameFiles('puzzle-seam-probe', escape);
     const physicsJson = JSON.parse(physicsFiles.get('content/game.json')!) as { systemPacks: Array<{ packId: string }> };
     const escapeJson = JSON.parse(escapeFiles.get('content/game.json')!) as { systemPacks: Array<{ packId: string }> };
-    expect(physicsJson.systemPacks.map((s) => s.packId)).toContain('sw2d.puzzle');
-    expect(escapeJson.systemPacks.map((s) => s.packId)).toContain('sw2d.puzzle');
-    expect(physicsFiles.get('src/game-specific/packConfig.ts')).toContain("kind: 'physics-goal'");
-    expect(physicsFiles.get('src/game-specific/packConfig.ts')).toContain('inGoal');
-    expect(escapeFiles.get('src/game-specific/packConfig.ts')).toContain("kind: 'escape-locks'");
-    expect(escapeFiles.get('src/game-specific/packConfig.ts')).toContain('note');
+    expect(physicsJson.systemPacks.map((s) => s.packId)).toContain('sw2d.puzzle-rules');
+    expect(escapeJson.systemPacks.map((s) => s.packId)).toContain('sw2d.puzzle-rules');
+    expect(physicsJson.systemPacks.map((s) => s.packId)).not.toContain('sw2d.puzzle');
+    expect(escapeJson.systemPacks.map((s) => s.packId)).not.toContain('sw2d.puzzle');
+    const physicsDoc = JSON.parse(physicsFiles.get('content/puzzles.json')!) as { puzzles: Array<{ kind: string; launchLimit?: number }> };
+    const escapeDoc = JSON.parse(escapeFiles.get('content/puzzles.json')!) as { puzzles: Array<{ kind: string; interactables: unknown[] }> };
+    expect(physicsDoc.puzzles[0]?.kind).toBe('physics-goal');
+    expect(physicsDoc.puzzles[0]?.launchLimit).toBe(8);
+    expect(escapeDoc.puzzles[0]?.kind).toBe('escape');
+    expect(escapeDoc.puzzles[0]?.interactables.length).toBe(3);
+    expect(physicsFiles.get('src/game-specific/packConfig.ts')).not.toContain('createInitialState');
+    expect(escapeFiles.get('src/game-specific/packConfig.ts')).not.toContain('createInitialState');
     const physicsTheme = JSON.parse(physicsFiles.get('content/themes/default/theme.json')!) as { ui: { playHint: string } };
     const escapeTheme = JSON.parse(escapeFiles.get('content/themes/default/theme.json')!) as { ui: { playHint: string } };
     expect(physicsTheme.ui.playHint).toContain('CLICK TO NUDGE');
@@ -1168,7 +1178,8 @@ describe('generated endless-driving and boat-flight consume vehicle presentation
     expect(shell).toContain('bindStarterVehicle(context, { mode: VEHICLE_STARTER })');
     expect(shell).toContain('drive.setVehicle(');
     expect(shell).toContain('drive.switchCraft(');
-    expect(shell).toContain('bindStarterKartItem(context, { mode: KART_STARTER })');
+    expect(shell).toContain('bindStarterKartItem(');
+    expect(shell).toContain('mode: KART_STARTER');
     expect(shell).toContain('kartItem.fire(');
     expect(shell).toContain("from './packConfig.ts'");
   });
@@ -1185,6 +1196,7 @@ describe('generated endless-driving and boat-flight consume vehicle presentation
     expect(roadJson.systemPacks.map((s) => s.packId)).toContain('sw2d.vehicles');
     expect(roadJson.systemPacks.map((s) => s.packId)).toContain('sw2d.arcade');
     expect(craftJson.systemPacks.map((s) => s.packId)).toContain('sw2d.vehicles');
+    expect(craftJson.systemPacks.map((s) => s.packId)).toContain('sw2d.racing');
     expect(roadFiles.get('src/game-specific/packConfig.ts')).toContain(
       "VEHICLE_STARTER: 'road' | 'craft' | null = 'road'",
     );
@@ -1195,7 +1207,12 @@ describe('generated endless-driving and boat-flight consume vehicle presentation
       "VEHICLE_STARTER: 'road' | 'craft' | null = null",
     );
     expect(kartFiles.get('src/game-specific/packConfig.ts')).toContain("KART_STARTER: 'item' | null = 'item'");
-    expect(roadFiles.get('src/game-specific/packConfig.ts')).toContain("KART_STARTER: 'item' | null = null");
+    expect(roadFiles.get('src/game-specific/packConfig.ts')).toContain("KART_STARTER: 'item' | null = 'item'");
+    expect(roadJson.systemPacks.map((s) => s.packId)).toContain('sw2d.items');
+    expect(kart.requiredSystemPacks.map((s) => s.packId)).toContain('sw2d.items');
+    const kartItems = JSON.parse(kartFiles.get('content/items.json')!) as { items: Array<{ id: string; metadata?: { fire?: string } }> };
+    expect(kartItems.items.map((item) => item.id)).toEqual(expect.arrayContaining(['kart-shell', 'kart-boost']));
+    expect(kartItems.items.find((item) => item.id === 'kart-shell')?.metadata?.fire).toBe('shell');
     const roadTheme = JSON.parse(roadFiles.get('content/themes/default/theme.json')!) as { ui: { playHint: string } };
     const craftTheme = JSON.parse(craftFiles.get('content/themes/default/theme.json')!) as { ui: { playHint: string } };
     expect(roadTheme.ui.playHint).toContain('BANK DISTANCE');
@@ -1318,7 +1335,7 @@ describe('generated museum and rail consume look presentation', () => {
       "LOOK_STARTER: 'museum' | 'rail' | null = 'museum'",
     );
     expect(railFiles.get('src/game-specific/packConfig.ts')).toContain(
-      "LOOK_STARTER: 'museum' | 'rail' | null = 'rail'",
+      "LOOK_STARTER: 'museum' | 'rail' | null = null",
     );
     expect(photoFiles.get('src/game-specific/packConfig.ts')).toContain(
       "LOOK_STARTER: 'museum' | 'rail' | null = null",
@@ -1326,8 +1343,8 @@ describe('generated museum and rail consume look presentation', () => {
     const museumTheme = JSON.parse(museumFiles.get('content/themes/default/theme.json')!) as { ui: { playHint: string } };
     const railTheme = JSON.parse(railFiles.get('content/themes/default/theme.json')!) as { ui: { playHint: string } };
     expect(museumTheme.ui.playHint).toContain('J INSPECTS PLAQUES');
-    expect(railTheme.ui.playHint).toContain('J DAMAGES APPROACHING TARGETS');
-    expect(railTheme.ui.playHint).not.toContain('FIRE');
+    expect(railTheme.ui.playHint).toContain('RIDE THE RAIL');
+    expect(railTheme.ui.playHint).toContain('FIRE');
   });
 });
 
@@ -1487,5 +1504,149 @@ describe('generated wall, territory, pinball, camera, codex and targeting consum
     }
     const towerFiles = buildGameFiles('wave30-probe', PRESETS.find((candidate) => candidate.id === 'tower-defense')!);
     expect(towerFiles.get('src/game-specific/shellPack.ts')).toContain('bindStarterTargeting(context)');
+  });
+});
+
+describe('Final Product Completion Wave 1 - generated platforming consumes sw2d.pursuit and the ledge grammar', () => {
+  it('every preset emits a schema-valid content/pursuit.json (inert unless required)', () => {
+    for (const preset of PRESETS) {
+      const files = buildGameFiles('fpc-probe', preset);
+      const pursuitJson: unknown = JSON.parse(files.get('content/pursuit.json')!);
+      expect(() => validateContentBundleData({ pursuit: pursuitJson })).not.toThrow();
+      expect(files.get('src/content.ts'), preset.id).toContain('pursuit: pursuitData');
+      expect(files.get('src/main.ts'), preset.id).toContain('pursuitPack');
+      const required = preset.requiredSystemPacks.some((s) => s.packId === 'sw2d.pursuit');
+      const doc = pursuitJson as { mode: string; speed: number; maxGap: number };
+      if (!required) expect(doc.speed === 0 && doc.maxGap === 0, preset.id).toBe(true);
+    }
+  });
+
+  it('chase-platformer gets the closing wall; the runners get the trailing chaser (course vs endless escape line)', () => {
+    const read = (id: string) => {
+      const preset = PRESETS.find((candidate) => candidate.id === id)!;
+      const files = buildGameFiles('fpc-probe', preset);
+      const gameJson = JSON.parse(files.get('content/game.json')!) as { systemPacks: Array<{ packId: string }> };
+      expect(gameJson.systemPacks.map((s) => s.packId), id).toContain('sw2d.pursuit');
+      return JSON.parse(files.get('content/pursuit.json')!) as { mode: string; escapeX: number | null; speed: number; maxGap: number };
+    };
+    expect(read('chase-platformer')).toMatchObject({ mode: 'wall', escapeX: 820 });
+    expect(read('chase-platformer').speed).toBeGreaterThan(0);
+    expect(read('auto-runner')).toMatchObject({ mode: 'chaser', escapeX: 820 });
+    expect(read('endless-runner')).toMatchObject({ mode: 'chaser', escapeX: null });
+    expect(read('endless-runner').maxGap).toBeGreaterThan(0);
+  });
+
+  it('precision-platformer and climbing-game author ledges in content/wall.json', () => {
+    for (const id of ['precision-platformer', 'climbing-game'] as const) {
+      const preset = PRESETS.find((candidate) => candidate.id === id)!;
+      const files = buildGameFiles('fpc-probe', preset);
+      const doc = JSON.parse(files.get('content/wall.json')!) as { ledges?: Array<{ id: string; side: string }>; regrabLockoutMs?: number };
+      expect(doc.ledges?.length ?? 0, id).toBeGreaterThan(0);
+      expect(doc.regrabLockoutMs, id).toBeGreaterThan(0);
+      expect(files.get('src/game-specific/shellPack.ts'), id).toContain('wallsCap.climb()');
+      expect(files.get('src/game-specific/shellPack.ts'), id).toContain('wallsCap.drop()');
+    }
+  });
+});
+
+describe('Final Product Completion Wave 2 - generated combat games consume runs, escalation, dungeon and stealth AI', () => {
+  it('every preset emits a schema-valid content/runs.json; survivor-like and action-roguelite require sw2d.runs with real unlocks', () => {
+    for (const preset of PRESETS) {
+      const files = buildGameFiles('fpc-probe', preset);
+      const runsJson = JSON.parse(files.get('content/runs.json')!) as { mode: string; unlocks: unknown[] };
+      expect(() => validateContentBundleData({ runs: runsJson })).not.toThrow();
+      expect(files.get('src/content.ts'), preset.id).toContain('runs: runsData');
+      expect(files.get('src/content.ts'), preset.id).toContain('simulation: simulationData');
+      const simJson = JSON.parse(files.get('content/simulation.json')!) as { schemaVersion: number };
+      expect(() => validateContentBundleData({ simulation: simJson })).not.toThrow();
+      const required = preset.requiredSystemPacks.some((s) => s.packId === 'sw2d.runs');
+      expect(runsJson.unlocks.length > 0, preset.id).toBe(required);
+      if (preset.id === 'action-roguelite') expect(runsJson.mode).toBe('roguelite');
+      if (preset.id === 'survivor-like') expect(runsJson.mode).toBe('survive');
+    }
+  });
+
+  it('survivor-like authors wave escalation; other encounter presets do not', () => {
+    const survivor = PRESETS.find((p) => p.id === 'survivor-like')!;
+    const doc = JSON.parse(buildGameFiles('fpc-probe', survivor).get('content/encounters.json')!) as { escalation?: { countPerWave: number } };
+    expect(doc.escalation?.countPerWave).toBeGreaterThan(0);
+    const twin = PRESETS.find((p) => p.id === 'twin-stick-shooter')!;
+    const twinDoc = JSON.parse(buildGameFiles('fpc-probe', twin).get('content/encounters.json')!) as { escalation?: unknown; encounters: unknown[] };
+    expect(twinDoc.escalation).toBeUndefined();
+    expect(twinDoc.encounters.length).toBeGreaterThan(0);
+  });
+
+  it('dungeon-crawler and action-roguelite require sw2d.ai and bind the dungeon starter; stealth presets author a patrol route', () => {
+    for (const id of ['dungeon-crawler', 'action-roguelite'] as const) {
+      const preset = PRESETS.find((p) => p.id === id)!;
+      expect(preset.requiredSystemPacks.map((s) => s.packId), id).toContain('sw2d.ai');
+      const shell = buildGameFiles('fpc-probe', preset).get('src/game-specific/shellPack.ts')!;
+      expect(shell, id).toContain('bindStarterDungeon(context, level, { mode: DUNGEON_STARTER })');
+      expect(shell, id).toContain('dungeon.strike()');
+    }
+    for (const id of ['stealth-game', 'heist-game'] as const) {
+      const preset = PRESETS.find((p) => p.id === id)!;
+      const doc = JSON.parse(buildGameFiles('fpc-probe', preset).get('content/perception.json')!) as { observers: Array<{ patrol?: { waypoints: unknown[] }; takedownRadius?: number }> };
+      expect(doc.observers[0]?.patrol?.waypoints.length ?? 0, id).toBeGreaterThan(1);
+      expect(doc.observers[0]?.takedownRadius ?? 0, id).toBeGreaterThan(0);
+    }
+    const melee = PRESETS.find((p) => p.id === 'action-adventure')!;
+    const meleeDoc = JSON.parse(buildGameFiles('fpc-probe', melee).get('content/melee.json')!) as { combo?: { steps: unknown[] }; arcDeg?: number };
+    expect(meleeDoc.combo?.steps.length).toBe(3);
+    expect(meleeDoc.arcDeg).toBe(120);
+  });
+});
+
+describe('Final Product Completion Wave 3 - generated shooters consume formations, sequences, pooling, the ship and the gallery', () => {
+  const doc = (id: string, file: string): Record<string, unknown> => JSON.parse(buildGameFiles('fpc-probe', PRESETS.find((p) => p.id === id)!).get(file)!) as Record<string, unknown>;
+  const shell = (id: string): string => buildGameFiles('fpc-probe', PRESETS.find((p) => p.id === id)!).get('src/game-specific/shellPack.ts')!;
+
+  it('boss-rush authors a three-boss sequence; bullet-hell a dense boss; both validate', () => {
+    const rush = doc('boss-rush', 'content/encounters.json') as { sequence?: { encounterIds: string[] }; archetypes?: Record<string, { motion: string }> };
+    expect(rush.sequence?.encounterIds).toHaveLength(3);
+    expect(rush.archetypes?.boss?.motion).toBe('hold');
+    const hell = doc('bullet-hell', 'content/encounters.json') as { encounters: Array<{ phases: Array<{ emitters?: unknown[] }> }> };
+    expect(hell.encounters[0]?.phases[0]?.emitters?.length).toBe(3);
+    expect(() => validateContentBundleData({ encounters: rush })).not.toThrow();
+    expect(() => validateContentBundleData({ encounters: hell })).not.toThrow();
+  });
+
+  it('the shmups author parallax layers, a rail and drifting formations', () => {
+    for (const id of ['horizontal-shmup', 'vertical-shmup'] as const) {
+      const stage = doc(id, 'content/stage-scroll.json') as { layers?: unknown[]; rail?: unknown[] };
+      expect(stage.layers?.length, id).toBe(3);
+      expect(stage.rail?.length, id).toBe(3);
+      const enc = doc(id, 'content/encounters.json') as { archetypes?: Record<string, { motion: string }>; encounters: Array<{ phases: Array<{ spawns?: Array<{ at: { kind: string } }> }> }> };
+      expect(enc.archetypes?.raider?.motion, id).toBe('drift');
+      expect(enc.encounters[0]?.phases[0]?.spawns?.[0]?.at.kind, id).toBe('formation');
+    }
+  });
+
+  it('asteroids requires sw2d.vehicles (ship profile) + sw2d.arcade and binds the rock field', () => {
+    const preset = PRESETS.find((p) => p.id === 'asteroids-shooter')!;
+    expect(preset.vehicleProfile).toBe('ship');
+    expect(preset.requiredSystemPacks.map((s) => s.packId)).toEqual(expect.arrayContaining(['sw2d.vehicles', 'sw2d.arcade']));
+    const vehicles = doc('asteroids-shooter', 'content/vehicles.json') as { vehicles: Array<{ profile: string; wrap?: unknown; angularAcceleration?: number }> };
+    expect(vehicles.vehicles[0]?.profile).toBe('ship');
+    expect(vehicles.vehicles[0]?.wrap).toBeDefined();
+    expect(shell('asteroids-shooter')).toContain("bindStarterAsteroids(context, { mode: ASTEROIDS_STARTER })");
+    expect(buildGameFiles('fpc-probe', preset).get('src/game-specific/packConfig.ts')).toContain("ASTEROIDS_STARTER: 'field' | null = 'field'");
+  });
+
+  it('gallery-shooter and rail-shooter require encounters + arcade (+ weapons) and bind the gallery; run-and-gun binds encounters on the platform shell', () => {
+    for (const id of ['gallery-shooter', 'rail-shooter'] as const) {
+      const preset = PRESETS.find((p) => p.id === id)!;
+      expect(preset.requiredSystemPacks.map((s) => s.packId), id).toEqual(expect.arrayContaining(['sw2d.encounters', 'sw2d.arcade', 'sw2d.weapons']));
+      expect(shell(id), id).toContain('bindStarterGallery(context, { mode: GALLERY_STARTER })');
+      const enc = doc(id, 'content/encounters.json') as { sequence?: unknown; archetypes?: Record<string, { motion: string }> };
+      expect(enc.sequence, id).toBeDefined();
+      expect(Object.values(enc.archetypes ?? {}).map((a) => a.motion), id).toContain(id === 'rail-shooter' ? 'approach' : 'drift');
+    }
+    expect(buildGameFiles('fpc-probe', PRESETS.find((p) => p.id === 'gallery-shooter')!).get('src/game-specific/packConfig.ts')).toContain("GALLERY_STARTER: 'gallery' | 'rail' | null = 'gallery'");
+    const rng = PRESETS.find((p) => p.id === 'run-and-gun')!;
+    expect(rng.requiredSystemPacks.map((s) => s.packId)).toContain('sw2d.encounters');
+    expect(shell('run-and-gun')).toContain('bindStarterEncounters(context, player, { walls: ground');
+    const enc = doc('run-and-gun', 'content/encounters.json') as { archetypes?: Record<string, { motion: string }> };
+    expect(enc.archetypes?.walker?.motion).toBe('ground');
   });
 });

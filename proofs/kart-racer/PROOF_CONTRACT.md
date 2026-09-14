@@ -4,17 +4,17 @@ Frozen before implementation. Category-C Wave 29 (game-specific kart item-fire, 
 
 ## Preset
 
-`kart-racer` (`packages/presets/src/catalog/vehicleMovement.ts`) — controller family `vehicle`, required packs `sw2d.world`, `sw2d.world-entities`, **`sw2d.vehicles`** (kart), **`sw2d.racing`**. Content roles tuning, levels.
+`kart-racer` (`packages/presets/src/catalog/vehicleMovement.ts`) — controller family `vehicle`, required packs `sw2d.world`, `sw2d.world-entities`, **`sw2d.vehicles`** (kart), **`sw2d.racing`**, **`sw2d.items`**. Content roles tuning, levels, items.
 
 Generated via `npm run sw2d -- new proof-kart-racer --preset kart-racer` (the canonical factory, unmodified - the Category-C shells consume the capability directly, so no `src/game-specific/` customization was needed).
 
 ## Reusable capability exercised
 
-- `sw2d.racing` countdown / ordered checkpoints (`content/races.json`, 2 laps) on the kart profile of `sw2d.vehicles`; `bindStarterKartItem` (`KART_STARTER 'item'`): an item box on the first straight grants a shell, PRIMARY fires it along the heading.
+- `sw2d.racing` countdown / ordered checkpoints (`content/races.json`, 2 laps) on the kart profile of `sw2d.vehicles`; `bindStarterKartItem` (`KART_STARTER 'item'`): item boxes grant the reusable `sw2d.items` held slot (`kart-shell`); PRIMARY consumes it and fires a shell. The race still owns completion.
 
 ## Terminal success/failure oracle
 
-- **Success surface:** firing with no item is `empty`; CONFIRM starts the race (`countdown` then `racing`, `cp-1` expected); driving the first straight picks up the item (`pickup`) and passes `cp-1` (`cp-2` expected); PRIMARY fires (`fired 1`, `complete`); keyboard steering reaches `cp-2` (`cp-3` expected); restart reinstalls (`idle`, no item).
+- **Success surface:** firing with no item is `empty`; CONFIRM starts the race (`countdown` then `racing`, `cp-1` expected); driving the first straight picks up the item (`pickup`) and passes `cp-1` (`cp-2` expected); PRIMARY fires (`fired 1`, still `playing`); a second box reacquires the held slot; keyboard steering reaches `cp-2` (`cp-3` expected); restart reinstalls (`idle`, no item).
 - **Failure surface:** `race.phase`, `expectedCheckpoint`, `vehicle.{x,y,heading,speed}`, `kartItem.{held,fired,lastResult,outcome}`.
 
 ## Defining journey (automated, real-browser, deterministic frame stepping)

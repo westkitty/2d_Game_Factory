@@ -11,7 +11,7 @@ export const PACK_CONFIG: Readonly<Record<string, unknown>> = {
 };
 
 /** Category-C Wave 13: farm vs colony presentation of sw2d.simulation. Null otherwise. */
-export const SIMULATION_STARTER: 'farm' | 'colony' | null = null;
+export const SIMULATION_STARTER: 'idle' | 'farm' | 'colony' | null = null;
 
 /** Category-C Wave 14: fiction vs case presentation of sw2d.narrative. Null otherwise. */
 export const NARRATIVE_STARTER: 'fiction' | 'case' | null = null;
@@ -23,7 +23,7 @@ export const ARCADE_STARTER: 'fishing' | 'cooking' | 'micro' | null = null;
 export const POINTER_STARTER: 'draw' | 'wardrobe' | null = null;
 
 /** Category-C Wave 17: survive vs run presentation of sw2d.progression. Null otherwise. */
-export const PROGRESSION_STARTER: 'survive' | 'run' | null = 'run';
+export const PROGRESSION_STARTER: 'survive' | 'run' | null = null;
 
 /** Category-C Wave 18: tactics vs battler presentation of sw2d.strategy. Null otherwise. */
 export const STRATEGY_STARTER: 'tactics' | 'battler' | null = null;
@@ -60,3 +60,12 @@ export const KART_STARTER: 'item' | null = null;
 
 /** Category-C Wave 31: closing-wall pursuit. Null otherwise. */
 export const CHASE_STARTER: 'pursuit' | null = null;
+
+/** Final Product Completion Wave 2: room-graph dungeon (crawl) vs roguelite run (rogue). Null otherwise. */
+export const DUNGEON_STARTER: 'crawl' | 'rogue' | null = 'rogue';
+
+/** Final Product Completion Wave 3: pointer target shooter - fixed gallery vs camera rail. Null otherwise. */
+export const GALLERY_STARTER: 'gallery' | 'rail' | null = null;
+
+/** Final Product Completion Wave 3: the Asteroids rock field on the vehicle shell. Null otherwise. */
+export const ASTEROIDS_STARTER: 'field' | null = null;

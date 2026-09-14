@@ -19,7 +19,8 @@
       "oneOf": [
         { "$ref": "#/definitions/segmentChain" },
         { "$ref": "#/definitions/roomGraph" },
-        { "$ref": "#/definitions/roadChain" }
+        { "$ref": "#/definitions/roadChain" },
+        { "$ref": "#/definitions/maze" }
       ]
     },
     "segmentChain": {
@@ -122,6 +123,17 @@
             }
           }
         }
+      }
+    },
+    "maze": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "cols", "rows"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "kind": { "const": "maze" },
+        "cols": { "type": "integer", "minimum": 5, "maximum": 64 },
+        "rows": { "type": "integer", "minimum": 5, "maximum": 64 }
       }
     }
   }

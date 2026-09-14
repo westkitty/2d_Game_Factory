@@ -80,7 +80,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
     const microScores = [0, 0, 0];
 
     let currentPlayer = 0;
-    const partyScores = [0, 0];
+    const partyScores = [0, 0, 0, 0];
     let partyTurns = 0;
     let winner: number | null = null;
 
@@ -203,8 +203,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
         }
         const snap = seats.snapshot();
         currentPlayer = snap.currentPlayer;
-        partyScores[0] = snap.scores[0] ?? 0;
-        partyScores[1] = snap.scores[1] ?? 0;
+        for (let seat = 0; seat < partyScores.length; seat++) partyScores[seat] = snap.scores[seat] ?? 0;
         partyTurns = snap.turns;
         winner = snap.winner;
         if (snap.outcome !== 'playing') outcome = snap.outcome as typeof outcome;
@@ -213,8 +212,8 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
       if (!context.input.justPressed('PRIMARY_ACTION') && !context.input.justPressed('CONFIRM')) return;
       const power = 1 + (partyTurns % 3);
       partyScores[currentPlayer] = (partyScores[currentPlayer] ?? 0) + power;
-      partyTurns += 1; lastAction = 'party-turn'; currentPlayer = currentPlayer === 0 ? 1 : 0;
-      if (partyTurns >= 6) { const p1 = partyScores[0] ?? 0; const p2 = partyScores[1] ?? 0; winner = p1 === p2 ? 0 : p1 > p2 ? 0 : 1; outcome = 'complete'; }
+      partyTurns += 1; lastAction = 'party-turn'; currentPlayer = (currentPlayer + 1) % partyScores.length;
+      if (partyTurns >= 8) { const best = Math.max(...partyScores); winner = partyScores.findIndex((value) => value === best); outcome = 'complete'; }
     }
 
     function updateToy(deltaMs: number): void {
@@ -308,7 +307,7 @@ export const GAME_SPECIFIC_PACK: ScenePackDefinition = {
 
     function render(): void {
       if (VARIANT === 'microgame-collection') status.setText('Microgame ' + Math.min(3, microgame + 1) + '/3 · ' + microScores.join(' + ') + (outcome === 'complete' ? ' · total ' + score : ''));
-      else if (VARIANT === 'local-party-game') status.setText('Player ' + (currentPlayer + 1) + ' turn · P1 ' + partyScores[0] + ' · P2 ' + partyScores[1] + (winner !== null ? ' · winner P' + (winner + 1) : ''));
+      else if (VARIANT === 'local-party-game') status.setText('Player ' + (currentPlayer + 1) + ' turn · ' + partyScores.map((value, index) => 'P' + (index + 1) + ' ' + value).join(' · ') + (winner !== null ? ' · winner P' + (winner + 1) : ''));
       else if (VARIANT === 'physics-toy') status.setText('Moving objects ' + toyBodies.length + ' · spawned ' + toySpawns + ' · resets ' + toyResets);
       else if (VARIANT === 'virtual-pet') status.setText('Hunger ' + Math.round(hunger) + ' · happiness ' + Math.round(happiness) + ' · actions ' + petActions);
       else if (VARIANT === 'dress-up-character-toy') status.setText('Category ' + (wardrobeCategory + 1) + ' · look ' + wardrobe.join('/') + ' · changes ' + wardrobeChanges);

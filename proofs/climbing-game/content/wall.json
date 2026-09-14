@@ -19,9 +19,32 @@
   "jumpVx": 140,
   "jumpVy": -420,
   "goal": {
-    "x": 420,
-    "y": 338,
+    "x": 440,
+    "y": 218,
     "radius": 36
   },
-  "failY": 520
+  "failY": 520,
+  "ledges": [
+    {
+      "id": "step-ledge",
+      "x": 180,
+      "y": 360,
+      "side": "left",
+      "grabHalfWidth": 30,
+      "grabHalfHeight": 34
+    },
+    {
+      "id": "summit-ledge",
+      "x": 330,
+      "y": 240,
+      "side": "left",
+      "grabHalfWidth": 30,
+      "grabHalfHeight": 34
+    }
+  ],
+  "hangOffsetX": 14,
+  "hangOffsetY": 22,
+  "hangJumpVy": -420,
+  "climbMs": 180,
+  "regrabLockoutMs": 400
 }

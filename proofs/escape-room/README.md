@@ -62,14 +62,13 @@ with a small working placeholder to replace. Every other pack is configured as J
 ## Composition
 
 - Controller family/families: pointer, ui-simulation
-- Required packs (enabled by default): sw2d.puzzle
+- Required packs (enabled by default): sw2d.puzzle-rules
 - Optional packs (available, not enabled by default - add to content/game.json's systemPacks to use): sw2d.narrative, sw2d.world
 - Content roles this preset expects: tuning, puzzles
 
 ## Known preset limitations
 
-- Standard puzzle kinds (sokoban, switch/sequence, match, falling-block) are now content-authorable through the sw2d.puzzle-rules capability and content/puzzles.json (ADR-0023). This recipe's board rules are not one of those built-in kinds, so it still uses the code seam: sw2d.puzzle declares configSource: 'code' (ADR-0017) and a generated game supplies createInitialState/isSolved from src/game-specific/packConfig.ts (shipped with a working placeholder to replace) - the pack really installs, but this puzzle's own rules stay game-specific TypeScript, not content.
-- No content-authored escape-room puzzle grammar exists yet.
+- (none stated)
 
 ## How to add a level
 

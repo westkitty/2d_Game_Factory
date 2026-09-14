@@ -30,6 +30,8 @@ export interface StarterDialogueSnapshot {
   readonly step: number;
   readonly lastResult: string | null;
   readonly hotspots: readonly { id: string; conversationId: string; x: number; y: number; locked: boolean }[];
+  readonly scene: { readonly id: string; readonly title: string; readonly background: string; readonly backgroundImage?: string } | null;
+  readonly speakerPresentation: { readonly id: string; readonly portrait: string; readonly position: string; readonly color?: string } | null;
 }
 
 export interface StarterDialogueBinding {
@@ -67,6 +69,8 @@ const INERT: StarterDialogueBinding = {
     step: 0,
     lastResult: null,
     hotspots: [],
+    scene: null,
+    speakerPresentation: null,
   }),
   render: () => undefined,
   dispose: () => undefined,
@@ -91,6 +95,9 @@ export function bindStarterDialogue(context: SceneContext, options?: { readonly 
     : null;
   const hint = hud ? scene.add.text(width * 0.5, height - 36, '', accentStyle(14)).setOrigin(0.5).setScrollFactor(0) : null;
   const status = hud ? scene.add.text(width * 0.5, height - 64, '', mutedStyle(14)).setOrigin(0.5).setScrollFactor(0) : null;
+  const backdrop = hud ? scene.add.rectangle(width * 0.5, height * 0.42, width - 48, height * 0.58, 0x17233d, 0.96).setDepth(-10) : null;
+  const portrait = hud ? scene.add.rectangle(width * 0.22, height * 0.46, 150, 230, 0x8a93a6, 0.95).setStrokeStyle(3, 0xffffff, 0.85).setDepth(-5) : null;
+  const portraitLabel = hud ? scene.add.text(width * 0.22, height * 0.46, '', headingStyle(16)).setOrigin(0.5).setDepth(-4).setWordWrapWidth(130) : null;
 
   function snapshot(): StarterDialogueSnapshot {
     const selected = dialogue.choices()[dialogue.selectedIndex()];
@@ -112,13 +119,23 @@ export function bindStarterDialogue(context: SceneContext, options?: { readonly 
       step: dialogue.step(),
       lastResult: dialogue.lastResult(),
       hotspots: dialogue.hotspots(),
+      scene: dialogue.presentation().scene,
+      speakerPresentation: dialogue.presentation().speaker,
     };
   }
 
   function render(): void {
+    const presentation = dialogue.presentation();
+    const parseColor = (value: string | undefined, fallback: number): number => value && /^#[0-9a-f]{6}$/i.test(value) ? Number.parseInt(value.slice(1), 16) : fallback;
+    backdrop?.setFillStyle(parseColor(presentation.scene?.background, 0x17233d), 0.96);
+    if (portrait && portraitLabel) {
+      const px = presentation.speaker?.position === 'right' ? width * 0.78 : presentation.speaker?.position === 'center' ? width * 0.5 : width * 0.22;
+      portrait.setPosition(px, height * 0.46).setFillStyle(parseColor(presentation.speaker?.color, 0x8a93a6), presentation.speaker ? 0.95 : 0.2);
+      portraitLabel.setPosition(px, height * 0.46).setText(presentation.speaker ? `${presentation.speaker.displayName}\n\n${presentation.speaker.portrait}` : '');
+    }
     if (!title || !body || !hint || !status) return;
     const modeLabel = dialogue.mode() === 'adventure' ? 'ADVENTURE' : 'NOVEL';
-    title.setText(`${modeLabel}${dialogue.speaker() ? `  ·  ${dialogue.speaker().toUpperCase()}` : ''}`);
+    title.setText(`${presentation.scene?.title?.toUpperCase() ?? modeLabel}${dialogue.speaker() ? `  ·  ${dialogue.speaker().toUpperCase()}` : ''}`);
 
     if (dialogue.kind() === 'idle') {
       body.setText(dialogue.mode() === 'adventure' ? 'Click a hotspot.' : '');
@@ -175,6 +192,9 @@ export function bindStarterDialogue(context: SceneContext, options?: { readonly 
         body?.destroy();
         hint?.destroy();
         status?.destroy();
+        backdrop?.destroy();
+        portrait?.destroy();
+        portraitLabel?.destroy();
       } catch {
         /* scene already tearing down */
       }

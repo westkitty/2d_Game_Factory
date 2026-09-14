@@ -28,11 +28,17 @@ import {
   generateCameraCatalog,
   generateCodexCatalog,
   generateTargetingCatalog,
+  generatePursuitCatalog,
+  generateRunsCatalog,
+  generateSimulationCatalog,
   generateResourceManifest,
   generateTiledLevel,
   generateTheme,
   generateTuning,
   generateUiCopy,
+  generateMicrogameCatalog,
+  generateFishingCatalog,
+  generateCookingCatalog,
 } from './contentDocuments.ts';
 import { generatePackConfig } from './packConfig.ts';
 import { generateReadme } from './readme.ts';
@@ -91,6 +97,9 @@ export function buildGameFiles(gameId: string, preset: PresetDefinition): Map<st
     ) + '\n',
   );
   files.set('content/tuning.json', JSON.stringify(generateTuning(), null, 2) + '\n');
+  files.set('content/microgames.json', JSON.stringify(generateMicrogameCatalog(preset.id === 'microgame-collection'), null, 2) + '\n');
+  files.set('content/fishing.json', JSON.stringify(generateFishingCatalog(preset.id === 'fishing-game'), null, 2) + '\n');
+  files.set('content/cooking.json', JSON.stringify(generateCookingCatalog(preset.id === 'cooking-game'), null, 2) + '\n');
   files.set(
     'content/themes/default/theme.json',
     JSON.stringify(
@@ -112,7 +121,19 @@ export function buildGameFiles(gameId: string, preset: PresetDefinition): Map<st
   files.set('content/levels/main.json', JSON.stringify(generateTiledLevel(), null, 2) + '\n');
   files.set(
     'content/items.json',
-    JSON.stringify(generateItemCatalog(preset.requiredContentRoles.includes('items')), null, 2) + '\n',
+    JSON.stringify(
+      generateItemCatalog(
+        !preset.requiredContentRoles.includes('items')
+          ? 'none'
+          : preset.id === 'dress-up-character-toy'
+            ? 'wardrobe'
+          : preset.id === 'kart-racer' || preset.id === 'endless-driving'
+            ? 'kart'
+            : 'coin',
+      ),
+      null,
+      2,
+    ) + '\n',
   );
   files.set(
     'content/weapons.json',
@@ -124,7 +145,34 @@ export function buildGameFiles(gameId: string, preset: PresetDefinition): Map<st
   );
   files.set(
     'content/encounters.json',
-    JSON.stringify(generateEncounterCatalog(requiredPackIds.includes('sw2d.encounters')), null, 2) + '\n',
+    JSON.stringify(
+      generateEncounterCatalog(requiredPackIds.includes('sw2d.encounters'), {
+        kind:
+          preset.id === 'survivor-like'
+            ? 'swarm'
+            : preset.id === 'run-and-gun'
+              ? 'platform'
+              : preset.id === 'boss-rush'
+                ? 'boss-rush'
+                : preset.id === 'bullet-hell'
+                  ? 'bullet-hell'
+                : preset.id === 'gallery-shooter'
+                  ? 'gallery'
+                  : preset.id === 'rail-shooter'
+                    ? 'rail'
+                    : preset.id === 'horizontal-shmup'
+                      ? 'shmup-h'
+                      : preset.id === 'vertical-shmup'
+                        ? 'shmup-v'
+                        : preset.id === 'lane-defense'
+                          ? 'lane'
+                          : preset.id === 'base-defense'
+                            ? 'hold'
+                        : 'skirmish',
+      }),
+      null,
+      2,
+    ) + '\n',
   );
   files.set(
     'content/puzzles.json',
@@ -135,9 +183,13 @@ export function buildGameFiles(gameId: string, preset: PresetDefinition): Map<st
             ? 'match'
             : preset.id === 'falling-block-puzzle'
               ? 'falling-block'
-              : preset.controllerFamilies[0] === 'grid'
-                ? 'sokoban'
-                : 'switch-sequence'
+              : preset.id === 'physics-puzzle'
+                ? 'physics-goal'
+                : preset.id === 'escape-room'
+                  ? 'escape'
+                  : preset.controllerFamilies[0] === 'grid'
+                    ? 'sokoban'
+                    : 'switch-sequence'
           : 'none',
       ),
       null,
@@ -153,11 +205,13 @@ export function buildGameFiles(gameId: string, preset: PresetDefinition): Map<st
     JSON.stringify(
       generateGenerationDoc(
         requiredPackIds.includes('sw2d.generation')
-          ? preset.controllerFamilies[0] === 'vehicle'
-            ? 'road-chain'
-            : preset.controllerFamilies[0] === 'top-down' || preset.controllerFamilies[0] === 'grid'
-              ? 'room-graph'
-              : 'segment-chain'
+          ? preset.id === 'maze-game'
+            ? 'maze'
+            : preset.controllerFamilies[0] === 'vehicle'
+              ? 'road-chain'
+              : preset.controllerFamilies[0] === 'top-down' || preset.controllerFamilies[0] === 'grid'
+                ? 'room-graph'
+                : 'segment-chain'
           : 'none',
       ),
       null,
@@ -207,7 +261,9 @@ export function buildGameFiles(gameId: string, preset: PresetDefinition): Map<st
             ? 'habitat'
             : preset.id === 'virtual-pet'
               ? 'companion'
-              : 'creature'
+              : preset.id === 'colony-lite'
+                ? 'colony'
+                : 'creature'
           : 'none',
       ),
       null,
@@ -218,7 +274,9 @@ export function buildGameFiles(gameId: string, preset: PresetDefinition): Map<st
     'content/dialogue.json',
     JSON.stringify(
       generateDialogueCatalog(
-        requiredPackIds.includes('sw2d.dialogue')
+        preset.id === 'interactive-fiction-hybrid'
+          ? 'fiction'
+          : requiredPackIds.includes('sw2d.dialogue')
           ? preset.id === 'point-and-click'
             ? 'adventure'
             : 'novel'
@@ -357,6 +415,48 @@ export function buildGameFiles(gameId: string, preset: PresetDefinition): Map<st
               ? 'range'
               : 'tower'
           : 'none',
+      ),
+      null,
+      2,
+    ) + '\n',
+  );
+  files.set(
+    'content/pursuit.json',
+    JSON.stringify(
+      generatePursuitCatalog(
+        requiredPackIds.includes('sw2d.pursuit')
+          ? preset.id === 'chase-platformer'
+            ? 'wall'
+            : preset.id === 'auto-runner'
+              ? 'chaser-course'
+              : 'chaser'
+          : 'none',
+      ),
+      null,
+      2,
+    ) + '\n',
+  );
+  files.set(
+    'content/runs.json',
+    JSON.stringify(
+      generateRunsCatalog(requiredPackIds.includes('sw2d.runs') ? (preset.id === 'action-roguelite' ? 'roguelite' : 'survive') : 'none'),
+      null,
+      2,
+    ) + '\n',
+  );
+  files.set(
+    'content/simulation.json',
+    JSON.stringify(
+      generateSimulationCatalog(
+        preset.id === 'idle-incremental'
+          ? 'idle'
+          : preset.id === 'farming-lite'
+            ? 'farm'
+            : preset.id === 'colony-lite'
+              ? 'colony'
+            : preset.id === 'shopkeeper' || preset.id === 'tycoon-lite' || preset.id === 'restaurant'
+              ? 'meta'
+              : 'none',
       ),
       null,
       2,

@@ -13,6 +13,9 @@ interface Arcade {
   readonly mistakes: number;
   readonly lastResult: string | null;
   readonly outcome: string;
+  readonly failures: number;
+  readonly dish: string | null;
+  readonly action: string | null;
 }
 interface Shell {
   readonly arcade?: Arcade;
@@ -28,15 +31,14 @@ export async function run(harness: Harness): Promise<SmokeOutcome> {
   evidence.initial = initial;
   const startedOk = booted.installedPacks.includes('sw2d.arcade') && initial.mode === 'cooking' && initial.phase === 'cook' && initial.recipeStep === 0 && initial.score === 0;
 
-  // Adding the wrong ingredient first is a counted mistake and does not advance the recipe.
-  await harness.keyTap('ArrowRight');
+  // Missing the authored timing window fails and resets the recipe.
+  await harness.stepFrames(180);
   await harness.keyTap('Enter');
   const wrong = await a();
   evidence.wrong = { last: wrong.lastResult, mistakes: wrong.mistakes, step: wrong.recipeStep };
-  const wrongOk = wrong.lastResult === 'wrong' && wrong.mistakes === 1 && wrong.recipeStep === 0;
+  const wrongOk = wrong.lastResult === 'too-slow' && wrong.mistakes === 1 && wrong.failures === 1 && wrong.recipeStep === 0;
 
   // The ordered sequence flour -> egg -> next advances the recipe step by step.
-  await harness.keyTap('ArrowLeft');
   await harness.keyTap('Enter');
   const flour = await a();
   await harness.keyTap('ArrowRight');
@@ -51,7 +53,7 @@ export async function run(harness: Harness): Promise<SmokeOutcome> {
   await harness.keyTap('Enter');
   const done = await a();
   evidence.done = { last: done.lastResult, step: done.recipeStep, mistakes: done.mistakes, score: done.score, outcome: done.outcome };
-  const doneOk = done.lastResult === 'ready' && done.recipeStep === 3 && done.mistakes === 1 && done.score > 0 && done.outcome === 'complete';
+  const doneOk = done.lastResult === 'ready' && done.recipeStep === 3 && done.mistakes === 1 && done.score > 0 && done.dish === 'Golden Flatcake' && done.outcome === 'complete';
 
   const run = await restartRun(harness);
   const fresh = await a();

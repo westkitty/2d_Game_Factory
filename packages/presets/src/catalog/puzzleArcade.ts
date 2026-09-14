@@ -1,6 +1,6 @@
 import type { PresetDefinition } from '@sw2d/contracts';
 import { PACK_IDS } from '@sw2d/packs/ids';
-import { LIMITATIONS, POINTER_INPUT_MODES, VALIDATION_PROFILES, definePreset, pack } from '../shared.ts';
+import { POINTER_INPUT_MODES, VALIDATION_PROFILES, definePreset, pack } from '../shared.ts';
 
 /**
  * Family E - Puzzle / arcade (recipes 33-42).
@@ -10,17 +10,16 @@ import { LIMITATIONS, POINTER_INPUT_MODES, VALIDATION_PROFILES, definePreset, pa
  * confirm-driven recipes get `ui-simulation`, ball-and-paddle recipes reuse
  * `top-down`'s continuous axis for paddle movement (ball motion is
  * `sw2d.ball-paddle`, see `LIMITATIONS.ballPaddleSystem`),
- * timing recipes consume `sw2d.timing` (visual reaction / beat windows,
- * ADR-0037), and the one recipe that is genuinely about pointer interaction
+ * timing recipes consume `sw2d.timing` (reaction delays / audio-clock beats,
+ * ADR-0037 / Wave 4 L27), and the one recipe that is genuinely about pointer interaction
  * (`physics-puzzle`) gets `pointer`, honestly limited to press-style actions.
  *
- * Standard puzzle kinds (sokoban, switch/sequence, match, falling-block) are
- * content-authorable through `sw2d.puzzle-rules` + `content/puzzles.json`
- * (ADR-0023, Category-C Wave 9). `sokoban`, `match-puzzle` and
- * `falling-block-puzzle` consume that reusable service. `physics-puzzle`
- * still selects the foundational, code-configured `sw2d.puzzle` (Category-C
- * Wave 12 consumes that seam with a Matter ball-in-goal) and reuses
- * `LIMITATIONS.puzzleConfigIsCode` verbatim.
+ * Standard puzzle kinds (sokoban, switch/sequence, match, falling-block,
+ * physics-goal, escape) are content-authorable through `sw2d.puzzle-rules` +
+ * `content/puzzles.json` (ADR-0023, Final Product Completion Wave 4).
+ * `sokoban`, `match-puzzle`, `falling-block-puzzle` and `physics-puzzle`
+ * consume that reusable service. The pointer shell presents physics-goal
+ * as a Matter ball-in-goal driven by `report-entity` / `launch` ops.
  */
 export const PUZZLE_ARCADE_PRESETS: readonly PresetDefinition[] = [
   definePreset({
@@ -49,10 +48,9 @@ export const PUZZLE_ARCADE_PRESETS: readonly PresetDefinition[] = [
     optionalSystemPacks: [pack(PACK_IDS.arcade)],
     requiredContentRoles: ['tuning', 'puzzles'],
     validationProfile: VALIDATION_PROFILES.puzzleArcade,
-    knownLimitations: [
-      LIMITATIONS.puzzleBoardRules,
-      'The reusable spatial pointer (world cursor, hover, drag - ADR-0018) exists; this grid-family recipe does not consume it, so tile drag/swap interaction is game-specific code.',
-    ],
+    // Final Product Completion Wave 4 (matrix L21/L22): pointer drag-swap via
+    // the spatial pointer; keyboard swap remains. Match cascade lives in sw2d.puzzle-rules.
+    knownLimitations: [],
   }),
 
   definePreset({
@@ -65,7 +63,9 @@ export const PUZZLE_ARCADE_PRESETS: readonly PresetDefinition[] = [
     optionalSystemPacks: [pack(PACK_IDS.arcade)],
     requiredContentRoles: ['tuning', 'puzzles'],
     validationProfile: VALIDATION_PROFILES.puzzleArcade,
-    knownLimitations: [LIMITATIONS.puzzleBoardRules],
+    // Final Product Completion Wave 4 (matrix L21): wall kicks + hard drop on
+    // the reusable falling-block engine.
+    knownLimitations: [],
   }),
 
   definePreset({
@@ -77,7 +77,7 @@ export const PUZZLE_ARCADE_PRESETS: readonly PresetDefinition[] = [
     requiredSystemPacks: [pack(PACK_IDS.arcade), pack(PACK_IDS.ballPaddle)],
     requiredContentRoles: ['tuning', 'ball-paddle'],
     validationProfile: VALIDATION_PROFILES.puzzleArcade,
-    knownLimitations: [LIMITATIONS.ballPaddleSystem],
+    knownLimitations: [],
   }),
 
   definePreset({
@@ -89,7 +89,7 @@ export const PUZZLE_ARCADE_PRESETS: readonly PresetDefinition[] = [
     requiredSystemPacks: [pack(PACK_IDS.arcade), pack(PACK_IDS.ballPaddle), pack(PACK_IDS.localPlay)],
     requiredContentRoles: ['tuning', 'ball-paddle', 'local-play'],
     validationProfile: VALIDATION_PROFILES.puzzleArcade,
-    knownLimitations: [LIMITATIONS.ballPaddleSystem, LIMITATIONS.localPlaySeats],
+    knownLimitations: [],
   }),
 
   definePreset({
@@ -98,14 +98,14 @@ export const PUZZLE_ARCADE_PRESETS: readonly PresetDefinition[] = [
     displayName: 'Physics Puzzle',
     family: 'puzzle-arcade',
     controllerFamilies: ['pointer'],
-    requiredSystemPacks: [pack(PACK_IDS.puzzle)],
-    requiredContentRoles: ['tuning'],
+    requiredSystemPacks: [pack(PACK_IDS.puzzleRules)],
+    requiredContentRoles: ['tuning', 'puzzles'],
     supportedInputModes: POINTER_INPUT_MODES,
     validationProfile: VALIDATION_PROFILES.puzzleArcade,
     // Phase 9 (ADR-0026): the Matter backend + reusable AdvancedPhysicsService
-    // drive motion; the puzzle's own success condition stays in sw2d.puzzle.
+    // drive motion. Wave 4 L25: goal zone / launch limit live in content/puzzles.json.
     physicsProfile: 'matter',
-    knownLimitations: [LIMITATIONS.puzzleConfigIsCode],
+    knownLimitations: [],
   }),
 
   definePreset({
@@ -114,13 +114,13 @@ export const PUZZLE_ARCADE_PRESETS: readonly PresetDefinition[] = [
     displayName: 'Maze Game',
     family: 'puzzle-arcade',
     controllerFamilies: ['grid'],
-    requiredSystemPacks: [pack(PACK_IDS.world), pack(PACK_IDS.worldEntities), pack(PACK_IDS.navigation)],
+    requiredSystemPacks: [pack(PACK_IDS.world), pack(PACK_IDS.worldEntities), pack(PACK_IDS.navigation), pack(PACK_IDS.generation)],
     optionalSystemPacks: [pack(PACK_IDS.arcade)],
-    requiredContentRoles: ['tuning', 'levels'],
+    requiredContentRoles: ['tuning', 'levels', 'generation'],
     validationProfile: VALIDATION_PROFILES.puzzleArcade,
-    knownLimitations: [
-      'Grid pathfinding and walkable occupancy are reusable (sw2d.navigation); fog-of-war, minimap and authored maze generation are not.',
-    ],
+    // Final Product Completion Wave 4 (matrix L26): seeded maze generation,
+    // fog-of-war and a minimap on the reusable navigation grid.
+    knownLimitations: [],
   }),
 
   definePreset({
@@ -132,7 +132,7 @@ export const PUZZLE_ARCADE_PRESETS: readonly PresetDefinition[] = [
     requiredSystemPacks: [pack(PACK_IDS.arcade), pack(PACK_IDS.timing)],
     requiredContentRoles: ['tuning', 'timing'],
     validationProfile: VALIDATION_PROFILES.puzzleArcade,
-    knownLimitations: [LIMITATIONS.visualTiming],
+    knownLimitations: [],
   }),
 
   definePreset({
@@ -144,7 +144,7 @@ export const PUZZLE_ARCADE_PRESETS: readonly PresetDefinition[] = [
     requiredSystemPacks: [pack(PACK_IDS.arcade), pack(PACK_IDS.timing)],
     requiredContentRoles: ['tuning', 'timing'],
     validationProfile: VALIDATION_PROFILES.puzzleArcade,
-    knownLimitations: [LIMITATIONS.visualTiming],
+    knownLimitations: [],
   }),
 
   definePreset({
@@ -160,8 +160,8 @@ export const PUZZLE_ARCADE_PRESETS: readonly PresetDefinition[] = [
     // give the ball real rigid-body motion and collision. Wave 30 pinball-lite
     // consumes sw2d.pinball instead of the Matter table path.
     physicsProfile: 'matter',
-    knownLimitations: [
-      'Flippers, bumpers and bumper-score are reusable (sw2d.pinball); Matter presentation stays on physics-toy.',
-    ],
+    // Final Product Completion Wave 4 (matrix L28): launch, drain, balls/lives,
+    // bumper score, game-over and restart on the reusable sw2d.pinball table.
+    knownLimitations: [],
   }),
 ];

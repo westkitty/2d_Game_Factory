@@ -68,8 +68,7 @@ with a small working placeholder to replace. Every other pack is configured as J
 
 ## Known preset limitations
 
-- Match-detection/cascade and falling-piece/line-clear are reusable (sw2d.puzzle-rules); pointer drag-swap, wall-kicks and overlay-local boards are not.
-- The reusable spatial pointer (world cursor, hover, drag - ADR-0018) exists; this grid-family recipe does not consume it, so tile drag/swap interaction is game-specific code.
+- (none stated)
 
 ## How to add a level
 

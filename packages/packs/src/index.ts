@@ -63,6 +63,8 @@ export {
   simulationPack,
   DuplicateSimulationJobError,
   UnknownSimulationJobError,
+  SIMULATION_SAVE_SLOT,
+  formatSimulationAmount,
   type SimulationJob,
   type SimulationService,
 } from './simulation/simulationPack.ts';
@@ -100,3 +102,5 @@ export { pinballPack, type PinballService } from './pinball/pinballPack.ts';
 export { cameraPack, type CameraService } from './camera/cameraPack.ts';
 export { codexPack, type CodexService } from './codex/codexPack.ts';
 export { targetingPack, type TargetingService } from './targeting/targetingPack.ts';
+export { pursuitPack, type PursuitService } from './pursuit/pursuitPack.ts';
+export { runsPack, type RunsService } from './runs/runsPack.ts';

@@ -11,6 +11,7 @@ interface PhysicsPlay {
   readonly score: number;
   readonly flips: number;
   readonly lastResult: string | null;
+  readonly balls: number;
   readonly outcome: string;
 }
 interface Shell {
@@ -32,7 +33,7 @@ export async function run(harness: Harness): Promise<SmokeOutcome> {
   const booted = await readSnapshot(harness);
   const initial = await pp();
   evidence.initial = initial;
-  const startedOk = booted.installedPacks.includes('sw2d.pinball') && initial.mode === 'table' && initial.outcome === 'playing' && initial.score === 0 && initial.flips === 0;
+  const startedOk = booted.installedPacks.includes('sw2d.pinball') && initial.mode === 'table' && initial.outcome === 'playing' && initial.score === 0 && initial.flips === 0 && initial.balls === 3;
 
   // Hands off: the ball falls under gravity, misses every bumper, drains, and the table resets it - no score.
   await harness.stepFrames(6);
@@ -40,7 +41,7 @@ export async function run(harness: Harness): Promise<SmokeOutcome> {
   const fallOk = falling.ballY > initial.ballY;
   const drained = (await waitUntil(harness, read, (s) => s.physicsPlay?.lastResult === 'drain', 80, 4)).physicsPlay!;
   evidence.drained = { last: drained.lastResult, score: drained.score, ballY: drained.ballY };
-  const drainOk = drained.lastResult === 'drain' && drained.score === 0 && drained.ballY < 200;
+  const drainOk = drained.lastResult === 'drain' && drained.score === 0 && drained.ballY < 200 && drained.balls === 2;
 
   // Now play: flip whenever the ball is over a flipper. Bumper hits score; the win needs the flips.
   let live = drained;

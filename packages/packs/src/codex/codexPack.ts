@@ -5,7 +5,7 @@
  * catalogs stay inert.
  *
  * Bounded modes: exhibit (inspect to fill a museum codex) and case
- * (inspect, then deduce when all are unlocked). Not portraits or parser IF.
+ * (inspect, reject invalid theories, then expose authored links/conclusion).
  */
 
 import type {
@@ -30,6 +30,9 @@ class CodexServiceImpl implements CodexService {
   private readonly unlockedSet = new Set<string>();
   private last: string | null = null;
   private current: CodexOutcome = 'playing';
+  private boardLinks: Array<readonly [string, string]> = [];
+  private solvedConclusion: string | null = null;
+  private invalidCount = 0;
 
   constructor(
     private readonly events: EventBus,
@@ -65,20 +68,36 @@ class CodexServiceImpl implements CodexService {
     return true;
   }
 
-  deduce(): boolean {
+  deduce(id?: string): boolean {
     if (!this.active() || this.current !== 'playing' || this.catalog.mode !== 'case') {
       this.last = 'no-case';
       return false;
     }
-    if (this.unlockedSet.size < this.liveCount()) {
+    const deduction = id
+      ? this.catalog.deductions?.find((candidate) => candidate.id === id)
+      : this.catalog.deductions?.find((candidate) => candidate.valid);
+    const required = deduction?.requireEntries ?? this.catalog.entries.filter((entry) => entry.id !== 'none').map((entry) => entry.id);
+    if (required.some((entryId) => !this.unlockedSet.has(entryId))) {
       this.last = 'incomplete';
       return false;
     }
+    if (deduction && !deduction.valid) {
+      this.invalidCount += 1;
+      this.last = 'invalid-deduction';
+      return false;
+    }
+    this.boardLinks = [...(deduction?.links ?? [])];
+    this.solvedConclusion = deduction?.conclusion ?? 'The evidence supports the conclusion.';
     this.current = 'complete';
     this.last = 'solved';
     this.events.emit('codex:completed', { mode: this.catalog.mode });
     return true;
   }
+
+  entries(): readonly CodexCatalog['entries'][number][] { return this.catalog.entries; }
+  links(): readonly (readonly [string, string])[] { return this.boardLinks; }
+  conclusion(): string | null { return this.solvedConclusion; }
+  invalidAttempts(): number { return this.invalidCount; }
 
   unlocked(): readonly string[] {
     return [...this.unlockedSet];
@@ -96,6 +115,9 @@ class CodexServiceImpl implements CodexService {
     this.unlockedSet.clear();
     this.last = null;
     this.current = 'playing';
+    this.boardLinks = [];
+    this.solvedConclusion = null;
+    this.invalidCount = 0;
   }
 
   private liveCount(): number {

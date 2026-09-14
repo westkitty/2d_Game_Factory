@@ -13,11 +13,17 @@ interface Stage {
   readonly fireX: number;
   readonly fireY: number;
   readonly outcome: string;
+  readonly layers: readonly { readonly id: string; readonly offset: number; readonly speedFactor: number }[];
+  readonly currentSpeed: number;
+  readonly crossOffset: number;
+  readonly railLeg: number;
 }
 interface Battle {
   readonly projectilesSpawned: number;
   readonly enemiesAlive: number;
   readonly kills: number;
+  readonly escaped: number;
+  readonly enemies: readonly { readonly id: string; readonly x: number; readonly y: number; readonly archetype: string }[];
 }
 interface Shell {
   readonly stageScroll?: Stage;
@@ -60,16 +66,30 @@ export async function run(harness: Harness): Promise<SmokeOutcome> {
   evidence.pause = { ...paused, beforePause, afterPause };
   const pauseOk = paused.pausedDuring && !paused.pausedAfter && afterPause - beforePause < 40;
 
-  // Survive to stage-clear.
-  const done = (await waitUntil(harness, read, (s) => s.stageScroll?.outcome === 'complete', 90, 8)).stageScroll!;
-  evidence.done = done;
-  const doneOk = done.outcome === 'complete' && done.progress >= 1 && done.offset >= 720;
+  // Parallax planes move at their own factors; the formation sweeps in from the incoming edge.
+  const formation = await waitUntil(harness, read, (s) => (s.battle?.enemiesAlive ?? 0) >= 3, 60, 4);
+  const layers = formation.stageScroll!.layers;
+  evidence.parallax = { layers, enemies: formation.battle?.enemies.length, archetype: formation.battle?.enemies[0]?.archetype };
+  const far = layers.find((l) => l.speedFactor < 0.5);
+  const near = layers.find((l) => l.speedFactor > 1);
+  const parallaxOk = layers.length === 3 && far !== undefined && near !== undefined && far.offset < near.offset && (formation.battle?.enemies[0]?.archetype ?? '') === 'raider';
+
+  // The rail path: the middle leg slows the stage and drifts the camera; the last leg speeds it up.
+  const leg2 = await waitUntil(harness, read, (s) => (s.stageScroll?.railLeg ?? -1) >= 1, 120, 6);
+  const leg3 = await waitUntil(harness, read, (s) => (s.stageScroll?.railLeg ?? -1) >= 2, 120, 6);
+  evidence.rail = { leg2: { leg: leg2.stageScroll?.railLeg, speed: leg2.stageScroll?.currentSpeed, cross: leg2.stageScroll?.crossOffset }, leg3: { leg: leg3.stageScroll?.railLeg, speed: leg3.stageScroll?.currentSpeed, cross: leg3.stageScroll?.crossOffset } };
+  const railOk = leg2.stageScroll?.railLeg === 1 && leg2.stageScroll.currentSpeed === 120 && leg3.stageScroll?.railLeg === 2 && leg3.stageScroll.currentSpeed === 220 && Math.abs(leg3.stageScroll.crossOffset) > 20;
+
+  // Survive to stage-clear; formations that flew past count as escaped, not as kills.
+  const done = await waitUntil(harness, read, (s) => s.stageScroll?.outcome === 'complete', 90, 8);
+  evidence.done = { stage: done.stageScroll, battle: { escaped: done.battle?.escaped, kills: done.battle?.kills } };
+  const doneOk = done.stageScroll?.outcome === 'complete' && done.stageScroll.progress >= 1 && done.stageScroll.offset >= 720 && (done.battle?.escaped ?? 0) + (done.battle?.kills ?? 0) >= 3;
 
   const run = await restartRun(harness);
   const fresh = (await read()).stageScroll!;
   evidence.restart = { ...run, offset: fresh.offset, outcome: fresh.outcome };
   const restartOk = run.after === run.before + 1 && fresh.outcome === 'playing' && fresh.offset < 200;
 
-  const passed = startedOk && scrollOk && moveOk && fireOk && pauseOk && doneOk && restartOk;
-  return { passed, details: { ...evidence, startedOk, scrollOk, moveOk, fireOk, pauseOk, doneOk, restartOk } };
+  const passed = startedOk && scrollOk && moveOk && fireOk && pauseOk && parallaxOk && railOk && doneOk && restartOk;
+  return { passed, details: { ...evidence, startedOk, scrollOk, moveOk, fireOk, pauseOk, parallaxOk, railOk, doneOk, restartOk } };
 }

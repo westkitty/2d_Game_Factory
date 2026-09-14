@@ -197,8 +197,7 @@ async function bulletHellRun(harness: Harness): Promise<SmokeOutcome> {
 async function stealthRun(harness: Harness): Promise<SmokeOutcome> {
   type S = { x: number; y: number; objectiveCollected: boolean; alarm: boolean; guardSeesPlayer: boolean; outcome: string };
   await start(harness);
-  await hold(harness, 'ArrowRight', 100);
-  const detected = await shell<S>(harness);
+  const detected = await holdUntil<S>(harness, 'ArrowRight', (state) => state.outcome === 'failed', 80, 4);
 
   await restartPlay(harness);
   await hold(harness, 'ArrowUp', 46);

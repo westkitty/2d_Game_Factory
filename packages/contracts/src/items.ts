@@ -57,6 +57,9 @@ export interface WorldFlagEffect {
   readonly flag: string;
   readonly value: boolean;
 }
+export interface VehicleBoostEffect {
+  readonly kind: 'vehicle.boost';
+}
 export interface ChainEffect {
   readonly kind: 'chain';
   /** Applied in array order, deterministically. */
@@ -72,7 +75,8 @@ export type LeafEffectDefinition =
   | ProgressionItemEffect
   | ScoreEffect
   | ResourceEffect
-  | WorldFlagEffect;
+  | WorldFlagEffect
+  | VehicleBoostEffect;
 
 export type EffectDefinition = LeafEffectDefinition | ChainEffect;
 
@@ -91,6 +95,7 @@ export const EFFECT_CAPABILITY_REQUIREMENT: Readonly<Record<Exclude<EffectKind, 
   'arcade.score': 'arcade.score',
   'simulation.resource': 'simulation.resources',
   'world.flag': 'world.state',
+  'vehicle.boost': 'vehicle.motion',
 };
 
 // --- Item definitions --------------------------------------------------
@@ -175,4 +180,12 @@ export interface ItemsService {
   consume(itemId: string, quantity?: number, effectContext?: ItemEffectContext): ItemConsumeResult;
   /** Apply an arbitrary effect list directly (used for on-pickup effects and by other systems). */
   applyEffects(effects: readonly EffectDefinition[], effectContext?: ItemEffectContext): ApplyEffectsResult;
+  /** The currently held on-demand item id, or null. Kart / driving use this slot. */
+  held(): string | null;
+  /** Hold `itemId` if at least one unit is in inventory. Replaces any previous held id. */
+  hold(itemId: string): boolean;
+  /** Consume the held item (if any) and apply its effects. Clears the slot when the count hits zero. */
+  useHeld(quantity?: number, effectContext?: ItemEffectContext): ItemConsumeResult;
+  /** Drop the held slot without consuming. */
+  clearHeld(): void;
 }

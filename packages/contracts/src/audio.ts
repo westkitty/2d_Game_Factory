@@ -29,4 +29,18 @@ export interface AudioBus extends Disposable {
   readonly unlockState: AudioUnlockState;
   playCue(cue: AudioCueId): void;
   applySettings(settings: GameSettings): void;
+  /**
+   * AudioContext.currentTime in seconds, minus pause accumulation.
+   * 0 while locked/unavailable. This is the rhythm transport — not performance.now
+   * and not a setTimeout chain.
+   */
+  now(): number;
+  /** Hardware output latency in seconds when the context reports it. */
+  outputLatency(): number;
+  pauseClock(): void;
+  resumeClock(): void;
+  /** Schedule a short metronome click at an absolute audio time (seconds). */
+  scheduleTone(whenSec: number, frequency?: number): void;
+  /** Cancel pending scheduled tones. */
+  cancelScheduled(): void;
 }

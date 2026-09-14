@@ -15,6 +15,31 @@ export interface GameManifestInput {
   readonly physicsProfile?: 'matter';
 }
 
+export function generateMicrogameCatalog(active: boolean): Record<string, unknown> {
+  return active ? { schemaVersion: 1, order: 'rotate', rounds: [
+    { id: 'signal', kind: 'react', countdownMs: 400, durationMs: 650, target: 1, score: 40 },
+    { id: 'scramble', kind: 'mash', countdownMs: 250, durationMs: 1200, target: 4, score: 60 },
+    { id: 'steady', kind: 'hold', countdownMs: 250, durationMs: 900, target: 500, score: 70 },
+    { id: 'switch', kind: 'alternate', countdownMs: 250, durationMs: 1400, target: 4, score: 80 },
+  ] } : { schemaVersion: 1, order: 'fixed', rounds: [] };
+}
+
+export function generateFishingCatalog(active: boolean): Record<string, unknown> {
+  return active ? { schemaVersion: 1, castMs: 360, biteMs: 650, hookMs: 500, tensionMin: 20, tensionMax: 80, reelTarget: 3, catchTarget: 2, fish: [
+    { id: 'sunfish', name: 'Sunfish', score: 50, pull: 7 }, { id: 'bass', name: 'River Bass', score: 80, pull: 11 },
+  ] } : { schemaVersion: 1, castMs: 1, biteMs: 1, hookMs: 1, tensionMin: 0, tensionMax: 1, reelTarget: 1, catchTarget: 1, fish: [] };
+}
+
+export function generateCookingCatalog(active: boolean): Record<string, unknown> {
+  return active ? { schemaVersion: 1, ingredients: [
+    { id: 'flour', label: 'FLOUR' }, { id: 'egg', label: 'EGG' }, { id: 'pan', label: 'PAN' },
+  ], recipes: [{ id: 'flatcake', dish: 'Golden Flatcake', score: 100, actions: [
+    { ingredientId: 'flour', action: 'measure', maxDelayMs: 2500 },
+    { ingredientId: 'egg', action: 'mix', maxDelayMs: 2500 },
+    { ingredientId: 'pan', action: 'cook', maxDelayMs: 2500 },
+  ] }] } : { schemaVersion: 1, ingredients: [], recipes: [] };
+}
+
 /** content/game.json - a GameDefinition. Only the recipe's *required* packs are enabled by default, plus the generated shell pack. */
 export function generateGameManifest(input: GameManifestInput): Record<string, unknown> {
   return {
@@ -44,8 +69,52 @@ export function generateGameManifest(input: GameManifestInput): Record<string, u
  * its effect through the reusable `sw2d.items` service. Other presets get an
  * empty catalog.
  */
-export function generateItemCatalog(hasItemsRole: boolean): Record<string, unknown> {
-  if (!hasItemsRole) return { schemaVersion: 1, items: [] };
+export function generateItemCatalog(kind: boolean | 'coin' | 'kart' | 'wardrobe' | 'none' = 'none'): Record<string, unknown> {
+  const resolved = kind === true ? 'coin' : kind === false ? 'none' : kind;
+  if (resolved === 'none') return { schemaVersion: 1, items: [] };
+  if (resolved === 'kart') {
+    return {
+      schemaVersion: 1,
+      items: [
+        {
+          id: 'kart-shell',
+          displayName: 'Shell',
+          category: 'held',
+          tags: ['kart'],
+          stackable: false,
+          maxCount: 1,
+          consumable: true,
+          quantityPerGrant: 1,
+          metadata: { fire: 'shell' },
+        },
+        {
+          id: 'kart-boost',
+          displayName: 'Boost',
+          category: 'held',
+          tags: ['kart'],
+          stackable: false,
+          maxCount: 1,
+          consumable: true,
+          quantityPerGrant: 1,
+          effects: [{ kind: 'vehicle.boost' }],
+          metadata: { fire: 'boost' },
+        },
+      ],
+    };
+  }
+  if (resolved === 'wardrobe') {
+    return {
+      schemaVersion: 1,
+      items: [
+        { id: 'hat', displayName: 'Violet Hat', category: 'wardrobe', tags: ['head'], stackable: false, consumable: false,
+          metadata: { slot: 'head', layer: 20, offsetX: 0, offsetY: -110, scale: 1, rotation: 0, color: 12159728 } },
+        { id: 'crown', displayName: 'Gold Crown', category: 'wardrobe', tags: ['head'], stackable: false, consumable: false,
+          metadata: { slot: 'head', layer: 21, offsetX: 0, offsetY: -118, scale: 0.9, rotation: 0, color: 15778420 } },
+        { id: 'shirt', displayName: 'Blue Shirt', category: 'wardrobe', tags: ['body'], stackable: false, consumable: false,
+          metadata: { slot: 'body', layer: 19, offsetX: 0, offsetY: 20, scale: 1, rotation: 0, color: 5218016 } },
+      ],
+    };
+  }
   return {
     schemaVersion: 1,
     items: [
@@ -104,8 +173,286 @@ export function generateWeaponCatalog(hasWeaponsPack: boolean, hasEncountersPack
  * content/encounters.json - an EncounterCatalog (capability program Phase 4).
  * Always emitted; empty unless the preset installs `sw2d.encounters`.
  */
-export function generateEncounterCatalog(hasEncountersPack: boolean): Record<string, unknown> {
+export type EncounterStarterKind = 'skirmish' | 'swarm' | 'platform' | 'boss-rush' | 'bullet-hell' | 'gallery' | 'rail' | 'shmup-h' | 'shmup-v' | 'lane' | 'hold' | 'none';
+
+export function generateEncounterCatalog(hasEncountersPack: boolean, options: { readonly escalate?: boolean; readonly kind?: EncounterStarterKind } = {}): Record<string, unknown> {
   if (!hasEncountersPack) return { schemaVersion: 1, encounters: [] };
+  const kind: EncounterStarterKind = options.kind ?? (options.escalate ? 'swarm' : 'skirmish');
+  // Survivor-like (Final Product Completion Wave 2): every loop of the same
+  // content is a bigger, tougher, faster wave - the reusable escalation the
+  // encounters pack applies from this document.
+  if (kind === 'lane') {
+    return {
+      schemaVersion: 1,
+      archetypes: { runner: { motion: 'ground', speed: 70 } },
+      encounters: [
+        {
+          id: 'starter-lane',
+          phases: [
+            {
+              id: 'wave-1',
+              spawns: [{ archetype: 'runner', count: 2, at: { kind: 'point', x: 128, y: 256 }, intervalMs: 700, health: 2 }],
+              completeWhen: { kind: 'spawns-cleared' },
+            },
+            {
+              id: 'wave-2',
+              spawns: [{ archetype: 'runner', count: 2, at: { kind: 'point', x: 128, y: 256 }, intervalMs: 500, health: 2 }],
+              completeWhen: { kind: 'spawns-cleared' },
+            },
+          ],
+        },
+      ],
+    };
+  }
+  if (kind === 'hold') {
+    return {
+      schemaVersion: 1,
+      escalation: { countPerWave: 1, healthScalePerWave: 0.2, speedScalePerWave: 0.1, maxWaves: 3 },
+      archetypes: { raider: { motion: 'chase', speed: 40 } },
+      encounters: [
+        {
+          id: 'starter-hold',
+          phases: [
+            {
+              id: 'raid',
+              spawns: [{ archetype: 'raider', count: 2, at: { kind: 'point', x: 160, y: 270 }, intervalMs: 800, health: 2 }],
+              completeWhen: { kind: 'spawns-cleared' },
+            },
+          ],
+        },
+      ],
+    };
+  }
+  if (kind === 'swarm') {
+    return {
+      schemaVersion: 1,
+      escalation: { countPerWave: 1, healthScalePerWave: 0.25, speedScalePerWave: 0.15, maxWaves: 12 },
+      encounters: [
+        {
+          id: 'starter-swarm',
+          phases: [
+            {
+              id: 'swarm',
+              spawns: [{ archetype: 'grunt', count: 3, at: { kind: 'edge', edge: 'top' }, intervalMs: 400, health: 20 }],
+              completeWhen: { kind: 'spawns-cleared' },
+            },
+          ],
+        },
+      ],
+    };
+  }
+  // Run-and-gun (Final Product Completion Wave 3, matrix L16): walkers under
+  // gravity come in from the right; wave 2 adds a standing shooter.
+  if (kind === 'platform') {
+    return {
+      schemaVersion: 1,
+      archetypes: { walker: { motion: 'ground', speed: 70 }, shooter: { motion: 'hold', speed: 0 } },
+      encounters: [
+        {
+          id: 'starter-assault',
+          phases: [
+            {
+              id: 'wave-1',
+              spawns: [{ archetype: 'walker', count: 3, at: { kind: 'point', x: 900, y: 380 }, intervalMs: 700, health: 20 }],
+              completeWhen: { kind: 'spawns-cleared' },
+            },
+            {
+              id: 'wave-2',
+              spawns: [
+                { archetype: 'walker', count: 2, at: { kind: 'point', x: 900, y: 380 }, intervalMs: 900, health: 20 },
+                { archetype: 'shooter', count: 1, at: { kind: 'point', x: 760, y: 467 }, health: 30, emitterIds: ['aimed-shot'] },
+              ],
+              emitters: [{ id: 'aimed-shot', weaponId: 'enemy-blaster', pattern: { kind: 'aimed' }, everyMs: 1500, startDelayMs: 600 }],
+              completeWhen: { kind: 'spawns-cleared' },
+            },
+          ],
+        },
+      ],
+    };
+  }
+  // Boss rush (Final Product Completion Wave 3, matrix L10): three bosses in
+  // sequence, each its own encounter with its own pattern; the shell runs the
+  // `sequence` back to back with a readable transition.
+  if (kind === 'boss-rush') {
+    const boss = (id: string, health: number, pattern: Record<string, unknown>, everyMs: number, x: number) => ({
+      id,
+      phases: [
+        {
+          id: 'fight',
+          spawns: [{ archetype: 'boss', count: 1, at: { kind: 'point', x, y: 120 }, health, emitterIds: ['barrage'] }],
+          emitters: [{ id: 'barrage', weaponId: 'enemy-blaster', pattern, everyMs, startDelayMs: 500 }],
+          completeWhen: { kind: 'spawns-cleared' },
+        },
+      ],
+    });
+    return {
+      schemaVersion: 1,
+      archetypes: { boss: { motion: 'hold', speed: 0, size: 56, score: 100 } },
+      sequence: { encounterIds: ['boss-warden', 'boss-sentinel', 'boss-tyrant'], transitionMs: 1500 },
+      encounters: [
+        boss('boss-warden', 60, { kind: 'aimed' }, 900, 480),
+        boss('boss-sentinel', 90, { kind: 'fan', count: 3, spreadDeg: 40, aimed: true }, 1100, 300),
+        boss('boss-tyrant', 120, { kind: 'ring', count: 8 }, 1300, 660),
+      ],
+    };
+  }
+  // Bullet hell (Final Product Completion Wave 3, matrix L12): one boss whose
+  // three emitters (a 24-way ring, a rotating 8-way spiral and an aimed fan)
+  // keep several hundred bullets live at once - the workload the pooled
+  // projectile runtime is tuned and benchmarked against
+  // (tools/scripts/qa-bullet-budget.ts).
+  if (kind === 'bullet-hell') {
+    return {
+      schemaVersion: 1,
+      archetypes: { boss: { motion: 'hold', speed: 0, size: 56, score: 500 }, drone: { motion: 'chase', speed: 40, score: 10 } },
+      encounters: [
+        {
+          id: 'hell-gate',
+          phases: [
+            {
+              id: 'opening',
+              spawns: [{ archetype: 'boss', count: 1, at: { kind: 'point', x: 480, y: 110 }, health: 400, emitterIds: ['ring', 'spiral', 'fan'] }],
+              emitters: [
+                { id: 'ring', weaponId: 'enemy-blaster', pattern: { kind: 'ring', count: 32 }, everyMs: 260, startDelayMs: 200 },
+                { id: 'spiral', weaponId: 'enemy-blaster', pattern: { kind: 'spiral', count: 10, rotationStepDeg: 13 }, everyMs: 70, startDelayMs: 100 },
+                { id: 'fan', weaponId: 'enemy-blaster', pattern: { kind: 'fan', count: 7, spreadDeg: 50, aimed: true }, everyMs: 480, startDelayMs: 300 },
+              ],
+              completeWhen: { kind: 'entity-health-below', entityId: 'hell-gate:opening:0:0', fraction: 0.5 },
+            },
+            {
+              id: 'frenzy',
+              spawns: [{ archetype: 'drone', count: 4, at: { kind: 'edge', edge: 'top' }, intervalMs: 500, health: 20 }],
+              emitters: [
+                { id: 'ring', weaponId: 'enemy-blaster', pattern: { kind: 'ring', count: 32 }, everyMs: 280, startDelayMs: 100 },
+                { id: 'spiral', weaponId: 'enemy-blaster', pattern: { kind: 'spiral', count: 10, rotationStepDeg: 17 }, everyMs: 80, startDelayMs: 100 },
+              ],
+              completeWhen: { kind: 'spawns-cleared' },
+            },
+          ],
+        },
+      ],
+    };
+  }
+  // Gallery shooter (Final Product Completion Wave 3, matrix L15): two rounds
+  // of drifting targets worth points; targets never fight back.
+  if (kind === 'gallery') {
+    return {
+      schemaVersion: 1,
+      archetypes: { target: { motion: 'drift', speed: 120, driftDeg: 0, score: 10, size: 30 }, bonus: { motion: 'drift', speed: 200, driftDeg: 180, score: 25, size: 22 } },
+      sequence: { encounterIds: ['round-1', 'round-2'], transitionMs: 800 },
+      encounters: [
+        {
+          id: 'round-1',
+          phases: [
+            {
+              id: 'targets',
+              spawns: [{ archetype: 'target', count: 4, at: { kind: 'formation', shape: 'line', x: 480, y: 150, spacing: 140 }, intervalMs: 150, health: 10 }],
+              completeWhen: { kind: 'spawns-cleared' },
+            },
+          ],
+        },
+        {
+          id: 'round-2',
+          phases: [
+            {
+              id: 'targets',
+              spawns: [
+                { archetype: 'target', count: 5, at: { kind: 'formation', shape: 'v', x: 480, y: 130, spacing: 120 }, intervalMs: 150, health: 10 },
+                { archetype: 'bonus', count: 2, at: { kind: 'formation', shape: 'line', x: 480, y: 300, spacing: 300 }, startDelayMs: 400, health: 10 },
+              ],
+              completeWhen: { kind: 'spawns-cleared' },
+            },
+          ],
+        },
+      ],
+    };
+  }
+  // Rail shooter (Final Product Completion Wave 3, matrix L17): drones ahead of
+  // the gun approach it; two legs of the rail, each its own encounter.
+  if (kind === 'rail') {
+    return {
+      schemaVersion: 1,
+      archetypes: { drone: { motion: 'approach', speed: 55, score: 5, size: 30 }, hunter: { motion: 'approach', speed: 85, score: 15, size: 34 } },
+      sequence: { encounterIds: ['leg-1', 'leg-2'], transitionMs: 700 },
+      encounters: [
+        {
+          id: 'leg-1',
+          phases: [
+            {
+              id: 'drones',
+              spawns: [{ archetype: 'drone', count: 4, at: { kind: 'formation', shape: 'line', x: 480, y: 110, spacing: 170 }, intervalMs: 350, health: 10 }],
+              completeWhen: { kind: 'spawns-cleared' },
+            },
+          ],
+        },
+        {
+          id: 'leg-2',
+          phases: [
+            {
+              id: 'hunters',
+              spawns: [
+                { archetype: 'drone', count: 3, at: { kind: 'formation', shape: 'v', x: 480, y: 100, spacing: 160 }, intervalMs: 300, health: 10 },
+                { archetype: 'hunter', count: 2, at: { kind: 'formation', shape: 'line', x: 480, y: 60, spacing: 400 }, startDelayMs: 900, health: 20 },
+              ],
+              completeWhen: { kind: 'spawns-cleared' },
+            },
+          ],
+        },
+      ],
+    };
+  }
+  // Shmups (Final Product Completion Wave 3, matrix L11): enemy formations
+  // sweep across the streaming stage (drift + escape), a shooter wing fires.
+  if (kind === 'shmup-h' || kind === 'shmup-v') {
+    const vertical = kind === 'shmup-v';
+    const drift = vertical ? 90 : 180;
+    return {
+      schemaVersion: 1,
+      archetypes: { raider: { motion: 'drift', speed: 150, driftDeg: drift, score: 10, size: 26 }, gunner: { motion: 'drift', speed: 90, driftDeg: drift, score: 20, size: 30 } },
+      encounters: [
+        {
+          id: 'stage-formations',
+          phases: [
+            {
+              id: 'wing-1',
+              spawns: [
+                {
+                  archetype: 'raider',
+                  count: 4,
+                  at: vertical ? { kind: 'formation', shape: 'line', x: 480, y: -30, spacing: 130 } : { kind: 'formation', shape: 'column', x: 990, y: 270, spacing: 90 },
+                  intervalMs: 200,
+                  health: 10,
+                },
+              ],
+              completeWhen: { kind: 'elapsed', ms: 4500 },
+            },
+            {
+              id: 'wing-2',
+              spawns: [
+                {
+                  archetype: 'raider',
+                  count: 5,
+                  at: vertical ? { kind: 'formation', shape: 'v', x: 480, y: -30, spacing: 110 } : { kind: 'formation', shape: 'v', x: 990, y: 200, spacing: 80 },
+                  intervalMs: 200,
+                  health: 10,
+                },
+                {
+                  archetype: 'gunner',
+                  count: 2,
+                  at: vertical ? { kind: 'formation', shape: 'line', x: 480, y: -30, spacing: 300 } : { kind: 'formation', shape: 'column', x: 990, y: 270, spacing: 200 },
+                  startDelayMs: 1200,
+                  health: 20,
+                  emitterIds: ['aimed-shot'],
+                },
+              ],
+              emitters: [{ id: 'aimed-shot', weaponId: 'enemy-blaster', pattern: { kind: 'aimed' }, everyMs: 1400, startDelayMs: 900 }],
+              completeWhen: { kind: 'elapsed', ms: 6000 },
+            },
+          ],
+        },
+      ],
+    };
+  }
   // A real two-phase starter fight, not a placeholder: wave 1 is three
   // chasing grunts, wave 2 adds shooters carrying the enemy-blaster emitter
   // (generateWeaponCatalog ships that weapon whenever encounters are on).
@@ -150,12 +497,13 @@ export function generateEncounterCatalog(hasEncountersPack: boolean): Record<str
  * content/puzzles.json - a PuzzleRulesDoc (capability program Phase 6).
  * Always emitted; empty unless the preset installs `sw2d.puzzle-rules`. A
  * puzzle-family preset gets one built-in starter definition matching its
- * kind (sokoban, switch-sequence, match, falling-block), so its generated
- * shell loads an entire ruleset - moves, undo, reset, solved-detection -
- * from serialized data with no `createInitialState` / `isSolved` callback.
+ * kind (sokoban, switch-sequence, match, falling-block, physics-goal, escape),
+ * so its generated shell loads an entire ruleset - moves, undo, reset,
+ * solved-detection - from serialized data with no `createInitialState` /
+ * `isSolved` callback.
  */
 export function generatePuzzleRulesDoc(
-  kind: 'sokoban' | 'switch-sequence' | 'match' | 'falling-block' | 'none',
+  kind: 'sokoban' | 'switch-sequence' | 'match' | 'falling-block' | 'physics-goal' | 'escape' | 'none',
 ): Record<string, unknown> {
   if (kind === 'sokoban') {
     return {
@@ -231,6 +579,36 @@ export function generatePuzzleRulesDoc(
       ],
     };
   }
+  if (kind === 'physics-goal') {
+    return {
+      schemaVersion: 1,
+      puzzles: [
+        {
+          id: 'starter',
+          kind: 'physics-goal',
+          launchLimit: 8,
+          goals: [{ entityId: 'ball', zone: { x: 740, y: 430, width: 120, height: 100 } }],
+        },
+      ],
+    };
+  }
+  if (kind === 'escape') {
+    return {
+      schemaVersion: 1,
+      puzzles: [
+        {
+          id: 'starter',
+          kind: 'escape',
+          interactables: [
+            { id: 'note', x: 240, y: 280, radius: 28, label: 'note', setsFlags: ['note'] },
+            { id: 'key', x: 480, y: 280, radius: 28, label: 'key', requiresFlags: ['note'], setsFlags: ['key'] },
+            { id: 'door', x: 720, y: 280, radius: 28, label: 'door', requiresFlags: ['key'], setsFlags: ['escaped'] },
+          ],
+          completeWhen: { flags: ['key'] },
+        },
+      ],
+    };
+  }
   return { schemaVersion: 1, puzzles: [] };
 }
 
@@ -242,7 +620,7 @@ export function generatePuzzleRulesDoc(
  * dungeons, road-chain for driving), so its generated shell builds the
  * playable world from a deterministic seed - same seed, identical layout.
  */
-export function generateGenerationDoc(kind: 'segment-chain' | 'room-graph' | 'road-chain' | 'none'): Record<string, unknown> {
+export function generateGenerationDoc(kind: 'segment-chain' | 'room-graph' | 'road-chain' | 'maze' | 'none'): Record<string, unknown> {
   if (kind === 'segment-chain') {
     return {
       schemaVersion: 1,
@@ -302,6 +680,13 @@ export function generateGenerationDoc(kind: 'segment-chain' | 'room-graph' | 'ro
           ],
         },
       ],
+    };
+  }
+  if (kind === 'maze') {
+    return {
+      schemaVersion: 1,
+      seed: 1337,
+      generators: [{ id: 'main', kind: 'maze', cols: 17, rows: 11 }],
     };
   }
   return { schemaVersion: 1, seed: 0, generators: [] };
@@ -378,7 +763,7 @@ export function generateWorldGraphDoc(hasWorldGraphPack: boolean): Record<string
  * recipe can show both). Values come from VEHICLE_PROFILE_DEFAULTS, expressed
  * inline so the document is real, editable tuning.
  */
-export function generateVehicleCatalog(profile: 'car' | 'kart' | 'boat' | 'flight' | 'none'): Record<string, unknown> {
+export function generateVehicleCatalog(profile: 'car' | 'kart' | 'boat' | 'flight' | 'ship' | 'none'): Record<string, unknown> {
   const car = {
     id: 'starter-car',
     profile: 'car',
@@ -422,6 +807,30 @@ export function generateVehicleCatalog(profile: 'car' | 'kart' | 'boat' | 'fligh
     minAltitude: 0,
     maxAltitude: 240,
   };
+  // Final Product Completion Wave 3 (matrix L14): the asteroids ship -
+  // Newtonian thrust with momentum, rotational inertia, wrap-around.
+  const ship = {
+    id: 'starter-ship',
+    profile: 'ship',
+    acceleration: 240,
+    braking: 160,
+    reverseAcceleration: 160,
+    maxForwardSpeed: 320,
+    maxReverseSpeed: 320,
+    steeringRate: 0,
+    speedSensitiveSteering: 0,
+    drag: 0.82,
+    lateralGrip: 0,
+    traction: 0,
+    driftFactor: 0,
+    boostForce: 260,
+    boostDurationMs: 600,
+    boostCooldownMs: 2400,
+    angularAcceleration: 9,
+    angularDamping: 0.08,
+    wrap: { width: 960, height: 540, margin: 24 },
+  };
+  if (profile === 'ship') return { schemaVersion: 1, vehicles: [ship] };
   if (profile === 'kart') return { schemaVersion: 1, vehicles: [kart] };
   if (profile === 'boat') return { schemaVersion: 1, vehicles: [boat, flight] };
   if (profile === 'flight') return { schemaVersion: 1, vehicles: [flight] };
@@ -444,6 +853,16 @@ export function generateEconomyCatalog(kind: 'shop' | 'kitchen' | 'factory' | 'n
     spawn: { firstDelayMs: 0, intervalMs: 1000, maxQueue: 0 },
   };
   if (kind === 'none') return empty;
+  const shopLayout = {
+    entrance: { x: 80, y: 420 },
+    counter: { x: 520, y: 220 },
+    exit: { x: 880, y: 420 },
+    queueSlots: [
+      { x: 400, y: 300 },
+      { x: 320, y: 300 },
+    ],
+    walkSpeed: 620,
+  };
   if (kind === 'shop') {
     return {
       schemaVersion: 1,
@@ -458,6 +877,7 @@ export function generateEconomyCatalog(kind: 'shop' | 'kitchen' | 'factory' | 'n
         { id: 'sam', displayName: 'Sam', goodId: 'bread', patienceMs: 12000 },
       ],
       spawn: { firstDelayMs: 250, intervalMs: 2200, maxQueue: 2 },
+      layout: shopLayout,
     };
   }
   if (kind === 'kitchen') {
@@ -478,6 +898,13 @@ export function generateEconomyCatalog(kind: 'shop' | 'kitchen' | 'factory' | 'n
         { id: 'diner-b', displayName: 'Guest', goodId: 'salad', patienceMs: 14000 },
       ],
       spawn: { firstDelayMs: 250, intervalMs: 2400, maxQueue: 2 },
+      layout: {
+        ...shopLayout,
+        seats: [
+          { x: 200, y: 180 },
+          { x: 280, y: 180 },
+        ],
+      },
     };
   }
   return {
@@ -492,7 +919,61 @@ export function generateEconomyCatalog(kind: 'shop' | 'kitchen' | 'factory' | 'n
       { id: 'buyer-b', displayName: 'Client', goodId: 'widget', patienceMs: 16000 },
     ],
     spawn: { firstDelayMs: 400, intervalMs: 1800, maxQueue: 3 },
+    layout: shopLayout,
   };
+}
+
+/**
+ * content/simulation.json - a SimulationCatalog (Final Product Completion Wave 6).
+ * Always emitted; empty unless the preset actually consumes idle/farm/shop-meta fields.
+ */
+export function generateSimulationCatalog(kind: 'idle' | 'farm' | 'colony' | 'meta' | 'none'): Record<string, unknown> {
+  if (kind === 'idle') {
+    return {
+      schemaVersion: 1,
+      persist: true,
+      resources: [
+        { id: 'gold', amount: 0, ratePerSecond: 8 },
+        { id: 'currency', amount: 0 },
+      ],
+      offline: { maxMs: 8000, discontinuityMs: 86_400_000 },
+      prestige: { resourceId: 'gold', cost: 16, multiplier: 2 },
+    };
+  }
+  if (kind === 'farm') {
+    return {
+      schemaVersion: 1,
+      resources: [{ id: 'crops', amount: 0 }],
+      plots: [{ id: 'plot-0' }, { id: 'plot-1' }, { id: 'plot-2' }],
+      crops: [{ id: 'wheat', growMs: 480, waterRequired: true, yield: 1, resourceId: 'crops' }],
+      seasons: [
+        { id: 'spring', durationMs: 2000, growScale: 1 },
+        { id: 'summer', durationMs: 2000, growScale: 1.2 },
+        { id: 'autumn', durationMs: 2000, growScale: 0.9 },
+        { id: 'winter', durationMs: 2000, growScale: 0.7 },
+      ],
+      harvestTarget: 3,
+    };
+  }
+  if (kind === 'colony') {
+    return {
+      schemaVersion: 1,
+      resources: [
+        { id: 'wood', amount: 0 },
+        { id: 'stone', amount: 0 },
+      ],
+    };
+  }
+  if (kind === 'meta') {
+    return {
+      schemaVersion: 1,
+      persist: true,
+      resources: [{ id: 'gold', amount: 0, ratePerSecond: 8 }],
+      offline: { maxMs: 6000, discontinuityMs: 86_400_000 },
+      prestige: { resourceId: 'gold', cost: 16, multiplier: 2 },
+    };
+  }
+  return { schemaVersion: 1 };
 }
 
 /**
@@ -501,7 +982,7 @@ export function generateEconomyCatalog(kind: 'shop' | 'kitchen' | 'factory' | 'n
  * modes match the three care consumers: creature (hunger/mood hold-to-win),
  * habitat (water/food longer hold, fail-below), companion (instant win, no fail).
  */
-export function generateNeedsCatalog(kind: 'creature' | 'habitat' | 'companion' | 'none'): Record<string, unknown> {
+export function generateNeedsCatalog(kind: 'creature' | 'habitat' | 'companion' | 'colony' | 'none'): Record<string, unknown> {
   const empty = {
     schemaVersion: 1,
     mode: 'creature',
@@ -514,8 +995,17 @@ export function generateNeedsCatalog(kind: 'creature' | 'habitat' | 'companion' 
   if (kind === 'creature') {
     return {
       schemaVersion: 1,
+      persist: true,
       mode: 'creature',
       subject: { id: 'pet', displayName: 'Pico' },
+      creatures: [{ id: 'pico', displayName: 'Pico', x: 180, y: 270, speed: 110 }],
+      decisionIntervalMs: 400,
+      activities: [
+        { id: 'seek-food', displayName: 'Seeking food', needId: 'hunger', below: 78, targetX: 760, targetY: 300, durationMs: 1200 },
+        { id: 'rest', displayName: 'Resting', needId: 'mood', below: 78, targetX: 240, targetY: 350, durationMs: 1200 },
+        { id: 'explore', displayName: 'Exploring', targetX: 520, targetY: 220, durationMs: 900 },
+        { id: 'play', displayName: 'Playing', targetX: 420, targetY: 360, durationMs: 900 },
+      ],
       needs: [
         { id: 'hunger', displayName: 'Hunger', value: 72, min: 0, max: 100, decayPerSecond: 2.8 },
         { id: 'mood', displayName: 'Mood', value: 72, min: 0, max: 100, decayPerSecond: 2.2 },
@@ -532,8 +1022,25 @@ export function generateNeedsCatalog(kind: 'creature' | 'habitat' | 'companion' 
   if (kind === 'habitat') {
     return {
       schemaVersion: 1,
+      persist: true,
       mode: 'habitat',
       subject: { id: 'tank', displayName: 'Tank' },
+      creatures: [
+        { id: 'fin', displayName: 'Fin', x: 220, y: 220, speed: 75 },
+        { id: 'coral', displayName: 'Coral', x: 650, y: 300, speed: 65, needValues: { food: 70 } },
+        { id: 'dart', displayName: 'Dart', x: 420, y: 360, speed: 90, needValues: { water: 72 } },
+      ],
+      decisionIntervalMs: 500,
+      activities: [
+        { id: 'forage', displayName: 'Foraging', needId: 'food', below: 80, targetX: 470, targetY: 260, durationMs: 1200 },
+        { id: 'surface', displayName: 'Seeking clean water', needId: 'water', below: 80, targetX: 470, targetY: 140, durationMs: 1200 },
+        { id: 'school', displayName: 'Schooling', targetX: 470, targetY: 260, durationMs: 1000 },
+        { id: 'drift', displayName: 'Drifting', targetX: 650, targetY: 330, durationMs: 1000 },
+      ],
+      relationships: [
+        { a: 'fin', b: 'coral', affinity: 10, gainPerSecond: 2, max: 100 },
+        { a: 'coral', b: 'dart', affinity: 6, gainPerSecond: 1.5, max: 100 },
+      ],
       needs: [
         { id: 'water', displayName: 'Water', value: 78, min: 0, max: 100, decayPerSecond: 3 },
         { id: 'food', displayName: 'Food', value: 78, min: 0, max: 100, decayPerSecond: 3.5 },
@@ -546,10 +1053,46 @@ export function generateNeedsCatalog(kind: 'creature' | 'habitat' | 'companion' 
       loseBelow: 10,
     };
   }
+  if (kind === 'colony') {
+    return {
+      schemaVersion: 1,
+      mode: 'creature',
+      subject: { id: 'colony', displayName: 'Founders' },
+      creatures: [
+        { id: 'ada', displayName: 'Ada', x: 420, y: 360, speed: 150, needValues: { hunger: 76, rest: 84 } },
+        { id: 'bo', displayName: 'Bo', x: 470, y: 360, speed: 145, needValues: { hunger: 82, rest: 72 } },
+        { id: 'cy', displayName: 'Cy', x: 520, y: 360, speed: 140, needValues: { hunger: 88, rest: 80 } },
+      ],
+      needs: [
+        { id: 'hunger', displayName: 'Hunger', value: 80, min: 0, max: 100, decayPerSecond: 2 },
+        { id: 'rest', displayName: 'Rest', value: 80, min: 0, max: 100, decayPerSecond: 1.5 },
+      ],
+      actions: [
+        { id: 'meal', displayName: 'Meal', effects: [{ needId: 'hunger', delta: 25 }] },
+        { id: 'sleep', displayName: 'Sleep', effects: [{ needId: 'rest', delta: 25 }] },
+      ],
+      activities: [
+        { id: 'eat', displayName: 'Eating', needId: 'hunger', below: 35, targetX: 470, targetY: 390, durationMs: 800 },
+        { id: 'sleep', displayName: 'Sleeping', needId: 'rest', below: 35, targetX: 560, targetY: 390, durationMs: 800 },
+        { id: 'ready', displayName: 'Ready', targetX: 470, targetY: 340, durationMs: 800 },
+      ],
+      relationships: [{ a: 'ada', b: 'bo', affinity: 5, gainPerSecond: 0.2, max: 100 }],
+      decisionIntervalMs: 400,
+      win: { minValue: 0, holdMs: 999999, minActions: 999999 },
+    };
+  }
   return {
     schemaVersion: 1,
+    persist: true,
     mode: 'companion',
     subject: { id: 'buddy', displayName: 'Buddy' },
+    creatures: [{ id: 'buddy', displayName: 'Buddy', x: 300, y: 300, speed: 100 }],
+    decisionIntervalMs: 400,
+    activities: [
+      { id: 'seek-food', displayName: 'Seeking food', needId: 'hunger', below: 76, targetX: 720, targetY: 280, durationMs: 1000 },
+      { id: 'seek-play', displayName: 'Seeking play', needId: 'happiness', below: 76, targetX: 260, targetY: 220, durationMs: 1000 },
+      { id: 'wander', displayName: 'Wandering', targetX: 500, targetY: 340, durationMs: 900 },
+    ],
     needs: [
       { id: 'hunger', displayName: 'Hunger', value: 70, min: 0, max: 100, decayPerSecond: 3 },
       { id: 'happiness', displayName: 'Happiness', value: 70, min: 0, max: 100, decayPerSecond: 2.5 },
@@ -569,7 +1112,7 @@ export function generateNeedsCatalog(kind: 'creature' | 'habitat' | 'companion' 
  * bounded starter modes match the two consumers: novel (auto-start, choice,
  * two endings) and adventure (hotspot start, gated exit).
  */
-export function generateDialogueCatalog(kind: 'novel' | 'adventure' | 'none'): Record<string, unknown> {
+export function generateDialogueCatalog(kind: 'novel' | 'adventure' | 'fiction' | 'none'): Record<string, unknown> {
   const empty = {
     schemaVersion: 1,
     mode: 'novel',
@@ -581,48 +1124,84 @@ export function generateDialogueCatalog(kind: 'novel' | 'adventure' | 'none'): R
       schemaVersion: 1,
       mode: 'novel',
       startConversationId: 'station',
+      scenes: [
+        { id: 'platform', title: 'Old Station', background: '#17233d', backgroundImage: 'station-night' },
+        { id: 'dawn', title: 'Dawn Platform', background: '#6b4f63', backgroundImage: 'station-dawn' },
+      ],
+      speakers: [
+        { id: 'narrator', displayName: 'Narrator', portrait: 'narrator-silhouette', position: 'center', color: '#8a93a6' },
+        { id: 'stranger', displayName: 'Stranger', portrait: 'stranger-coat', position: 'right', color: '#b98af0' },
+      ],
       conversations: [
         {
           id: 'station',
           startNodeId: 'n0',
           nodes: [
-            { id: 'n0', kind: 'line', speaker: 'Narrator', text: 'A stranger arrives at the old station.', next: 'n1' },
-            { id: 'n1', kind: 'line', speaker: 'Stranger', text: 'They ask you to choose what happens next.', next: 'n2' },
+            { id: 'n0', kind: 'line', speaker: 'Narrator', speakerId: 'narrator', sceneId: 'platform', text: 'A stranger arrives at the old station.', next: 'n1' },
+            { id: 'n1', kind: 'line', speaker: 'Stranger', speakerId: 'stranger', sceneId: 'platform', text: 'They ask you to choose what happens next.', next: 'n2' },
             {
               id: 'n2',
               kind: 'choice',
               speaker: 'Stranger',
+              speakerId: 'stranger',
+              sceneId: 'platform',
               text: 'What do you do?',
               choices: [
                 { id: 'help', text: 'Help the stranger', next: 'n3', branchId: 'help-the-stranger', setFlag: 'helped' },
                 { id: 'secret', text: 'Keep the secret', next: 'n4', branchId: 'keep-the-secret', setFlag: 'secret' },
               ],
             },
-            { id: 'n3', kind: 'end', speaker: 'Narrator', text: 'Your choice changes the final scene.', ending: 'dawn-ending' },
-            { id: 'n4', kind: 'end', speaker: 'Narrator', text: 'Your choice changes the final scene.', ending: 'midnight-ending' },
+            { id: 'n3', kind: 'end', speaker: 'Narrator', speakerId: 'narrator', sceneId: 'dawn', text: 'Your choice changes the final scene.', ending: 'dawn-ending' },
+            { id: 'n4', kind: 'end', speaker: 'Narrator', speakerId: 'narrator', sceneId: 'platform', text: 'Your choice changes the final scene.', ending: 'midnight-ending' },
           ],
         },
       ],
     };
   }
+  if (kind === 'fiction') {
+    return {
+      schemaVersion: 1,
+      mode: 'novel',
+      conversations: [],
+      parser: {
+        startNodeId: 'cabin',
+        prompt: 'What now?',
+        objects: [
+          { id: 'note', nouns: ['note'], aliases: ['crumpled note', 'paper'] },
+          { id: 'key', nouns: ['key'], aliases: ['brass key'] },
+          { id: 'door', nouns: ['door'], aliases: ['locked door'] },
+        ],
+        commands: [
+          { id: 'look-note', verb: 'look', aliases: ['examine', 'inspect'], objectId: 'note', setFlags: ['saw-note'], nodeId: 'note-seen', text: 'The note says: the brass key is beneath the lamp.' },
+          { id: 'take-key', verb: 'take', aliases: ['get'], objectId: 'key', requireFlags: ['saw-note'], setFlags: ['has-key'], nodeId: 'key-taken', text: 'You take the brass key.' },
+          { id: 'unlock-door', verb: 'unlock', aliases: ['open'], objectId: 'door', indirectObjectId: 'key', requireFlags: ['has-key'], nodeId: 'escaped', text: 'The key turns. You step outside.', ending: 'escaped' },
+        ],
+        unknownVerb: 'Try LOOK, TAKE, or UNLOCK.',
+        unknownObject: 'You cannot identify that object here.',
+        blocked: 'That is not possible yet.',
+      },
+    };
+  }
   return {
     schemaVersion: 1,
     mode: 'adventure',
+    scenes: [{ id: 'study', title: 'Clockwork Study', background: '#241b2f', backgroundImage: 'study' }],
+    speakers: [{ id: 'you', displayName: 'You', portrait: 'detective-profile', position: 'left', color: '#65d0a8' }],
     conversations: [
       {
         id: 'note',
         startNodeId: 'n',
-        nodes: [{ id: 'n', kind: 'end', speaker: 'You', text: 'A crumpled note: the clock is lying.', setFlag: 'saw-note' }],
+        nodes: [{ id: 'n', kind: 'end', speaker: 'You', speakerId: 'you', sceneId: 'study', text: 'A crumpled note: the clock is lying.', setFlag: 'saw-note' }],
       },
       {
         id: 'clock',
         startNodeId: 'c',
-        nodes: [{ id: 'c', kind: 'end', speaker: 'You', text: 'The clock hides a small brass key.', setFlag: 'saw-clock' }],
+        nodes: [{ id: 'c', kind: 'end', speaker: 'You', speakerId: 'you', sceneId: 'study', text: 'The clock hides a small brass key.', setFlag: 'saw-clock' }],
       },
       {
         id: 'door',
         startNodeId: 'd',
-        nodes: [{ id: 'd', kind: 'end', speaker: 'You', text: 'The door swings open.', ending: 'escaped' }],
+        nodes: [{ id: 'd', kind: 'end', speaker: 'You', speakerId: 'you', sceneId: 'study', text: 'The door swings open.', ending: 'escaped' }],
       },
     ],
     hotspots: [
@@ -654,6 +1233,9 @@ export function generatePerceptionCatalog(kind: 'infiltrate' | 'heist' | 'none')
     start: { x: 120, y: 270 },
     playerRadius: 14,
     hiddenMultiplier: 0.15,
+    // Final Product Completion Wave 2 (matrix L09): the guard walks a route
+    // (patrol), chases on a clear sighting, investigates where it lost the
+    // player, returns to the route, and can be taken down from behind.
     observers: [
       {
         id: 'guard',
@@ -664,6 +1246,12 @@ export function generatePerceptionCatalog(kind: 'infiltrate' | 'heist' | 'none')
         range: 220,
         suspicionRisePerSecond: 2,
         suspicionDecayPerSecond: 0.5,
+        patrol: { waypoints: [{ x: 520, y: 270 }, { x: 700, y: 270 }], speed: 60, waitMs: 700 },
+        chaseSpeed: 90,
+        catchRadius: 24,
+        memoryMs: 1200,
+        investigateMs: 1500,
+        takedownRadius: 40,
       },
     ],
     cover: [{ id: 'crate', x: 400, y: 180, radius: 36 }],
@@ -776,8 +1364,10 @@ export function generateLocalPlayCatalog(kind: 'hotseat' | 'versus' | 'none'): R
       players: [
         { id: 'p1', label: 'P1' },
         { id: 'p2', label: 'P2' },
+        { id: 'p3', label: 'P3' },
+        { id: 'p4', label: 'P4' },
       ],
-      hotseat: { turns: 6, pointsCycle: [1, 2, 3] },
+      hotseat: { turns: 8, pointsCycle: [1, 2, 3, 2] },
     };
   }
   return {
@@ -812,7 +1402,7 @@ export function generateStageScrollCatalog(kind: 'horizontal' | 'vertical' | 'no
       schemaVersion: 1,
       mode: 'horizontal',
       speed: 180,
-      length: 720,
+      length: 1400,
       viewport: { width: 960, height: 540 },
       player: { x: 120, y: 270, radius: 16, speed: 210, minX: 40, maxX: 420, minY: 40, maxY: 500 },
       hazards: [
@@ -820,19 +1410,42 @@ export function generateStageScrollCatalog(kind: 'horizontal' | 'vertical' | 'no
         { id: 'rock-b', along: 480, cross: 450, radius: 18 },
         { id: 'rock-c', along: 640, cross: 90, radius: 18 },
       ],
+      // Final Product Completion Wave 3 (matrix L11): three parallax planes
+      // and a rail path - the stage slows and drifts down through a canyon
+      // on its middle leg, then speeds up and climbs back.
+      layers: [
+        { id: 'stars-far', speedFactor: 0.2, spacing: 160, size: 6, alpha: 0.25, cross: 80 },
+        { id: 'ridge-mid', speedFactor: 0.5, spacing: 120, size: 14, alpha: 0.35, cross: 470 },
+        { id: 'debris-near', speedFactor: 1.4, spacing: 200, size: 10, alpha: 0.6, cross: 250 },
+      ],
+      rail: [
+        { from: 0, speed: 180, crossDrift: 0 },
+        { from: 480, speed: 120, crossDrift: 40 },
+        { from: 960, speed: 220, crossDrift: -40 },
+      ],
     };
   }
   return {
     schemaVersion: 1,
     mode: 'vertical',
     speed: 180,
-    length: 720,
+    length: 1400,
     viewport: { width: 960, height: 540 },
     player: { x: 480, y: 440, radius: 16, speed: 210, minX: 40, maxX: 920, minY: 260, maxY: 510 },
     hazards: [
       { id: 'rock-a', along: 280, cross: 120, radius: 18 },
       { id: 'rock-b', along: 480, cross: 840, radius: 18 },
       { id: 'rock-c', along: 640, cross: 120, radius: 18 },
+    ],
+    layers: [
+      { id: 'stars-far', speedFactor: 0.2, spacing: 160, size: 6, alpha: 0.25, cross: 120 },
+      { id: 'cloud-mid', speedFactor: 0.5, spacing: 140, size: 14, alpha: 0.35, cross: 820 },
+      { id: 'spray-near', speedFactor: 1.4, spacing: 220, size: 10, alpha: 0.6, cross: 480 },
+    ],
+    rail: [
+      { from: 0, speed: 180, crossDrift: 0 },
+      { from: 480, speed: 120, crossDrift: 60 },
+      { from: 960, speed: 220, crossDrift: -60 },
     ],
   };
 }
@@ -841,7 +1454,7 @@ export function generateStageScrollCatalog(kind: 'horizontal' | 'vertical' | 'no
  * content/timing.json - a TimingCatalog (Category-C Wave 10). Always
  * emitted; empty/inert unless the preset installs `sw2d.timing`. Two
  * bounded starter modes match the two consumers: reaction (deterministic
- * delay, too-early miss) and rhythm (periodic visual beats). Not audio-sync.
+ * delay, too-early miss) and rhythm (audio-clock beats).
  */
 export function generateTimingCatalog(kind: 'reaction' | 'rhythm' | 'none'): Record<string, unknown> {
   const empty = {
@@ -900,8 +1513,22 @@ export function generateWallCatalog(kind: 'slide' | 'leap' | 'none'): Record<str
       slideSpeed: 80,
       jumpVx: 140,
       jumpVy: -420,
-      goal: { x: 420, y: 338, radius: 36 },
+      goal: { x: 440, y: 218, radius: 36 },
       failY: 520,
+      // Ledge grammar (Final Product Completion Wave 1): the climb's two
+      // upper platforms (tops at y 360 and y 240) sit above a plain jump's
+      // reach, so each is entered by grabbing its open-air corner: a jump
+      // toward the corner hangs; UP climbs onto the platform, DOWN drops
+      // (with a regrab lockout), JUMP launches straight up.
+      ledges: [
+        { id: 'step-ledge', x: 180, y: 360, side: 'left', grabHalfWidth: 30, grabHalfHeight: 34 },
+        { id: 'summit-ledge', x: 330, y: 240, side: 'left', grabHalfWidth: 30, grabHalfHeight: 34 },
+      ],
+      hangOffsetX: 14,
+      hangOffsetY: 22,
+      hangJumpVy: -420,
+      climbMs: 180,
+      regrabLockoutMs: 400,
     };
   }
   return {
@@ -914,6 +1541,110 @@ export function generateWallCatalog(kind: 'slide' | 'leap' | 'none'): Record<str
     jumpVy: -380,
     goal: { x: 820, y: 458, radius: 36 },
     failY: 520,
+    // Ledge grammar (Final Product Completion Wave 1): the far side of the
+    // precision gap is a grabbable corner, so a jump that falls short hangs
+    // instead of failing outright; UP climbs, DOWN drops into the gap.
+    ledges: [{ id: 'gap-ledge', x: 360, y: 480, side: 'left', grabHalfWidth: 22, grabHalfHeight: 28 }],
+    hangOffsetX: 14,
+    hangOffsetY: 22,
+    hangJumpVy: -400,
+    climbMs: 180,
+    regrabLockoutMs: 400,
+  };
+}
+
+/**
+ * content/pursuit.json - a PursuitCatalog (Final Product Completion Wave 1).
+ * Always emitted so content.ts can always load and validate it; inert
+ * (speed 0 / maxGap 0) unless the preset requires sw2d.pursuit. `wall` is
+ * chase-platformer's closing wall; `chaser` is the runner pursuer that trails
+ * endless-runner / auto-runner and closes the gap while the runner stumbles.
+ */
+export function generatePursuitCatalog(kind: 'wall' | 'chaser' | 'chaser-course' | 'none'): Record<string, unknown> {
+  const empty = {
+    schemaVersion: 1,
+    mode: 'wall',
+    startX: 0,
+    speed: 0,
+    catchDistance: 0,
+    escapeX: null,
+    maxGap: 0,
+    closeSpeed: 0,
+    recoverSpeed: 0,
+    stumbleMs: 0,
+    failY: 0,
+  };
+  if (kind === 'none') return empty;
+  if (kind === 'wall') {
+    return {
+      schemaVersion: 1,
+      mode: 'wall',
+      startX: -40,
+      speed: 72,
+      catchDistance: 16,
+      escapeX: 820,
+      maxGap: 0,
+      closeSpeed: 0,
+      recoverSpeed: 0,
+      stumbleMs: 0,
+      failY: 520,
+    };
+  }
+  return {
+    schemaVersion: 1,
+    mode: 'chaser',
+    startX: 100,
+    speed: 0,
+    catchDistance: 24,
+    escapeX: kind === 'chaser-course' ? 820 : null,
+    maxGap: 150,
+    closeSpeed: 200,
+    recoverSpeed: 40,
+    stumbleMs: 520,
+    failY: 510,
+  };
+}
+
+/**
+ * content/runs.json - a RunsCatalog (Final Product Completion Wave 2). Always
+ * emitted; inert (no unlocks, zero rates) unless the preset requires
+ * sw2d.runs. `survive` banks meta from XP / kills / waves; `roguelite` banks
+ * from currency and clearing the dungeon. Both offer a small between-run
+ * loadout the next run starts with.
+ */
+export function generateRunsCatalog(kind: 'survive' | 'roguelite' | 'none'): Record<string, unknown> {
+  if (kind === 'none') {
+    return { schemaVersion: 1, mode: 'survive', metaPerXp: 0, metaPerKill: 0, metaPerWave: 0, metaPerCurrency: 0, metaPerClear: 0, unlocks: [] };
+  }
+  if (kind === 'survive') {
+    return {
+      schemaVersion: 1,
+      mode: 'survive',
+      metaPerXp: 1,
+      metaPerKill: 2,
+      metaPerWave: 5,
+      metaPerCurrency: 0,
+      metaPerClear: 0,
+      unlocks: [
+        { id: 'sturdy', label: 'Sturdy (+40 max health)', cost: 4, effect: { kind: 'max-health', value: 40 } },
+        { id: 'keen', label: 'Keen (+5 damage)', cost: 10, effect: { kind: 'damage', value: 5 } },
+        { id: 'fleet', label: 'Fleet (+40 speed)', cost: 16, effect: { kind: 'speed', value: 40 } },
+      ],
+    };
+  }
+  return {
+    schemaVersion: 1,
+    mode: 'roguelite',
+    metaPerXp: 0,
+    metaPerKill: 1,
+    metaPerWave: 0,
+    metaPerCurrency: 3,
+    metaPerClear: 10,
+    unlocks: [
+      { id: 'vigor', label: 'Vigor (+2 max health)', cost: 3, effect: { kind: 'max-health', value: 2 } },
+      { id: 'edge', label: 'Edge (+1 damage)', cost: 8, effect: { kind: 'damage', value: 1 } },
+      { id: 'purse', label: 'Purse (start with 2 coin)', cost: 12, effect: { kind: 'start-currency', value: 2 } },
+    ],
   };
 }
 
@@ -931,6 +1662,8 @@ export function generateTerritoryCatalog(kind: 'stand' | 'occupy' | 'none'): Rec
   return {
     schemaVersion: 1,
     mode: kind,
+    factions: ['player', 'red'],
+    victoryScore: 2,
     zones: [
       { id: 'zone-a', x: 280, y: 270, radius: 72, holdMs: 400 },
       { id: 'zone-b', x: 700, y: 270, radius: 72, holdMs: 400 },
@@ -979,6 +1712,7 @@ export function generatePinballCatalog(kind: 'table' | 'toy' | 'none'): Record<s
       ],
       drainY: 530,
       winScore: 3,
+      balls: 3,
     };
   }
   return {
@@ -1055,8 +1789,8 @@ export function generateCodexCatalog(kind: 'exhibit' | 'case' | 'none'): Record<
       schemaVersion: 1,
       mode: 'exhibit',
       entries: [
-        { id: 'plinth', title: 'Plinth', body: 'A stone plinth holds the first exhibit.' },
-        { id: 'bust', title: 'Bust', body: 'A carved bust watches the hall.' },
+        { id: 'plinth', title: 'Moon Vessel', body: 'A stone vessel recovered from the north gallery.', x: 280, y: 270, image: 'moon-vessel', portrait: 'vessel-profile', spotlightColor: '#7aa2f7' },
+        { id: 'bust', title: 'Keeper Bust', body: 'A carved keeper watches the hall.', x: 700, y: 270, image: 'keeper-bust', portrait: 'keeper-profile', spotlightColor: '#f0c274' },
       ],
     };
   }
@@ -1066,6 +1800,10 @@ export function generateCodexCatalog(kind: 'exhibit' | 'case' | 'none'): Record<
     entries: [
       { id: 'print', title: 'Print', body: 'A boot print by the window.' },
       { id: 'photo', title: 'Photo', body: 'A torn photograph of the hall.' },
+    ],
+    deductions: [
+      { id: 'false-lead', requireEntries: ['print', 'photo'], links: [['print', 'photo']], conclusion: 'The groundskeeper acted alone.', valid: false },
+      { id: 'window-route', requireEntries: ['print', 'photo'], links: [['print', 'photo']], conclusion: 'The print and torn photo place the visitor at the window.', valid: true },
     ],
   };
 }
@@ -1085,8 +1823,17 @@ export function generateTargetingCatalog(kind: 'tower' | 'auto' | 'range' | 'non
     return {
       schemaVersion: 1,
       mode: 'tower',
+      startingGold: 100,
+      placeCost: 40,
+      slots: [
+        { id: 'pad-a', x: 480, y: 200, radius: 36 },
+        { id: 'pad-b', x: 640, y: 270, radius: 36 },
+      ],
+      upgrades: [
+        { cost: 0, range: 400, damage: 10 },
+        { cost: 30, range: 480, damage: 20 },
+      ],
       actors: [
-        { id: 'tower', x: 480, y: 270, range: 400, damage: 1, cooldownMs: 280, team: 'player', health: 3 },
         { id: 'creep-a', x: 280, y: 180, range: 40, damage: 1, cooldownMs: 600, team: 'enemy', health: 2 },
         { id: 'creep-b', x: 280, y: 360, range: 40, damage: 1, cooldownMs: 600, team: 'enemy', health: 2 },
       ],
@@ -1098,6 +1845,8 @@ export function generateTargetingCatalog(kind: 'tower' | 'auto' | 'range' | 'non
       mode: 'auto',
       actors: [
         { id: 'fox', x: 260, y: 270, range: 520, damage: 1, cooldownMs: 280, team: 'player', health: 2 },
+        { id: 'bear', x: 260, y: 270, range: 480, damage: 1, cooldownMs: 420, team: 'player', health: 4 },
+        { id: 'owl', x: 260, y: 270, range: 560, damage: 2, cooldownMs: 220, team: 'player', health: 2 },
         { id: 'cpu', x: 700, y: 270, range: 520, damage: 1, cooldownMs: 400, team: 'enemy', health: 2 },
       ],
     };
@@ -1134,9 +1883,21 @@ export function generateMeleeCatalog(kind: 'skirmish' | 'arena' | 'none'): Recor
       schemaVersion: 1,
       mode: 'skirmish',
       player: { id: 'player', x: 120, y: 270, radius: 16, health: 5 },
-      foes: [{ id: 'foe-0', x: 470, y: 270, radius: 17, health: 3 }],
-      strike: { range: 145, damage: 1, cooldownMs: 0, knockback: 8, stunMs: 80 },
-      contact: { range: 34, damage: 1, cooldownMs: 650 },
+      // One elite foe that closes on the player; a three-hit chain
+      // (opener, follow-up, finisher) lands inside the combo window, and
+      // strikes only reach foes inside the 120-degree facing arc.
+      foes: [{ id: 'foe-0', x: 470, y: 270, radius: 17, health: 5, speed: 55 }],
+      strike: { range: 145, damage: 1, cooldownMs: 120, knockback: 8, stunMs: 80 },
+      contact: { range: 34, damage: 1, cooldownMs: 650, stunMs: 240 },
+      combo: {
+        steps: [
+          { damage: 1, knockback: 8, stunMs: 90 },
+          { damage: 1, knockback: 10, stunMs: 110 },
+          { damage: 3, knockback: 36, stunMs: 320 },
+        ],
+        windowMs: 700,
+      },
+      arcDeg: 120,
     };
   }
   return {
@@ -1144,12 +1905,21 @@ export function generateMeleeCatalog(kind: 'skirmish' | 'arena' | 'none'): Recor
     mode: 'arena',
     player: { id: 'player', x: 120, y: 270, radius: 16, health: 5 },
     foes: [
-      { id: 'foe-0', x: 420, y: 160, radius: 17, health: 2 },
-      { id: 'foe-1', x: 560, y: 270, radius: 17, health: 2 },
-      { id: 'foe-2', x: 420, y: 380, radius: 17, health: 2 },
+      { id: 'foe-0', x: 420, y: 160, radius: 17, health: 3, speed: 45 },
+      { id: 'foe-1', x: 560, y: 270, radius: 17, health: 3, speed: 40 },
+      { id: 'foe-2', x: 420, y: 380, radius: 17, health: 3, speed: 45 },
     ],
-    strike: { range: 145, damage: 1, cooldownMs: 0, knockback: 8, stunMs: 80 },
-    contact: { range: 34, damage: 1, cooldownMs: 650 },
+    strike: { range: 145, damage: 1, cooldownMs: 120, knockback: 8, stunMs: 80 },
+    contact: { range: 34, damage: 1, cooldownMs: 650, stunMs: 240 },
+    combo: {
+      steps: [
+        { damage: 1, knockback: 8, stunMs: 90 },
+        { damage: 1, knockback: 10, stunMs: 110 },
+        { damage: 2, knockback: 30, stunMs: 300 },
+      ],
+      windowMs: 700,
+    },
+    arcDeg: 120,
   };
 }
 
@@ -1237,6 +2007,12 @@ export function generateUiCopy(options: {
           ? 'MOVE WASD/ARROWS  -  STRIKE J/X'
           : has('sw2d.stage-scroll')
             ? 'MOVE WASD/ARROWS  -  FIRE J/X  -  CLEAR THE STAGE'
+            : presetId === 'base-defense'
+              ? 'MOVE WASD/ARROWS  -  STRIKE J/X  -  DEFEND THE BASE'
+            : presetId === 'simple-rts'
+              ? 'J SELECTS UNIT A  -  DRAG BOX-SELECTS  -  WASD MOVES'
+            : presetId === 'territory-control'
+              ? 'MOVE WASD/ARROWS  -  STAND IN BOTH ZONES'
             : has('sw2d.encounters')
               ? 'MOVE WASD/ARROWS  -  AIM WITH MOUSE  -  FIRE J/X  -  SURVIVE THE WAVES'
               : has('sw2d.weapons')
@@ -1279,11 +2055,13 @@ export function generateUiCopy(options: {
         : presetId === 'falling-block-puzzle'
           ? 'MOVE WASD/ARROWS  -  ENTER ROTATES  -  DROP K'
           : presetId === 'turn-based-tactics'
-            ? 'ARROWS MOVE  -  J SELECTS  -  REACH THE FLAG'
+            ? 'ARROWS MOVE  -  J SELECTS  -  ENTER ATTACKS'
           : presetId === 'maze-game'
             ? 'ARROWS WALK  -  REACH THE EXIT'
             : presetId === 'lane-defense'
-              ? 'ARROWS AIM  -  J BLOCKS  -  THE RUNNER REPATHS'
+              ? 'ARROWS AIM  -  J BLOCKS  -  DEFEND THE BASE'
+          : presetId === 'tower-defense'
+            ? 'CLICK OR ENTER PLACES  -  ARROWS PICK A PAD  -  K UPGRADES'
           : has('sw2d.puzzle-rules')
             ? 'MOVE / PUSH WASD/ARROWS  -  UNDO BACKSPACE  -  RESET K'
             : 'MOVE WASD/ARROWS  -  PAUSE TO STOP';
@@ -1291,12 +2069,16 @@ export function generateUiCopy(options: {
     case 'pointer':
       playHint = has('sw2d.dialogue')
         ? 'CLICK HOTSPOTS  -  ENTER ADVANCES'
+        : presetId === 'rail-shooter'
+          ? 'AIM WITH MOUSE  -  FIRE J/X OR CLICK  -  RIDE THE RAIL'
+          : presetId === 'gallery-shooter'
+            ? 'AIM WITH MOUSE  -  FIRE J/X OR CLICK  -  CLEAR EVERY ROUND'
         : has('sw2d.weapons')
           ? 'AIM WITH MOUSE  -  FIRE J/X'
-          : has('sw2d.puzzle')
-            ? presetId === 'escape-room'
-              ? 'CLICK THE NOTE  -  THEN THE KEY'
-              : 'CLICK TO NUDGE  -  LAND IN THE GOAL'
+          : presetId === 'escape-room'
+            ? 'CLICK THE NOTE  -  THEN THE KEY'
+            : presetId === 'physics-puzzle'
+              ? 'CLICK TO NUDGE  -  LAND IN THE GOAL'
             : presetId === 'drawing-game'
               ? 'DRAW TWO STROKES ON THE PAGE'
               : presetId === 'dress-up-character-toy'
@@ -1305,12 +2087,12 @@ export function generateUiCopy(options: {
                   ? 'CLICK STAMPS  -  ARROWS PICK  -  CLICK OBJECT TO MOVE  -  K DELETES'
                 : presetId === 'physics-toy'
                   ? 'CLICK OR J LAUNCHES  -  LAND IN THE GOAL'
-                  : presetId === 'rail-shooter'
-                    ? 'J DAMAGES APPROACHING TARGETS'
                 : 'POINT AT THINGS  -  CLICK TO ACT  -  PAUSE TO STOP';
       break;
     case 'ui-simulation':
-      playHint = has('sw2d.economy')
+      playHint = presetId === 'colony-lite'
+        ? 'ARROWS PICK A JOB  -  ENTER ASSIGNS OR BUILDS'
+        : has('sw2d.economy')
         ? 'ARROWS PICK  -  ENTER SERVES  -  K RESTOCKS OR COOKS'
         : has('sw2d.needs')
           ? 'J FEEDS  -  K PLAYS OR REFRESHES  -  KEEP NEEDS UP'
@@ -1322,11 +2104,11 @@ export function generateUiCopy(options: {
                 ? presetId === 'rhythm-action'
                   ? 'ENTER ON THE BEAT'
                   : 'WAIT FOR THE GO  -  ENTER HITS'
+                : presetId === 'idle-incremental'
+                  ? 'J GATHERS  -  K UPGRADES  -  BACKSPACE PRESTIGES'
                 : presetId === 'farming-lite'
-                  ? 'ARROWS PICK A PLOT  -  ENTER PLANTS OR HARVESTS'
-                  : presetId === 'colony-lite'
-                    ? 'ARROWS PICK A JOB  -  ENTER ASSIGNS OR BUILDS'
-                    : presetId === 'interactive-fiction-hybrid'
+                  ? 'ARROWS PICK A PLOT  -  ENTER PLANTS, WATERS, OR HARVESTS'
+                  : presetId === 'interactive-fiction-hybrid'
                       ? 'ARROWS PICK A VERB  -  ENTER ACTS'
                       : presetId === 'fishing-game'
                         ? 'ENTER CASTS AND LANDS'

@@ -68,7 +68,7 @@ with a small working placeholder to replace. Every other pack is configured as J
 
 ## Known preset limitations
 
-- Wait/go then mash rounds are a generated starter scheduler on sw2d.arcade; a content-authored rotation/meta-framework is not.
+- (none stated)
 
 ## How to add a level
 

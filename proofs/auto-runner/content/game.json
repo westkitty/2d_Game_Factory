@@ -18,6 +18,10 @@
       "config": {}
     },
     {
+      "packId": "sw2d.pursuit",
+      "config": {}
+    },
+    {
       "packId": "game.platform-shell",
       "config": {}
     }

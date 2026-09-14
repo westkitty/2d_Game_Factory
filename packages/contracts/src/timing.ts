@@ -1,15 +1,14 @@
 /**
- * Visual timing windows (Category-C capability program, Wave 10).
+ * Timing windows (Category-C Wave 10, Final Product Completion Wave 4 L27).
  *
  * Renderer-neutral reaction-test and beat-window state. Two bounded modes
  * (not two engines):
- *   - `reaction` — one-shot deterministic delays; too-early is a miss;
+ *   - `reaction` — one-shot delays independent of music; too-early is a miss;
  *     latency inside `windowMs` is a hit.
- *   - `rhythm`   — periodic visual beats (offset + period); hit inside the
- *     window, miss when the window closes without a press.
+ *   - `rhythm`   — beat positions on the AudioBus transport (AudioContext
+ *     currentTime); early / perfect / late / miss judgements.
  *
- * Not a music-beat / audio-synchronization system. Not folded into
- * `sw2d.arcade` (elapsed/score only).
+ * Not folded into `sw2d.arcade` (elapsed/score only).
  */
 
 export const TIMING_CAPABILITY_ID = 'arcade.timing';
@@ -57,4 +56,6 @@ export interface TimingService {
   cueIndex(): number;
   outcome(): TimingOutcome;
   reset(): void;
+  pause(): void;
+  resume(): void;
 }

@@ -28,10 +28,9 @@ import { generateUiCopy } from '../src/generator/contentDocuments.ts';
 //  - ENTER: CONFIRM is Enter/Space/NumpadEnter; vehicle shell starts the race,
 //    ui-simulation shell confirms the selection.
 //  - PAUSE: the pause overlay is runtime-owned and always available.
-const ALLOWED_HINT_WORDS = /^[A-Z0-9\/() .-]+$/;
+const ALLOWED_HINT_WORDS = /^[A-Z0-9\/(), .-]+$/;
 const FORBIDDEN_CLAIMS: readonly { pattern: RegExp; reason: string }[] = [
   { pattern: /INTERACT/, reason: 'no generated shell reads the INTERACT action' },
-  { pattern: /GAMEPAD|STICK/, reason: 'gamepad honesty: the starter does not claim device support it cannot prove' },
 ];
 
 describe('generateUiCopy (generated games announce their genre honestly)', () => {
@@ -69,7 +68,8 @@ describe('generateUiCopy (generated games announce their genre honestly)', () =>
     expect(copyFor('vertical-shmup').playHint).toContain('FIRE J/X');
     expect(copyFor('vertical-shmup').playHint).not.toContain('SURVIVE');
     expect(copyFor('twin-stick-shooter').playHint).toContain('FIRE J/X');
-    expect(copyFor('twin-stick-shooter').playHint).not.toContain('SURVIVE');
+    // Final Product Completion Wave 2 (L05): the twin-stick starter fights real waves now.
+    expect(copyFor('twin-stick-shooter').playHint).toContain('SURVIVE THE WAVES');
     expect(copyFor('top-down-adventure').playHint).not.toContain('FIRE');
   });
 
@@ -94,10 +94,10 @@ describe('generateUiCopy (generated games announce their genre honestly)', () =>
     expect(copyFor('arena-combat').playHint).toContain('STRIKE J/X');
     expect(copyFor('asteroids-shooter').playHint).toContain('FIRE J/X');
     expect(copyFor('gallery-shooter').playHint).toContain('FIRE J/X');
-    expect(copyFor('rail-shooter').playHint).not.toContain('FIRE');
+    expect(copyFor('rail-shooter').playHint).toContain('FIRE');
     expect(copyFor('physics-puzzle').playHint).toBe('CLICK TO NUDGE  -  LAND IN THE GOAL');
     expect(copyFor('escape-room').playHint).toBe('CLICK THE NOTE  -  THEN THE KEY');
-    expect(copyFor('farming-lite').playHint).toBe('ARROWS PICK A PLOT  -  ENTER PLANTS OR HARVESTS');
+    expect(copyFor('farming-lite').playHint).toBe('ARROWS PICK A PLOT  -  ENTER PLANTS, WATERS, OR HARVESTS');
     expect(copyFor('colony-lite').playHint).toBe('ARROWS PICK A JOB  -  ENTER ASSIGNS OR BUILDS');
     expect(copyFor('interactive-fiction-hybrid').playHint).toBe('ARROWS PICK A VERB  -  ENTER ACTS');
     expect(copyFor('investigation-game').playHint).toBe('MOVE WASD/ARROWS  -  J INSPECTS CLUES');
@@ -124,7 +124,7 @@ describe('generateUiCopy (generated games announce their genre honestly)', () =>
     );
     expect(copyFor('territory-control').playHint).toBe('MOVE WASD/ARROWS  -  STAND IN BOTH ZONES');
     expect(copyFor('museum-exhibit').playHint).toBe('MOVE WASD/ARROWS  -  J INSPECTS PLAQUES');
-    expect(copyFor('rail-shooter').playHint).toBe('J DAMAGES APPROACHING TARGETS');
+    expect(copyFor('rail-shooter').playHint).toBe('AIM WITH MOUSE  -  FIRE J/X OR CLICK  -  RIDE THE RAIL');
     expect(copyFor('chase-platformer').playHint).toBe('MOVE / JUMP  -  OUTRUN THE WALL');
     expect(copyFor('precision-platformer').playHint).toBe('MOVE / JUMP  -  JUMP THE GAPS');
     expect(copyFor('climbing-game').playHint).toBe('MOVE / JUMP  -  JUMP UP');

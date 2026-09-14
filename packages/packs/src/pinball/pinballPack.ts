@@ -40,6 +40,7 @@ class PinballServiceImpl implements PinballService {
   private points = 0;
   private last: string | null = null;
   private current: PinballOutcome = 'playing';
+  private balls: number;
   private readonly cooldown = new Map<string, number>();
 
   constructor(
@@ -50,6 +51,7 @@ class PinballServiceImpl implements PinballService {
     this.y = catalog.ball.y;
     this.vx = catalog.ball.vx;
     this.vy = catalog.ball.vy;
+    this.balls = catalog.balls ?? (catalog.mode === 'table' ? 3 : 1);
   }
 
   mode(): PinballMode {
@@ -106,15 +108,16 @@ class PinballServiceImpl implements PinballService {
       return;
     }
     if (this.y >= this.catalog.drainY) {
-      if (this.catalog.mode === 'table') {
-        this.x = this.catalog.ball.x;
-        this.y = this.catalog.ball.y;
-        this.vx = this.catalog.ball.vx;
-        this.vy = this.catalog.ball.vy;
-        this.last = 'drain';
-      } else {
-        this.finish('failed', 'drain');
+      this.balls = Math.max(0, this.balls - 1);
+      this.last = 'drain';
+      if (this.balls <= 0) {
+        this.finish('failed', 'game-over');
+        return;
       }
+      this.x = this.catalog.ball.x;
+      this.y = this.catalog.ball.y;
+      this.vx = this.catalog.ball.vx;
+      this.vy = this.catalog.ball.vy;
     }
   }
 
@@ -149,6 +152,10 @@ class PinballServiceImpl implements PinballService {
     return this.points;
   }
 
+  ballsRemaining(): number {
+    return this.balls;
+  }
+
   lastResult(): string | null {
     return this.last;
   }
@@ -165,6 +172,7 @@ class PinballServiceImpl implements PinballService {
     this.points = 0;
     this.last = null;
     this.current = 'playing';
+    this.balls = this.catalog.balls ?? (this.catalog.mode === 'table' ? 3 : 1);
     this.cooldown.clear();
   }
 

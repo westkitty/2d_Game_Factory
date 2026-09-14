@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "mode": "survive",
+  "metaPerXp": 1,
+  "metaPerKill": 2,
+  "metaPerWave": 5,
+  "metaPerCurrency": 0,
+  "metaPerClear": 0,
+  "unlocks": [
+    {
+      "id": "sturdy",
+      "label": "Sturdy (+40 max health)",
+      "cost": 4,
+      "effect": {
+        "kind": "max-health",
+        "value": 40
+      }
+    },
+    {
+      "id": "keen",
+      "label": "Keen (+5 damage)",
+      "cost": 10,
+      "effect": {
+        "kind": "damage",
+        "value": 5
+      }
+    },
+    {
+      "id": "fleet",
+      "label": "Fleet (+40 speed)",
+      "cost": 16,
+      "effect": {
+        "kind": "speed",
+        "value": 40
+      }
+    }
+  ]
+}

@@ -27,12 +27,16 @@ export interface StarterPhysicsSnapshot {
   readonly nudges: number;
   readonly flips: number;
   readonly lastResult: string | null;
-  readonly outcome: 'playing' | 'complete';
+  readonly balls: number;
+  readonly props: number;
+  readonly resets: number;
+  readonly outcome: 'playing' | 'complete' | 'failed';
 }
 
 export interface StarterPhysicsBinding {
   readonly active: boolean;
   nudge(): void;
+  reset(): void;
   flip(side: 'left' | 'right'): void;
   tick(_deltaMs: number): void;
   snapshot(): StarterPhysicsSnapshot;
@@ -43,6 +47,7 @@ export interface StarterPhysicsBinding {
 const INERT: StarterPhysicsBinding = {
   active: false,
   nudge: () => undefined,
+  reset: () => undefined,
   flip: () => undefined,
   tick: () => undefined,
   snapshot: () => ({
@@ -54,6 +59,9 @@ const INERT: StarterPhysicsBinding = {
     nudges: 0,
     flips: 0,
     lastResult: null,
+    balls: 0,
+    props: 0,
+    resets: 0,
     outcome: 'playing',
   }),
   render: () => undefined,
@@ -112,7 +120,7 @@ function bindPinballTable(
       : null;
   let flips = 0;
   let lastResult: string | null = null;
-  let outcome: 'playing' | 'complete' = 'playing';
+  let outcome: 'playing' | 'complete' | 'failed' = 'playing';
   let disposed = false;
 
   function snapshot(): StarterPhysicsSnapshot {
@@ -125,7 +133,10 @@ function bindPinballTable(
       nudges: 0,
       flips,
       lastResult: lastResult ?? pinball.lastResult(),
-      outcome: pinball.outcome() === 'complete' ? 'complete' : outcome,
+      balls: pinball.ballsRemaining(),
+      props: 1,
+      resets: 0,
+      outcome: pinball.outcome() === 'failed' ? 'failed' : pinball.outcome() === 'complete' ? 'complete' : outcome,
     };
   }
 
@@ -133,16 +144,28 @@ function bindPinballTable(
     const snap = snapshot();
     ballSprite?.setPosition(pinball.ballX(), pinball.ballY());
     if (!title || !status || !hint) return;
-    title.setText(snap.outcome === 'complete' ? 'TABLE' : 'PINBALL');
-    status.setText(`score ${snap.score}/${winScore}  ·  flips ${snap.flips}${snap.lastResult ? `  ·  ${snap.lastResult}` : ''}`);
-    hint.setText(snap.outcome === 'playing' ? 'J LEFT K RIGHT   HIT BUMPERS' : 'TABLE');
+    title.setText(snap.outcome === 'failed' ? 'GAME OVER' : snap.outcome === 'complete' ? 'TABLE' : 'PINBALL');
+    status.setText(
+      `score ${snap.score}/${winScore}  ·  balls ${snap.balls}  ·  flips ${snap.flips}${snap.lastResult ? `  ·  ${snap.lastResult}` : ''}`,
+    );
+    hint.setText(snap.outcome === 'playing' ? 'J LEFT K RIGHT   HIT BUMPERS' : snap.outcome === 'failed' ? 'GAME OVER' : 'TABLE');
   }
 
   paint();
 
   return {
     active: true,
-    nudge: () => undefined,
+    nudge(): void {
+      if (disposed || pinball.outcome() !== 'playing') return;
+      pinball.launch(0, -12);
+      lastResult = 'launch';
+      context.audio.playCue('ui.confirm');
+      paint();
+    },
+    reset(): void {
+      if (disposed) return;
+      pinball.reset(); flips = 0; outcome = 'playing'; lastResult = 'reset'; paint();
+    },
     flip(side: 'left' | 'right'): void {
       if (disposed || pinball.outcome() !== 'playing') return;
       pinball.flip(side);
@@ -158,6 +181,10 @@ function bindPinballTable(
         outcome = 'complete';
         lastResult = pinball.lastResult() ?? 'scored';
         context.audio.playCue('ui.confirm');
+      } else if (pinball.outcome() === 'failed') {
+        outcome = 'failed';
+        lastResult = pinball.lastResult() ?? 'game-over';
+        context.audio.playCue('ui.cancel');
       }
       paint();
     },
@@ -259,6 +286,17 @@ export function bindStarterPhysics(
     category: 'prop',
   });
   if (mode === 'table') physics.setVelocity(ball, 2.4, 6);
+  const toyProps = mode === 'toy'
+    ? Array.from({ length: 6 }, (_, index) => physics.createBody({
+        id: `toy-prop-${index}`,
+        x: 360 + (index % 3) * 70,
+        y: 300 - Math.floor(index / 3) * 60,
+        shape: index % 2 === 0 ? { kind: 'circle' as const, radius: 16 } : { kind: 'rect' as const, width: 34, height: 34 },
+        restitution: 0.35,
+        friction: 0.05,
+        category: 'prop',
+      }))
+    : [];
 
   const leftFlipper =
     mode === 'table'
@@ -321,10 +359,11 @@ export function bindStarterPhysics(
   let nudges = 0;
   let flips = 0;
   let lastResult: string | null = null;
-  let outcome: 'playing' | 'complete' = 'playing';
+  let outcome: 'playing' | 'complete' | 'failed' = 'playing';
   let bumperCool: Record<string, number> = { 'bumper-a': 0, 'bumper-b': 0, 'bumper-c': 0 };
   let nowMs = 0;
   let disposed = false;
+  let resets = 0;
 
   function ballState() {
     return physics.bodyState(ball);
@@ -341,6 +380,9 @@ export function bindStarterPhysics(
       nudges,
       flips,
       lastResult,
+      balls: 0,
+      props: 1 + toyProps.length,
+      resets,
       outcome,
     };
   }
@@ -405,6 +447,14 @@ export function bindStarterPhysics(
       lastResult = 'nudge';
       context.audio.playCue('ui.confirm');
       paint();
+    },
+    reset(): void {
+      if (disposed || mode !== 'toy') return;
+      physics.setPosition(ball, ballStart.x, ballStart.y); physics.setVelocity(ball, 0, 0);
+      for (let index = 0; index < toyProps.length; index++) {
+        const prop = toyProps[index]!; physics.setPosition(prop, 360 + (index % 3) * 70, 300 - Math.floor(index / 3) * 60); physics.setVelocity(prop, 0, 0);
+      }
+      outcome = 'playing'; nudges = 0; resets += 1; lastResult = 'reset'; paint();
     },
     flip(side: 'left' | 'right'): void {
       if (disposed || outcome !== 'playing' || mode !== 'table') return;

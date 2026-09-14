@@ -59,6 +59,25 @@ describe('sw2d.territory - occupy', () => {
     expect(zones.outcome()).toBe('complete');
     expect(zones.owned()).toEqual(['zone-a', 'zone-b']);
   });
+
+  it('two factions in one zone are contested and do not capture', () => {
+    const { zones } = install({
+      ...OCCUPY,
+      factions: ['player', 'red'],
+      victoryScore: 2,
+    });
+    zones.setOccupants([
+      { faction: 'player', x: 280, y: 270 },
+      { faction: 'red', x: 280, y: 270 },
+    ]);
+    zones.tick(400);
+    expect(zones.contested()).toEqual(['zone-a']);
+    expect(zones.owned()).toEqual([]);
+    zones.setOccupants([{ faction: 'player', x: 280, y: 270 }]);
+    zones.tick(400);
+    expect(zones.owner('zone-a')).toBe('player');
+    expect(zones.score('player')).toBe(1);
+  });
 });
 
 describe('sw2d.territory - lifecycle', () => {

@@ -62,13 +62,13 @@ with a small working placeholder to replace. Every other pack is configured as J
 ## Composition
 
 - Controller family/families: grid
-- Required packs (enabled by default): sw2d.world, sw2d.world-entities, sw2d.navigation
+- Required packs (enabled by default): sw2d.world, sw2d.world-entities, sw2d.navigation, sw2d.generation
 - Optional packs (available, not enabled by default - add to content/game.json's systemPacks to use): sw2d.arcade
-- Content roles this preset expects: tuning, levels
+- Content roles this preset expects: tuning, levels, generation
 
 ## Known preset limitations
 
-- Grid pathfinding and walkable occupancy are reusable (sw2d.navigation); fog-of-war, minimap and authored maze generation are not.
+- (none stated)
 
 ## How to add a level
 

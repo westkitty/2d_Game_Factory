@@ -11,6 +11,8 @@ import type {
   DialogueNodeKind,
   DialogueOutcome,
   DialogueService,
+  DialogueSceneDef,
+  DialogueSpeakerDef,
   EventBus,
   GameContext,
   InstalledSystemPack,
@@ -40,6 +42,8 @@ class DialogueServiceImpl implements DialogueService {
   readonly #conversations = new Map<string, LiveConversation>();
   readonly #hotspots: DialogueHotspotDef[];
   readonly #events: EventBus;
+  readonly #speakers = new Map<string, DialogueSpeakerDef>();
+  readonly #scenes = new Map<string, DialogueSceneDef>();
   #conversationId: string | null = null;
   #nodeId: string | null = null;
   #flags = new Set<string>();
@@ -54,6 +58,8 @@ class DialogueServiceImpl implements DialogueService {
     this.#events = events;
     this.#mode = catalog?.mode ?? 'novel';
     this.#hotspots = [...(catalog?.hotspots ?? [])];
+    for (const speaker of catalog?.speakers ?? []) this.#speakers.set(speaker.id, speaker);
+    for (const scene of catalog?.scenes ?? []) this.#scenes.set(scene.id, scene);
     for (const conversation of catalog?.conversations ?? []) {
       if (this.#conversations.has(conversation.id)) throw new DuplicateDialogueIdError(conversation.id);
       const nodes = new Map<string, DialogueNodeDef>();
@@ -283,6 +289,15 @@ class DialogueServiceImpl implements DialogueService {
       y: h.y,
       locked: (h.requireFlags ?? []).some((flag) => !this.#flags.has(flag)),
     }));
+  }
+
+  presentation(): { readonly scene: DialogueSceneDef | null; readonly speaker: DialogueSpeakerDef | null } {
+    const node = this.#current();
+    const speakerId = node?.speakerId ?? node?.speaker;
+    return {
+      scene: node?.sceneId ? this.#scenes.get(node.sceneId) ?? null : null,
+      speaker: speakerId ? this.#speakers.get(speakerId) ?? null : null,
+    };
   }
 
   reset(): void {
