@@ -1,0 +1,3 @@
+THIRD-PARTY ASSET NOTICES
+
+No third-party visual assets are bundled in this build. All artwork is project-owned or generated locally.

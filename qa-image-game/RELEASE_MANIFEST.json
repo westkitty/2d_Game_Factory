@@ -1,0 +1,22 @@
+{
+  "formatVersion": 1,
+  "gameId": "qa-image-game",
+  "presetId": "chase-platformer",
+  "factoryVersion": "0.1.0",
+  "packagingMode": "static-vite-build",
+  "fileInventory": [
+    "assets/index-DesThAun.js",
+    "assets/index-DesThAun.js.map",
+    "assets/index-kYnqIy2i.css",
+    "assets/workbench/der_0fd6fb7748254711.png",
+    "assets/workbench/der_1c8b79ed788c1d1d.png",
+    "assets/workbench/src_da3f710bdddb3fc9.png",
+    "index.html"
+  ],
+  "projectLicenseStatus": "UNLICENSED",
+  "resourceGovernance": {
+    "manifestValid": true,
+    "recordCount": 7,
+    "allApproved": true
+  }
+}

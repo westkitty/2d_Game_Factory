@@ -1,0 +1,20 @@
+{
+  "formatVersion": 1,
+  "gameId": "qa-provenance-game",
+  "presetId": "chase-platformer",
+  "factoryVersion": "0.1.0",
+  "packagingMode": "static-vite-build",
+  "fileInventory": [
+    "assets/index-Cm4yazxa.js",
+    "assets/index-Cm4yazxa.js.map",
+    "assets/index-kYnqIy2i.css",
+    "assets/workbench/src_da3f710bdddb3fc9.png",
+    "index.html"
+  ],
+  "projectLicenseStatus": "UNLICENSED",
+  "resourceGovernance": {
+    "manifestValid": true,
+    "recordCount": 7,
+    "allApproved": true
+  }
+}
