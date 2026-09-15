@@ -19,6 +19,9 @@ const COMMANDS = [
   'validate',
   'build',
   'pack',
+  'stats',
+  'playground',
+  'cleanup',
 ] as const;
 
 type CommandName = (typeof COMMANDS)[number];
@@ -47,6 +50,12 @@ async function loadCommand(name: CommandName): Promise<{ run(args: readonly stri
       return import('./commands/build.ts');
     case 'pack':
       return import('./commands/pack.ts');
+    case 'stats':
+      return import('./commands/stats.ts');
+    case 'playground':
+      return import('./commands/playground.ts');
+    case 'cleanup':
+      return import('./commands/cleanup.ts');
   }
 }
 
