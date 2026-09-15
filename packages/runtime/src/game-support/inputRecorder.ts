@@ -73,14 +73,12 @@ export function createInputRecorder(): InputRecorder {
   let recording = false;
   let gameId = '';
   let seed = 0;
-  let startTime = 0;
   const frames: InputFrame[] = [];
 
   function start(game: string, s: number): void {
     recording = true;
     gameId = game;
     seed = s;
-    startTime = 0;
     frames.length = 0;
   }
 

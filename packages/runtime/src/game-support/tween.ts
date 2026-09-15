@@ -46,8 +46,8 @@ export interface TweenConfig {
 
 export interface Tween {
   readonly id: number;
-  readonly isComplete: boolean;
-  readonly progress: number;
+  isComplete: boolean;
+  progress: number;
   update(deltaMs: number): void;
   stop(): void;
 }
@@ -89,8 +89,8 @@ export function createTweenManager(): TweenManager {
     repeatCount: number;
     yoyo: boolean;
     forward: boolean;
-    onComplete?: () => void;
-    onUpdate?: (progress: number) => void;
+    onComplete: (() => void) | undefined;
+    onUpdate: ((progress: number) => void) | undefined;
     stopped: boolean;
   }
 
@@ -102,9 +102,10 @@ export function createTweenManager(): TweenManager {
     const startValues: Record<string, number> = {};
     const endValues: Record<string, number> = {};
 
-    for (const [key, value] of Object.entries(props)) {
+    for (const key of Object.keys(props)) {
+      const value = (props as Record<string, number | undefined>)[key];
       if (value !== undefined) {
-        startValues[key] = target[key] ?? 0;
+        startValues[key] = (target as Record<string, number>)[key] ?? 0;
         endValues[key] = value;
       }
     }
@@ -113,9 +114,9 @@ export function createTweenManager(): TweenManager {
       ? config.easing
       : config.easing ? Easing[config.easing] : Easing.linear;
 
-    const tween: InternalTween = {
+    const tween = {
       id: nextId++,
-      target,
+      target: target as unknown as Record<string, number>,
       startValues,
       endValues,
       elapsed: 0,

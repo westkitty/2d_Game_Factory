@@ -98,7 +98,7 @@ describe('createDialogEngine', () => {
   it('applies effects from lines', () => {
     const engine = createDialogEngine();
     engine.start([
-      { text: 'Got flag', effects: [{ type: 'setFlag', key: 'quest_started', value: true }] },
+      { text: 'Got flag', effects: [{ type: 'setFlag', key: 'quest_started' }] },
     ]);
 
     expect(engine.context.flags.quest_started).toBe(true);
@@ -129,7 +129,7 @@ describe('createDialogEngine', () => {
           text: 'Options:',
           choices: [
             { text: 'Always available' },
-            { text: 'Needs flag', condition: (ctx) => ctx.flags.hasKey === true },
+            { text: 'Needs flag', condition: (ctx) => Boolean(ctx.flags.hasKey) },
           ],
         },
       ],

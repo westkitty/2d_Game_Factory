@@ -21,7 +21,7 @@ describe('Easing functions', () => {
   });
 
   it('all easings return 0 at t=0 and 1 at t=1', () => {
-    for (const [name, fn] of Object.entries(Easing)) {
+    for (const [, fn] of Object.entries(Easing)) {
       expect(fn(0)).toBeCloseTo(0, 5);
       expect(fn(1)).toBeCloseTo(1, 5);
     }

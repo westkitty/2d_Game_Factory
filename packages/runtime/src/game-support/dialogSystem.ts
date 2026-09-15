@@ -100,7 +100,7 @@ export function createDialogEngine(): DialogEngine {
     appliedEffects.push(effect);
     switch (effect.type) {
       case 'setFlag':
-        context = { ...context, flags: { ...context.flags, [effect.key]: effect.value !== false } };
+        context = { ...context, flags: { ...context.flags, [effect.key]: true } };
         break;
       case 'addItem': {
         const items = new Set(context.items);
@@ -138,7 +138,7 @@ export function createDialogEngine(): DialogEngine {
 
     // Apply effects from new line
     if (lines[currentIndex]?.effects) {
-      for (const effect of lines[currentIndex]!.effects) applyEffect(effect);
+      for (const effect of (lines[currentIndex]!.effects ?? [])) applyEffect(effect);
     }
   }
 
@@ -174,7 +174,7 @@ export function createDialogEngine(): DialogEngine {
 
     // Apply effects from new line
     if (lines[currentIndex]?.effects) {
-      for (const effect of lines[currentIndex]!.effects) applyEffect(effect);
+      for (const effect of (lines[currentIndex]!.effects ?? [])) applyEffect(effect);
     }
   }
 

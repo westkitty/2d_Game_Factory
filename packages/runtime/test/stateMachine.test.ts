@@ -6,7 +6,6 @@ import { describe, it, expect, vi } from 'vitest';
 import { createStateMachine } from '../src/game-support/stateMachine.ts';
 
 type GameState = 'menu' | 'playing' | 'paused' | 'gameOver';
-type GameEvent = 'START' | 'PAUSE' | 'RESUME' | 'DIE' | 'QUIT';
 
 const gameConfig = {
   initial: 'menu' as GameState,

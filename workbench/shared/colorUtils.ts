@@ -124,9 +124,6 @@ export function mix(a: RGB, b: RGB, ratio: number): RGB {
  * Generates a complementary color palette from a base color.
  */
 export function complementaryPalette(base: RGB): readonly RGB[] {
-  const hsl = rgbToHsl(base);
-  const complementH = (hsl.h + 0.5) % 1;
-  // Approximate HSL to RGB for complement
   return [
     base,
     { r: base.r, g: base.b, b: base.g }, // Simple hue rotation approximation
