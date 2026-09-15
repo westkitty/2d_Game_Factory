@@ -48,6 +48,8 @@ import { PACK_CONFIG } from './game-specific/packConfig.ts';
 const gameRoot = document.querySelector<HTMLElement>('#game-root');
 const touchControls = document.querySelector<HTMLElement>('#touch-controls');
 const startOverlay = document.querySelector<HTMLElement>('#start-overlay');
+const gameHud = document.querySelector<HTMLElement>('#game-hud');
+const keyboardHints = document.querySelector<HTMLElement>('#keyboard-hints');
 
 if (!gameRoot) throw new Error('#game-root is missing from index.html');
 
@@ -89,6 +91,22 @@ function syncStartOverlay(sceneKey: string): void {
 
 runtime.context.events.on('scene:changed', ({ to }) => syncStartOverlay(to));
 runtime.context.events.on('run:started', () => syncStartOverlay(SCENE_KEYS.play));
+
+// Show keyboard hints on desktop (non-touch devices) during play
+function syncKeyboardHints(sceneKey: string): void {
+  if (!keyboardHints) return;
+  const isTouch = window.matchMedia('(pointer: coarse)').matches;
+  keyboardHints.hidden = isTouch || sceneKey !== SCENE_KEYS.play;
+}
+runtime.context.events.on('scene:changed', ({ to }) => syncKeyboardHints(to));
+runtime.context.events.on('run:started', () => syncKeyboardHints(SCENE_KEYS.play));
+
+// HUD visibility tracks the play scene
+function syncHud(sceneKey: string): void {
+  if (!gameHud) return;
+  gameHud.hidden = sceneKey !== SCENE_KEYS.play;
+}
+runtime.context.events.on('scene:changed', ({ to }) => syncHud(to));
 
 window.addEventListener('error', (event) => {
   console.error('[sw2d]', event.error ?? event.message);

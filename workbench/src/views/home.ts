@@ -8,7 +8,7 @@
  * architectural law 1).
  */
 
-import { button, el, maturityBadgeClass, replace, toast } from '../dom.ts';
+import { button, el, maturityBadgeClass, replace, registerShortcut, toast } from '../dom.ts';
 import { getState, subscribe, type AppState } from '../state.ts';
 import { goPresets, openProject, openProjectAndRun, refreshProjects } from '../actions.ts';
 import { openCreateDialog } from './createDialog.ts';
@@ -77,6 +77,36 @@ function projectCard(summary: AppState['projects'][number]): HTMLElement {
 
 export function renderHome(host: HTMLElement): () => void {
   const projectsHost = el('div');
+  const disposers: (() => void)[] = [];
+
+  // Register keyboard shortcuts for the home view
+  disposers.push(
+    registerShortcut({
+      key: 'n',
+      ctrl: true,
+      description: 'Create new game',
+      action: () => openCreateDialog({ mode: 'gameplay' }),
+      group: 'Home',
+    }),
+  );
+  disposers.push(
+    registerShortcut({
+      key: 'p',
+      ctrl: true,
+      description: 'Browse presets',
+      action: () => goPresets(),
+      group: 'Home',
+    }),
+  );
+  disposers.push(
+    registerShortcut({
+      key: 'r',
+      ctrl: true,
+      description: 'Refresh projects',
+      action: () => void refreshProjects(),
+      group: 'Home',
+    }),
+  );
 
   function paint(state: AppState): void {
     replace(
@@ -159,7 +189,11 @@ export function renderHome(host: HTMLElement): () => void {
 
   paint(getState());
   void refreshProjects();
-  return subscribe(paint);
+  const unsub = subscribe(paint);
+  return () => {
+    unsub();
+    for (const dispose of disposers) dispose();
+  };
 }
 
 /** Kept for the preset browser's "create from this preset" path. */

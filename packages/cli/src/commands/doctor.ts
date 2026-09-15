@@ -70,10 +70,21 @@ export async function run(): Promise<number> {
   );
 
   let failed = false;
+  let warnings = 0;
+  console.log('SW2D Environment Diagnostics');
+  console.log('===========================');
+  console.log('');
   for (const c of checks) {
-    const marker = c.status === 'ok' ? 'OK  ' : c.status === 'warn' ? 'WARN' : 'FAIL';
-    console.log(`[${marker}] ${c.name}: ${c.detail}`);
+    const marker = c.status === 'ok' ? '✓' : c.status === 'warn' ? '⚠' : '✗';
+    console.log(`  ${marker} ${c.name}: ${c.detail}`);
     if (c.status === 'fail') failed = true;
+    if (c.status === 'warn') warnings++;
+  }
+  console.log('');
+  console.log(`Summary: ${checks.length} checks, ${checks.filter(c => c.status === 'ok').length} passed, ${warnings} warnings, ${checks.filter(c => c.status === 'fail').length} failed`);
+  if (failed) {
+    console.log('');
+    console.log('Fix the FAIL items above before continuing.');
   }
 
   return failed ? 1 : 0;

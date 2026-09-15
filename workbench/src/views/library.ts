@@ -12,7 +12,7 @@
  * bound - see `thumbnailFor`.
  */
 
-import { el, button, replace, formatBytes } from '../dom.ts';
+import { el, button, replace, formatBytes, registerShortcut } from '../dom.ts';
 import * as api from '../api.ts';
 import { getState, subscribe, update, type AppState } from '../state.ts';
 import { savePanels } from '../actions.ts';
@@ -28,11 +28,23 @@ function matches(asset: AssetRecord, query: string): boolean {
 
 export function renderLibrary(host: HTMLElement): () => void {
   let query = '';
+  const disposers: (() => void)[] = [];
 
   const search = el('input', {
-    attrs: { type: 'search', placeholder: 'Search assets…', 'aria-label': 'Search assets' },
+    attrs: { type: 'search', placeholder: 'Search assets… (Ctrl+F)', 'aria-label': 'Search assets' },
     on: { input: (event) => { query = (event.target as HTMLInputElement).value; paint(getState()); } },
   });
+
+  // Register Ctrl+F to focus the search box when in workspace
+  disposers.push(
+    registerShortcut({
+      key: 'f',
+      ctrl: true,
+      description: 'Focus asset search',
+      action: () => { search.focus(); search.select(); },
+      group: 'Assets',
+    }),
+  );
 
   const body = el('div', { class: 'pane__body' });
   const head = el('div', { class: 'pane__head' }, el('span', { class: 'pane__title', text: 'Assets' }));
@@ -165,5 +177,9 @@ export function renderLibrary(host: HTMLElement): () => void {
 
   replace(host, head, body);
   paint(getState());
-  return subscribe(paint);
+  const unsub = subscribe(paint);
+  return () => {
+    unsub();
+    for (const dispose of disposers) dispose();
+  };
 }

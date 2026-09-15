@@ -12,7 +12,7 @@
  * preview and status stay reachable.
  */
 
-import { el, button, replace } from '../dom.ts';
+import { el, button, replace, registerShortcut } from '../dom.ts';
 import { anyJobRunning, getState, latestJob, subscribe, update, type AppState } from '../state.ts';
 import { goHome, reveal, runPipeline, savePanels, startPreview, synthesizeTheme } from '../actions.ts';
 import { renderLibrary } from './library.ts';
@@ -206,6 +206,14 @@ export function renderWorkspace(host: HTMLElement): () => void {
 
   makeResizer(leftResizer, libraryPane, 'libraryWidth', false);
   makeResizer(rightResizer, inspectorPane, 'inspectorWidth', true);
+
+  // Keyboard shortcuts for workspace actions
+  disposers.push(registerShortcut({ key: '1', alt: true, description: 'Switch to Asset Lab', action: () => activate('lab'), group: 'Workspace' }));
+  disposers.push(registerShortcut({ key: '2', alt: true, description: 'Switch to Scene Composer', action: () => activate('scene'), group: 'Workspace' }));
+  disposers.push(registerShortcut({ key: '3', alt: true, description: 'Switch to Preview', action: () => activate('preview'), group: 'Workspace' }));
+  disposers.push(registerShortcut({ key: 'b', ctrl: true, shift: true, description: 'Build project', action: () => void runPipeline('build'), group: 'Workspace' }));
+  disposers.push(registerShortcut({ key: 'p', ctrl: true, shift: true, description: 'Pack project', action: () => void runPipeline('pack'), group: 'Workspace' }));
+  disposers.push(registerShortcut({ key: 'Escape', description: 'Go back to projects', action: () => goHome(), group: 'Workspace' }));
 
   const initial = getState();
   libraryPane.style.width = `${initial.panels.libraryWidth}px`;

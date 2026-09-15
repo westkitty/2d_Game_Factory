@@ -8,14 +8,19 @@
  * is showing so "it looked fine in preview" always means something specific.
  */
 
-import { el, button, replace } from '../dom.ts';
+import { el, button, replace, registerShortcut } from '../dom.ts';
 import { getState, subscribe, type AppState } from '../state.ts';
 import { runPipeline, startPreview, stopPreview } from '../actions.ts';
 
 export function renderPreview(host: HTMLElement): () => void {
+  const disposers: (() => void)[] = [];
   const toolbar = el('div', { class: 'lab__toolbar' });
   const stage = el('div', { class: 'preview', style: { flex: '1 1 auto', 'min-height': '0' } });
   const root = el('div', { style: { flex: '1 1 auto', display: 'flex', 'flex-direction': 'column', 'min-height': '0' } }, toolbar, stage);
+
+  // Keyboard shortcuts for preview actions
+  disposers.push(registerShortcut({ key: 'F5', description: 'Reload preview', action: () => { if (frame && shownUrl) frame.src = `${shownUrl}?r=${Date.now()}`; }, group: 'Preview' }));
+  disposers.push(registerShortcut({ key: 'F5', ctrl: true, description: 'Reload preview', action: () => { if (frame && shownUrl) frame.src = `${shownUrl}?r=${Date.now()}`; }, group: 'Preview' }));
 
   let frame: HTMLIFrameElement | null = null;
   let shownUrl: string | null = null;
@@ -98,5 +103,9 @@ export function renderPreview(host: HTMLElement): () => void {
 
   replace(host, root);
   paint(getState());
-  return subscribe(paint);
+  const unsub = subscribe(paint);
+  return () => {
+    unsub();
+    for (const dispose of disposers) dispose();
+  };
 }

@@ -35,7 +35,7 @@ describe('doctor command', () => {
       const code = await run();
       expect(code).toBe(1);
       const output = logSpy.mock.calls.map((c) => c.join(' ')).join('\n');
-      expect(output).toContain('[FAIL] Directory packages/runtime');
+      expect(output).toContain('✗ Directory packages/runtime');
     } finally {
       logSpy.mockRestore();
       vi.doUnmock('node:fs');
